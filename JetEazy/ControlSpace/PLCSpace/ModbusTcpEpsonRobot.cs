@@ -1,5 +1,5 @@
 ﻿
-#define NNMODBUS4_Epson
+//#define NNMODBUS4_Epson
 
 #if NNMODBUS4_Epson
 

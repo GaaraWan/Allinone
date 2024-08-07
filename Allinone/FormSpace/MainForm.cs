@@ -827,7 +827,7 @@ namespace Allinone.FormSpace
                 {
                     case JetEazy.OptionEnum.MAIN_SERVICE:
                     case OptionEnum.MAIN_X6:
-                        string _viewer_path = @"D:\AUTOMATION\Eazy AOI DX\Allinone\Allinone\bin\Debug\AJZReportViewer.exe";
+                        string _viewer_path = "AJZReportViewer.exe";
                         if (System.IO.File.Exists(_viewer_path))
                         {
                             IntPtr hwnd = FindWindow(null, "JetEazy Viewer");
@@ -3301,13 +3301,13 @@ namespace Allinone.FormSpace
 
                     TrainAlbum(RCPDB.DataNow.No, true);
 
-                    GetStatus();
-
                     DISPUI.SetDisplayType(DisplayTypeEnum.SHOW);
 
                     AlbumCollection.ProcessStaticAlbum(true);
 
                     RUNUI.MappingInit();
+
+                    GetStatus();
 
                     CGOperate();
 
@@ -3344,13 +3344,13 @@ namespace Allinone.FormSpace
 
                     TrainAlbum(RCPDB.DataNow.No);
 
-                    GetStatus();
-
                     DISPUI.SetDisplayType(DisplayTypeEnum.SHOW);
 
                     AlbumCollection.ProcessStaticAlbum(false);
 
                     RUNUI.MappingInit();
+
+                    GetStatus();
 
                     //CGOperate();
 

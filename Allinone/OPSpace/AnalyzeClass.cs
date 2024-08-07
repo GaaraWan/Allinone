@@ -96,6 +96,9 @@ namespace Allinone.OPSpace
         public bool IsByPass = false;
         public int DataReportIndex = 0;
 
+        /// <summary>
+        /// 設定檢查的2D條碼
+        /// </summary>
         private string m_barcode_2D = string.Empty;
         /// <summary>
         /// 設定檢查的2D條碼
@@ -881,7 +884,16 @@ namespace Allinone.OPSpace
             }
             if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
             {
-                return ReadBarcode2DRealStr + ";" + ReadBarcode2DGrade;
+                string tempstr = $"No Compare;{ReadBarcode2DRealStr};{ReadBarcode2DGrade}";
+                if (INI.IsCheckBarcodeOpen)
+                {
+                    if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                        tempstr = $"Compare [FAIL];Marking 2D[{Barcode_2D}];Read 2D[{ReadBarcode2DRealStr}];Grade[{ReadBarcode2DGrade}]";
+                    else
+                        tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];Marking 2D[{Barcode_2D}];Read 2D[{ReadBarcode2DRealStr}];Grade[{ReadBarcode2DGrade}]";
+                }
+                return tempstr;
+                //return ReadBarcode2DRealStr + ";" + ReadBarcode2DGrade;
             }
             foreach (AnalyzeClass analyzeClass in BranchList)
             {

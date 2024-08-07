@@ -27,7 +27,7 @@ namespace JzOCR.OPSpace
 {
     public class OCRCollectionClass
     {
-        const string OCRCollectionPath = @"D:\JETEAZY\OCR";
+        public static string OCRCollectionPath = @"D:\JETEAZY\OCR";
         string DATACNNSTRING = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + OCRCollectionPath + @"\DB\DATA.mdb;Jet OLEDB:Database Password=12892414;";
         protected OleDbConnection DATACONNECTION;
         protected OleDbCommand DATACOMMAND;
@@ -37,7 +37,7 @@ namespace JzOCR.OPSpace
         protected DataSet DATASET;
 
         DataTable myDataTable;
-     public   List<OCRClass> myDataList = new List<OCRClass>();
+        public List<OCRClass> myDataList = new List<OCRClass>();
 
         int Index = 0;
 
@@ -85,6 +85,11 @@ namespace JzOCR.OPSpace
         public OCRCollectionClass()
         {
 
+        }
+        public OCRCollectionClass(string diskPath)
+        {
+            OCRCollectionPath = $@"{diskPath}\JETEAZY\OCR";
+            //DATACNNSTRING = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + $@"{diskPath}\JETEAZY\OCR" + @"\DB\DATA.mdb;Jet OLEDB:Database Password=12892414;";
         }
         public void Initial()
         {

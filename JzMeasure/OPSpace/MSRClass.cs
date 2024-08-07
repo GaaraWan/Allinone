@@ -16,7 +16,7 @@ namespace JzMSR.OPSpace
 {
     public class MSRCollectionClass
     {
-        const string MSRCollectionPath = @"D:\JETEAZY\MSR";
+        public static string MSRCollectionPath = @"D:\JETEAZY\MSR";
         string DATACNNSTRING = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + MSRCollectionPath + @"\DB\DATA.mdb;Jet OLEDB:Database Password=12892414;";
         protected OleDbConnection DATACONNECTION;
         protected OleDbCommand DATACOMMAND;
@@ -74,6 +74,11 @@ namespace JzMSR.OPSpace
         public MSRCollectionClass()
         {
 
+        }
+        public MSRCollectionClass(string diskPath)
+        {
+            MSRCollectionPath = $@"{diskPath}\JETEAZY\MSR";
+            //DATACNNSTRING = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + $@"{diskPath}\JETEAZY\MSR" + @"\DB\DATA.mdb;Jet OLEDB:Database Password=12892414;";
         }
         public void Initial()
         {

@@ -316,6 +316,10 @@ namespace Allinone
         /// 开启和关闭读取德龙返回的接收到了的信号
         /// </summary>
         public static bool IsReadHandlerOKSign = false;
+        /// <summary>
+        /// 不接收handler的完成信号
+        /// </summary>
+        public static bool IsNoUseHandlerOKSign = false;
 
         /// <summary>
         /// 开启和关闭发送德龙完成信号 通过tcp
@@ -740,6 +744,7 @@ namespace Allinone
             user_screen_bold = ReadINIValue("MainX6 Control", "user_screen_bold", (user_screen_bold ? "1" : "0"), INIFILE) == "1";
             IsReadHandlerOKSign = ReadINIValue("MainX6 Control", "IsReadHandlerOKSign", (IsReadHandlerOKSign ? "1" : "0"), INIFILE) == "1";
             IsSendHandlerTcpOKSign = ReadINIValue("MainX6 Control", "IsSendHandlerTcpOKSign", (IsSendHandlerTcpOKSign ? "1" : "0"), INIFILE) == "1";
+            IsNoUseHandlerOKSign = ReadINIValue("MainX6 Control", "IsNoUseHandlerOKSign", (IsNoUseHandlerOKSign ? "1" : "0"), INIFILE) == "1";
 
             IsLightAlwaysOn = ReadINIValue("MainX6 Control", "IsLightAlwaysOn", (IsLightAlwaysOn ? "1" : "0"), INIFILE) == "1";
             IsCollectPictures = ReadINIValue("MainX6 Control", "IsCollectPictures", (IsCollectPictures ? "1" : "0"), INIFILE) == "1";
@@ -935,6 +940,7 @@ namespace Allinone
             WriteINIValue("MainX6 Control", "user_screen_bold", (user_screen_bold ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsReadHandlerOKSign", (IsReadHandlerOKSign ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsSendHandlerTcpOKSign", (IsSendHandlerTcpOKSign ? "1" : "0"), INIFILE);
+            WriteINIValue("MainX6 Control", "IsNoUseHandlerOKSign", (IsNoUseHandlerOKSign ? "1" : "0"), INIFILE);
 
             WriteINIValue("MainX6 Control", "IsLightAlwaysOn", (IsLightAlwaysOn ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsCollectPictures", (IsCollectPictures ? "1" : "0"), INIFILE);

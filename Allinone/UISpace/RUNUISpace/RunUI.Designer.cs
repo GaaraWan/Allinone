@@ -70,9 +70,12 @@
             this.label17 = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.label19 = new System.Windows.Forms.Label();
+            this.DS = new JzDisplay.UISpace.DispUI();
+            this.label22 = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
             this.runMainX6JcetSFUI1 = new Allinone.UISpace.RUNUISpace.RunMainX6JcetSFUI();
             this.rptUI1 = new JetEazy.UISpace.RptUI();
-            this.DS = new JzDisplay.UISpace.DispUI();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -377,14 +380,17 @@
             // 
             // grpErrorColor
             // 
+            this.grpErrorColor.Controls.Add(this.label11);
+            this.grpErrorColor.Controls.Add(this.label24);
+            this.grpErrorColor.Controls.Add(this.label23);
+            this.grpErrorColor.Controls.Add(this.label22);
             this.grpErrorColor.Controls.Add(this.label14);
             this.grpErrorColor.Controls.Add(this.label20);
             this.grpErrorColor.Controls.Add(this.label9);
-            this.grpErrorColor.Controls.Add(this.label11);
             this.grpErrorColor.Controls.Add(this.label12);
             this.grpErrorColor.Controls.Add(this.label13);
             this.grpErrorColor.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.grpErrorColor.Location = new System.Drawing.Point(500, 172);
+            this.grpErrorColor.Location = new System.Drawing.Point(450, 172);
             this.grpErrorColor.Name = "grpErrorColor";
             this.grpErrorColor.Size = new System.Drawing.Size(223, 127);
             this.grpErrorColor.TabIndex = 40;
@@ -427,7 +433,7 @@
             this.label11.BackColor = System.Drawing.Color.Yellow;
             this.label11.Location = new System.Drawing.Point(6, 54);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(211, 20);
+            this.label11.Size = new System.Drawing.Size(212, 20);
             this.label11.TabIndex = 2;
             this.label11.Text = "油墨污染";
             this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -437,7 +443,7 @@
             this.label12.BackColor = System.Drawing.Color.Violet;
             this.label12.Location = new System.Drawing.Point(6, 34);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(211, 20);
+            this.label12.Size = new System.Drawing.Size(103, 20);
             this.label12.TabIndex = 1;
             this.label12.Text = "印字偏移";
             this.label12.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -447,7 +453,7 @@
             this.label13.BackColor = System.Drawing.Color.Cyan;
             this.label13.Location = new System.Drawing.Point(6, 16);
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(211, 20);
+            this.label13.Size = new System.Drawing.Size(103, 20);
             this.label13.TabIndex = 0;
             this.label13.Text = "印字錯誤";
             this.label13.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -546,9 +552,48 @@
             this.label19.Text = "无胶";
             this.label19.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // DS
+            // 
+            this.DS.Cursor = System.Windows.Forms.Cursors.Default;
+            this.DS.Location = new System.Drawing.Point(672, 82);
+            this.DS.Name = "DS";
+            this.DS.Size = new System.Drawing.Size(641, 296);
+            this.DS.TabIndex = 44;
+            this.DS.Visible = false;
+            // 
+            // label22
+            // 
+            this.label22.BackColor = System.Drawing.Color.Orange;
+            this.label22.Location = new System.Drawing.Point(115, 14);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(103, 20);
+            this.label22.TabIndex = 6;
+            this.label22.Text = "2D比对错误";
+            this.label22.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label23
+            // 
+            this.label23.BackColor = System.Drawing.Color.Fuchsia;
+            this.label23.Location = new System.Drawing.Point(115, 34);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(103, 20);
+            this.label23.TabIndex = 7;
+            this.label23.Text = "2D读取错误";
+            this.label23.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label24
+            // 
+            this.label24.BackColor = System.Drawing.Color.LightPink;
+            this.label24.Location = new System.Drawing.Point(115, 54);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(103, 20);
+            this.label24.TabIndex = 8;
+            this.label24.Text = "2D码重复";
+            this.label24.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // runMainX6JcetSFUI1
             // 
-            this.runMainX6JcetSFUI1.Location = new System.Drawing.Point(384, 90);
+            this.runMainX6JcetSFUI1.Location = new System.Drawing.Point(384, 28);
             this.runMainX6JcetSFUI1.Name = "runMainX6JcetSFUI1";
             this.runMainX6JcetSFUI1.Size = new System.Drawing.Size(223, 127);
             this.runMainX6JcetSFUI1.TabIndex = 42;
@@ -560,15 +605,6 @@
             this.rptUI1.Name = "rptUI1";
             this.rptUI1.Size = new System.Drawing.Size(213, 58);
             this.rptUI1.TabIndex = 35;
-            // 
-            // DS
-            // 
-            this.DS.Cursor = System.Windows.Forms.Cursors.Default;
-            this.DS.Location = new System.Drawing.Point(672, 82);
-            this.DS.Name = "DS";
-            this.DS.Size = new System.Drawing.Size(641, 296);
-            this.DS.TabIndex = 44;
-            this.DS.Visible = false;
             // 
             // RunUI
             // 
@@ -655,5 +691,8 @@
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label21;
         private JzDisplay.UISpace.DispUI DS;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.Label label22;
     }
 }

@@ -51,10 +51,11 @@ namespace AJZReportViewer
             this.label2 = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.allinoneViewerUI1 = new AJZReportViewer.AllinoneViewerUI();
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.allinoneViewerUI1 = new AJZReportViewer.AllinoneViewerUI();
+            this.button10 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -219,6 +220,7 @@ namespace AJZReportViewer
             // 
             // panel3
             // 
+            this.panel3.Controls.Add(this.button10);
             this.panel3.Controls.Add(this.button9);
             this.panel3.Controls.Add(this.textBox2);
             this.panel3.Controls.Add(this.label2);
@@ -273,18 +275,6 @@ namespace AJZReportViewer
             this.label1.TabIndex = 0;
             this.label1.Text = "快速查找";
             // 
-            // allinoneViewerUI1
-            // 
-            this.allinoneViewerUI1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.allinoneViewerUI1.Location = new System.Drawing.Point(492, 108);
-            this.allinoneViewerUI1.Name = "allinoneViewerUI1";
-            this.allinoneViewerUI1.ReportCount = 0;
-            this.allinoneViewerUI1.ReportFilename = "";
-            this.allinoneViewerUI1.ReportLot = "";
-            this.allinoneViewerUI1.ReportPath = "D:\\report\\work\\auto";
-            this.allinoneViewerUI1.Size = new System.Drawing.Size(659, 407);
-            this.allinoneViewerUI1.TabIndex = 2;
-            // 
             // notifyIcon1
             // 
             this.notifyIcon1.ContextMenuStrip = this.contextMenuStrip1;
@@ -302,9 +292,33 @@ namespace AJZReportViewer
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(100, 22);
             this.toolStripMenuItem1.Text = "退出";
             this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
+            // 
+            // allinoneViewerUI1
+            // 
+            this.allinoneViewerUI1.Date = "";
+            this.allinoneViewerUI1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.allinoneViewerUI1.Location = new System.Drawing.Point(492, 108);
+            this.allinoneViewerUI1.Name = "allinoneViewerUI1";
+            this.allinoneViewerUI1.ReportCount = 0;
+            this.allinoneViewerUI1.ReportFilename = "";
+            this.allinoneViewerUI1.ReportLot = "";
+            this.allinoneViewerUI1.ReportPath = "D:\\report\\work\\auto";
+            this.allinoneViewerUI1.Size = new System.Drawing.Size(659, 407);
+            this.allinoneViewerUI1.TabIndex = 2;
+            // 
+            // button10
+            // 
+            this.button10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.button10.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button10.Location = new System.Drawing.Point(8, 75);
+            this.button10.Name = "button10";
+            this.button10.Size = new System.Drawing.Size(68, 21);
+            this.button10.TabIndex = 5;
+            this.button10.Text = "全域结果图";
+            this.button10.UseVisualStyleBackColor = false;
             // 
             // frmMain
             // 
@@ -356,6 +370,7 @@ namespace AJZReportViewer
         private System.Windows.Forms.NotifyIcon notifyIcon1;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
+        private System.Windows.Forms.Button button10;
     }
 }
 

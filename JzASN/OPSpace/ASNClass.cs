@@ -22,7 +22,7 @@ namespace JzASN.OPSpace
         VersionEnum VERSION;
         OptionEnum OPTION;
 
-        const string ASNCollectionPath = @"D:\JETEAZY\ASN";
+        public static string ASNCollectionPath = @"D:\JETEAZY\ASN";
         string DATACNNSTRING = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + ASNCollectionPath + @"\DB\DATA.mdb;Jet OLEDB:Database Password=12892414;";
         protected OleDbConnection DATACONNECTION;
         protected OleDbCommand DATACOMMAND;

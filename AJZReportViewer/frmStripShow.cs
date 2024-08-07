@@ -16,12 +16,14 @@ namespace AJZReportViewer
         string m_imagePath = string.Empty;
         RectangleF m_rectF = new RectangleF();
         Color m_color = Color.Green;
+        string m_barcode2D = string.Empty;
 
-        public frmStripShow(string ePathStr,RectangleF rectangleF,Color color)
+        public frmStripShow(string ePathStr, RectangleF rectangleF, Color color, string e2DBarcode = "")
         {
             m_imagePath = ePathStr;
             m_rectF = rectangleF;
             m_color = color;
+            m_barcode2D = e2DBarcode;
 
             InitializeComponent();
             this.Load += FrmStripShow_Load;
@@ -50,6 +52,7 @@ namespace AJZReportViewer
                 bitmap1.Dispose();
                 Graphics g = Graphics.FromImage(bitmap2);
                 g.DrawRectangles(new Pen(m_color, 9), rectangleFs);
+                g.DrawString(m_barcode2D, new Font("宋体", 18), new SolidBrush(m_color), new PointF(m_rectF.X + m_rectF.Width / 2, m_rectF.Y + m_rectF.Height / 2));
                 g.Dispose();
 
                 DS.SetDisplayImage(bitmap2);

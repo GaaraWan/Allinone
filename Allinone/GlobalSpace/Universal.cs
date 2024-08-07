@@ -42,16 +42,17 @@ namespace Allinone
     public class Universal : JetEazy.Universal
     {
         public static bool IsNoUseCCD = false;
-        public static bool IsNoUseIO = false;
+        public static bool IsNoUseIO = true;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2024/07/07";
+        public static string VersionDate = "2024/08/07";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
-        public static OptionEnum OPTION = OptionEnum.MAIN_SDM3;
+        public static OptionEnum OPTION = OptionEnum.MAIN_X6;
 
-        public static CameraActionMode CAMACT = CameraActionMode.CAM_MOTOR_MODE2;
+        public static CameraActionMode CAMACT = CameraActionMode.CAM_MOTOR_LINESCAN;
         public static RobotType myRobotType = RobotType.NONE;
+        public static DiskType myDiskType = DiskType.DISK_D;
 
         #region 德龙激光
 
@@ -110,11 +111,34 @@ namespace Allinone
         public static bool IsLocalPicture = false;
 
         public static UserOptionEnum PassOption = UserOptionEnum.ALL;
-        
 
-        public static string CODEPATH = @"D:\AUTOMATION\Eazy AOI DX";
+        public static string PROGRAMME_ROOT
+        {
+            get
+            {
+                string iret = @"D:";
+                switch (OPTION)
+                {
+                    case OptionEnum.MAIN_X6:
+                        switch (myDiskType)
+                        {
+                            case DiskType.DISK_C:
+                                iret = @"C:";
+                                break;
+                            case DiskType.DISK_D:
+                                iret = @"D:";
+                                break;
+                        }
+                        break;
+                }
+                return iret;
+            }
+        }
+
+        public static string CODEPATH = $@"{PROGRAMME_ROOT}\AUTOMATION\Eazy AOI DX";
         public static string VEROPT = VERSION.ToString() + "-" + OPTION.ToString();
-        public static string MAINPATH = @"D:\JETEAZY\" + VEROPT;
+        public static string MAINPATH = $@"{PROGRAMME_ROOT}\JETEAZY\" + VEROPT;
+        public static string WORKPATH = $@"{PROGRAMME_ROOT}\JETEAZY\" + VEROPT + @"\WORK";
 
         public static string DBPATH = MAINPATH + @"\DB";
         public static string RCPPATH = MAINPATH + @"\PIC";
@@ -124,7 +148,7 @@ namespace Allinone
         public static string LOGDBPATH = @"D:\JETEAZY\" + VEROPT + @"\LOGDB";
         public static string BACKUPDBPATH = @"D:\JETEAZY\" + VEROPT + @"\BACKUPDB";
         public static string LOGTXTPATH = @"D:\JETEAZY\" + VEROPT + @"\LOGTXT";
-        public static string WORKPATH = @"D:\JETEAZY\" + VEROPT + @"\WORK";
+        
         public static string DEBUGRAWPATH = @"D:\JETEAZY\" + VEROPT + @"\ORG";              //偵錯儲存的原圖位置
         public static string DEBUGRESULTPATH = @"D:\JETEAZY\" + VEROPT + @"\DEBUG";         //偵錯結果圖位置
         public static string TESTRESULTPATH = @"D:\COPYDATA";                               //偵錯結果圖位置
@@ -1041,6 +1065,7 @@ namespace Allinone
             switch (VERSION)
             {
                 case VersionEnum.ALLINONE:
+                    OCRCollectionClass.OCRCollectionPath = $@"{PROGRAMME_ROOT}\JETEAZY\OCR";
                     OCRCollection = new OCRCollectionClass();
                     OCRCollection.Initial();
                     break;
@@ -1057,6 +1082,7 @@ namespace Allinone
                     switch(OPTION)
                     {
                         case OptionEnum.MAIN:
+                            MSRCollectionClass.MSRCollectionPath = $@"{PROGRAMME_ROOT}\JETEAZY\MSR";
                             MSRCollection = new MSRCollectionClass();
                             MSRCollection.Initial();
                             break;
@@ -1796,6 +1822,7 @@ namespace Allinone
         }
         static void InitialASN()
         {
+            ASNCollectionClass.ASNCollectionPath = $@"{PROGRAMME_ROOT}\JETEAZY\ASN";
             ASNCollection = new ASNCollectionClass(VERSION, OPTION);
             ASNCollection.Initial();
         }

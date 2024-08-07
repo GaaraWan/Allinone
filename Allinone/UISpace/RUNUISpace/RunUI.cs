@@ -16,6 +16,7 @@ using JetEazy.UISpace;
 using Allinone.OPSpace;
 using JetEazy.FormSpace;
 using Allinone.FormSpace;
+using iTextSharp.text.pdf;
 
 namespace Allinone.UISpace.RUNUISpace
 {
@@ -905,6 +906,12 @@ namespace Allinone.UISpace.RUNUISpace
                 case AnanlyzeProcedureEnum.CHECKDIRT:
                     c = Color.Yellow;
                     break;
+                case AnanlyzeProcedureEnum.CHECKBARCODE:
+                    c = Color.Fuchsia;
+                    break;
+                case AnanlyzeProcedureEnum.CHECKMISBARCODE:
+                    c = Color.Orange;
+                    break;
                 default:
                     break;
             }
@@ -938,17 +945,47 @@ namespace Allinone.UISpace.RUNUISpace
             {
                 iret = 6;
             }
+            else if (eColor == Color.Orange)
+            {
+                iret = 7;
+            }
+            else if (eColor == Color.Fuchsia)
+            {
+                iret = 8;
+            }
+            else if (eColor == Color.LightPink)
+            {
+                iret = 9;
+            }
             return iret;
         }
         string _getAnalyzeBarcodeStr(AnalyzeClass eAnalyze)
         {
             if (eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX)
             {
-                return eAnalyze.ReadBarcode2DStr;
+                string tempstr = $"No Compare;{eAnalyze.ReadBarcode2DRealStr}";
+                if (INI.IsCheckBarcodeOpen)
+                {
+                    if (string.IsNullOrEmpty(eAnalyze.ReadBarcode2DRealStr))
+                        tempstr = $"Compare [FAIL];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}]";
+                    else
+                        tempstr = $"Compare [{(eAnalyze.ReadBarcode2DRealStr == eAnalyze.Barcode_2D ? "PASS" : "FAIL")}];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}]";
+                }
+                return tempstr;
+                //return eAnalyze.ReadBarcode2DStr;
             }
             else if (eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
             {
-                return eAnalyze.ReadBarcode2DStr + ";" + eAnalyze.ReadBarcode2DGrade;
+                string tempstr = $"No Compare;{eAnalyze.ReadBarcode2DRealStr};{eAnalyze.ReadBarcode2DGrade}";
+                if (INI.IsCheckBarcodeOpen)
+                {
+                    if (string.IsNullOrEmpty(eAnalyze.ReadBarcode2DRealStr))
+                        tempstr = $"Compare [FAIL];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}];Grade[{eAnalyze.ReadBarcode2DGrade}]";
+                    else
+                        tempstr = $"Compare [{(eAnalyze.ReadBarcode2DRealStr == eAnalyze.Barcode_2D ? "PASS" : "FAIL")}];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}];Grade[{eAnalyze.ReadBarcode2DGrade}]";
+                }
+                return tempstr;
+                //return eAnalyze.ReadBarcode2DStr + ";" + eAnalyze.ReadBarcode2DGrade;
             }
             foreach (AnalyzeClass analyzeClass in eAnalyze.BranchList)
             {
@@ -957,6 +994,45 @@ namespace Allinone.UISpace.RUNUISpace
                     return _barcodeStr;
             }
             return string.Empty;
+        }
+        int _getAnalyzeBarcodeStr(AnalyzeClass eAnalyze, out string outReadBarcode)
+        {
+            if (eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX)
+            {
+                int tempstr = -1;
+                if (INI.IsCheckBarcodeOpen)
+                {
+                    if (string.IsNullOrEmpty(eAnalyze.ReadBarcode2DRealStr))
+                        tempstr = -1;
+                    else
+                        tempstr = (eAnalyze.ReadBarcode2DRealStr == eAnalyze.Barcode_2D ? 0 : -2);
+                }
+                outReadBarcode = eAnalyze.ReadBarcode2DRealStr;
+                return tempstr;
+                //return eAnalyze.ReadBarcode2DStr;
+            }
+            else if (eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
+            {
+                int tempstr = -1;
+                if (INI.IsCheckBarcodeOpen)
+                {
+                    if (string.IsNullOrEmpty(eAnalyze.ReadBarcode2DRealStr))
+                        tempstr = -1;
+                    else
+                        tempstr = (eAnalyze.ReadBarcode2DRealStr == eAnalyze.Barcode_2D ? 0 : -2);
+                }
+                outReadBarcode = eAnalyze.ReadBarcode2DRealStr;
+                return tempstr;
+                //return eAnalyze.ReadBarcode2DStr + ";" + eAnalyze.ReadBarcode2DGrade;
+            }
+            foreach (AnalyzeClass analyzeClass in eAnalyze.BranchList)
+            {
+                int iret = _getAnalyzeBarcodeStr(analyzeClass, out outReadBarcode);
+                if (!string.IsNullOrEmpty(outReadBarcode))
+                    return iret;
+            }
+            outReadBarcode = "N/A";
+            return 0;
         }
         string _getLabelText(string eText, string eFormat = "00")
         {
@@ -1019,7 +1095,27 @@ namespace Allinone.UISpace.RUNUISpace
                                         color = Color.Purple;
                                     }
                                     else
+                                    {
                                         lbl.BackColor = color;
+                                        //if (color == Color.Fuchsia)
+                                        //{
+                                        //    //先判断是否读到码和比对是否成功 0->OK  -1->没读到码 -2->码比对错误
+                                        //    int iretbar = _getAnalyzeBarcodeStr(analyze, out string tempoutbarcode);
+                                        //    switch (iretbar)
+                                        //    {
+                                        //        case -1:
+                                        //            lbl.BackColor = Color.Fuchsia;
+                                        //            break;
+                                        //        case -2:
+                                        //            lbl.BackColor = Color.Orange;
+                                        //            break;
+                                        //    }
+                                        //}
+                                        //else
+                                        //{
+                                        //    lbl.BackColor = color;
+                                        //}
+                                    }
 
                                     string STR = lbl.Name + ",";
                                     STR += lbl.Location.X + ",";
@@ -1053,8 +1149,6 @@ namespace Allinone.UISpace.RUNUISpace
                                     STR += stripRectF.Width + ",";
                                     STR += stripRectF.Height + ",";
 
-                                    JzMainSDPositionParas.ReportAdd(STR);
-
                                     switch (OPTION)
                                     {
                                         case OptionEnum.MAIN_SD:
@@ -1082,6 +1176,9 @@ namespace Allinone.UISpace.RUNUISpace
                                             JzMainSDPositionParas.ReportGradeAdd(_getLabelText(lbl.Text) + ";" + messageStr + ";");
                                             break;
                                     }
+
+                                    STR += _getLabelText(lbl.Text) + ";" + messageStr + ";" + ",";
+                                    JzMainSDPositionParas.ReportAdd(STR);
 
                                     if (!string.IsNullOrEmpty(messageStr))
                                         lbl.Tag = messageStr;

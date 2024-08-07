@@ -136,6 +136,10 @@
     <Reference Include="MvCameraControl.Net">
       <HintPath>C:\Program Files (x86)\MVS\Development\DotNet\AnyCpu\MvCameraControl.Net.dll</HintPath>
     </Reference>
+    <Reference Include="MVDCNNCodeReader.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=f723f1780490d437, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDCNNCodeReader.Net.dll</HintPath>
+    </Reference>
     <Reference Include="MVDCode2DReader.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=8cf0701c7bb1a732, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDCode2DReader.Net.dll</HintPath>
@@ -189,9 +193,9 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="TIS.Imaging.ICImagingControl35, Version=3.5.7.4039, Culture=neutral, PublicKeyToken=257805929e8b7928, processorArchitecture=x86">
+    <Reference Include="TIS.Imaging.ICImagingControl33, Version=3.3.4.1837, Culture=neutral, PublicKeyToken=257805929e8b7928, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\The Imaging Source Europe GmbH\IC Imaging Control 3.5 .NET Library\bin\x64\TIS.Imaging.ICImagingControl35.dll</HintPath>
+      <HintPath>C:\Program Files\Common Files\IC Imaging Control 3.3\bin\v4.0.30319\x64\TIS.Imaging.ICImagingControl33.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="zxing, Version=0.16.6.0, Culture=neutral, PublicKeyToken=4e88037ac681fe60, processorArchitecture=MSIL">

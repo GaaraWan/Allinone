@@ -385,7 +385,7 @@ namespace Allinone.UISpace
 
                             lblReConnectHandleServer.BackColor = Color.Red;
                             lblReConnectHandleServer.Text = "ServerHandle重连中";
-                            
+
                             System.Threading.Thread thread_DL_ReConnectServer = new System.Threading.Thread(_reConnectHandleServer);
                             thread_DL_ReConnectServer.Start();
                         }
@@ -411,7 +411,7 @@ namespace Allinone.UISpace
             lblGetImageIndex.Text = JetEazy.PlugSpace.CamActClass.Instance.StepCurrent.ToString() + " 总[" +
                 JetEazy.PlugSpace.CamActClass.Instance.StepCount.ToString() + "]";
 
-            if(INI.IsReadHandlerOKSign)
+            if (INI.IsReadHandlerOKSign && !INI.IsNoUseHandlerOKSign)
                 lblHandlerOK.BackColor = (PLCIO.IsHandlerOK ? Color.Green : Color.Black);
 
             myJzTimer.Cut();

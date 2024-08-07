@@ -264,7 +264,7 @@ namespace JetEazy.BasicSpace
                                 int i = 0;
                                 while (i < irowcol)
                                 {
-                                    _qc2dbarcode[i] = vs[i];
+                                    _qc2dbarcode[i] = vs[i].Trim();
                                     i++;
                                 }
                             }

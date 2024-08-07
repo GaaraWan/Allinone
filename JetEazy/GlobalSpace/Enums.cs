@@ -116,7 +116,18 @@ namespace JetEazy
         /// </summary>
         STILTS,
 
+        /// <summary>
+        /// 读取失败
+        /// </summary>
         CHECKBARCODE,
+        /// <summary>
+        /// 匹配错误
+        /// </summary>
+        CHECKMISBARCODE,
+        /// <summary>
+        /// 重复码
+        /// </summary>
+        CHECKREPEATBARCODE,
 
         检查键盘膜,
         PADINSPECT,
@@ -195,7 +206,7 @@ namespace JetEazy
         KBAOI = 3,
         CNAOI = 4,
         HEIGHTMEASURE = 5,
-        MEASURE2D =6,
+        MEASURE2D = 6,
 
         ALLINONE = 7,
 
@@ -274,7 +285,7 @@ namespace JetEazy
         /// </summary>
         MAIN_SDM3 = 17,
     }
-    
+
     public enum ESSStatusEnum
     {
         EXIT,
@@ -386,7 +397,7 @@ namespace JetEazy
         /// 用户设定满盒NG
         /// </summary>
         ACT_USER_FULL_NG,
-        
+
         ACT_SENSOR_FULL_PASS,
         ACT_SENSOR_FULL_NG,
 
@@ -437,7 +448,7 @@ namespace JetEazy
     public enum IOEnum : int
     {
         COUNT = 8,
-        
+
         I1 = 0,
         I2 = 1,
         I3 = 2,
@@ -555,13 +566,13 @@ namespace JetEazy
         /// </summary>
         SET_CURRENT_IMAGE,
 
-       COUNT_MAPPING,
-       SHOW_CURRENT_IMAGE,
+        COUNT_MAPPING,
+        SHOW_CURRENT_IMAGE,
 
-       /// <summary>
-       /// 显示最后读到的条码信息
-       /// </summary>
-       SHOW_BARCODE_RESULT,
+        /// <summary>
+        /// 显示最后读到的条码信息
+        /// </summary>
+        SHOW_BARCODE_RESULT,
 
     }
     public enum RunStatusEnum
@@ -687,8 +698,8 @@ namespace JetEazy
         ALARM_ROBOT,
         USER_STOP,
     }
-    
-    public enum MC100IONameEnum :int
+
+    public enum MC100IONameEnum : int
     {
         COUNT = 14,
 
@@ -765,6 +776,20 @@ namespace JetEazy
         NONE = 0,
         HCFA = 1,
     }
-   
-} 
+    /// <summary>
+    /// 程序及环境的启动盘
+    /// </summary>
+    public enum DiskType : int
+    {
+        /// <summary>
+        /// 设置D盘
+        /// </summary>
+        DISK_D = 0,
+        /// <summary>
+        /// 设置C盘
+        /// </summary>
+        DISK_C = 1,
+    }
+
+}
 

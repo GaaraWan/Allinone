@@ -33,7 +33,12 @@ namespace JetEazy.PlugSpace
         }
         public int StepCurrent
         {
-            get { return _stepCurrent; }
+            get
+            {
+                int ret = _stepCurrent;
+                return ret;
+                //return _stepCurrent;
+            }
             set { _stepCurrent = value; }
         }
         public int GetCurrentStep()

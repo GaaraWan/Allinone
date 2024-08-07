@@ -138,9 +138,8 @@ namespace JetEazy.BasicSpace
             Report_LOT = Report_LOT.Replace('-', '_');
 
             //路径 + auto + 批号 
-            string str = "D:\\ReportGrade" + "\\auto";
-            string strfilename = Report_LOT + "_" + (eIspass ? "P-" : "F-") +
-                DateTime.Now.ToString("yyyyMMddHHmmss");
+            string str = "D:\\ReportGrade" + "\\auto\\" + $"{Report_LOT}";
+            string strfilename = Report_LOT + "_" + (eIspass ? "P-" : "F-") + eIndex.ToString("00000") + "-" + DateTime.Now.ToString("yyyyMMddHHmmss");
 
             ReportGradeSave(str, strfilename);
         }

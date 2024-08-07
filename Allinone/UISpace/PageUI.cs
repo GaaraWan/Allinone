@@ -1363,6 +1363,7 @@ namespace Allinone.UISpace
 
                             switch(OPTION)
                             {
+                                case OptionEnum.MAIN_SDM3:
                                 case OptionEnum.MAIN_X6:
                                 case OptionEnum.MAIN_SERVICE:
 
@@ -1408,6 +1409,7 @@ namespace Allinone.UISpace
                     {
                         case OptionEnum.MAIN_X6:
                         case OptionEnum.MAIN_SERVICE:
+                        case OptionEnum.MAIN_SDM3:
 
                             ATREEUI.DismissAnalyzeTable();
 

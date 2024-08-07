@@ -492,6 +492,13 @@ namespace Allinone.BasicSpace
             get { return INI.IsReadHandlerOKSign; }
             set { INI.IsReadHandlerOKSign = value; }
         }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 屏蔽 false:打开")]
+        [DisplayName("是否屏蔽handler完成信号")]
+        public bool IsNoUseHandlerOKSign
+        {
+            get { return INI.IsNoUseHandlerOKSign; }
+            set { INI.IsNoUseHandlerOKSign = value; }
+        }
         [CategoryAttribute(cat2), DescriptionAttribute("true: 开启 false:关闭")]
         [DisplayName("是否开启发送Tcp完成信号")]
         public bool IsSendHandlerTcpOKSign

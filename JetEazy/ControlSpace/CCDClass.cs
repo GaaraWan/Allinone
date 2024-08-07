@@ -3471,6 +3471,7 @@ namespace JetEazy.ControlSpace
             }
         }
 
+        //FrameSnapSink[] snapSinks;
         FrameFilter RotateFlipFilter;
         public ICImagingControl[] TISCAM;
         TIS.Imaging.ImageBuffer[] TISImageBuffer;
@@ -3707,7 +3708,7 @@ namespace JetEazy.ControlSpace
         {
             if (m_dvp2Class != null)
             {
-                foreach(var dvp2Class in m_dvp2Class)
+                foreach (var dvp2Class in m_dvp2Class)
                 {
                     dvp2Class.Dispose();
                 }
@@ -4183,7 +4184,7 @@ namespace JetEazy.ControlSpace
             #region TIS TYPE
             try
             {
-
+                //snapSinks = new FrameSnapSink[CCDRelateIndexArray.Count()];
                 TISCAM = new ICImagingControl[CCDRelateIndexArray.Count()];
                 TISCAMTUNING = new VCDSimpleProperty[CCDRelateIndexArray.Count()];
                 TISPolaritySwitch = new VCDSwitchProperty[CCDRelateIndexArray.Count()];
@@ -4407,9 +4408,11 @@ namespace JetEazy.ControlSpace
 
                     //TISCAM[i].LoadShowSaveDeviceState(fmtpath + "\\" + DeviceList[i].Split(',')[0] + ".ini");
 
+                    //TISCAM[i].Sink = new TIS.Imaging.FrameSnapSink();
 
                     TISCAM[i].ImageAvailable += new EventHandler<ICImagingControl.ImageAvailableEventArgs>(CCDClass_ImageAvailable);
                     TISCAM[i].DeviceLost += new EventHandler<ICImagingControl.DeviceLostEventArgs>(TISCCD_DeviceLost);
+
                     TISCAM[i].LiveStart();
 
                     //string strmess=  TISCAM[i].SaveDeviceState();
@@ -4469,12 +4472,33 @@ namespace JetEazy.ControlSpace
         }
         private bool TIS_SetExposureAbs(TIS.Imaging.ICImagingControl ic, double value)
         {
+            //TIS.Imaging.VCDPropertyItem exposure = ic.VCDPropertyItems.FindItem(TIS.Imaging.VCDGUIDs.VCDID_Exposure);
+            //TIS.Imaging.VCDRangeProperty _exposureRange;
+            //TIS.Imaging.VCDSwitchProperty _exposureSwitch;
+            //if (exposure != null)
+            //{
+            //    //<<getswitchandrange
+            //    // Acquire interfaces to the range and switch interface for value and auto
+            //    _exposureRange = exposure.Find<TIS.Imaging.VCDRangeProperty>(TIS.Imaging.VCDGUIDs.VCDElement_Value);
+            //    _exposureSwitch = exposure.Find<TIS.Imaging.VCDSwitchProperty>(TIS.Imaging.VCDGUIDs.VCDElement_Auto);
+            //    if (_exposureSwitch != null)
+            //    {
+            //        _exposureSwitch.Switch = false;
+            //        //MessageBox.Show("Automation of brightness is not supported by the current device!");
+            //    }
+            //    if (_exposureRange != null)
+            //    {
+
+            //    }
+            //}
+
             TIS.Imaging.VCDAbsoluteValueProperty ExposureAbs;
             ExposureAbs = (TIS.Imaging.VCDAbsoluteValueProperty)ic.VCDPropertyItems.FindInterface(
                                                            TIS.Imaging.VCDIDs.VCDID_Exposure + ":"
                                                          + TIS.Imaging.VCDIDs.VCDElement_Value + ":"
                                                          + TIS.Imaging.VCDIDs.VCDInterface_AbsoluteValue);
-
+            //ExposureAbs = 
+            //    (VCDAbsoluteValueProperty)ic.VCDPropertyItems.FindInterface(VCDGUIDs.VCDID_Exposure, VCDGUIDs.VCDElement_Value, VCDGUIDs.VCDInterface_AbsoluteValue);
             if (ExposureAbs != null)
             {
                 //double max = ExposureAbs.RangeMax;
@@ -4663,7 +4687,10 @@ namespace JetEazy.ControlSpace
             RotateFlipFilter.Dispose();
 
             foreach (ICImagingControl ic in TISCAM)
-                ic.Dispose();
+            {
+                if (ic != null)
+                    ic.Dispose();
+            }
             foreach (TIS.Imaging.ImageBuffer image in TISImageBuffer)
             {
                 if (image != null)
@@ -4675,10 +4702,17 @@ namespace JetEazy.ControlSpace
 
             //USE FOR USB TRIGGER
             foreach (VCDSwitchProperty vcd in TISTriggerEnable)
-                vcd.Dispose();
+            {
+                if (vcd != null)
+                    vcd.Dispose();
+            }
+
 
             foreach (VCDButtonProperty vcd in TISSoftTrigger)
-                vcd.Dispose();
+            {
+                if (vcd != null)
+                    vcd.Dispose();
+            }
         }
 #endif
 #if IWIN
@@ -6238,6 +6272,11 @@ namespace JetEazy.ControlSpace
                                         if (!File.Exists(bmpstring))
                                             bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + Universal.GlobalImageTypeString;
 
+                                        //if (!File.Exists(bmpstring))
+                                        //    bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + Universal.GlobalImageTypeString;
+
+
+
                                         break;
                                 }
 
@@ -6349,9 +6388,8 @@ namespace JetEazy.ControlSpace
                     case CCDTYPEEnum.TISUSB:
                         TISCAM[index].LiveCapturePause = false;
                         TISCAM[index].LiveCaptureContinuous = true;
-
                         TISSoftTrigger[index].Push();
-
+                        //取像问题 建立于20240711
                         if (TISImageBuffer[index] != null)
                         {
                             // bmp = bmplist[relateindex];
@@ -6364,10 +6402,34 @@ namespace JetEazy.ControlSpace
 
                             //Bitmap tis
 
-                            RenderBMPSizeChange(TISImageBuffer[index].Bitmap, bmplist[relateindex]);
+                            //3648x2432
+                            int iw = 3648;
+                            int ih = 2432;
+                            iw = SizeDefArray[relateindex].OrgSize.Width;
+                            ih = SizeDefArray[relateindex].OrgSize.Height;
+                            try
+                            {
+                                if (bmplist[relateindex] != null)
+                                {
+                                    iw = bmplist[relateindex].Width;
+                                    ih = bmplist[relateindex].Height;
+                                }
+                            }
+                            catch
+                            {
+
+                            }
+
+                            Bitmap bmpnewtemp = new Bitmap(iw, ih);
+                            RenderBMPSizeChange(TISImageBuffer[index].Bitmap, bmpnewtemp);
+                            bmplist[relateindex] = bmpnewtemp;// new Bitmap(bmpnewtemp);
 
                             //bmplist[relateindex].Save("D://Temp.png");
                         }
+
+                        //TIS.Imaging.FrameSnapSink snapSink = TISCAM[index].Sink as TIS.Imaging.FrameSnapSink;
+                        //TIS.Imaging.IFrameQueueBuffer frm = snapSink.SnapSingle(TimeSpan.FromSeconds(5));
+                        //RenderBMPSizeChange(frm.CreateBitmapWrap(), bmplist[relateindex]);
 
                         break;
 #endif
@@ -6437,7 +6499,8 @@ namespace JetEazy.ControlSpace
                                         if (!File.Exists(bmpstring))
                                             bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + Universal.GlobalImageTypeString;
 
-                                        bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + (relateindex + basecount).ToString("000") + ".jpg";
+                                        if (!File.Exists(bmpstring))
+                                            bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + (relateindex + basecount).ToString("000") + ".jpg";
                                         if (!File.Exists(bmpstring))
                                             bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + ".jpg";
 
@@ -6550,27 +6613,27 @@ namespace JetEazy.ControlSpace
                     case CCDTYPEEnum.TIS:
                     // break;
                     case CCDTYPEEnum.TISUSB:
-                        TISCAM[index].LiveCapturePause = false;
-                        TISCAM[index].LiveCaptureContinuous = true;
+                        //TISCAM[index].LiveCapturePause = false;
+                        //TISCAM[index].LiveCaptureContinuous = true;
 
-                        TISSoftTrigger[index].Push();
+                        //TISSoftTrigger[index].Push();
 
-                        if (TISImageBuffer[index] != null)
-                        {
-                            // bmp = bmplist[relateindex];
+                        //if (TISImageBuffer[index] != null)
+                        //{
+                        //    // bmp = bmplist[relateindex];
 
-                            //Bitmap bmptemp = TISImageBuffer[index].Bitmap;
-                            //bmptemp = bmptemp.Clone(new Rectangle(0, 0, bmptemp.Width, bmptemp.Height), PixelFormat.Format32bppArgb);
-                            //bmplist[relateindex] = bmptemp;// ( TISImageBuffer[index].Bitmap).Clone() as Bitmap;
+                        //    //Bitmap bmptemp = TISImageBuffer[index].Bitmap;
+                        //    //bmptemp = bmptemp.Clone(new Rectangle(0, 0, bmptemp.Width, bmptemp.Height), PixelFormat.Format32bppArgb);
+                        //    //bmplist[relateindex] = bmptemp;// ( TISImageBuffer[index].Bitmap).Clone() as Bitmap;
 
-                            //EPIXRender(index, RotationDegreeArray[index], bmp);
+                        //    //EPIXRender(index, RotationDegreeArray[index], bmp);
 
-                            //Bitmap tis
+                        //    //Bitmap tis
 
-                            RenderBMPSizeChange(TISImageBuffer[index].Bitmap, bmplist[relateindex]);
+                        //    RenderBMPSizeChange(TISImageBuffer[index].Bitmap, bmplist[relateindex]);
 
-                            //bmplist[relateindex].Save("D://Temp.png");
-                        }
+                        //    //bmplist[relateindex].Save("D://Temp.png");
+                        //}
 
                         break;
 #endif
@@ -6722,23 +6785,23 @@ namespace JetEazy.ControlSpace
                     case CCDTYPEEnum.TIS:
                     // break;
                     case CCDTYPEEnum.TISUSB:
-                        TISCAM[index].LiveCapturePause = false;
-                        TISCAM[index].LiveCaptureContinuous = true;
+                        //TISCAM[index].LiveCapturePause = false;
+                        //TISCAM[index].LiveCaptureContinuous = true;
 
-                        TISSoftTrigger[index].Push();
+                        //TISSoftTrigger[index].Push();
 
-                        if (TISImageBuffer[index] != null)
-                        {
-                            // bmp = bmplist[relateindex];
+                        //if (TISImageBuffer[index] != null)
+                        //{
+                        //    // bmp = bmplist[relateindex];
 
-                            //Bitmap bmptemp = TISImageBuffer[index].Bitmap;
-                            //bmptemp = bmptemp.Clone(new Rectangle(0, 0, bmptemp.Width, bmptemp.Height), PixelFormat.Format32bppArgb);
-                            //bmplist[relateindex] = bmptemp;// ( TISImageBuffer[index].Bitmap).Clone() as Bitmap;
+                        //    //Bitmap bmptemp = TISImageBuffer[index].Bitmap;
+                        //    //bmptemp = bmptemp.Clone(new Rectangle(0, 0, bmptemp.Width, bmptemp.Height), PixelFormat.Format32bppArgb);
+                        //    //bmplist[relateindex] = bmptemp;// ( TISImageBuffer[index].Bitmap).Clone() as Bitmap;
 
-                            RenderBMPSizeChange(TISImageBuffer[index].Bitmap, bmplist[relateindex]);
+                        //    RenderBMPSizeChange(TISImageBuffer[index].Bitmap, bmplist[relateindex]);
 
-                            //bmplist[relateindex].Save("D://Temp.png");
-                        }
+                        //    //bmplist[relateindex].Save("D://Temp.png");
+                        //}
 
                         break;
 #endif

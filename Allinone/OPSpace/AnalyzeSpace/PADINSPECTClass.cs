@@ -1491,8 +1491,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 //填写数据的区域
                 RectangleF _rectF = new RectangleF(0, 0, 1100, 290);
+                _rectF = new RectangleF(0, 0, 1100, 40);
                 g.FillRectangle(Brushes.Black, _rectF);
-
+                int linewidth = 1;
+                int fontsize = 8;
                 //画图 及 显示比对图
                 i = 0;
                 int drawIndex = 0;
@@ -1524,16 +1526,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                     if (m_ischeckgluepass)
                     {
-                        g.DrawLines(new Pen(Color.Lime, 5), glues[drawIndex].GetPointF());
-                        g.DrawLines(new Pen(Color.Lime, 5), glues[drawIndex].GetPointFIN());
-                        g.DrawString(measureStr, new Font("宋体", 43), Brushes.Lime, 5, 5);
+                        g.DrawLines(new Pen(Color.Lime, linewidth), glues[drawIndex].GetPointF());
+                        g.DrawLines(new Pen(Color.Lime, linewidth), glues[drawIndex].GetPointFIN());
+                        g.DrawString(measureStr, new Font("宋体", fontsize), Brushes.Lime, 2, 2);
                         //g.DrawString(measureStr, new Font("宋体", 22), Brushes.Lime, _rectF);
                     }
                     else
                     {
-                        g.DrawLines(new Pen(Color.Red, 5), glues[drawIndex].GetPointF());
-                        g.DrawLines(new Pen(Color.Red, 5), glues[drawIndex].GetPointFIN());
-                        g.DrawString(measureStr, new Font("宋体", 43), Brushes.Red, 5, 5);
+                        g.DrawLines(new Pen(Color.Red, linewidth), glues[drawIndex].GetPointF());
+                        g.DrawLines(new Pen(Color.Red, linewidth), glues[drawIndex].GetPointFIN());
+                        g.DrawString(measureStr, new Font("宋体", fontsize), Brushes.Red, 2, 2);
                         //g.DrawString(measureStr, new Font("宋体", 22), Brushes.Red, _rectF);
                     }
 

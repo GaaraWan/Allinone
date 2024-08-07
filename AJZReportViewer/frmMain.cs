@@ -28,6 +28,7 @@ namespace AJZReportViewer
         Button btnLstDown;
         Button btnLstGo;
         Button btnLstUpdate;
+        Button btnShowWholeImage;
 
         public frmMain()
         {
@@ -56,6 +57,7 @@ namespace AJZReportViewer
             btnLstDown = button6;
             btnLstGo = button7;
             btnLstUpdate = button8;
+            btnShowWholeImage = button10;
 
             Viewer = allinoneViewerUI1;
 
@@ -72,8 +74,20 @@ namespace AJZReportViewer
             btnLstUp.Click += BtnLstUp_Click;
             btnLstDown.Click += BtnLstDown_Click;
             btnLstUpdate.Click += BtnLstUpdate_Click;
+            btnShowWholeImage.Click += BtnShowWholeImage_Click;
 
             this.WindowState = FormWindowState.Minimized;
+        }
+
+        frmStripShow m_ShowStrip = null;
+        private void BtnShowWholeImage_Click(object sender, EventArgs e)
+        {
+            string pathfilename = Viewer.WholeImage;
+            if (File.Exists(pathfilename))
+            {
+                m_ShowStrip = new frmStripShow(pathfilename, new RectangleF(0, 0, 10, 10), Color.Lime, "");
+                m_ShowStrip.ShowDialog();
+            }
         }
 
         private void TrvLot_DrawNode(object sender, DrawTreeNodeEventArgs e)
@@ -132,7 +146,7 @@ namespace AJZReportViewer
                 return;
 
             if (lstFilename.SelectedIndex <= 0 || lstFilename.SelectedIndex >= lstFilename.Items.Count)
-                lstFilename.SelectedIndex = lstFilename.Items.Count - 1; 
+                lstFilename.SelectedIndex = lstFilename.Items.Count - 1;
             else if (lstFilename.SelectedIndex > 0)
                 lstFilename.SelectedIndex--;
         }
@@ -340,7 +354,7 @@ namespace AJZReportViewer
             }
 
             trvLot.ExpandAll();
-            
+
         }
 
         void ClearListbox()

@@ -14,12 +14,16 @@ namespace AJZReportViewer
     {
         private string m_imagepath = @"D:\report\work\Image";
         private string m_path = @"D:\report\work\auto";
+        private string m_wholeImage = "";
         public string ReportPath
         {
             get { return m_path; }
             set { m_path = value; }
         }
-
+        public string WholeImage
+        {
+            get { return m_wholeImage; }
+        }
         Label lblHeadStr;
         Panel pnlViewer;
 
@@ -60,7 +64,7 @@ namespace AJZReportViewer
             set { m_filename = value; }
         }
 
-        public void Set(string epathfilename,int eCount)
+        public void Set(string epathfilename, int eCount)
         {
             if (!File.Exists(epathfilename))
                 return;
@@ -81,6 +85,13 @@ namespace AJZReportViewer
             m_filename = strs[strs.Length - 1].Replace(".csv", "");
             m_lot = strs[strs.Length - 2];
 
+
+            m_wholeImage = m_imagepath + "\\" + m_lot + "\\" + m_filename.Split('-')[2] + "\\000\\result.jpg";
+
+            if (!string.IsNullOrEmpty(m_date))
+            {
+                m_wholeImage = m_imagepath + "\\" + m_date + "\\" + m_lot + "\\" + m_filename.Split('-')[2] + "\\000\\result.jpg";
+            }
         }
 
         public void UpdateViewer()
@@ -136,6 +147,8 @@ namespace AJZReportViewer
                     if (Strs.Length > 10)
                     {
                         string strtag = Strs[7] + "," + Strs[8] + "," + Strs[9] + "," + Strs[10] + "," + Strs[11] + "," + Strs[5];
+                        if (Strs.Length > 12)
+                            strtag = Strs[7] + "," + Strs[8] + "," + Strs[9] + "," + Strs[10] + "," + Strs[11] + "," + Strs[5] + "," + Strs[12];
                         lbl.Tag = strtag;
 
                         lbl.DoubleClick += Lbl_DoubleClick;
@@ -184,6 +197,9 @@ namespace AJZReportViewer
                 float.Parse(vs[4]));
 
             Color color = _getColor(int.Parse(vs[5]));
+            string _2dBarcode = string.Empty;
+            if (vs.Length > 6)
+                _2dBarcode = vs[6];
 
             //加载图片路径
 
@@ -200,7 +216,7 @@ namespace AJZReportViewer
 
             if (File.Exists(_imagepath))
             {
-                m_ShowStrip = new frmStripShow(_imagepath, rectangleF, color);
+                m_ShowStrip = new frmStripShow(_imagepath, rectangleF, color, _2dBarcode);
                 m_ShowStrip.ShowDialog();
                 //Bitmap bitmap1 = new Bitmap(_imagepath);
                 //Bitmap bitmap2 = new Bitmap(bitmap1);
@@ -235,6 +251,15 @@ namespace AJZReportViewer
                     break;
                 case 6:
                     eColor = Color.Blue;
+                    break;
+                case 7:
+                    eColor = Color.Orange;
+                    break;
+                case 8:
+                    eColor = Color.Fuchsia;
+                    break;
+                case 9:
+                    eColor = Color.LightPink;
                     break;
                 default:
                     eColor = Color.Green;

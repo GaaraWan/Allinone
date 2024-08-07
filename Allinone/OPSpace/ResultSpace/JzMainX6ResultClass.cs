@@ -28,6 +28,7 @@ using System.Threading;
 using System.Diagnostics;
 using JetEazy.Interface;
 using FreeImageAPI;
+using System.Windows.Documents;
 
 namespace Allinone.OPSpace.ResultSpace
 {
@@ -222,7 +223,7 @@ namespace Allinone.OPSpace.ResultSpace
                     //DLResultOKTick();
 
                     //Trigger Start
-                    bool isGetImageStart = MACHINE.PLCIO.IsStart;
+                    bool isGetImageStart = MACHINE.PLCIO.IsStart && !MACHINE.PLCIO.Busy;
 
                     if (isGetImageStart && IsGetImageStartOld != isGetImageStart)
                     {
@@ -1126,7 +1127,7 @@ namespace Allinone.OPSpace.ResultSpace
                         TestTimer.Cut();
                         m_input_time = DateTime.Now;
                         OnEnvTrigger(ResultStatusEnum.CHANGEDIRECTORY, 0, "");
-                        OnTrigger(ResultStatusEnum.COUNTSTART);
+                        //OnTrigger(ResultStatusEnum.COUNTSTART);
                         //把要檢測的東西放進去
                         FillOperaterString(RELATECOLORSTR);
 
@@ -1259,6 +1260,7 @@ namespace Allinone.OPSpace.ResultSpace
                             //thread_DL_Test.IsBackground = true;
                             //thread_DL_Test.Start(_currentStep);
 
+                            OnTrigger(ResultStatusEnum.COUNTSTART);
                             Task task = new Task(() =>
                             {
                                 DLCalPageIndex(_currentStep);
@@ -1411,8 +1413,8 @@ namespace Allinone.OPSpace.ResultSpace
                             //Testms[3] = TestTimer.msDuriation;
                             TestTimer.Cut();
 
-                            //if (IsNoUseCCD)
-                            //    OnTrigger(ResultStatusEnum.COUNTSTART);
+                            if (IsNoUseCCD)
+                                OnTrigger(ResultStatusEnum.COUNTSTART);
 
 
                             switch (Universal.CAMACT)
@@ -1696,6 +1698,7 @@ void MainX6Tick()
 
                         Process.TimeUnit = TimeUnitEnum.ms;
                         Process.NextDuriation = INI.MAINSD_GETIMAGE_DELAYTIME;
+                        JetEazy.LoggerClass.Instance.WriteLog($"手动抓取图像{Universal.CAMACT.ToString()}");
 
                         switch (Universal.CAMACT)
                         {
@@ -1735,6 +1738,8 @@ void MainX6Tick()
 
                                         m_DLGetImageOK.Start();
                                     }
+                                    JetEazy.LoggerClass.Instance.WriteLog($"手动抓取图像完成{Universal.CAMACT.ToString()}");
+
                                 }
                                 else
                                 {
@@ -1773,6 +1778,8 @@ void MainX6Tick()
 
                                 m_DLGetImageOK.Start();
                             }
+                            JetEazy.LoggerClass.Instance.WriteLog($"手动抓取图像完成{Universal.CAMACT.ToString()}");
+
 
                         }
                         break;
@@ -1825,7 +1832,7 @@ void MainX6Tick()
                         {
                             if (INI.IsReadHandlerOKSign)
                             {
-                                if (MACHINE.PLCIO.IsHandlerOK)
+                                if (MACHINE.PLCIO.IsHandlerOK || INI.IsNoUseHandlerOKSign)
                                 {
                                     Process.Stop();
                                     MACHINE.PLCIO.GetImageOK = false;
@@ -1968,7 +1975,7 @@ void MainX6Tick()
                         {
                             if (INI.IsReadHandlerOKSign)
                             {
-                                if (MACHINE.PLCIO.IsHandlerOK)
+                                if (MACHINE.PLCIO.IsHandlerOK || INI.IsNoUseHandlerOKSign)
                                 {
                                     Process.Stop();
                                     MACHINE.PLCIO.Busy = false;
