@@ -388,7 +388,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             if (!isgood)
             {
-                if (INI.IsCollectPictures)
+                if (INI.IsCollectErrorSmall)
                 {
                     if (!System.IO.Directory.Exists(Universal.MainX6_Path))
                         System.IO.Directory.CreateDirectory(Universal.MainX6_Path);

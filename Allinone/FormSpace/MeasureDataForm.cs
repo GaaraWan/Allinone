@@ -23,6 +23,7 @@ namespace Allinone.FormSpace
         MbUI MBUI;
         BkUI BKUI;
         ColorUI CLUI;
+        SolderUI SLUI;
 
         Button btnOK;
         Button btnCancel;
@@ -40,6 +41,7 @@ namespace Allinone.FormSpace
             MBUI = mbUI1;
             BKUI = bkUI1;
             CLUI = colorUI1;
+            SLUI = solderUI1;
 
             btnOK = button4;
             btnCancel = button6;
@@ -79,6 +81,13 @@ namespace Allinone.FormSpace
 
                     CLUI.Initial(strs[1]);
                     CLUI.Visible = true;
+
+                    break;
+
+                case MeasureMethodEnum.SOLDERBALLCHECK:
+
+                    SLUI.Initial(strs[1]);
+                    SLUI.Visible = true;
 
                     break;
             }
@@ -124,6 +133,9 @@ namespace Allinone.FormSpace
                     CLUI.Visible = true;
 
                     break;
+                case MeasureMethodEnum.SOLDERBALLCHECK:
+                    SLUI.Visible = true;
+                    break;
 
             }
 
@@ -144,10 +156,12 @@ namespace Allinone.FormSpace
             MBUI.Visible = false;
             BKUI.Visible = false;
             CLUI.Visible = false;
+            SLUI.Visible = false;
 
             MBUI.Location = new Point(6,58);
             BKUI.Location = new Point(6, 58);
             CLUI.Location = new Point(6, 58);
+            SLUI.Location = new Point(6, 58);
         }
 
         string GetReturnString()
@@ -166,6 +180,9 @@ namespace Allinone.FormSpace
                     break;
                 case MeasureMethodEnum.COLORCHECK:
                     retstr += CLUI.GetDataValueString();
+                    break;
+                case MeasureMethodEnum.SOLDERBALLCHECK:
+                    retstr += SLUI.GetDataValueString();
                     break;
             }
 

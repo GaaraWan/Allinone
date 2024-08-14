@@ -2179,6 +2179,7 @@ namespace Allinone.FormSpace
                             analyze.ExtendY = PAGEUI.AnalyzeSelectNow.ExtendY;
                             //analyze.NORMALPara.FromString(PAGEUI.AnalyzeSelectNow.NORMALPara.ToString());
                             analyze.ALIGNPara.FromString(PAGEUI.AnalyzeSelectNow.ALIGNPara.ToString());
+                            analyze.MEASUREPara.FromString(PAGEUI.AnalyzeSelectNow.MEASUREPara.ToString());
                             analyze.AOIPara.FromString(PAGEUI.AnalyzeSelectNow.AOIPara.ToString());
                             if (analyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
                                  || analyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)

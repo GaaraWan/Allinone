@@ -56,10 +56,13 @@
             this.button2 = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.grpErrorColor = new System.Windows.Forms.GroupBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.label22 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.label20 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
-            this.label11 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.button3 = new System.Windows.Forms.Button();
@@ -71,9 +74,6 @@
             this.label18 = new System.Windows.Forms.Label();
             this.label19 = new System.Windows.Forms.Label();
             this.DS = new JzDisplay.UISpace.DispUI();
-            this.label22 = new System.Windows.Forms.Label();
-            this.label23 = new System.Windows.Forms.Label();
-            this.label24 = new System.Windows.Forms.Label();
             this.runMainX6JcetSFUI1 = new Allinone.UISpace.RUNUISpace.RunMainX6JcetSFUI();
             this.rptUI1 = new JetEazy.UISpace.RptUI();
             this.groupBox2.SuspendLayout();
@@ -398,6 +398,46 @@
             this.grpErrorColor.Text = "標識區";
             this.grpErrorColor.Visible = false;
             // 
+            // label11
+            // 
+            this.label11.BackColor = System.Drawing.Color.Yellow;
+            this.label11.Location = new System.Drawing.Point(6, 54);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(103, 20);
+            this.label11.TabIndex = 2;
+            this.label11.Text = "油墨污染";
+            this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label24
+            // 
+            this.label24.BackColor = System.Drawing.Color.LightPink;
+            this.label24.Location = new System.Drawing.Point(115, 54);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(103, 20);
+            this.label24.TabIndex = 8;
+            this.label24.Text = "2D码重复";
+            this.label24.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label23
+            // 
+            this.label23.BackColor = System.Drawing.Color.Fuchsia;
+            this.label23.Location = new System.Drawing.Point(115, 34);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(103, 20);
+            this.label23.TabIndex = 7;
+            this.label23.Text = "2D读取错误";
+            this.label23.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label22
+            // 
+            this.label22.BackColor = System.Drawing.Color.Orange;
+            this.label22.Location = new System.Drawing.Point(115, 14);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(103, 20);
+            this.label22.TabIndex = 6;
+            this.label22.Text = "2D比对错误";
+            this.label22.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // label14
             // 
             this.label14.BackColor = System.Drawing.Color.Purple;
@@ -427,16 +467,6 @@
             this.label9.TabIndex = 3;
             this.label9.Text = "印字缺失";
             this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label11
-            // 
-            this.label11.BackColor = System.Drawing.Color.Yellow;
-            this.label11.Location = new System.Drawing.Point(6, 54);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(212, 20);
-            this.label11.TabIndex = 2;
-            this.label11.Text = "油墨污染";
-            this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label12
             // 
@@ -560,36 +590,6 @@
             this.DS.Size = new System.Drawing.Size(641, 296);
             this.DS.TabIndex = 44;
             this.DS.Visible = false;
-            // 
-            // label22
-            // 
-            this.label22.BackColor = System.Drawing.Color.Orange;
-            this.label22.Location = new System.Drawing.Point(115, 14);
-            this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(103, 20);
-            this.label22.TabIndex = 6;
-            this.label22.Text = "2D比对错误";
-            this.label22.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label23
-            // 
-            this.label23.BackColor = System.Drawing.Color.Fuchsia;
-            this.label23.Location = new System.Drawing.Point(115, 34);
-            this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(103, 20);
-            this.label23.TabIndex = 7;
-            this.label23.Text = "2D读取错误";
-            this.label23.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label24
-            // 
-            this.label24.BackColor = System.Drawing.Color.LightPink;
-            this.label24.Location = new System.Drawing.Point(115, 54);
-            this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(103, 20);
-            this.label24.TabIndex = 8;
-            this.label24.Text = "2D码重复";
-            this.label24.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // runMainX6JcetSFUI1
             // 

@@ -326,6 +326,7 @@ namespace Allinone
         /// </summary>
         public static bool IsSendHandlerTcpOKSign = false;
 
+        public static bool IsCollectErrorSmall = false;
         public static bool IsCollectStripPictures = false;
         public static bool IsLightAlwaysOn = false;
         public static bool IsCollectPictures = false;
@@ -338,6 +339,7 @@ namespace Allinone
         public static bool IsAdminMode = false;
         public static bool IsCollectPicturesSingle = false;
         public static string AI_Model_FilenamePath = string.Empty;
+        public static bool IsOpenCheckRepeatCode = false;
 
         //Jcet Contorl
         public static bool JCET_IS_USE_SHOPFLOOR = false;
@@ -746,6 +748,8 @@ namespace Allinone
             IsSendHandlerTcpOKSign = ReadINIValue("MainX6 Control", "IsSendHandlerTcpOKSign", (IsSendHandlerTcpOKSign ? "1" : "0"), INIFILE) == "1";
             IsNoUseHandlerOKSign = ReadINIValue("MainX6 Control", "IsNoUseHandlerOKSign", (IsNoUseHandlerOKSign ? "1" : "0"), INIFILE) == "1";
 
+            IsOpenCheckRepeatCode = ReadINIValue("MainX6 Control", "IsOpenCheckRepeatCode", (IsOpenCheckRepeatCode ? "1" : "0"), INIFILE) == "1";
+            IsCollectErrorSmall = ReadINIValue("MainX6 Control", "IsCollectErrorSmall", (IsCollectErrorSmall ? "1" : "0"), INIFILE) == "1";
             IsLightAlwaysOn = ReadINIValue("MainX6 Control", "IsLightAlwaysOn", (IsLightAlwaysOn ? "1" : "0"), INIFILE) == "1";
             IsCollectPictures = ReadINIValue("MainX6 Control", "IsCollectPictures", (IsCollectPictures ? "1" : "0"), INIFILE) == "1";
             IsSaveScreen = ReadINIValue("MainX6 Control", "IsSaveScreen", (IsSaveScreen ? "1" : "0"), INIFILE) == "1";
@@ -942,6 +946,8 @@ namespace Allinone
             WriteINIValue("MainX6 Control", "IsSendHandlerTcpOKSign", (IsSendHandlerTcpOKSign ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsNoUseHandlerOKSign", (IsNoUseHandlerOKSign ? "1" : "0"), INIFILE);
 
+            WriteINIValue("MainX6 Control", "IsOpenCheckRepeatCode", (IsOpenCheckRepeatCode ? "1" : "0"), INIFILE);
+            WriteINIValue("MainX6 Control", "IsCollectErrorSmall", (IsCollectErrorSmall ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsLightAlwaysOn", (IsLightAlwaysOn ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsCollectPictures", (IsCollectPictures ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsSaveScreen", (IsSaveScreen ? "1" : "0"), INIFILE);

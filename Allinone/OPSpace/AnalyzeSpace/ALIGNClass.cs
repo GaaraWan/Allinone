@@ -67,6 +67,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
         public string RelateAnalyzeString = "";
         //public string RelateAnalyzeInformation = "";
+        public bool CheckGood = true;
 
         public PassInfoClass PassInfo = new PassInfoClass();
 
@@ -608,25 +609,25 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public bool AuFindRun(Bitmap bmpinput, ref Bitmap bmpoutput, bool istrain, int brightness, int contrast)
         {
             bool isgood = true;
-
+            CheckGood = true;
             //bmpoutput.Dispose();
             bmpoutput = new Bitmap(1, 1);
 
             if (MTPSample == -1)
             {
 
-                if(bmpinput.Width/mySize<1)
+                if (bmpinput.Width / mySize < 1)
                     bmpinput = new Bitmap(bmpinput);
                 else
                     bmpinput = new Bitmap(bmpinput, new Size((int)(bmpinput.Width / mySize), (int)(bmpinput.Height / mySize)));
-             //   bmpmask = new Bitmap(bmpmask, new Size((int)(bmpmask.Width / mySize), (int)(bmpmask.Height / mySize)));
+                //   bmpmask = new Bitmap(bmpmask, new Size((int)(bmpmask.Width / mySize), (int)(bmpmask.Height / mySize)));
             }
 
             WorkStatusClass workstatus = new WorkStatusClass(AnanlyzeProcedureEnum.ALIGNRUN);
             string processstring = "Start " + RelateAnalyzeString + " Alignment " + (istrain ? "<TRAIN>" : "<RUN>") + " Run." + Environment.NewLine;
             string errorstring = "";
             ReasonEnum reason = ReasonEnum.PASS;
-            
+
             switch (AlignMethod)
             {
                 case AlignMethodEnum.NONE:
@@ -644,16 +645,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                     return true;
             }
-            
+
             JzTimes mytime = new JzTimes();
             int resultcount = 0;
             int ms = 0;
-            
+
             AUGrayImg8 imginput = new AUGrayImg8();
             AUColorImg24 imginput24 = new AUColorImg24();
             AUColorImg24 imgoutput24 = new AUColorImg24();
 
-            
+
 
             //Bitmap bmptest = new Bitmap(Universal.TESTPATH + "\\ANALYZETEST\\ALIGN.png");
             bmpRunInput.Dispose();
@@ -677,15 +678,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
             {
                 //xTrainingInfoF tmpInfo = new xTrainingInfoF();
                 //AUFIND.GetTrainingInfo(out tmpInfo);
-                string strpath = "D:\\TestTest\\"+Universal.RESULT.myResult.RELATECOLORSTR+"\\" + RelateAnalyzeString + "\\";
+                string strpath = "D:\\TestTest\\" + Universal.RESULT.myResult.RELATECOLORSTR + "\\" + RelateAnalyzeString + "\\";
                 if (!Directory.Exists(strpath))
                     Directory.CreateDirectory(strpath);
-                if (!Directory.Exists(strpath+"Data\\"))
+                if (!Directory.Exists(strpath + "Data\\"))
                     Directory.CreateDirectory(strpath + "Data\\");
 
-                Bitmap bmpsavePatt=new Bitmap(bmpPattern,new Size((int)(bmpPattern.Width/mySize),(int)(bmpPattern.Height/mySize)));
+                Bitmap bmpsavePatt = new Bitmap(bmpPattern, new Size((int)(bmpPattern.Width / mySize), (int)(bmpPattern.Height / mySize)));
 
-                bmpsavePatt.Save(strpath+"\\TRAINPATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                bmpsavePatt.Save(strpath + "\\TRAINPATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
 
                 bmpsavePatt.Dispose();
                 //bmpMask Should Disposed if there is no inspection to do
@@ -700,7 +701,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             AUUtility.DrawBitmapToAUGrayImg8(bmpRunInput, ref imginput);
 
-        //    bmpRunInput.Dispose();
+            //    bmpRunInput.Dispose();
 
             processstring += "Do Run Alignment." + Environment.NewLine;
 
@@ -708,7 +709,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             switch (AlignMethod)
             {
                 case AlignMethodEnum.AUFIND:
-              //  case AlignMethodEnum.AUMATCH:
+                    //  case AlignMethodEnum.AUMATCH:
                     resultcount = AUFIND.Find(imginput, 3000);
                     break;
                 case AlignMethodEnum.AUMATCH:
@@ -725,7 +726,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 if (resultcount > MTMaxOcc)
                 {
                     isgood = false;
-                    
+                    //CheckGood = false;
                     processstring += "Error For More Than " + MTMaxOcc + " Results." + Environment.NewLine;
                     errorstring += RelateAnalyzeString + " Error For More Than " + MTMaxOcc + " Results." + Environment.NewLine;
                     reason = ReasonEnum.NG;
@@ -733,7 +734,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 else if (resultcount < MTMaxOcc)
                 {
                     isgood = false;
-
+                    //CheckGood = false;
                     //bmpPattern.Save(Universal.TESTPATH + "\\ANALYZETEST\\TRAINPATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
                     //bmpMask.Save(Universal.TESTPATH + "\\ANALYZETEST\\TRAINMASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
                     //bmpRunInput.Save(Universal.TESTPATH + "\\ANALYZETEST\\RUNINPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
@@ -748,7 +749,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 if (resultcount < MTMaxOcc)
                 {
                     isgood = false;
-
+                    //CheckGood = false;
                     processstring += "Error For Less Than " + MTMaxOcc + " Results." + Environment.NewLine;
                     errorstring += RelateAnalyzeString + " Error For Less Than " + MTMaxOcc + " Results." + Environment.NewLine;
                     reason = ReasonEnum.NG;
@@ -787,7 +788,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     {
 
                         isgood = false;
-
+                        //CheckGood = false;
                         processstring += "The Result Score is " + Score.ToString("0.00") + " < " + MTTolerance.ToString("0.00") + " Error." + Environment.NewLine;
                         errorstring += RelateAnalyzeString + " The Result Score is " + Score.ToString("0.00") + " < " + MTTolerance.ToString("0.00") + " Error." + Environment.NewLine;
                         reason = ReasonEnum.NG;
@@ -863,7 +864,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     {
 
                         isgood = false;
-
+                        //CheckGood = false;
                         processstring += "The Result Score is " + Score.ToString("0.00") + " < " + MTTolerance.ToString("0.00") + " Error." + Environment.NewLine;
                         errorstring += RelateAnalyzeString + " The Result Score is " + Score.ToString("0.00") + " < " + MTTolerance.ToString("0.00") + " Error." + Environment.NewLine;
                         reason = ReasonEnum.NG;
@@ -929,10 +930,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 else
                     bmpoutput = new Bitmap(bmpinput);
 
-               
+
 
                 if (MTPSample == -1)
-                    bmpoutput = new Bitmap(bmpoutput,bmpPattern.Size);
+                    bmpoutput = new Bitmap(bmpoutput, bmpPattern.Size);
 
                 //string strpath2 = "D:\\TestTest\\" + Universal.RESULT.myResult.RELATECOLORSTR + "\\" + RelateAnalyzeString + "\\";
                 //bmpoutput.Save(strpath2 + "Input2" + ".png");
@@ -951,7 +952,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             else
             {
                 if (bmpPattern == null || bmpinput == null)
-                    workstatus.SetWorkStatus(new Bitmap(1,1), bmpinput, new Bitmap(1, 1), reason, errorstring, processstring, PassInfo);
+                    workstatus.SetWorkStatus(new Bitmap(1, 1), bmpinput, new Bitmap(1, 1), reason, errorstring, processstring, PassInfo);
                 else
                     workstatus.SetWorkStatus(bmpPattern, bmpinput, bmpPattern, reason, errorstring, processstring, PassInfo);
             }
@@ -975,11 +976,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         processstring = "The Offset is " + Offset.ToString("0.00") + " > " + MTOffset.ToString("0.00") + " Error." + Environment.NewLine;
                         errorstring = RelateAnalyzeString + "The Offset is " + Offset.ToString("0.00") + " > " + MTOffset.ToString("0.00") + " Error." + Environment.NewLine;
                         reason = ReasonEnum.NG;
-
+                        //CheckGood = false;
                         //if (!System.IO.Directory.Exists(Universal.MainX6_Path))
                         //    System.IO.Directory.CreateDirectory(Universal.MainX6_Path);
 
-                        if (INI.IsCollectPictures)
+                        if (INI.IsCollectErrorSmall)
                         {
                             if (!System.IO.Directory.Exists(Universal.MainX6_Path + "\\offset"))
                                 System.IO.Directory.CreateDirectory(Universal.MainX6_Path + "\\offset");
@@ -1009,9 +1010,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         RunStatusCollection.Add(biasrunstatus);
                 }
             }
-            
-            //IsPass = isgood;
 
+            //IsPass = isgood;
+            CheckGood = isgood;
             return isgood;
         }
         /// <summary>
@@ -1232,6 +1233,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public void ResetTrainStatus()
         {
             TrainStatusCollection.Clear();
+            //CheckGood = true;
         }
         /// <summary>
         /// 在做大量運算前要清除的相關資料
@@ -1239,6 +1241,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public void ResetRunStatus()
         {
             RunStatusCollection.Clear();
+            //CheckGood = true;
         }
         /// <summary>
         /// 將產生出來的過程寫出去

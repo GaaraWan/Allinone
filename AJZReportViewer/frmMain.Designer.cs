@@ -46,6 +46,7 @@ namespace AJZReportViewer
             this.button6 = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
             this.panel3 = new System.Windows.Forms.Panel();
+            this.button10 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -54,14 +55,24 @@ namespace AJZReportViewer
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.grpErrorColor = new System.Windows.Forms.GroupBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.label22 = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
+            this.label20 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
             this.allinoneViewerUI1 = new AJZReportViewer.AllinoneViewerUI();
-            this.button10 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
+            this.grpErrorColor.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -220,6 +231,7 @@ namespace AJZReportViewer
             // 
             // panel3
             // 
+            this.panel3.Controls.Add(this.grpErrorColor);
             this.panel3.Controls.Add(this.button10);
             this.panel3.Controls.Add(this.button9);
             this.panel3.Controls.Add(this.textBox2);
@@ -229,8 +241,19 @@ namespace AJZReportViewer
             this.panel3.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel3.Location = new System.Drawing.Point(492, 0);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(659, 108);
+            this.panel3.Size = new System.Drawing.Size(690, 150);
             this.panel3.TabIndex = 3;
+            // 
+            // button10
+            // 
+            this.button10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.button10.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button10.Location = new System.Drawing.Point(8, 75);
+            this.button10.Name = "button10";
+            this.button10.Size = new System.Drawing.Size(68, 21);
+            this.button10.TabIndex = 5;
+            this.button10.Text = "全域结果图";
+            this.button10.UseVisualStyleBackColor = false;
             // 
             // button9
             // 
@@ -296,35 +319,133 @@ namespace AJZReportViewer
             this.toolStripMenuItem1.Text = "退出";
             this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
             // 
+            // grpErrorColor
+            // 
+            this.grpErrorColor.Controls.Add(this.label11);
+            this.grpErrorColor.Controls.Add(this.label24);
+            this.grpErrorColor.Controls.Add(this.label23);
+            this.grpErrorColor.Controls.Add(this.label22);
+            this.grpErrorColor.Controls.Add(this.label14);
+            this.grpErrorColor.Controls.Add(this.label20);
+            this.grpErrorColor.Controls.Add(this.label9);
+            this.grpErrorColor.Controls.Add(this.label12);
+            this.grpErrorColor.Controls.Add(this.label13);
+            this.grpErrorColor.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.grpErrorColor.Location = new System.Drawing.Point(464, 3);
+            this.grpErrorColor.Name = "grpErrorColor";
+            this.grpErrorColor.Size = new System.Drawing.Size(223, 127);
+            this.grpErrorColor.TabIndex = 41;
+            this.grpErrorColor.TabStop = false;
+            this.grpErrorColor.Text = "標識區";
+            // 
+            // label11
+            // 
+            this.label11.BackColor = System.Drawing.Color.Yellow;
+            this.label11.Location = new System.Drawing.Point(6, 54);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(103, 20);
+            this.label11.TabIndex = 2;
+            this.label11.Text = "油墨污染";
+            this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label24
+            // 
+            this.label24.BackColor = System.Drawing.Color.LightPink;
+            this.label24.Location = new System.Drawing.Point(115, 54);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(103, 20);
+            this.label24.TabIndex = 8;
+            this.label24.Text = "2D码重复";
+            this.label24.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label23
+            // 
+            this.label23.BackColor = System.Drawing.Color.Fuchsia;
+            this.label23.Location = new System.Drawing.Point(115, 34);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(103, 20);
+            this.label23.TabIndex = 7;
+            this.label23.Text = "2D读取错误";
+            this.label23.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label22
+            // 
+            this.label22.BackColor = System.Drawing.Color.Orange;
+            this.label22.Location = new System.Drawing.Point(115, 14);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(103, 20);
+            this.label22.TabIndex = 6;
+            this.label22.Text = "2D比对错误";
+            this.label22.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label14
+            // 
+            this.label14.BackColor = System.Drawing.Color.Purple;
+            this.label14.Location = new System.Drawing.Point(6, 94);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(103, 20);
+            this.label14.TabIndex = 5;
+            this.label14.Text = "不检测";
+            this.label14.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label20
+            // 
+            this.label20.BackColor = System.Drawing.Color.Blue;
+            this.label20.Location = new System.Drawing.Point(115, 94);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(102, 20);
+            this.label20.TabIndex = 4;
+            this.label20.Text = "其它";
+            this.label20.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label9
+            // 
+            this.label9.BackColor = System.Drawing.Color.Red;
+            this.label9.Location = new System.Drawing.Point(6, 74);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(211, 20);
+            this.label9.TabIndex = 3;
+            this.label9.Text = "印字缺失";
+            this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label12
+            // 
+            this.label12.BackColor = System.Drawing.Color.Violet;
+            this.label12.Location = new System.Drawing.Point(6, 34);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(103, 20);
+            this.label12.TabIndex = 1;
+            this.label12.Text = "印字偏移";
+            this.label12.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label13
+            // 
+            this.label13.BackColor = System.Drawing.Color.Cyan;
+            this.label13.Location = new System.Drawing.Point(6, 16);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(103, 20);
+            this.label13.TabIndex = 0;
+            this.label13.Text = "印字錯誤";
+            this.label13.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // allinoneViewerUI1
             // 
             this.allinoneViewerUI1.Date = "";
             this.allinoneViewerUI1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.allinoneViewerUI1.Location = new System.Drawing.Point(492, 108);
+            this.allinoneViewerUI1.Location = new System.Drawing.Point(492, 150);
             this.allinoneViewerUI1.Name = "allinoneViewerUI1";
             this.allinoneViewerUI1.ReportCount = 0;
             this.allinoneViewerUI1.ReportFilename = "";
             this.allinoneViewerUI1.ReportLot = "";
             this.allinoneViewerUI1.ReportPath = "D:\\report\\work\\auto";
-            this.allinoneViewerUI1.Size = new System.Drawing.Size(659, 407);
+            this.allinoneViewerUI1.Size = new System.Drawing.Size(690, 365);
             this.allinoneViewerUI1.TabIndex = 2;
-            // 
-            // button10
-            // 
-            this.button10.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
-            this.button10.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button10.Location = new System.Drawing.Point(8, 75);
-            this.button10.Name = "button10";
-            this.button10.Size = new System.Drawing.Size(68, 21);
-            this.button10.TabIndex = 5;
-            this.button10.Text = "全域结果图";
-            this.button10.UseVisualStyleBackColor = false;
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1151, 515);
+            this.ClientSize = new System.Drawing.Size(1182, 515);
             this.ControlBox = false;
             this.Controls.Add(this.allinoneViewerUI1);
             this.Controls.Add(this.panel3);
@@ -340,6 +461,7 @@ namespace AJZReportViewer
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();
             this.contextMenuStrip1.ResumeLayout(false);
+            this.grpErrorColor.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -371,6 +493,16 @@ namespace AJZReportViewer
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.Button button10;
+        private System.Windows.Forms.GroupBox grpErrorColor;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Label label13;
     }
 }
 

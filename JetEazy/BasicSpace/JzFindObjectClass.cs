@@ -7065,9 +7065,9 @@ namespace JetEazy.BasicSpace
             g.Dispose();
         }
 
-        public void AH_SetThreshold(ref Bitmap bmp, int iThresholdValue)
+        public void AH_SetThreshold(Bitmap bmpinput, ref Bitmap bmp, int iThresholdValue)
         {
-            Bitmap _bmptmp = new Bitmap(bmp);
+            Bitmap _bmptmp = new Bitmap(bmpinput);
 
             JetGrayImg grayimage = new JetGrayImg(_bmptmp);
             JetImgproc.Threshold(grayimage, iThresholdValue, grayimage);

@@ -470,6 +470,20 @@ namespace Allinone.UISpace.RUNUISpace
 
             switch (OPTION)
             {
+                case OptionEnum.MAIN_SDM3:
+
+                    label19.Text = "定位错误";
+                    label18.Text = "检测错误";
+                    label17.Text = "量测错误";
+
+                    label16.Visible = false;
+                    label21.Visible = false;
+
+                    break;
+            }
+
+            switch (OPTION)
+            {
                 case OptionEnum.MAIN_SDM2:
                 case OptionEnum.MAIN_SDM1:
                 case OptionEnum.MAIN_SDM3:
@@ -911,6 +925,9 @@ namespace Allinone.UISpace.RUNUISpace
                     break;
                 case AnanlyzeProcedureEnum.CHECKMISBARCODE:
                     c = Color.Orange;
+                    break;
+                case AnanlyzeProcedureEnum.CHECKREPEATBARCODE:
+                    c = Color.LightPink;
                     break;
                 default:
                     break;

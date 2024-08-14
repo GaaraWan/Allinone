@@ -32,9 +32,10 @@
             this.label1 = new System.Windows.Forms.Label();
             this.button6 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
-            this.colorUI1 = new Allinone.UISpace.MSRUISpace.ColorUI();
-            this.bkUI1 = new Allinone.UISpace.MSRUISpace.BkUI();
             this.mbUI1 = new Allinone.UISpace.MSRUISpace.MbUI();
+            this.bkUI1 = new Allinone.UISpace.MSRUISpace.BkUI();
+            this.colorUI1 = new Allinone.UISpace.MSRUISpace.ColorUI();
+            this.solderUI1 = new Allinone.UISpace.MSRUISpace.SolderUI();
             this.SuspendLayout();
             // 
             // comboBox1
@@ -75,12 +76,12 @@
             this.button4.Text = "確定";
             this.button4.UseVisualStyleBackColor = false;
             // 
-            // colorUI1
+            // mbUI1
             // 
-            this.colorUI1.Location = new System.Drawing.Point(72, 151);
-            this.colorUI1.Name = "colorUI1";
-            this.colorUI1.Size = new System.Drawing.Size(607, 298);
-            this.colorUI1.TabIndex = 9;
+            this.mbUI1.Location = new System.Drawing.Point(270, 19);
+            this.mbUI1.Name = "mbUI1";
+            this.mbUI1.Size = new System.Drawing.Size(607, 298);
+            this.mbUI1.TabIndex = 11;
             // 
             // bkUI1
             // 
@@ -89,12 +90,19 @@
             this.bkUI1.Size = new System.Drawing.Size(607, 298);
             this.bkUI1.TabIndex = 10;
             // 
-            // mbUI1
+            // colorUI1
             // 
-            this.mbUI1.Location = new System.Drawing.Point(270, 19);
-            this.mbUI1.Name = "mbUI1";
-            this.mbUI1.Size = new System.Drawing.Size(607, 298);
-            this.mbUI1.TabIndex = 11;
+            this.colorUI1.Location = new System.Drawing.Point(72, 151);
+            this.colorUI1.Name = "colorUI1";
+            this.colorUI1.Size = new System.Drawing.Size(607, 298);
+            this.colorUI1.TabIndex = 9;
+            // 
+            // solderUI1
+            // 
+            this.solderUI1.Location = new System.Drawing.Point(343, 68);
+            this.solderUI1.Name = "solderUI1";
+            this.solderUI1.Size = new System.Drawing.Size(607, 298);
+            this.solderUI1.TabIndex = 12;
             // 
             // MeasureDataForm
             // 
@@ -102,6 +110,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(622, 407);
             this.ControlBox = false;
+            this.Controls.Add(this.solderUI1);
             this.Controls.Add(this.mbUI1);
             this.Controls.Add(this.bkUI1);
             this.Controls.Add(this.colorUI1);
@@ -126,5 +135,6 @@
         private UISpace.MSRUISpace.ColorUI colorUI1;
         private UISpace.MSRUISpace.BkUI bkUI1;
         private UISpace.MSRUISpace.MbUI mbUI1;
+        private UISpace.MSRUISpace.SolderUI solderUI1;
     }
 }

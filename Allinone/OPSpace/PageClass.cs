@@ -829,7 +829,7 @@ namespace Allinone.OPSpace
                 case VersionEnum.AUDIX:
 
                     AnalyzeRootArray[(int)PageOPTypeEnum.P00].ResetTrainStatus();
-                    isgood = AnalyzeRootArray[(int)PageOPTypeEnum.P00].A00_Train(bmpORG[(int)PageOPTypeEnum.P00], new PointF(0, 0), false, false);
+                    isgood = AnalyzeRootArray[(int)PageOPTypeEnum.P00].A00_Train(bmpORG[(int)PageOPTypeEnum.P00], new PointF(0, 0), false, false, true);
                     if (!isgood)
                         ShowTrainMessage(TrainStatusCollection(PageOPTypeEnum.P00));
 

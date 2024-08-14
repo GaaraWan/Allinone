@@ -614,6 +614,10 @@ namespace JetEazy.PlugSpace.BarcodeEx
             try
             {
                 GetBarcodeItem.Reset();
+                if (Code2DReaderTool == null)
+                {
+                    return retStr;
+                }
 
                 Stopwatch RunLineWatch = new Stopwatch();
                 RunLineWatch.Start();

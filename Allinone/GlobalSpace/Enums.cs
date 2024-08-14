@@ -17,7 +17,7 @@ namespace Allinone
     {
         COUNT = 1,
         AOICOUNT = 1,
-        
+
         P00 = 0,
         P01 = 1,
         P02 = 2,
@@ -40,7 +40,7 @@ namespace Allinone
         BRANCH = 0,
         LEARNING = 1,
     }
-    
+
     public enum AlignMethodEnum : int
     {
         NONE = -1,
@@ -54,9 +54,9 @@ namespace Allinone
         BORDER = 1,
     }
 
-    public enum InspectionMethodEnum :int
+    public enum InspectionMethodEnum : int
     {
-        NONE =-1,
+        NONE = -1,
         /// <summary>
         /// 绝对值
         /// </summary>
@@ -88,20 +88,21 @@ namespace Allinone
         /// <summary>
         /// AB 加强法
         /// </summary>
-       ABPlus = 2,
+        ABPlus = 2,
 
-       
+
     }
     public enum MeasureMethodEnum : int
     {
-        COUNT = 4,
+        COUNT = 5,
 
         NONE = -1,
 
         BLIND = 0,
         BLOBS = 1,
         MBCHECK = 2,
-        COLORCHECK=3,
+        COLORCHECK = 3,
+        SOLDERBALLCHECK = 4,
 
     }
     public enum OCRMethodEnum : int
@@ -124,7 +125,7 @@ namespace Allinone
     {
         NONE = -1,
 
-        OCR=0,
+        OCR = 0,
     }
     public enum AOIMethodEnum : int
     {
@@ -140,22 +141,22 @@ namespace Allinone
         KBGAP = 0,
         LASER = 1,
         //左侧虚拟线
-        LL=2,
+        LL = 2,
         //左下虚拟线
-        LD =3,
+        LD = 3,
         //右侧虚拟线
-        RR =4,
+        RR = 4,
         //右下虚拟线
-        RD =5,
+        RD = 5,
 
 
-        ST=6,
-        SN=7,
+        ST = 6,
+        SN = 7,
 
         //测log
-        Logo=8,
-        LU=9,
-        RU=10,
+        Logo = 8,
+        LU = 9,
+        RU = 10,
 
     }
     /// <summary>
@@ -166,7 +167,7 @@ namespace Allinone
         NONE = -1,
 
         STILTS = 0,
-    
+
     }
 
     /// <summary>
@@ -434,6 +435,6 @@ namespace Allinone
         BOTTOM = 3,
     }
 
-    
+
 
 }

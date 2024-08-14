@@ -111,7 +111,7 @@ namespace Allinone.UISpace
             ATREEUI = atreeUI1;
             AINFOUI = ainfoUI1;
             DISPUI = dispUI1;
-            DISPUI.Initial();
+            DISPUI.Initial(10, 0.01f);
             DISPUI.SetDisplayType(DisplayTypeEnum.NORMAL);
 
             SUBUI = subUI1;
@@ -2850,6 +2850,7 @@ namespace Allinone.UISpace
 
                         //analyze.NORMALPara.FromString(AnalyzeSelectNow.NORMALPara.ToString());
                         analyze.ALIGNPara.FromString(AnalyzeSelectNow.ALIGNPara.ToString());
+                        analyze.MEASUREPara.FromString(AnalyzeSelectNow.MEASUREPara.ToString());
                         analyze.AOIPara.FromString(AnalyzeSelectNow.AOIPara.ToString());
                         if (analyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
                                  || analyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)

@@ -715,6 +715,12 @@
     <Compile Include="UISpace\MSRUISpace\MbUI.Designer.cs">
       <DependentUpon>MbUI.cs</DependentUpon>
     </Compile>
+    <Compile Include="UISpace\MSRUISpace\SolderUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UISpace\MSRUISpace\SolderUI.Designer.cs">
+      <DependentUpon>SolderUI.cs</DependentUpon>
+    </Compile>
     <Compile Include="UISpace\PageUI.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -998,6 +1004,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UISpace\MSRUISpace\MbUI.resx">
       <DependentUpon>MbUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UISpace\MSRUISpace\SolderUI.resx">
+      <DependentUpon>SolderUI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UISpace\PageUI.resx">
       <DependentUpon>PageUI.cs</DependentUpon>

@@ -1429,6 +1429,17 @@ namespace Allinone.OPSpace.ResultSpace
                                     break;
                             }
 
+
+                            #region 检查重复的码 和 检查是否在此批号中
+
+                            if (INI.IsOpenCheckRepeatCode)
+                            {
+                                bool bOK = AlbumWork.A09_RunRepeatCodeProcess(PageOPTypeEnum.P00);
+                            }
+
+                            #endregion
+
+
                             AlbumWork.FillRunStatus(RunStatusCollection);
 
                             //取得Compound 在這個 ENV 裏的資料
@@ -2439,8 +2450,8 @@ void MainX6Tick()
                 JzMainSDPositionParas.INSPECT_NGINDEX++;
                 JzMainSDPositionParas.SaveRecord();
             }
-            if (INI.ISQSMCALLSAVE)
-                _saveAllResultPictures();
+            //if (INI.ISQSMCALLSAVE)
+            //    _saveAllResultPictures();
 
             if (INI.IsCollectPictures)
                 MainX6Save();
@@ -2838,58 +2849,145 @@ void MainX6Tick()
         string mainx6_path = "D:\\CollectPictures";
         private void MainX6Save()
         {
-            mainx6_path = "D:\\CollectPictures\\" + JzTimes.DateSerialString + "\\" + (IsPass ? "P-" : "F-") + JzTimes.DateTimeSerialString;
-
-            if (!Directory.Exists(mainx6_path + "\\000"))
-                Directory.CreateDirectory(mainx6_path + "\\000");
-
-            EnvClass env = AlbumWork.ENVList[0];
-
-            int qi = 0;
-            foreach (PageClass page in env.PageList)
+            Task task = new Task(() =>
             {
-                page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
-                qi++;
-            }
+                try
+                {
+                    mainx6_path = "D:\\CollectPictures\\" + JzTimes.DateSerialString + "\\" + (IsPass ? "P-" : "F-") + JzTimes.DateTimeSerialString;
 
+                    if (!Directory.Exists(mainx6_path + "\\000"))
+                        Directory.CreateDirectory(mainx6_path + "\\000");
+
+                    EnvClass env = AlbumWork.ENVList[0];
+
+                    int qi = 0;
+                    foreach (PageClass page in env.PageList)
+                    {
+                        FreeImageAPI.FreeImageBitmap freeImage = new FreeImageBitmap(page.GetbmpRUN());
+                        freeImage.Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", FREE_IMAGE_FORMAT.FIF_JPEG);
+                        freeImage.Dispose();
+                        //page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                        qi++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                }
+            });
+            task.Start();
+
+            //mainx6_path = "D:\\CollectPictures\\" + JzTimes.DateSerialString + "\\" + (IsPass ? "P-" : "F-") + JzTimes.DateTimeSerialString;
+
+            //if (!Directory.Exists(mainx6_path + "\\000"))
+            //    Directory.CreateDirectory(mainx6_path + "\\000");
+
+            //EnvClass env = AlbumWork.ENVList[0];
+
+            //int qi = 0;
+            //foreach (PageClass page in env.PageList)
+            //{
+            //    page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
+            //    qi++;
+            //}
 
         }
         private void MainX6StripImageDataSave()
         {
-            string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
-            _imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
-
-            if (!Directory.Exists(_imagePath + "\\000"))
-                Directory.CreateDirectory(_imagePath + "\\000");
-
-            EnvClass env = AlbumWork.ENVList[0];
-
-            int qi = 0;
-            foreach (PageClass page in env.PageList)
+            Task task = new Task(() =>
             {
-                page.GetbmpRUN().Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
-                qi++;
-            }
+                try
+                {
+                    string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                    _imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+
+                    if (!Directory.Exists(_imagePath + "\\000"))
+                        Directory.CreateDirectory(_imagePath + "\\000");
+
+                    EnvClass env = AlbumWork.ENVList[0];
+
+                    int qi = 0;
+                    foreach (PageClass page in env.PageList)
+                    {
+                        FreeImageAPI.FreeImageBitmap freeImage = new FreeImageBitmap(page.GetbmpRUN());
+                        freeImage.Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".jpg", FREE_IMAGE_FORMAT.FIF_JPEG);
+                        freeImage.Dispose();
+                        //page.GetbmpRUN().Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
+                        qi++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                }
+            });
+            task.Start();
+
+
+            //string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+            //_imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+
+            //if (!Directory.Exists(_imagePath + "\\000"))
+            //    Directory.CreateDirectory(_imagePath + "\\000");
+
+            //EnvClass env = AlbumWork.ENVList[0];
+
+            //int qi = 0;
+            //foreach (PageClass page in env.PageList)
+            //{
+            //    page.GetbmpRUN().Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
+            //    qi++;
+            //}
         }
         public void SavePrintScreenForMainX6()
         {
-            string screen_SavePath = "D:\\CollectPictures\\Screen\\" + JzTimes.DateSerialString;
-
-            if (!Directory.Exists(screen_SavePath))
-                Directory.CreateDirectory(screen_SavePath);
-
-            int width = Screen.PrimaryScreen.Bounds.Width;
-            int height = Screen.PrimaryScreen.Bounds.Height;
-
-            Bitmap m = new Bitmap(width, height);
-            using (Graphics g = Graphics.FromImage(m))
+            Task task = new Task(() =>
             {
-                g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);
-                g.Dispose();
-            }
+                try
+                {
+                    string screen_SavePath = "D:\\CollectPictures\\Screen\\" + JzTimes.DateSerialString;
 
-            m.Save(screen_SavePath + "\\Screen_" + JzTimes.DateTimeSerialString + ".jpg", ImageFormat.Jpeg);
-            m.Dispose();
+                    if (!Directory.Exists(screen_SavePath))
+                        Directory.CreateDirectory(screen_SavePath);
+
+                    int width = Screen.PrimaryScreen.Bounds.Width;
+                    int height = Screen.PrimaryScreen.Bounds.Height;
+
+                    Bitmap m = new Bitmap(width, height);
+                    using (Graphics g = Graphics.FromImage(m))
+                    {
+                        g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);
+                        g.Dispose();
+                    }
+
+                    m.Save(screen_SavePath + "\\Screen_" + JzTimes.DateTimeSerialString + ".jpg", ImageFormat.Jpeg);
+                    m.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                }
+            });
+            task.Start();
+
+
+            //string screen_SavePath = "D:\\CollectPictures\\Screen\\" + JzTimes.DateSerialString;
+
+            //if (!Directory.Exists(screen_SavePath))
+            //    Directory.CreateDirectory(screen_SavePath);
+
+            //int width = Screen.PrimaryScreen.Bounds.Width;
+            //int height = Screen.PrimaryScreen.Bounds.Height;
+
+            //Bitmap m = new Bitmap(width, height);
+            //using (Graphics g = Graphics.FromImage(m))
+            //{
+            //    g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);
+            //    g.Dispose();
+            //}
+
+            //m.Save(screen_SavePath + "\\Screen_" + JzTimes.DateTimeSerialString + ".jpg", ImageFormat.Jpeg);
+            //m.Dispose();
         }
 
         #endregion

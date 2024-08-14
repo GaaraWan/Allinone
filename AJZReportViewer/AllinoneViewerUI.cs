@@ -213,6 +213,10 @@ namespace AJZReportViewer
                 _imagepath = m_imagepath + "\\" + m_date + "\\" + m_lot + "\\" + m_filename.Split('-')[2] + "\\000\\P00-" + pageno.ToString("000") + ".png";
 
             }
+            if (!File.Exists(_imagepath))
+            {
+                _imagepath = _imagepath.Replace(".png", ".jpg");
+            }
 
             if (File.Exists(_imagepath))
             {

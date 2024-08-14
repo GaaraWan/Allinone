@@ -1580,6 +1580,16 @@ namespace Allinone.OPSpace
         }
         #endregion
 
+        public bool A09_RunRepeatCodeProcess(PageOPTypeEnum pageoptype)
+        {
+            bool isgood = true;
+
+            EnvClass env = ENVList[EnvRunIndex];
+            isgood &= env.A09_RunRepeatCodeProcess(pageoptype);
+
+            return isgood;
+        }
+
         public void SDM2Test()
         {
             m_EnvNow = new EnvClass();

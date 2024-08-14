@@ -52,7 +52,7 @@ namespace AJZReportViewer
                 bitmap1.Dispose();
                 Graphics g = Graphics.FromImage(bitmap2);
                 g.DrawRectangles(new Pen(m_color, 9), rectangleFs);
-                g.DrawString(m_barcode2D, new Font("宋体", 18), new SolidBrush(m_color), new PointF(m_rectF.X + m_rectF.Width / 2, m_rectF.Y + m_rectF.Height / 2));
+                g.DrawString(m_barcode2D, new Font("宋体", 38), new SolidBrush(m_color), new PointF(m_rectF.X + m_rectF.Width / 2, m_rectF.Y + m_rectF.Height / 2));
                 g.Dispose();
 
                 DS.SetDisplayImage(bitmap2);

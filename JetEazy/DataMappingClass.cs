@@ -48,5 +48,28 @@ namespace JetEazy
             }
             return str;
         }
+        public string GetDescStrSorld()
+        {
+            string str = "PASS";
+            switch (ReportBinValue)
+            {
+                case 1:
+                    str = "定位错误";
+                    break;
+                case 2:
+                    str = "检测错误";
+                    break;
+                case 3:
+                    str = "量测错误";
+                    break;
+                    //case 4:
+                    //    str = "胶水宽度异常";
+                    //    break;
+                    //case 5:
+                    //    str = "无芯片";
+                    //    break;
+            }
+            return str;
+        }
     }
 }

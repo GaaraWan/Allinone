@@ -903,6 +903,28 @@ namespace Allinone.OPSpace
             }
             return string.Empty;
         }
+        /// <summary>
+        /// 仅仅获取读到的条码
+        /// </summary>
+        /// <returns></returns>
+        public string GetAnalyzeOnlyBarcodeStr()
+        {
+            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX)
+            {
+                return ReadBarcode2DRealStr;
+            }
+            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
+            {
+                return ReadBarcode2DRealStr;
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                string _barcodeStr = analyzeClass.GetAnalyzeOnlyBarcodeStr();
+                if (!string.IsNullOrEmpty(_barcodeStr))
+                    return _barcodeStr;
+            }
+            return string.Empty;
+        }
         public bool CheckAnalyzeReadBarcode()
         {
             if (OCRPara.OCRMethod != OCRMethodEnum.NONE)
@@ -917,6 +939,20 @@ namespace Allinone.OPSpace
             }
             return false;
         }
+        public bool CheckRepeatCode(List<string> eCodes)
+        {
+            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
+            {
+                return OCRPara.CheckRepeatCode(eCodes, bmpPATTERN, bmpWIP, PassInfo);
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                bool ret = analyzeClass.CheckRepeatCode(eCodes);
+                if (ret)
+                    return true;
+            }
+            return false;
+        }
         public void SetAnalyzeByPass(bool ePass)
         {
             IsByPass = ePass;
@@ -924,6 +960,35 @@ namespace Allinone.OPSpace
             {
                 analyzeClass.SetAnalyzeByPass(ePass);
             }
+        }
+        /// <summary>
+        /// 获取框的错误类型
+        /// </summary>
+        /// <returns></returns>
+        public int GetAnalyzeErrorType()
+        {
+            if (ALIGNPara.AlignMethod != AlignMethodEnum.NONE)
+            {
+                if (!ALIGNPara.CheckGood)
+                    return 1;//定位错误
+            }
+            if (INSPECTIONPara.InspectionMethod != InspectionMethodEnum.NONE)
+            {
+                if (!INSPECTIONPara.IsPass)
+                    return 2;//检测错误
+            }
+            if (MEASUREPara.MeasureMethod != MeasureMethodEnum.NONE)
+            {
+                if (!MEASUREPara.CheckGood)
+                    return 3;//量测错误
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                int index = analyzeClass.GetAnalyzeErrorType();
+                if (index != 0)
+                    return index;
+            }
+            return 0;
         }
 
         public void FillToList(List<AnalyzeClass> analyzelist)
@@ -3904,7 +3969,7 @@ namespace Allinone.OPSpace
                     myOringinOffsetPointF = new PointF(offsetpointf.X + myOPRectF.X, offsetpointf.Y + myOPRectF.Y);
 
                     bmpPATTERN.Dispose();
-                    bmpPATTERN = (Bitmap)bmpinput.Clone(myOPRectF, PixelFormat.Format32bppArgb);
+                    bmpPATTERN = (Bitmap)bmpinput.Clone(myOPRectF, PixelFormat.Format24bppRgb);
                 }
             }
 
@@ -3921,7 +3986,7 @@ namespace Allinone.OPSpace
             }
 
             bmpMASK.Dispose();
-            bmpMASK = new Bitmap(bmpPATTERN.Width, bmpPATTERN.Height, PixelFormat.Format32bppArgb);
+            bmpMASK = new Bitmap(bmpPATTERN.Width, bmpPATTERN.Height, PixelFormat.Format24bppRgb);
 
             //檢查是否需要檢測髒污的鍵帽，不需要一定得檢查髒污才能用Boarder
             //if (AOIPara.CheckDirtMethod != CheckDirtMethodEnum.NONE)
@@ -4859,7 +4924,7 @@ namespace Allinone.OPSpace
                         else
                         {
                             bmpWIP.Dispose();
-                            bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format32bppArgb);
+                            bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format24bppRgb);
                         }
                     }
 
@@ -4905,7 +4970,7 @@ namespace Allinone.OPSpace
                         bmpWIP = (Bitmap)bmpinput.Clone();
                     }
                     else
-                        bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format32bppArgb);
+                        bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format24bppRgb);
 
 
 
@@ -5034,24 +5099,10 @@ namespace Allinone.OPSpace
 
             if (isgood)
             {
-                if (Universal.IsUseSeedFuntion)
-                {
-                    AnalyzeSeed = null;
-                }
-
                 int icount = 0;
                 //先把所有要處理的東西準備好
                 foreach (AnalyzeClass branchanalyze in BranchList)
                 {
-                    if (Universal.IsUseSeedFuntion)
-                    {
-                        if (branchanalyze.IsSeed && AnalyzeSeed == null)
-                        {
-                            AnalyzeSeed = branchanalyze;
-                        }
-                    }
-
-
                     if (branchanalyze.MaskMethod == MaskMethodEnum.NONE)
                     {
                         icount++;
@@ -5200,22 +5251,22 @@ namespace Allinone.OPSpace
                                 branchanalyze.FillRunStatus(RunStatusCollection, ToLogString());
                             }
 
-                            if (Universal.IsUseSeedFuntion)
-                            {
-                                foreach (AnalyzeClass branchanalyze1 in branchanalyze.BranchList)
-                                {
-                                    if (branchanalyze1.MaskMethod == MaskMethodEnum.NONE)
-                                    {
-                                        if (branchanalyze1.RunStatusCollection.NGCOUNT > 0)
-                                        {
-                                            branchanalyze.FillRunStatus(branchanalyze1.RunStatusCollection, ToLogString());
-                                            //isgood = false;
-                                            //IsVeryGood = isgood;
-                                            branchanalyze.IsVeryGood = false;
-                                        }
-                                    }
-                                }
-                            }
+                            //if (Universal.IsUseSeedFuntion)
+                            //{
+                            //    foreach (AnalyzeClass branchanalyze1 in branchanalyze.BranchList)
+                            //    {
+                            //        if (branchanalyze1.MaskMethod == MaskMethodEnum.NONE)
+                            //        {
+                            //            if (branchanalyze1.RunStatusCollection.NGCOUNT > 0)
+                            //            {
+                            //                branchanalyze.FillRunStatus(branchanalyze1.RunStatusCollection, ToLogString());
+                            //                //isgood = false;
+                            //                //IsVeryGood = isgood;
+                            //                branchanalyze.IsVeryGood = false;
+                            //            }
+                            //        }
+                            //    }
+                            //}
 
 
                         }
@@ -6343,7 +6394,7 @@ namespace Allinone.OPSpace
             Graphics g = Graphics.FromImage(bmp);
 
             g.FillRectangle(fillsolid, SimpleRectF(bmp.Size));
-
+            g.Dispose();
         }
 
         void DrawText(Bitmap BMP, string Text)

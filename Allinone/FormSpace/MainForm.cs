@@ -37,6 +37,8 @@ using Allinone.UISpace.SHOWUISpace;
 using Allinone.BasicSpace;
 using ServiceMessageClass;
 using EzSegClientLib;
+using System.Drawing.Imaging;
+using System.IO;
 
 namespace Allinone.FormSpace
 {
@@ -4933,14 +4935,34 @@ namespace Allinone.FormSpace
                                     {
                                         if (!ispass)
                                         {
-                                            string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
-                                            _imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                            Task task = new Task(() =>
+                                            {
+                                                try
+                                                {
+                                                    string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                                    _imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
 
-                                            if (!System.IO.Directory.Exists(_imagePath + "\\000"))
-                                                System.IO.Directory.CreateDirectory(_imagePath + "\\000");
+                                                    if (!System.IO.Directory.Exists(_imagePath + "\\000"))
+                                                        System.IO.Directory.CreateDirectory(_imagePath + "\\000");
 
-                                            _showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
-                                                                                    System.Drawing.Imaging.ImageFormat.Jpeg);
+                                                    _showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
+                                                                                            System.Drawing.Imaging.ImageFormat.Jpeg);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                                                }
+                                            });
+                                            task.Start();
+
+                                            //string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                            //_imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+
+                                            //if (!System.IO.Directory.Exists(_imagePath + "\\000"))
+                                            //    System.IO.Directory.CreateDirectory(_imagePath + "\\000");
+
+                                            //_showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
+                                            //                                        System.Drawing.Imaging.ImageFormat.Jpeg);
                                         }
                                     }
 
@@ -5097,20 +5119,46 @@ namespace Allinone.FormSpace
                             MappingUI.DrawMap();
                             SetTrayMapping();
 
-                            if (Universal.IsNoUseIO)
+                            Task task = new Task(() =>
                             {
-                                MappingUI.bmpTray.Save(Universal.CalTestPath + "\\" + Universal.CalTestBarcode + ".jpg",
-                                       System.Drawing.Imaging.ImageFormat.Jpeg);
-                            }
-                            else
-                            {
-                                string _mapping_path = @"D:\COLLECT_MAPPING\" + JzTimes.DateSerialString;
-                                if (!System.IO.Directory.Exists(_mapping_path))
-                                    System.IO.Directory.CreateDirectory(_mapping_path);
+                                try
+                                {
+                                    if (Universal.IsNoUseIO)
+                                    {
+                                        MappingUI.bmpTray.Save(Universal.CalTestPath + "\\" + Universal.CalTestBarcode + ".jpg",
+                                               System.Drawing.Imaging.ImageFormat.Jpeg);
+                                    }
+                                    else
+                                    {
+                                        string _mapping_path = @"D:\COLLECT_MAPPING\" + JzTimes.DateSerialString;
+                                        if (!System.IO.Directory.Exists(_mapping_path))
+                                            System.IO.Directory.CreateDirectory(_mapping_path);
 
-                                MappingUI.bmpTray.Save(_mapping_path + "\\" + Universal.CalTestBarcode + ".jpg",
-                                       System.Drawing.Imaging.ImageFormat.Jpeg);
-                            }
+                                        MappingUI.bmpTray.Save(_mapping_path + "\\" + Universal.CalTestBarcode + ".jpg",
+                                               System.Drawing.Imaging.ImageFormat.Jpeg);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                                }
+                            });
+                            task.Start();
+
+                            //if (Universal.IsNoUseIO)
+                            //{
+                            //    MappingUI.bmpTray.Save(Universal.CalTestPath + "\\" + Universal.CalTestBarcode + ".jpg",
+                            //           System.Drawing.Imaging.ImageFormat.Jpeg);
+                            //}
+                            //else
+                            //{
+                            //    string _mapping_path = @"D:\COLLECT_MAPPING\" + JzTimes.DateSerialString;
+                            //    if (!System.IO.Directory.Exists(_mapping_path))
+                            //        System.IO.Directory.CreateDirectory(_mapping_path);
+
+                            //    MappingUI.bmpTray.Save(_mapping_path + "\\" + Universal.CalTestBarcode + ".jpg",
+                            //           System.Drawing.Imaging.ImageFormat.Jpeg);
+                            //}
 
                             //TrayMappingInit();
 

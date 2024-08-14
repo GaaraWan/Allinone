@@ -2187,7 +2187,8 @@ namespace Allinone.OPSpace.ResultSpace
             }
 
             EnvAnalyzePostionSettings envAnalyzePostion = new EnvAnalyzePostionSettings(AlbumWork.ENVList[envindex].GeneralPosition);
-
+            envAnalyzePostion.GetImageCountXoffset = 36.5f;
+            envAnalyzePostion.GetImageCountYoffset = 36.5f;
             //int tmprow = 0;
             //int tmpcol = 0;
             int i = 0;
@@ -2196,13 +2197,13 @@ namespace Allinone.OPSpace.ResultSpace
             int itemheight = 230;
             foreach (AnalyzeClass analyze in page1.AnalyzeRoot.BranchList)
             {
-                if (itemwidth < analyze.PADPara.bmpMeasureOutput.Width)
+                if (itemwidth < analyze.bmpWIP.Width)
                 {
-                    itemwidth = analyze.PADPara.bmpMeasureOutput.Width;
+                    itemwidth = analyze.bmpWIP.Width;
                 }
-                if (itemheight < analyze.PADPara.bmpMeasureOutput.Height)
+                if (itemheight < analyze.bmpWIP.Height)
                 {
-                    itemheight = analyze.PADPara.bmpMeasureOutput.Height;
+                    itemheight = analyze.bmpWIP.Height;
                 }
             }
 
@@ -2233,31 +2234,10 @@ namespace Allinone.OPSpace.ResultSpace
 
                 dataMapping.PtfCenter = new PointF(page.PageRunLocation.X + (float)(drawcol * envAnalyzePostion.GetImageCountXoffset * 1.0 / page.m_Mapping_Col),
                                                                             page.PageRunLocation.Y - (float)(drawrow * envAnalyzePostion.GetImageCountYoffset * 1.0 / page.m_Mapping_Row));
-                //dataMapping.PtfCenter = new PointF(page.PageRunLocation.X + (float)(tmpcol * envAnalyzePostion.GetImageCountXoffset * 1.0 / page.m_Mapping_Col),
-                //                                                            page.PageRunLocation.Y - (float)(tmprow * envAnalyzePostion.GetImageCountYoffset * 1.0 / page.m_Mapping_Row));
-
-                //dataMapping.PtfCenter = new PointF(page.PageRunLocation.X - (float)(tmpcol * envAnalyzePostion.GetImageCountXoffset * 1.0 / 2),
-                //                                                            page.PageRunLocation.Y + (float)(tmprow * envAnalyzePostion.GetImageCountYoffset * 1.0 / 2));
-
-                //dataMapping.PtfCenter = new PointF(page.PageRunLocation.X + (float)(tmpcol * 10),
-                //                                                            page.PageRunLocation.Y - (float)(tmprow * 10));
-
-
+                
 
                 if (!page.AnalyzeRoot.BranchList[i].CheckAnalyzeReadBarcode())
                 {
-                    //if (page.AnalyzeRoot.BranchList[i].DataReportIndex % page.m_Mapping_Col == 0)
-                    //{
-                    //    tmprow++;
-                    //    tmpcol = 0;
-                    //}
-                    //else
-                    //{
-                    //    tmpcol++;
-                    //}
-
-                    //dataMapping.PtfCenter = new PointF(page.PageRunLocation.X + (float)(tmpcol * 10),
-                    //                                                            page.PageRunLocation.Y - (float)(tmprow * 10));
 
                     //这里添加测试完成页面的结果
                     foreach (AnalyzeClass analyze in page1.AnalyzeRoot.BranchList)
@@ -2267,100 +2247,49 @@ namespace Allinone.OPSpace.ResultSpace
 
                         if (a1 == a2)
                         {
-                            graphics.DrawImage(analyze.PADPara.bmpMeasureOutput,
+                            graphics.DrawImage(analyze.bmpWIP,
                                                               new RectangleF(new PointF(0 + itemwidth * drawcol, 0 + itemheight * drawrow), new Size(itemwidth, itemheight)),
-                                                              new RectangleF(new PointF(0, 0), analyze.PADPara.bmpMeasureOutput.Size),
+                                                              new RectangleF(new PointF(0, 0), analyze.bmpWIP.Size),
                                                               GraphicsUnit.Pixel);
 
-                            //graphics.DrawImage(analyze.PADPara.bmpMeasureOutput,
-                            //                                  new RectangleF(new PointF(0, 0), Universal.SDM2_BMP_SHOW_CURRENT.Size),
-                            //                                  new RectangleF(new PointF(0, 0), analyze.PADPara.bmpMeasureOutput.Size),
-                            //                                  GraphicsUnit.Pixel);
-
-                            //Universal.SDM2_BMP_SHOW_CURRENT = (Bitmap)analyze.PADPara.bmpMeasureOutput.Clone();
-                                //new Bitmap(analyze.PADPara.bmpMeasureOutput);
+                            dataMapping.ReportBinValue = analyze.GetAnalyzeErrorType();
 
                             dataMapping.bmpResult.Dispose();
-                            dataMapping.bmpResult = new Bitmap(analyze.PADPara.bmpMeasureOutput);
+                            dataMapping.bmpResult = new Bitmap(analyze.bmpWIP);
 
-                            if (analyze.IsVeryGood)
+                            Graphics graphicsx = Graphics.FromImage(dataMapping.bmpResult);
+
+                            List<RectangleF> list = new List<RectangleF>();
+                            List<RectangleF> list_ng = new List<RectangleF>();
+                            //收集内框并画出
+                            foreach (AnalyzeClass analyze2 in analyze.BranchList)
                             {
-                                dataMapping.ReportBinValue = 0;
-                                if (analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK
-                                    || analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK_BlackEdge)
-                                {
-                                    if (string.IsNullOrEmpty(analyze.PADPara.DescStr))
-                                    {
-                                        analyze.CalculateChipWidth();
-                                        dataMapping.ReportStr = analyze.ToReportString1();
-                                    }
-                                    else
-                                    {
-                                        if (analyze.PADPara.DescStr.Contains("无胶"))
-                                        {
-                                            dataMapping.ReportBinValue = 1;
-                                        }
-                                        else if (analyze.PADPara.DescStr.Contains("尺寸"))
-                                        {
-                                            dataMapping.ReportBinValue = 2;
-                                        }
-                                        else if (analyze.PADPara.DescStr.Contains("溢胶"))
-                                        {
-                                            dataMapping.ReportBinValue = 3;
-                                        }
-                                        else if (analyze.PADPara.DescStr.Contains("胶水异常"))
-                                        {
-                                            dataMapping.ReportBinValue = 4;
-                                            analyze.CalculateChipWidth();
-                                            dataMapping.ReportStr = analyze.ToReportString1();
-                                        }
-                                        else
-                                        {
-                                            dataMapping.ReportBinValue = 5;
-                                        }
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                dataMapping.ReportStr = string.Empty;
-                                if (analyze.PADPara.DescStr.Contains("无胶"))
-                                {
-                                    dataMapping.ReportBinValue = 1;
-                                }
-                                else if (analyze.PADPara.DescStr.Contains("尺寸"))
-                                {
-                                    dataMapping.ReportBinValue = 2;
-                                }
-                                else if (analyze.PADPara.DescStr.Contains("溢胶"))
-                                {
-                                    dataMapping.ReportBinValue = 3;
-                                }
-                                else if (analyze.PADPara.DescStr.Contains("胶水异常"))
-                                {
-                                    dataMapping.ReportBinValue = 4;
-                                    analyze.CalculateChipWidth();
-                                    dataMapping.ReportStr = analyze.ToReportString1();
-                                }
+                                RectangleF rx = new RectangleF();
+                                rx.X = analyze2.myOPRectF.X - analyze.ALIGNPara.AlignOffset.X + analyze2.NORMALPara.ExtendX;// - analyze.myOPRectF.X;
+                                rx.Y = analyze2.myOPRectF.Y - analyze.ALIGNPara.AlignOffset.Y + analyze2.NORMALPara.ExtendY;// - analyze.myOPRectF.Y;
+                                rx.Width = analyze2.myOPRectF.Width - analyze2.NORMALPara.ExtendX * 2;
+                                rx.Height = analyze2.myOPRectF.Height - analyze2.NORMALPara.ExtendY * 2;
+                                if (analyze2.IsVeryGood)
+                                    list.Add(rx);
                                 else
-                                {
-                                    dataMapping.ReportBinValue = 5;
-                                }
+                                    list_ng.Add(rx);
                             }
+                            if (list.Count > 0)
+                            {
+                                graphics.DrawRectangles(new Pen(Color.Lime, 1), list.ToArray());
+                                graphicsx.DrawRectangles(new Pen(Color.Lime, 1), list.ToArray());
+                            }
+                            if (list_ng.Count > 0)
+                            {
+                                graphics.DrawRectangles(new Pen(Color.Red, 3), list_ng.ToArray());
+                                graphicsx.DrawRectangles(new Pen(Color.Red, 3), list_ng.ToArray());
+                            }
+                            
+                            graphicsx.Dispose();
+
                             break;
                         }
                     }
-
-                    //if (i > 0 && i % page.m_Mapping_Col == 0)
-                    //{
-                    //    drawrow++;
-                    //    drawcol = 0;
-                    //}
-                    //else
-                    //{
-                    //    drawcol++;
-                    //}
-
                     RunDataMappingCollection.Add(dataMapping);
                 }
                 else
@@ -2371,53 +2300,6 @@ namespace Allinone.OPSpace.ResultSpace
                         {
                             Universal.CalTestBarcode = analyze.GetAnalyzeBarcodeStr();
                             OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, Universal.CalTestBarcode);
-                            if (INI.chipUseAI)
-                            {
-                                if (string.IsNullOrEmpty(Universal.CalTestBarcode) || Universal.IsNoUseIO)
-                                {
-                                    //如果没有条码则开启新的线程读码 利用AI的服务器
-
-                                    //Task task = new Task(() =>
-                                    //{
-                                    //    try
-                                    //    {
-                                    //        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-                                    //        stopwatch.Restart();
-                                    //        OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, "解码中...");
-                                    //        EzSegDMTX ezSegDMTX = new EzSegDMTX();
-                                    //        //Rectangle rectangleAI = JzTools.SimpleRect(Universal.bmpProvideAI.Size);
-                                    //        //rectangleAI.Inflate(-15, -15);
-                                    //        //Bitmap bmp222ai = (Bitmap)Universal.bmpProvideAI.Clone(rectangleAI, PixelFormat.Format24bppRgb);
-                                    //        Bitmap bmp222ai = new Bitmap(Universal.bmpProvideAI);
-
-                                    //        //bmp222ai.Save("D:\\AI_ORG.png", ImageFormat.Png);
-                                    //        ezSegDMTX.InputImage = bmp222ai;
-                                    //        int iret = ezSegDMTX.Run();
-
-
-                                    //        stopwatch.Stop();
-                                    //        if (iret == 0)
-                                    //        {
-                                    //            Universal.CalTestBarcode = ezSegDMTX.BarcodeStr;
-                                    //            OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, Universal.CalTestBarcode);
-
-                                    //            //barcodeStrRead = IxBarcode.BarcodeStr;
-                                    //            //myBarcode = IxBarcode.BarcodeStr + " Model用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms";
-                                    //        }
-                                    //        else
-                                    //        {
-                                    //            OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, "解码失败");
-                                    //        }
-                                    //    }
-                                    //    catch
-                                    //    {
-
-                                    //    }
-                                    //});
-                                    //task.Start();
-
-                                }
-                            }
                         }
                     }
                 }
@@ -3125,7 +3007,7 @@ namespace Allinone.OPSpace.ResultSpace
                         //保存小图
                         if (INI.IsCollectPicturesSingle)
                             keyassign.bmpResult.Save(mainx6_picture_path + "\\" +
-                                                                         imappingindexx.ToString("000") + $"({keyassign.GetDescStr()})" + ".jpg",
+                                                                         imappingindexx.ToString("000") + $"({keyassign.GetDescStrSorld()})" + ".jpg",
                                                                          ImageFormat.Jpeg);
 
                         keyassign.bmpResult.Dispose();
@@ -3136,23 +3018,23 @@ namespace Allinone.OPSpace.ResultSpace
                         imappingindexx++;
                     }
 
-                    string myChipReportPath = "D:\\REPORT\\(CHIP)FORMAT01\\" + JzTimes.DateSerialString;
-                    if (!System.IO.Directory.Exists(myChipReportPath))
-                        System.IO.Directory.CreateDirectory(myChipReportPath);
+                    //string myChipReportPath = "D:\\REPORT\\(CHIP)FORMAT01\\" + JzTimes.DateSerialString;
+                    //if (!System.IO.Directory.Exists(myChipReportPath))
+                    //    System.IO.Directory.CreateDirectory(myChipReportPath);
 
-                    list.Sort();
-                    foreach (string strss in list)
-                    {
-                        myReportStr += strss + Environment.NewLine;
-                    }
+                    //list.Sort();
+                    //foreach (string strss in list)
+                    //{
+                    //    myReportStr += strss + Environment.NewLine;
+                    //}
 
 
 
-                    System.IO.StreamWriter streamWriter = new System.IO.StreamWriter(myChipReportPath + "\\" + Universal.CalTestBarcode + ".csv");
-                    streamWriter.WriteLine(myReportStr);
-                    streamWriter.Close();
-                    streamWriter.Dispose();
-                    streamWriter = null;
+                    //System.IO.StreamWriter streamWriter = new System.IO.StreamWriter(myChipReportPath + "\\" + Universal.CalTestBarcode + ".csv");
+                    //streamWriter.WriteLine(myReportStr);
+                    //streamWriter.Close();
+                    //streamWriter.Dispose();
+                    //streamWriter = null;
 
                     OnTrigger(ResultStatusEnum.COUNT_MAPPING);//显示mapping数据
 
@@ -3310,23 +3192,52 @@ namespace Allinone.OPSpace.ResultSpace
         }
         public void SavePrintScreenForMainX6()
         {
-            string screen_SavePath = "D:\\CollectPictures_" + Universal.OPTION.ToString() + "\\Screen\\" + JzTimes.DateSerialString;
-
-            if (!Directory.Exists(screen_SavePath))
-                Directory.CreateDirectory(screen_SavePath);
-
-            int width = Screen.PrimaryScreen.Bounds.Width;
-            int height = Screen.PrimaryScreen.Bounds.Height;
-
-            Bitmap m = new Bitmap(width, height);
-            using (Graphics g = Graphics.FromImage(m))
+            Task task = new Task(() =>
             {
-                g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);
-                g.Dispose();
-            }
+                try
+                {
+                    string screen_SavePath = "D:\\CollectPictures_" + Universal.OPTION.ToString() + "\\Screen\\" + JzTimes.DateSerialString;
 
-            m.Save(screen_SavePath + "\\" + (IsPass ? "P-" : "F-") + "Screen_" + Universal.CalTestBarcode + ".jpg", ImageFormat.Jpeg);
-            m.Dispose();
+                    if (!Directory.Exists(screen_SavePath))
+                        Directory.CreateDirectory(screen_SavePath);
+
+                    int width = Screen.PrimaryScreen.Bounds.Width;
+                    int height = Screen.PrimaryScreen.Bounds.Height;
+
+                    Bitmap m = new Bitmap(width, height);
+                    using (Graphics g = Graphics.FromImage(m))
+                    {
+                        g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);
+                        g.Dispose();
+                    }
+
+                    m.Save(screen_SavePath + "\\" + (IsPass ? "P-" : "F-") + "Screen_" + Universal.CalTestBarcode + ".jpg", ImageFormat.Jpeg);
+                    m.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                }
+            });
+            task.Start();
+
+            //string screen_SavePath = "D:\\CollectPictures_" + Universal.OPTION.ToString() + "\\Screen\\" + JzTimes.DateSerialString;
+
+            //if (!Directory.Exists(screen_SavePath))
+            //    Directory.CreateDirectory(screen_SavePath);
+
+            //int width = Screen.PrimaryScreen.Bounds.Width;
+            //int height = Screen.PrimaryScreen.Bounds.Height;
+
+            //Bitmap m = new Bitmap(width, height);
+            //using (Graphics g = Graphics.FromImage(m))
+            //{
+            //    g.CopyFromScreen(0, 0, 0, 0, Screen.PrimaryScreen.Bounds.Size);
+            //    g.Dispose();
+            //}
+
+            //m.Save(screen_SavePath + "\\" + (IsPass ? "P-" : "F-") + "Screen_" + Universal.CalTestBarcode + ".jpg", ImageFormat.Jpeg);
+            //m.Dispose();
         }
         private void MainX6Save()
         {
@@ -3335,20 +3246,44 @@ namespace Allinone.OPSpace.ResultSpace
                 if (IsPass)
                     return;
             }
-
-            string mainx6_path = Universal.MainX6_Path + "\\" + (IsPass ? "P-" : "F-") + JzTimes.DateTimeSerialString;
-
-            if (!Directory.Exists(mainx6_path + "\\000"))
-                Directory.CreateDirectory(mainx6_path + "\\000");
-
-            EnvClass env = AlbumWork.ENVList[0];
-
-            int qi = 0;
-            foreach (PageClass page in env.PageList)
+            Task task = new Task(() =>
             {
-                page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
-                qi++;
-            }
+                try
+                {
+                    string mainx6_path = Universal.MainX6_Path + "\\" + (IsPass ? "P-" : "F-") + JzTimes.DateTimeSerialString;
+
+                    if (!Directory.Exists(mainx6_path + "\\000"))
+                        Directory.CreateDirectory(mainx6_path + "\\000");
+
+                    EnvClass env = AlbumWork.ENVList[0];
+
+                    int qi = 0;
+                    foreach (PageClass page in env.PageList)
+                    {
+                        page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
+                        qi++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                }
+            });
+            task.Start();
+
+            //string mainx6_path = Universal.MainX6_Path + "\\" + (IsPass ? "P-" : "F-") + JzTimes.DateTimeSerialString;
+
+            //if (!Directory.Exists(mainx6_path + "\\000"))
+            //    Directory.CreateDirectory(mainx6_path + "\\000");
+
+            //EnvClass env = AlbumWork.ENVList[0];
+
+            //int qi = 0;
+            //foreach (PageClass page in env.PageList)
+            //{
+            //    page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
+            //    qi++;
+            //}
         }
         private void SMD2Save()
         {
@@ -3358,19 +3293,47 @@ namespace Allinone.OPSpace.ResultSpace
                     return;
             }
 
-            string mainx6_path = Universal.MainX6_Path + "\\" + (IsPass ? "P-" : "F-") + Universal.CalTestBarcode;
-
-            if (!Directory.Exists(mainx6_path + "\\000"))
-                Directory.CreateDirectory(mainx6_path + "\\000");
-
-            EnvClass env = m_EnvNow;
-
-            int qi = 0;
-            foreach (PageClass page in env.PageList)
+            Task task = new Task(() =>
             {
-                page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
-                qi++;
-            }
+                try
+                {
+                    string mainx6_path = Universal.MainX6_Path + "\\" + (IsPass ? "P-" : "F-") + Universal.CalTestBarcode;
+
+                    if (!Directory.Exists(mainx6_path + "\\000"))
+                        Directory.CreateDirectory(mainx6_path + "\\000");
+
+                    EnvClass env = AlbumWork.ENVList[0];
+
+                    int qi = 0;
+                    foreach (PageClass page in env.PageList)
+                    {
+                        FreeImageAPI.FreeImageBitmap freeImage = new FreeImageAPI.FreeImageBitmap(page.GetbmpRUN());
+                        freeImage.Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", FreeImageAPI.FREE_IMAGE_FORMAT.FIF_JPEG);
+                        freeImage.Dispose();
+                        //page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                        qi++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                }
+            });
+            task.Start();
+
+            //string mainx6_path = Universal.MainX6_Path + "\\" + (IsPass ? "P-" : "F-") + Universal.CalTestBarcode;
+
+            //if (!Directory.Exists(mainx6_path + "\\000"))
+            //    Directory.CreateDirectory(mainx6_path + "\\000");
+
+            //EnvClass env = m_EnvNow;
+
+            //int qi = 0;
+            //foreach (PageClass page in env.PageList)
+            //{
+            //    page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+            //    qi++;
+            //}
         }
         private void _LOG_MSG(string eMsg)
         {

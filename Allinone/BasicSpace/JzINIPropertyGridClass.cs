@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Drawing.Design;
 using System.Globalization;
 using System.Linq;
@@ -10,12 +11,26 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
+using AForge.Imaging.Filters;
 using Allinone.FormSpace;
 using JetEazy.BasicSpace;
 using JetEazy.UISpace;
 
 namespace Allinone.BasicSpace
 {
+    public enum BlobMode
+    {
+        /// <summary>
+        /// 找黑斑
+        /// </summary>
+        [Description("找黑斑")]
+        Black,
+        /// <summary>
+        /// 找白斑
+        /// </summary>
+        [Description("找白斑")]
+        White,
+    }
     public enum BlockDir
     {
         /// <summary>
@@ -427,6 +442,13 @@ namespace Allinone.BasicSpace
             set { INI.IsCollectPictures = value; }
         }
         [CategoryAttribute(cat2), DescriptionAttribute("true: 收集 false:不收集")]
+        [DisplayName("是否收集小图错误资料")]
+        public bool IsCollectErrorSmall
+        {
+            get { return INI.IsCollectErrorSmall; }
+            set { INI.IsCollectErrorSmall = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 收集 false:不收集")]
         [DisplayName("是否收集Strip资料")]
         public bool IsCollectStripPictures
         {
@@ -468,6 +490,13 @@ namespace Allinone.BasicSpace
         {
             get { return INI.IsCheckBarcodeOpen; }
             set { INI.IsCheckBarcodeOpen = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 比对 false:不比对")]
+        [DisplayName("A01.是否比对重复码")]
+        public bool IsOpenCheckRepeatCode
+        {
+            get { return INI.IsOpenCheckRepeatCode; }
+            set { INI.IsOpenCheckRepeatCode = value; }
         }
 
         [CategoryAttribute(cat2), DescriptionAttribute("true: 只显示当前图片 false:正常显示")]
@@ -967,6 +996,134 @@ namespace Allinone.BasicSpace
 
     }
 
+    public class CheckBaseParaPropertyGridClass
+    {
+        public CheckBaseParaPropertyGridClass()
+        {
 
+        }
+        const string cat1 = "00.图像设定";
+
+        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [DisplayName("A0.灰阶阈值")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 255)]
+        [Browsable(true)]
+        public int chkThresholdValue { get; set; } = 128;
+        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [DisplayName("A0.灰阶阈值")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 255)]
+        [Browsable(true)]
+        public BlobMode chkblobmode { get; set; } = BlobMode.White;
+
+
+        const string cat0 = "01.检测规格";
+
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("A0.开启训练检查")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100000)]
+        [Browsable(true)]
+        public bool chkIsOpen { get; set; } = false;
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("A1.标准宽度")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100000)]
+        [Browsable(true)]
+        public float chkWidth { get; set; } = 0;
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("A2.宽度比例")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
+        [Browsable(true)]
+        public float chkWidthUpratio { get; set; } = 5;
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("A3.宽度下限比例")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
+        [Browsable(false)]
+        public float chkWidthLowerratio { get; set; } = 5;
+
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("B1.标准高度")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100000)]
+        [Browsable(true)]
+        public float chkHeight { get; set; } = 0;
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("B2.高度比例")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
+        [Browsable(true)]
+        public float chkHeightUpratio { get; set; } = 5;
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("B3.高度下限比例")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
+        [Browsable(false)]
+        public float chkHeightLowerratio { get; set; } = 5;
+
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("C1.标准面积")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100000)]
+        [Browsable(true)]
+        public float chkArea { get; set; } = 0;
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("C2.面积比例")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
+        [Browsable(true)]
+        public float chkAreaUpratio { get; set; } = 5;
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("C3.面积下限比例")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
+        [Browsable(false)]
+        public float chkAreaLowerratio { get; set; } = 5;
+
+
+        public void FromingStr(string str)
+        {
+            string[] parts = str.Split(',');
+            if (parts.Length > 12)
+            {
+                chkWidth = float.Parse(parts[0]);
+                chkWidthUpratio = float.Parse(parts[1]);
+                chkWidthLowerratio = float.Parse(parts[2]);
+                chkHeight = float.Parse(parts[3]);
+                chkHeightUpratio = float.Parse(parts[4]);
+                chkHeightLowerratio = float.Parse(parts[5]);
+                chkArea = float.Parse(parts[6]);
+                chkAreaUpratio = float.Parse(parts[7]);
+                chkAreaLowerratio = float.Parse(parts[8]);
+                chkIsOpen = parts[9] == "1";
+                chkThresholdValue = int.Parse(parts[10]);
+                chkblobmode = (BlobMode)int.Parse(parts[11]);
+            }
+
+        }
+        public string ToParaString()
+        {
+            string str = string.Empty;
+
+            str += chkWidth.ToString() + ",";
+            str += chkWidthUpratio.ToString() + ",";
+            str += chkWidthLowerratio.ToString() + ",";
+            str += chkHeight.ToString() + ",";
+            str += chkHeightUpratio.ToString() + ",";
+            str += chkHeightLowerratio.ToString() + ",";
+            str += chkArea.ToString() + ",";
+            str += chkAreaUpratio.ToString() + ",";
+            str += chkAreaLowerratio.ToString() + ",";
+            str += (chkIsOpen ? "1" : "0") + ",";
+            str += chkThresholdValue.ToString() + ",";
+            str += ((int)chkblobmode).ToString() + ",";
+
+            return str;
+        }
+
+    }
 
 }

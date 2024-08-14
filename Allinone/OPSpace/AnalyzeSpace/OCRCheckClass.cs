@@ -1,6 +1,6 @@
 ﻿
-//#define OPT_USE_MVD_BARCODE
-#define OPT_USE_JET_BARCODE
+#define OPT_USE_MVD_BARCODE
+//#define OPT_USE_JET_BARCODE
 
 using System;
 using System.Collections.Generic;
@@ -29,6 +29,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         JetEazy.PlugSpace.BarcodeEx.BarcodeAll_MVD m_MvdCnnReader = new JetEazy.PlugSpace.BarcodeEx.BarcodeAll_MVD();
 
         public string BarcodeGrade = string.Empty;
+        string m_BarcodeReadStr = string.Empty;
 
         public OCRCheckClass()
         {
@@ -137,6 +138,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             string myBarcode = "";
             barcodeStrRead = string.Empty;
+            m_BarcodeReadStr = string.Empty;
 
             switch (Universal.OPTION)
             {
@@ -324,6 +326,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             string myBarcode = "";
             barcodeStrRead = string.Empty;
             BarcodeGrade = string.Empty;
+            m_BarcodeReadStr = string.Empty;
 
 #if OPT_USE_JET_BARCODE
 
@@ -390,7 +393,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     {
                         barcodeStrRead = tmpStr;
                         myBarcode = tmpStr;
-
+                        m_BarcodeReadStr = barcodeStrRead;
                         BarcodeGrade = m_MvdCnnReader.GetBarcodeItem.DecodeGrade;
                     }
 
@@ -686,7 +689,47 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
         }
 
+        public bool CheckRepeatCode(List<string> eCodes, Bitmap bmppattern, Bitmap bmpFind, PassInfoClass passInfo)
+        {
+            bool result = true;
+            WorkStatusClass workstatus = new WorkStatusClass(JetEazy.AnanlyzeProcedureEnum.CHECKREPEATBARCODE);
+            string processstring = "Start  CheckRepeatCode." + Environment.NewLine;
+            string errorstring = "";
+            JetEazy.ReasonEnum reason = JetEazy.ReasonEnum.PASS;
 
+            switch (OCRMethod)
+            {
+                case OCRMethodEnum.DATAMATRIXGRADE:
+
+                    int recordPCS = 0;
+                    if (!string.IsNullOrEmpty(m_BarcodeReadStr))
+                    {
+                        foreach (string s in eCodes)
+                        {
+                            if (s.Contains(m_BarcodeReadStr))
+                            {
+                                recordPCS++;
+                            }
+                        }
+
+                        if (recordPCS > 1)
+                        {
+                            errorstring += "2DBarcode Repeat." + Environment.NewLine; ;
+                            processstring += "2DBarcode Repeat." + Environment.NewLine;
+                            reason = JetEazy.ReasonEnum.NG;
+                            workstatus.AnalyzeProcedure = JetEazy.AnanlyzeProcedureEnum.CHECKREPEATBARCODE;
+                            result = false;
+                        }
+                    }
+
+                    workstatus.SetWorkStatus(bmppattern, bmpFind, bmpErr, reason, errorstring, processstring, passInfo);
+                    RunStatusCollection.Add(workstatus);
+
+                    break;
+            }
+
+            return result;
+        }
         public bool CheckBarCode(bool istrain, Bitmap bmpFind, PassInfoClass passInfo, int IBTolerance, int IBCount, int IBArea)
         {
 

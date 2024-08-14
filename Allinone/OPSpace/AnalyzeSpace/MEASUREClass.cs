@@ -9,6 +9,7 @@ using System.Drawing.Imaging;
 using Allinone;
 using JetEazy;
 using JetEazy.BasicSpace;
+using Allinone.BasicSpace;
 
 namespace Allinone.OPSpace.AnalyzeSpace
 {
@@ -59,9 +60,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 case ColorCheckTypeEnum.SILVERSCREW:
                 case ColorCheckTypeEnum.GREYSCREW:
                 case ColorCheckTypeEnum.ROSESCREW:
-                  //  IsTempSave = true;
-                    checkedratio = GetColorRatio(bmprun,passinfo, false);
-                  //  IsTempSave = false;
+                    //  IsTempSave = true;
+                    checkedratio = GetColorRatio(bmprun, passinfo, false);
+                    //  IsTempSave = false;
                     //bmprun.Save("D:\\temp.png");
                     if (checkedratio >= minratio && checkedratio <= maxratio)
                         ret = true;
@@ -121,7 +122,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                         retstr += colortype.ToString().PadRight(13, ' ') + " : " + (checkedratio * 100).ToString("0.00") + "%" + Environment.NewLine;
 
-                        colorindex ++;
+                        colorindex++;
 
                     }
 
@@ -142,7 +143,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
 
 
-        float GetColorRatio(Bitmap bmprun,PassInfoClass passinfo, bool ispurecolor = false, bool isreverse = false)
+        float GetColorRatio(Bitmap bmprun, PassInfoClass passinfo, bool ispurecolor = false, bool isreverse = false)
         {
             float ret = 0f;
 
@@ -172,7 +173,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 //     jzfind.SetThresholdEX(bmpthreshold, SimpleRect(bmpthreshold.Size, 1), (int)((float)(Mean - Min) * mmratio + (float)Min), 0, true, true);
                 int imaxvalue = 245;
-                if(INI.ISONLYCHICKWB)
+                if (INI.ISONLYCHICKWB)
                     imaxvalue = 256;
                 myImageProcessor.SetThreshold(bmpthreshold, imaxvalue, (int)((float)(Mean - Min) * mmratio + (float)Min), true);
                 //jzfind.SetThresholdEX(bmpthreshold, SimpleRect(bmpthreshold.Size, 1), 245, (int)((float)(Mean - Min) * mmratio + (float)Min), true, true);
@@ -182,7 +183,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 jzfind.FillLines(bmpthreshold, linegap, Color.Black);
                 jzfind.Find(bmpthreshold, Color.Red);
 
-                if(IsTempSave)
+                if (IsTempSave)
                     bmpthreshold.Save(Universal.TESTPATH + "\\ANALYZETEST\\COLORCHECK 2 " + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
 
                 foreach (FoundClass found in jzfind.FoundList)
@@ -194,13 +195,13 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     DrawRect(bmpruninside, rect, new SolidBrush(Color.Black));
                 }
 
-                if(IsTempSave)
+                if (IsTempSave)
                     bmpruninside.Save(Universal.TESTPATH + "\\ANALYZETEST\\COLORCHECK 3 " + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
             }
 
             ret = GetColorRatioSub(bmpruninside);
 
-            if(IsTempSave)
+            if (IsTempSave)
                 bmpruninside.Save(Universal.TESTPATH + "\\ANALYZETEST\\COLORCHECK 4 " + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
 
             bmpthreshold.Dispose();
@@ -212,8 +213,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
         bool CheckTPColor(Bitmap bmprun, PassInfoClass passinfo)
         {
             bool ret = false;
-            
-            if(GetTPColor(bmprun).ToString() == passinfo.OperateString.ToUpper())
+
+            if (GetTPColor(bmprun).ToString() == passinfo.OperateString.ToUpper())
             {
                 ret = true;
             }
@@ -275,7 +276,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             int G = pucPtr[1];
                             int B = pucPtr[0];
 
-                            if (R + G + B > 0 )
+                            if (R + G + B > 0)
                             {
                                 bool isincolorratio = false;
                                 bool isincolor = IsInColor(R, G, B, ref isincolorratio);
@@ -332,15 +333,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             bool isincolor = false;
             float minvalue = (minratio * 255);
-            if (INI.ISONLYCHICKWB  && (colortype == ColorCheckTypeEnum.SILVERSCREW || colortype == ColorCheckTypeEnum.GREYSCREW))
+            if (INI.ISONLYCHICKWB && (colortype == ColorCheckTypeEnum.SILVERSCREW || colortype == ColorCheckTypeEnum.GREYSCREW))
             {
                 //isincolor = (g > r && b > r && g > 130);
-              //  isincolor = (g > r && b > 140 || b > 200);
+                //  isincolor = (g > r && b > 140 || b > 200);
 
-              int  gray = (g * 19595 +b * 38469 + r * 7472) >> 16;
+                int gray = (g * 19595 + b * 38469 + r * 7472) >> 16;
                 //isincolor = (g > r && g > 120);
 
-            
+
                 float maxvalue = (maxratio * 255);
                 if (colortype == ColorCheckTypeEnum.SILVERSCREW)
                 {
@@ -361,7 +362,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     isincolorratio = true;
                 else
                     isincolorratio = false;
-               
+
             }
             else
             {
@@ -377,7 +378,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                 //isincolor = (g > r && b > r && g > 130);
                                 //   isincolor = (g > r && b > 100 || b > 200);
                                 //isincolor = (g > r && g > 120);
-                                isincolor = (g > r  && gray > minvalue);
+                                isincolor = (g > r && gray > minvalue);
                                 if (isincolor)
                                     //isincolorratio = ((((float)r / (float)Math.Max(g, b)) > colorratio || g > 200) ? true : false);
                                     isincolorratio = true;
@@ -440,7 +441,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             case ColorCheckMethodEnum.FXCD100:
 
                                 int gray2 = (g * 19595 + b * 38469 + r * 7472) >> 16;
-                           //     isincolor = (g > r && b < 120);
+                                //     isincolor = (g > r && b < 120);
                                 // isincolor = (g > r && g < 100);
 
                                 isincolor = (g > r && b > r && gray2 < minvalue);
@@ -457,8 +458,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                                 int gray3 = (g * 19595 + b * 38469 + r * 7472) >> 16;
 
-                            //    isincolor = (((float)g * 0.7f) > r && b < 120);
-                                 isincolor = (((float)g * 0.7f) > r && g < 100);
+                                //    isincolor = (((float)g * 0.7f) > r && b < 120);
+                                isincolor = (((float)g * 0.7f) > r && g < 100);
 
                                 if (isincolor)
                                     //isincolorratio = ((float)b / (float)Math.Max(g, r) > colorratio ? true : false);
@@ -512,7 +513,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                             if (isincolor)
                                 //isincolorratio = ((((float)r / (float)Math.Max(g, b)) > colorratio || g > 200) ? true : false);
-                            
+
                                 isincolorratio = true;
                             else
                                 isincolorratio = false;
@@ -560,8 +561,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         case ColorCheckMethodEnum.QSMC100:
                         case ColorCheckMethodEnum.QSMC1000:
                         case ColorCheckMethodEnum.FXCD100:
-                            isincolor = (g > r && b > g );
-                           // isincolor = (g > r && g < 100);
+                            isincolor = (g > r && b > g);
+                            // isincolor = (g > r && g < 100);
 
                             if (isincolor)
                                 //isincolorratio = ((float)b / (float)Math.Max(g, r) > colorratio ? true : false);
@@ -572,8 +573,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             break;
                         case ColorCheckMethodEnum.QSMCUSB:
                         case ColorCheckMethodEnum.FXCDUSB:
-                            isincolor = (((float)g ) > r && b < 200);
-                           // isincolor = (((float)g * 0.7f) > r && g < 100);
+                            isincolor = (((float)g) > r && b < 200);
+                            // isincolor = (((float)g * 0.7f) > r && g < 100);
 
                             if (isincolor)
                                 //isincolorratio = ((float)b / (float)Math.Max(g, r) > colorratio ? true : false);
@@ -650,15 +651,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             {
                                 CheckTPColor(R, G, B, ref issilver, ref isgold, ref isgrey);
 
-                                if(issilver)
+                                if (issilver)
                                 {
                                     silvercolorcount++;
                                 }
-                                if(isgold)
+                                if (isgold)
                                 {
                                     goldcolorcount++;
                                 }
-                                if(isgrey)
+                                if (isgrey)
                                 {
                                     greycolorcount++;
                                 }
@@ -680,7 +681,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     {
                         ret = TPColorEnum.SILVER;
                     }
-                    else if(goldcolorcount == max)
+                    else if (goldcolorcount == max)
                     {
                         ret = TPColorEnum.GOLD;
                     }
@@ -701,7 +702,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
         }
 
-        void CheckTPColor(int r, int g, int b, ref bool issilver,ref bool isgold,ref bool isgrey)
+        void CheckTPColor(int r, int g, int b, ref bool issilver, ref bool isgold, ref bool isgrey)
         {
             switch (colormethod)
             {
@@ -715,6 +716,138 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
         }
 
+    }
+    public class SolderBallMeasureClass
+    {
+        CheckBaseParaPropertyGridClass checkBaseParaPropertyGrid = new CheckBaseParaPropertyGridClass();
+        Bitmap bmpInput = new Bitmap(1, 1);
+
+        public SolderBallMeasureClass(string str)
+        {
+            FromString(str);
+        }
+        public SolderBallMeasureClass()
+        {
+
+        }
+        public bool CheckSolderBall(Bitmap bmpinput, Bitmap bmpmask, ref Bitmap bmpoutput, bool istrain, WorkStatusClass workstatus, PassInfoClass passinfo)
+        {
+            bool ret = false;
+            string str = "";
+
+            bmpInput.Dispose();
+            bmpInput = new Bitmap(bmpinput);
+
+            JzToolsClass jzToolsClass = new JzToolsClass();
+            Rectangle myRect = jzToolsClass.SimpleRect(bmpinput.Size);
+            JzFindObjectClass jzFindObjectClass = new JzFindObjectClass();
+            //jzFindObjectClass.AH_SetThreshold(bmpinput, ref bmpInput, checkBaseParaPropertyGrid.chkThresholdValue);
+            jzFindObjectClass.SetThresholdEX(bmpInput, myRect, 0, checkBaseParaPropertyGrid.chkThresholdValue, 0, !(checkBaseParaPropertyGrid.chkblobmode == BlobMode.White));
+            jzFindObjectClass.AH_FindBlob(bmpInput, checkBaseParaPropertyGrid.chkblobmode == BlobMode.White);
+            jzFindObjectClass.SortByArea();
+        
+            int myArea = myRect.Width * myRect.Height;
+
+            bmpoutput.Dispose();
+            bmpoutput = new Bitmap(bmpinput);
+
+            if (jzFindObjectClass.FoundList.Count > 0)
+            {
+                //int maxindex = jzFindObjectClass.GetMaxRectIndex();
+                FoundClass foundClass = jzFindObjectClass.GetFoundBySort(0);
+                myRect = foundClass.rect;
+                myArea = foundClass.Area;
+
+                if (istrain)
+                {
+                    jzFindObjectClass.GetMaskedImage(bmpoutput, bmpInput, Color.Black);
+                    jzToolsClass.DrawRectEx(bmpoutput, myRect, new Pen(Color.Red));
+                }
+                str = $"宽度{myRect.Width.ToString()}高度{myRect.Height.ToString()}面积{myArea.ToString()}";
+                workstatus.ProcessString += str + Environment.NewLine;
+            }
+
+            if (istrain)
+            {
+                if (!IsInRangeRatio(myRect.Width, checkBaseParaPropertyGrid.chkWidth, checkBaseParaPropertyGrid.chkWidthUpratio * 0.01))
+                {
+                    str = "train solderball is NG , width is " + myRect.Width.ToString() + " not in Range " + (checkBaseParaPropertyGrid.chkWidthUpratio).ToString("0.00") + "%";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.NG;
+
+                    ret = false || !checkBaseParaPropertyGrid.chkIsOpen;
+                }
+                else if (!IsInRangeRatio(myRect.Height, checkBaseParaPropertyGrid.chkHeight, checkBaseParaPropertyGrid.chkHeightUpratio * 0.01))
+                {
+                    str = "train solderball is NG , height is " + myRect.Height.ToString() + " not in Range " + (checkBaseParaPropertyGrid.chkHeightUpratio).ToString("0.00") + "%";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.NG;
+
+                    ret = false || !checkBaseParaPropertyGrid.chkIsOpen;
+                }
+                else if (!IsInRangeRatio(myArea, checkBaseParaPropertyGrid.chkArea, checkBaseParaPropertyGrid.chkAreaUpratio * 0.01))
+                {
+                    str = "train solderball is NG , area is " + myArea.ToString() + " not in Range " + (checkBaseParaPropertyGrid.chkAreaUpratio).ToString("0.00") + "%";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.NG;
+
+                    ret = false || !checkBaseParaPropertyGrid.chkIsOpen;
+                }
+                else
+                {
+                    str = "train solderball is PASS ";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.PASS;
+
+                    ret = true;
+                }
+            }
+            else
+            {
+                if (!IsInRangeRatio(myRect.Width, checkBaseParaPropertyGrid.chkWidth, checkBaseParaPropertyGrid.chkWidthUpratio * 0.01))
+                {
+                    str = "Run solderball is NG , width is " + myRect.Width.ToString() + " not in Range " + (checkBaseParaPropertyGrid.chkWidthUpratio).ToString("0.00") + "%";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.NG;
+
+                    ret = false;// || !checkBaseParaPropertyGrid.chkIsOpen;
+                }
+                else if (!IsInRangeRatio(myRect.Height, checkBaseParaPropertyGrid.chkHeight, checkBaseParaPropertyGrid.chkHeightUpratio * 0.01))
+                {
+                    str = "Run solderball is NG , height is " + myRect.Height.ToString() + " not in Range " + (checkBaseParaPropertyGrid.chkHeightUpratio).ToString("0.00") + "%";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.NG;
+
+                    ret = false;// || !checkBaseParaPropertyGrid.chkIsOpen;
+                }
+                else if (!IsInRangeRatio(myArea, checkBaseParaPropertyGrid.chkArea, checkBaseParaPropertyGrid.chkAreaUpratio * 0.01))
+                {
+                    str = "Run solderball is NG , area is " + myArea.ToString() + " not in Range " + (checkBaseParaPropertyGrid.chkAreaUpratio).ToString("0.00") + "%";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.NG;
+
+                    ret = false;// || !checkBaseParaPropertyGrid.chkIsOpen;
+                }
+                else
+                {
+                    str = "Run solderball is PASS ";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.PASS;
+
+                    ret = true;
+                }
+            }
+            return ret;
+        }
+
+        void FromString(string str)
+        {
+            checkBaseParaPropertyGrid.FromingStr(str);
+        }
+        bool IsInRangeRatio(double runvalue, double orgvalue, double ratio)
+        {
+            return (runvalue >= (orgvalue * (1 - ratio))) && (runvalue <= (orgvalue * (1 + ratio)));
+        }
     }
 
     public class MEASUREClass
@@ -734,7 +867,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
         public WorkStatusCollectionClass TrainStatusCollection = new WorkStatusCollectionClass();
         public WorkStatusCollectionClass RunStatusCollection = new WorkStatusCollectionClass();
-
+        public bool CheckGood = true;
         public string RelateAnalyzeString = "";
         public PassInfoClass PassInfo = new PassInfoClass();
 
@@ -755,8 +888,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             FromString(str);
         }
 
-        public bool MeasureProcess(Bitmap bmpinput,Bitmap bmppattern, Bitmap bmpmask,ref Bitmap bmpoutput,
-            int brightness, int contrast, string relateanalyzestr, PassInfoClass passinfo,bool istrain)
+        public bool MeasureProcess(Bitmap bmpinput, Bitmap bmppattern, Bitmap bmpmask, ref Bitmap bmpoutput,
+            int brightness, int contrast, string relateanalyzestr, PassInfoClass passinfo, bool istrain)
         {
             if (MeasureMethod == MeasureMethodEnum.NONE)
             {
@@ -764,13 +897,13 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
 
             SetBrightContrast(bmpinput, brightness, contrast);
-            
+
             string str = "";
             bool isgood = true;
-
+            CheckGood = true;
             //保留 Pattern 和 Mask 的圖
 
-            if(istrain)
+            if (istrain)
                 RelateAnalyzeString = relateanalyzestr;
 
             WorkStatusClass workstatus = new WorkStatusClass(AnanlyzeProcedureEnum.MEASURE);
@@ -778,7 +911,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             string errorstring = "";
             ReasonEnum reason = ReasonEnum.PASS;
 
-            if(istrain)
+            if (istrain)
                 PassInfo = new PassInfoClass(passinfo, OPLevelEnum.COPY);
 
             str = relateanalyzestr + " Use Method " + MeasureMethod.ToString() + " For Measure";
@@ -790,7 +923,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             {
                 case MeasureMethodEnum.BLIND:
 
-                    isgood = BlindMeasure(bmpinput, bmpmask,ref bmpoutput, istrain, workstatus);
+                    isgood = BlindMeasure(bmpinput, bmpmask, ref bmpoutput, istrain, workstatus);
 
                     break;
                 case MeasureMethodEnum.MBCHECK:
@@ -804,7 +937,13 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     break;
                 case MeasureMethodEnum.COLORCHECK:
 
-                    isgood = ColorMeasure(bmpinput, bmpmask, ref bmpoutput, istrain, workstatus,PassInfo);
+                    isgood = ColorMeasure(bmpinput, bmpmask, ref bmpoutput, istrain, workstatus, PassInfo);
+
+                    break;
+
+                case MeasureMethodEnum.SOLDERBALLCHECK:
+
+                    isgood = SolderBallMeasure(bmpinput, bmpmask, ref bmpoutput, istrain, workstatus, PassInfo);
 
                     break;
 
@@ -833,7 +972,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 TrainStatusCollection.Add(workstatus);
             else
                 RunStatusCollection.Add(workstatus);
-
+            CheckGood = isgood;
             return isgood;
         }
 
@@ -842,7 +981,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         #region Blind Measurement Function
         int ORGBlindArea = 0;
         int RUNBlindArea = 0;
-      public  bool BlindMeasure(Bitmap bmpinput, Bitmap bmpmask,ref Bitmap bmpoutput,bool istrain, WorkStatusClass workstatus)
+        public bool BlindMeasure(Bitmap bmpinput, Bitmap bmpmask, ref Bitmap bmpoutput, bool istrain, WorkStatusClass workstatus)
         {
             float diffratio = 0.2f;
             float threadratio = 0.3f;
@@ -865,8 +1004,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //IsTempSave = true;
 
             //WorkStatusClass workstatus = new WorkStatusClass(AnanlyzeProcedureEnum.MEASURETRAIN);
-            if(istrain)
-                workstatus.ProcessString  += "Start " + RelateAnalyzeString + " Blind Train." + Environment.NewLine;
+            if (istrain)
+                workstatus.ProcessString += "Start " + RelateAnalyzeString + " Blind Train." + Environment.NewLine;
             else
                 workstatus.ProcessString += "Start " + RelateAnalyzeString + " Blind Run." + Environment.NewLine;
             //string errorstring = "";
@@ -875,7 +1014,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             HistogramClass histogram = new HistogramClass(2);
             JzFindObjectClass jzfind = new JzFindObjectClass();
 
-            if(IsTempSave)
+            if (IsTempSave)
             {
                 bmpinput.Save(Universal.TESTPATH + "\\ANALYZETEST\\BLIND INPUT-" + RelateAnalyzeString + (istrain ? "-T" : "-R") + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
                 bmpmask.Save(Universal.TESTPATH + "\\ANALYZETEST\\BLIND MASK-" + RelateAnalyzeString + (istrain ? "-T" : "-R") + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
@@ -895,10 +1034,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
             issomthing = ((mode - min) > (int)((float)mode * diffratio)) || ((max - mode) > (int)((float)mode * diffratio));
 
             if (istrain)
-            { 
+            {
                 ORGBlindArea = 0;
                 RUNBlindArea = 0;
-                
+
                 bmpPattern.Dispose();
                 bmpPattern = new Bitmap(bmpinput);
 
@@ -945,7 +1084,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 bmpoutput.Dispose();
                 bmpoutput = new Bitmap(bmpinput);
 
-                if (ORGBlindArea == 0  && issomthing)
+                if (ORGBlindArea == 0 && issomthing)
                 {
                     str = "BLIND Check Error (Nothing To Something).";
                     workstatus.ProcessString += str + Environment.NewLine;
@@ -953,7 +1092,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                     isgood = false;
                 }
-                else if(ORGBlindArea != 0 && !issomthing)
+                else if (ORGBlindArea != 0 && !issomthing)
                 {
                     str = "BLIND Check Error (Something To Nothing).";
                     workstatus.ProcessString += str + Environment.NewLine;
@@ -1001,7 +1140,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //RunStatusCollection.Add(workstatus);
             }
 
-            if(IsTempSave )//|| true)
+            if (IsTempSave)//|| true)
             {
                 bmpoutput.Save(Universal.TESTPATH + "\\ANALYZETEST\\OUTPUT-" + RelateAnalyzeString + (istrain ? "-T" : "-R") + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
             }
@@ -1029,9 +1168,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
             int _MB_CutRightWidth = 10;
             float _MB_CheckRatio = 0.3f;
             public bool _MB_IsPass = false;
-           
-            public MBSliceClass(MBSliceTypeEnum mbslicetype, Bitmap bmp,bool iswidth,
-                                                 float widththresholdradio,int cutleftwidth,int cutrightwidth,float checkratio)
+
+            public MBSliceClass(MBSliceTypeEnum mbslicetype, Bitmap bmp, bool iswidth,
+                                                 float widththresholdradio, int cutleftwidth, int cutrightwidth, float checkratio)
             {
                 MBSliceType = mbslicetype;
                 _MB_WidthThresholdRatio = widththresholdradio;
@@ -1042,7 +1181,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 GetBMPAnalyze(bmp, iswidth, true);
             }
 
-            public bool GetBMPAnalyze(Bitmap bmp,bool iswidth, bool istrain = false)
+            public bool GetBMPAnalyze(Bitmap bmp, bool iswidth, bool istrain = false)
             {
                 bool ispass = true;
 
@@ -1074,7 +1213,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 jzfind.SetThreshold(bmp, SimpleRect(bmp.Size, 1), min, ((255 + mean) >> 1) - min, 255, true);
 
                 jzfind.GetInnerLineFromBorder(bmp, iswidth, 2, ref ltptlist, ref rbptlist, ref lenlist);
-                
+
                 bmp.Save(Universal.TESTPATH + "\\ANALYZETEST\\INNER LINE1 " + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
 
                 //Get Length Mode Value
@@ -1082,7 +1221,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 i = 0;
                 foreach (int len in lenlist)
                 {
-                    if(len > 1)
+                    if (len > 1)
                     {
                         datahistogram.Add(len);
                     }
@@ -1105,7 +1244,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     //先檢測是否為相同寬度的30%
                     if (!IsInRangeRatio(datahistogram.ModeGrade, MBWidth, _MB_WidthThresholdRatio * 100))
                     {
-                         ispass = false;
+                        ispass = false;
                     }
 
                     //再檢測裏面是否被刮傷
@@ -1184,7 +1323,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             if (lty <= found.Center.Y && rby >= found.Center.Y)
                             {
                                 if (found.Height > (int)((float)datahistogram.ModeGrade * _MB_CheckRatio))
-                                   // if (found.Height > (int)((float)datahistogram.ModeGrade / 3))
+                                // if (found.Height > (int)((float)datahistogram.ModeGrade / 3))
                                 {
                                     ispass = false;
                                     break;
@@ -1223,7 +1362,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 g.Dispose();
             }
         }
-        
+
         int MB_UDRange = 10;
         int MB_HeightThreshold = 10;
         bool MB_IsWidth = false;
@@ -1435,11 +1574,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
         /// <param name="bmporg"></param>
         /// <param name="bmpthreshed"></param>
         /// <param name="udrange"></param>
-        void MBCheckSub(Bitmap bmporg,Bitmap bmpthreshed,int udrange,int heightthreshold,bool istrain,ref bool ispass)
+        void MBCheckSub(Bitmap bmporg, Bitmap bmpthreshed, int udrange, int heightthreshold, bool istrain, ref bool ispass)
         {
             int i = 0;
             int j = 0;
-            
+
             Bitmap bmp = new Bitmap(1, 1);
 
             JzFindObjectClass jzfind = new JzFindObjectClass();
@@ -1451,8 +1590,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             while (i < jzfind.Count)
             {
                 FoundClass findi = jzfind.FoundList[i];
-             
-                if(findi.IsChecked)
+
+                if (findi.IsChecked)
                 {
                     i++;
                     continue;
@@ -1462,7 +1601,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 j = 0;
                 while (j < jzfind.Count)
-                {   
+                {
                     FoundClass findj = jzfind.FoundList[j];
 
                     if (findj.IsChecked || j == i)
@@ -1487,9 +1626,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             //清掉過小的雜訊
             i = rectlist.Count - 1;
-            while(i >= 0)
+            while (i >= 0)
             {
-                if(rectlist[i].Height < heightthreshold)
+                if (rectlist[i].Height < heightthreshold)
                 {
                     rectlist.RemoveAt(i);
                 }
@@ -1497,8 +1636,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
 
             //先檢查個數是不是相同
-            if(istrain)
-            {               
+            if (istrain)
+            {
                 MBCCount = rectlist.Count;
                 MBSliceList.Clear();
             }
@@ -1517,7 +1656,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             List<string> SortingList = new List<string>();
 
             i = 0;
-            foreach(Rectangle rect in rectlist)
+            foreach (Rectangle rect in rectlist)
             {
                 string str = rect.Y.ToString("000000") + "," + i.ToString("000");
                 SortingList.Add(str);
@@ -1527,7 +1666,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             SortingList.Sort();
 
             i = 0;
-            foreach(string sortstr in SortingList)
+            foreach (string sortstr in SortingList)
             {
                 //HistogramClass histogram = new HistogramClass(2);
 
@@ -1624,22 +1763,22 @@ namespace Allinone.OPSpace.AnalyzeSpace
         #region Color Measurement Function
 
         ColorMeasureClass MyColorMeasure = new ColorMeasureClass();
-        bool ColorMeasure(Bitmap bmpinput, Bitmap bmpmask, ref Bitmap bmpoutput, bool istrain, WorkStatusClass workstatus,PassInfoClass passinfo)
+        bool ColorMeasure(Bitmap bmpinput, Bitmap bmpmask, ref Bitmap bmpoutput, bool istrain, WorkStatusClass workstatus, PassInfoClass passinfo)
         {
             bool isgood = false;
             string str = "";
-            
-            if(istrain)
+
+            if (istrain)
             {
                 MyColorMeasure = new ColorMeasureClass(MMOPString);
-                str = "Bypass Color Check " + MyColorMeasure.colortype.ToString() + " for " + MyColorMeasure.colormethod.ToString() +  " Origin.";
+                str = "Bypass Color Check " + MyColorMeasure.colortype.ToString() + " for " + MyColorMeasure.colormethod.ToString() + " Origin.";
                 workstatus.ProcessString += str + Environment.NewLine;
                 workstatus.Reason = ReasonEnum.PASS;
                 isgood = true;
             }
             else
             {
-                if (MyColorMeasure.CheckColor(bmpinput,passinfo))
+                if (MyColorMeasure.CheckColor(bmpinput, passinfo))
                 {
                     str = "COLOR Check OK.";
                     workstatus.ProcessString += str + Environment.NewLine;
@@ -1661,7 +1800,69 @@ namespace Allinone.OPSpace.AnalyzeSpace
             return isgood;
 
         }
-        
+
+        #endregion
+
+        #region SolderBall Measurement Function
+
+        SolderBallMeasureClass MySolderBallMeasure = new SolderBallMeasureClass();
+        bool SolderBallMeasure(Bitmap bmpinput, Bitmap bmpmask, ref Bitmap bmpoutput, bool istrain, WorkStatusClass workstatus, PassInfoClass passinfo)
+        {
+            bool isgood = false;
+            string str = "";
+
+            if (istrain)
+            {
+                MySolderBallMeasure = new SolderBallMeasureClass(MMOPString);
+                //str = "Bypass Solder Check " + " Origin.";
+                //workstatus.ProcessString += str + Environment.NewLine;
+                //workstatus.Reason = ReasonEnum.PASS;
+                //isgood = true;
+
+                if (MySolderBallMeasure.CheckSolderBall(bmpinput, bmpmask, ref bmpoutput, true, workstatus, passinfo))
+                {
+                    str = "SolderBall train OK.";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.PASS;
+
+                    isgood = true;
+                }
+                else
+                {
+                    str = "SolderBall train NG.";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.NG;
+
+                    isgood = false;
+
+                }
+
+            }
+            else
+            {
+                if (MySolderBallMeasure.CheckSolderBall(bmpinput, bmpmask, ref bmpoutput, false, workstatus, passinfo))
+                {
+                    str = "SolderBall Check OK.";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.PASS;
+
+                    isgood = true;
+                }
+                else
+                {
+                    str = "SolderBall Check NG.";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.NG;
+
+                    isgood = false;
+
+                }
+
+            }
+            return isgood;
+
+        }
+
         #endregion
 
         #endregion
@@ -1688,7 +1889,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public void FromString(string str)
         {
             string[] strs = str.Split(Universal.SeperateCharB);
-            
+
             MeasureMethod = (MeasureMethodEnum)int.Parse(strs[0]);
             MMTolerance = float.Parse(strs[1]);
             MMOPString = strs[2];
@@ -1706,7 +1907,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             if (str[0] != "04.Measure")
                 return;
 
-            switch (str[1]) 
+            switch (str[1])
             {
                 //case "MeasureMethod":
                 //    MeasureMethod = (MeasureMethodEnum)Enum.Parse(typeof(MeasureMethodEnum), valuestring, true);
@@ -1760,6 +1961,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public void ResetTrainStatus()
         {
             TrainStatusCollection.Clear();
+            //CheckGood = true;
         }
         /// <summary>
         /// 在做大量運算前要清除的相關資料
@@ -1767,6 +1969,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public void ResetRunStatus()
         {
             RunStatusCollection.Clear();
+            //CheckGood = true;
         }
         /// <summary>
         /// 將產生出來的過程寫出去

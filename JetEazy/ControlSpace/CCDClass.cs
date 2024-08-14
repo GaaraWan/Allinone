@@ -7342,19 +7342,24 @@ namespace JetEazy.ControlSpace
         #region From JzTool Functions
         void GetBMP(string bmpfilestring, ref Bitmap orgbmp)
         {
-            Bitmap bmptmp = null;
+            //Bitmap bmptmp = null;
+            FreeImageAPI.FreeImageBitmap bmptmp = null;
             if (!File.Exists(bmpfilestring))
             {
                 string filename = System.IO.Path.GetFileName(bmpfilestring);//文件名 “P00-003.png”
                 filename = SystemWORKPATH + "\\" + filename;
 
-                bmptmp = new Bitmap(filename);
+                //bmptmp = new Bitmap(filename);
+                bmptmp = new FreeImageAPI.FreeImageBitmap(filename);
             }
             else
-                bmptmp = new Bitmap(bmpfilestring);
-
+            {
+                bmptmp = new FreeImageAPI.FreeImageBitmap(bmpfilestring);
+                //bmptmp = new Bitmap(bmpfilestring);
+            }
             orgbmp.Dispose();
-            orgbmp = new Bitmap(bmptmp);
+            orgbmp = (Bitmap)bmptmp.ToBitmap().Clone();
+            //orgbmp = new Bitmap(bmptmp);
 
             bmptmp.Dispose();
         }

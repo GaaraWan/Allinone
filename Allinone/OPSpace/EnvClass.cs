@@ -997,7 +997,39 @@ namespace Allinone.OPSpace
             return str;
         }
 
+        public bool A09_RunRepeatCodeProcess(PageOPTypeEnum pageoptype)
+        {
+            bool isgood = true;
+            //收集所有页面读取到的二维码
+            List<string> _collectCodeList = new List<string>();
+            for (int i = 0; i < PageList.Count; i++)
+            {
+                if (PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList.Count > 0)
+                {
+                    foreach (AnalyzeClass analyze in PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList)
+                    {
+                        string barcodeStr = analyze.GetAnalyzeOnlyBarcodeStr();
+                        if (!string.IsNullOrEmpty(barcodeStr))
+                        {
+                            _collectCodeList.Add(barcodeStr);
+                        }
+                    }
+                }
+            }
 
+            for (int i = 0; i < PageList.Count; i++)
+            {
+                if (PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList.Count > 0)
+                {
+                    foreach (AnalyzeClass analyze in PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList)
+                    {
+                        isgood &= analyze.CheckRepeatCode(_collectCodeList);
+                        analyze.IsVeryGood = isgood || analyze.IsByPass;
+                    }
+                }
+            }
+            return isgood;
+        }
         #region 自动编号 
 
         public void SetOffset(int pageindex, Point ePointOffset,bool ison)
