@@ -62,9 +62,9 @@ namespace JetEazy
                 case 3:
                     str = "量测错误";
                     break;
-                    //case 4:
-                    //    str = "胶水宽度异常";
-                    //    break;
+                case 4:
+                    str = "表面边角缺陷";
+                    break;
                     //case 5:
                     //    str = "无芯片";
                     //    break;

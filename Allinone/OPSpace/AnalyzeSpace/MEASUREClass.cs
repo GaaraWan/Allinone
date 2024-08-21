@@ -720,7 +720,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
     public class SolderBallMeasureClass
     {
         CheckBaseParaPropertyGridClass checkBaseParaPropertyGrid = new CheckBaseParaPropertyGridClass();
-        Bitmap bmpInput = new Bitmap(1, 1);
+        //Bitmap bmpInput = new Bitmap(1, 1);
+        JzToolsClass m_JzTools = new JzToolsClass();
+        JzFindObjectClass m_JzFind = new JzFindObjectClass();
 
         public SolderBallMeasureClass(string str)
         {
@@ -735,33 +737,32 @@ namespace Allinone.OPSpace.AnalyzeSpace
             bool ret = false;
             string str = "";
 
-            bmpInput.Dispose();
-            bmpInput = new Bitmap(bmpinput);
-
-            JzToolsClass jzToolsClass = new JzToolsClass();
-            Rectangle myRect = jzToolsClass.SimpleRect(bmpinput.Size);
-            JzFindObjectClass jzFindObjectClass = new JzFindObjectClass();
+            //bmpInput.Dispose();
+            Bitmap bmpInput = new Bitmap(bmpinput);
+            Rectangle myRect = m_JzTools.SimpleRect(bmpinput.Size);
+            
             //jzFindObjectClass.AH_SetThreshold(bmpinput, ref bmpInput, checkBaseParaPropertyGrid.chkThresholdValue);
-            jzFindObjectClass.SetThresholdEX(bmpInput, myRect, 0, checkBaseParaPropertyGrid.chkThresholdValue, 0, !(checkBaseParaPropertyGrid.chkblobmode == BlobMode.White));
-            jzFindObjectClass.AH_FindBlob(bmpInput, checkBaseParaPropertyGrid.chkblobmode == BlobMode.White);
-            jzFindObjectClass.SortByArea();
+            m_JzFind.SetThresholdEX(bmpInput, myRect, 0, checkBaseParaPropertyGrid.chkThresholdValue, 0, !(checkBaseParaPropertyGrid.chkblobmode == BlobMode.White));
+            //m_JzFind.AH_FindBlob(bmpInput, checkBaseParaPropertyGrid.chkblobmode == BlobMode.White);
+            m_JzFind.Find(bmpInput, Color.Red);
+            m_JzFind.SortByArea();
         
             int myArea = myRect.Width * myRect.Height;
 
             bmpoutput.Dispose();
             bmpoutput = new Bitmap(bmpinput);
 
-            if (jzFindObjectClass.FoundList.Count > 0)
+            if (m_JzFind.FoundList.Count > 0)
             {
                 //int maxindex = jzFindObjectClass.GetMaxRectIndex();
-                FoundClass foundClass = jzFindObjectClass.GetFoundBySort(0);
+                FoundClass foundClass = m_JzFind.GetFoundBySort(0);
                 myRect = foundClass.rect;
                 myArea = foundClass.Area;
 
                 if (istrain)
                 {
-                    jzFindObjectClass.GetMaskedImage(bmpoutput, bmpInput, Color.Black);
-                    jzToolsClass.DrawRectEx(bmpoutput, myRect, new Pen(Color.Red));
+                    m_JzFind.GetMaskedImage(bmpoutput, bmpInput, Color.Black);
+                    m_JzTools.DrawRectEx(bmpoutput, myRect, new Pen(Color.Red));
                 }
                 str = $"宽度{myRect.Width.ToString()}高度{myRect.Height.ToString()}面积{myArea.ToString()}";
                 workstatus.ProcessString += str + Environment.NewLine;
@@ -837,6 +838,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     ret = true;
                 }
             }
+
+            bmpInput.Dispose();
             return ret;
         }
 

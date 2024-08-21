@@ -137,6 +137,12 @@ namespace Allinone.FormSpace
             //myPICKUI.SetMirrorGrpIndex(0);
 
             btnAXIS.Visible = false;
+            switch(OPTION)
+            {
+                case OptionEnum.MAIN_SDM3:
+                    btnMoveGo.Visible = true;
+                    break;
+            }
         }
 
         private void BtnCalStartEndOffsetXY_Click(object sender, EventArgs e)

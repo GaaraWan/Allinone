@@ -39,7 +39,6 @@ namespace JetEazy.BasicSpace
 
             richTextBoxRemote.SelectionStart = richTextBoxRemote.TextLength;
             richTextBoxRemote.ScrollToCaret();
-
         }
         /// <summary>  
         /// 显示错误日志  

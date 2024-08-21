@@ -1590,10 +1590,11 @@ namespace Allinone.OPSpace
             return isgood;
         }
 
+        object m_lockObj = new object();
         public void SDM2Test()
         {
             m_EnvNow = new EnvClass();
-
+            m_EnvNow.PageList.Clear();
             int ipageindex = 0;
             foreach (PageClass page in ENVList[0].PageList)
             {
@@ -1613,15 +1614,24 @@ namespace Allinone.OPSpace
                 }
                 else
                 {
-                    foreach (string pos in page.PagePostionList)
-                    {
-                        PageClass page1 = page.Clone();
-                        page1.PageRunNo = ipageindex;
-                        page1.PageRunPos = pos;
-                        ipageindex++;
+                    //foreach (string pos in page.PagePostionList)
+                    //{
+                    //    PageClass page1 = page.Clone(false);
+                    //    page1.PageRunNo = ipageindex;
+                    //    page1.PageRunPos = pos;
+                    //    ipageindex++;
 
-                        m_EnvNow.PageList.Add(page1);
-                    }
+                    //    m_EnvNow.PageList.Add(page1);
+                    //}
+
+                    Parallel.For(0, page.PagePostionList.Count, index =>
+                    {
+                        PageClass page1 = page.Clone(false);
+                        page1.PageRunNo = index;
+                        page1.PageRunPos = page.PagePostionList[index];
+                        lock (m_lockObj)
+                            m_EnvNow.PageList.Add(page1);
+                    });
                 }
             }
             if (m_EnvNow.PageList.Count > 0)
@@ -1632,7 +1642,7 @@ namespace Allinone.OPSpace
                 //thread_Train.Start(new object());
 
                 //m_EnvTrainOK = false;
-                m_EnvNow.ResetTrainStatus();
+                //m_EnvNow.ResetTrainStatus();
                 //m_EnvNow.A00_TrainProcess(true);
                 //m_EnvTrainOK = true;
             }

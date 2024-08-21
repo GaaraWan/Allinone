@@ -19,6 +19,7 @@ using WorldOfMoveableObjects;
 using Allinone.OPSpace.AnalyzeSpace;
 using AUVision;
 using JzASN.OPSpace;
+using PdfSharp.Drawing;
 
 namespace Allinone.OPSpace
 {
@@ -660,17 +661,30 @@ namespace Allinone.OPSpace
                 //newanalyze.bmpOUTPUT = new Bitmap(this.bmpOUTPUT);
 
 
-                newanalyze.myOPRectF = this.myOPRectF;
-                newanalyze.myOringinOffsetPointF = this.myOringinOffsetPointF;
-                newanalyze.LearnOrigionOffsetRectf = this.LearnOrigionOffsetRectf;
+                //newanalyze.myOPRectF = this.myOPRectF;
+                //newanalyze.myOringinOffsetPointF = this.myOringinOffsetPointF;
+                //newanalyze.LearnOrigionOffsetRectf = this.LearnOrigionOffsetRectf;
             }
+
+            newanalyze.myOPRectF = this.myOPRectF;
+            newanalyze.myOringinOffsetPointF = this.myOringinOffsetPointF;
+            newanalyze.LearnOrigionOffsetRectf = this.LearnOrigionOffsetRectf;
 
             if (isbrachclone)
             {
                 foreach (AnalyzeClass branchanalzye in this.BranchList)
                 {
-                    AnalyzeClass newbranchanalyze = branchanalzye.Clone(offsetpoint, adddegree, isclearorigin, isbrachclone, isdeepclone, islearnclone);
-                    newanalyze.BranchList.Add(newbranchanalyze);
+                    if (isdeepclone)
+                    {
+                        AnalyzeClass newbranchanalyze = branchanalzye.Clone(offsetpoint, adddegree, isclearorigin, isbrachclone, isdeepclone, islearnclone);
+                        newanalyze.BranchList.Add(newbranchanalyze);
+                    }
+                    else
+                    {
+                        AnalyzeClass newbranchanalyze = branchanalzye.Clone(offsetpoint, adddegree, isclearorigin, false, isdeepclone, islearnclone);
+                        newanalyze.BranchList.Add(newbranchanalyze);
+                    }
+
                 }
             }
 
@@ -678,8 +692,17 @@ namespace Allinone.OPSpace
             {
                 foreach (AnalyzeClass leanranalzye in this.LearnList)
                 {
-                    AnalyzeClass newlearnanalyze = leanranalzye.Clone(offsetpoint, adddegree, isclearorigin, isbrachclone, true, islearnclone);
-                    newanalyze.LearnList.Add(newlearnanalyze);
+                    if (isdeepclone)
+                    {
+                        AnalyzeClass newlearnanalyze = leanranalzye.Clone(offsetpoint, adddegree, isclearorigin, isbrachclone, true, islearnclone);
+                        newanalyze.LearnList.Add(newlearnanalyze);
+                    }
+                    else
+                    {
+                        AnalyzeClass newlearnanalyze = leanranalzye.Clone(offsetpoint, adddegree, isclearorigin, false, true, islearnclone);
+                        newanalyze.LearnList.Add(newlearnanalyze);
+                    }
+
                 }
             }
 
@@ -981,6 +1004,11 @@ namespace Allinone.OPSpace
             {
                 if (!MEASUREPara.CheckGood)
                     return 3;//量测错误
+            }
+            if (PADPara.PADMethod != PADMethodEnum.NONE)
+            {
+                if (!PADPara.IsPass)
+                    return 4;//表面或边角缺陷
             }
             foreach (AnalyzeClass analyzeClass in BranchList)
             {
@@ -3969,7 +3997,7 @@ namespace Allinone.OPSpace
                     myOringinOffsetPointF = new PointF(offsetpointf.X + myOPRectF.X, offsetpointf.Y + myOPRectF.Y);
 
                     bmpPATTERN.Dispose();
-                    bmpPATTERN = (Bitmap)bmpinput.Clone(myOPRectF, PixelFormat.Format24bppRgb);
+                    bmpPATTERN = (Bitmap)bmpinput.Clone(myOPRectF, PixelFormat.Format32bppArgb);
                 }
             }
 
@@ -3986,7 +4014,7 @@ namespace Allinone.OPSpace
             }
 
             bmpMASK.Dispose();
-            bmpMASK = new Bitmap(bmpPATTERN.Width, bmpPATTERN.Height, PixelFormat.Format24bppRgb);
+            bmpMASK = new Bitmap(bmpPATTERN.Width, bmpPATTERN.Height, PixelFormat.Format32bppArgb);
 
             //檢查是否需要檢測髒污的鍵帽，不需要一定得檢查髒污才能用Boarder
             //if (AOIPara.CheckDirtMethod != CheckDirtMethodEnum.NONE)
@@ -4823,6 +4851,53 @@ namespace Allinone.OPSpace
                         //SaveData(ALIGNPara.ToAlignParaString(), Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + " Info.txt");
                     }
                 }
+                else if(PADPara.PADMethod == PADMethodEnum.PLACODE_CHECK)
+                {
+                    bmpWIP.Dispose();
+                    bmpWIP = new Bitmap(bmpALIGNED);
+
+                    //Graphics graphicsx = Graphics.FromImage(bmpWIP);
+
+                    List<RectangleF> list = new List<RectangleF>();
+                    //收集内框并画出
+                    foreach (AnalyzeClass analyze2 in BranchList)
+                    {
+                        RectangleF rx = new RectangleF();
+                        //rx.X = analyze2.myOPRectF.X - ALIGNPara.AlignOffset.X + analyze2.NORMALPara.ExtendX;// - analyze.myOPRectF.X;
+                        //rx.Y = analyze2.myOPRectF.Y - ALIGNPara.AlignOffset.Y + analyze2.NORMALPara.ExtendY;// - analyze.myOPRectF.Y;
+                        rx.X = analyze2.myOPRectF.X + analyze2.NORMALPara.ExtendX;// - analyze.myOPRectF.X;
+                        rx.Y = analyze2.myOPRectF.Y + analyze2.NORMALPara.ExtendY;// - analyze.myOPRectF.Y;
+                        rx.Width = analyze2.myOPRectF.Width - analyze2.NORMALPara.ExtendX * 2;
+                        rx.Height = analyze2.myOPRectF.Height - analyze2.NORMALPara.ExtendY * 2;
+                        list.Add(rx);
+                    }
+                    PADPara.ListRectFMask = list;
+                    //if (list.Count > 0)
+                    //    graphicsx.FillRectangles(Brushes.Black, list.ToArray());
+                    //graphicsx.Dispose();
+
+                    isgood &= P10_PADInspectionProcess(istrain);
+
+                    if (istrain)
+                        PADPara.FillTrainStatus(TrainStatusCollection, ToLogString());
+                    else
+                    {
+                        if (isoutputfilltrain)
+                            PADPara.FillRunStatus(TrainStatusCollection, ToLogString());
+                        else
+                            PADPara.FillRunStatus(RunStatusCollection, ToLogString());
+                    }
+
+                    if (!isgood && !istrain && IsTempSave)
+                    {
+                        //bmpPATTERN.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_PATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpWIP.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_WIP" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpMASK.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_MASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_OUTPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+
+                        //SaveData(ALIGNPara.ToAlignParaString(), Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + " Info.txt");
+                    }
+                }
             }
             //else
             //{
@@ -4924,7 +4999,7 @@ namespace Allinone.OPSpace
                         else
                         {
                             bmpWIP.Dispose();
-                            bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format24bppRgb);
+                            bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format32bppArgb);
                         }
                     }
 
@@ -4970,7 +5045,7 @@ namespace Allinone.OPSpace
                         bmpWIP = (Bitmap)bmpinput.Clone();
                     }
                     else
-                        bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format24bppRgb);
+                        bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format32bppArgb);
 
 
 
@@ -5110,8 +5185,16 @@ namespace Allinone.OPSpace
 
                         //bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\FUCKOUTPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
 
-
-                        branchanalyze.FillRunStatus(TrainStatusCollection, ToLogString());
+                        switch (OPTION)
+                        {
+                            //case OptionEnum.MAIN_X6:
+                            case OptionEnum.MAIN_SDM2:
+                            case OptionEnum.MAIN_SDM3:
+                                break;
+                            default:
+                                branchanalyze.FillRunStatus(RunStatusCollection, ToLogString());
+                                break;
+                        }
                     }
 
                     if (!isgood)
@@ -5248,7 +5331,17 @@ namespace Allinone.OPSpace
                         {
                             if (branchanalyze.RunStatusCollection.COUNT > 0)
                             {
-                                branchanalyze.FillRunStatus(RunStatusCollection, ToLogString());
+                                switch (OPTION)
+                                {
+                                    //case OptionEnum.MAIN_X6:
+                                    case OptionEnum.MAIN_SDM2:
+                                    case OptionEnum.MAIN_SDM3:
+                                        break;
+                                    default:
+                                        branchanalyze.FillRunStatus(RunStatusCollection, ToLogString());
+                                        break;
+                                }
+                                //branchanalyze.FillRunStatus(RunStatusCollection, ToLogString());
                             }
 
                             //if (Universal.IsUseSeedFuntion)
@@ -5902,6 +5995,9 @@ namespace Allinone.OPSpace
                     case PADMethodEnum.GLUECHECK_BlackEdge:
                         isgood = PADPara.PB10_GlueInspectionProcess_BlackEdge(bmpWIP, ref bmpOUTPUT);
                         break;
+                    case PADMethodEnum.PLACODE_CHECK:
+                        isgood = PADPara.PB10_GlacodeInspectionProcess(bmpWIP, ref bmpOUTPUT);
+                        break;
                 }
                 //isgood = PADPara.PB10_PADInspectionProcess(bmpWIP, ref bmpOUTPUT);
             }
@@ -6085,6 +6181,13 @@ namespace Allinone.OPSpace
                 PADPara.FillRunStatus(TrainStatusCollection, ToLogString());
             }
             else if (PADPara.PADMethod == PADMethodEnum.GLUECHECK_BlackEdge)
+            {
+                bmpWIP.Dispose();
+                bmpWIP = new Bitmap(PADPara.bmpPadFindOutput);
+
+                PADPara.FillRunStatus(TrainStatusCollection, ToLogString());
+            }
+            else if (PADPara.PADMethod == PADMethodEnum.PLACODE_CHECK)
             {
                 bmpWIP.Dispose();
                 bmpWIP = new Bitmap(PADPara.bmpPadFindOutput);

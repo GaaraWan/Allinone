@@ -327,7 +327,7 @@ namespace Allinone.OPSpace.ResultSpace
 
             //Universal.SDM2_BMP_SHOW_CURRENT.Dispose();
             //Universal.SDM2_BMP_SHOW_CURRENT = (Bitmap)CCDCollection.GetBMP(getimageindex, false).Clone();// new Bitmap(CCDCollection.GetBMP(getimageindex, false));
-            OnTrigger(ResultStatusEnum.SHOW_CURRENT_IMAGE);
+            //OnTrigger(ResultStatusEnum.SHOW_CURRENT_IMAGE);
         }
 
         /// <summary>
@@ -673,6 +673,7 @@ namespace Allinone.OPSpace.ResultSpace
                             thread_DL_Test.Start(para);
                             //thread_DL_Test.Start(CamActClass.Instance.StepCurrent);
 
+                            //DLCalPageOneStepIndex(para);
                             //DLCalPageOneStepIndex(CamActClass.Instance.StepCurrent);
                             CamActClass.Instance.StepCurrent++;
 
@@ -2427,7 +2428,7 @@ namespace Allinone.OPSpace.ResultSpace
             //Universal.SDM2_BMP_SHOW_CURRENT.Save("D:\\TEST001.BMP");
             ////放出图像显示
             //OnTriggerShowImageCurrent(bmpshowCurrent);
-            OnTrigger(ResultStatusEnum.SHOW_CURRENT_IMAGE);
+            //OnTrigger(ResultStatusEnum.SHOW_CURRENT_IMAGE);
 
             watchThreadTime.Stop();
             long _time = watchThreadTime.ElapsedMilliseconds;
@@ -2443,7 +2444,7 @@ namespace Allinone.OPSpace.ResultSpace
 
             _LOG_MSG("Step=" + pageindex.ToString() + " 用时=" + watchThreadTime.ElapsedMilliseconds + "ms");
             RunStepComplete = true;
-
+            OnTrigger(ResultStatusEnum.SHOW_CURRENT_IMAGE);
             ////还原所有框的位置
             //ptRestore = new Point(-m_AlignFristOffset.X, -(m_AlignFristOffset.Y));
             AlbumWork.SetOffset(envindex, pageindex2, ptRestore, false);

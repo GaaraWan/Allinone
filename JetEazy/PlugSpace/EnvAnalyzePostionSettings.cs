@@ -135,6 +135,7 @@ namespace JetEazy.PlugSpace
         }
         void FromString(string str)
         {
+            return;
             string[] strArr = str.Split(';');
             if (!string.IsNullOrEmpty(strArr[0]))
                 GetImageStart = float.Parse(strArr[0]);

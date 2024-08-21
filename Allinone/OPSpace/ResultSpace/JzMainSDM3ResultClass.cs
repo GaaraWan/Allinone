@@ -327,13 +327,13 @@ namespace Allinone.OPSpace.ResultSpace
 
             //Universal.SDM2_BMP_SHOW_CURRENT.Dispose();
             //Universal.SDM2_BMP_SHOW_CURRENT = (Bitmap)CCDCollection.GetBMP(getimageindex, false).Clone();// new Bitmap(CCDCollection.GetBMP(getimageindex, false));
-            OnTrigger(ResultStatusEnum.SHOW_CURRENT_IMAGE);
+            //OnTrigger(ResultStatusEnum.SHOW_CURRENT_IMAGE);
         }
 
         /// <summary>
         /// 计算tray通过第一个位置得来的偏移值 用到其他页面
         /// </summary>
-        Point m_AlignFristOffset = new Point();
+        Point m_AlignFristOffset = new Point(0, 0);
         /// <summary>
         /// 用来记录第一次定位完成计算偏移值的标志
         /// </summary>
@@ -579,7 +579,7 @@ namespace Allinone.OPSpace.ResultSpace
                             if (MACHINE.IsOnSite()
                                 && MACHINE.IsOnSitePosition(m_CurrentPosition)
                                 && RunStepComplete || (Universal.IsNoUseMotor && RunStepComplete))
-                                //if (MACHINE.IsOnSite() && MACHINE.IsOnSitePosition(m_CurrentPosition) || (Universal.IsNoUseMotor && RunStepComplete))
+                            //if (MACHINE.IsOnSite() && MACHINE.IsOnSitePosition(m_CurrentPosition) || (Universal.IsNoUseMotor && RunStepComplete))
                             {
                                 MACHINE.PLCIO.RobotAbs = false;
                                 RunStepComplete = false;
@@ -620,7 +620,7 @@ namespace Allinone.OPSpace.ResultSpace
                                 if (!m_IsAlignComplete)
                                 {
                                     m_IsAlignComplete = true;
-                                    FillProcessImageMotorAlignSDM2(CamActClass.Instance.StepCurrent);
+                                    //FillProcessImageMotorAlignSDM2(CamActClass.Instance.StepCurrent);
                                 }
                                 //CamActClass.Instance.StepCurrent++;
                                 //>> 20230608
@@ -669,10 +669,11 @@ namespace Allinone.OPSpace.ResultSpace
                             para.ParaPageIndex = CamActClass.Instance.StepCurrent;
                             para.ParaEnvindex = EnvIndex;
 
-                            System.Threading.Thread thread_DL_Test = new System.Threading.Thread(DLCalPageOneStepIndex);
-                            thread_DL_Test.Start(para);
+                            //System.Threading.Thread thread_DL_Test = new System.Threading.Thread(DLCalPageOneStepIndex);
+                            //thread_DL_Test.Start(para);
                             //thread_DL_Test.Start(CamActClass.Instance.StepCurrent);
 
+                            DLCalPageOneStepIndex(para);
                             //DLCalPageOneStepIndex(CamActClass.Instance.StepCurrent);
                             CamActClass.Instance.StepCurrent++;
 
@@ -1703,7 +1704,7 @@ namespace Allinone.OPSpace.ResultSpace
         {
             if (index >= m_EnvNow.PageList.Count)
                 return MACHINE.GetReadyPosition();
-                //return "0,0,0";
+            //return "0,0,0";
             return m_EnvNow.PageList[index].PageRunPos;
         }
         string _getReadyPos()
@@ -2129,6 +2130,22 @@ namespace Allinone.OPSpace.ResultSpace
             public int ParaPageIndex;
             public int ParaEnvindex;
         }
+        public class DrawResultClass
+        {
+            public RectangleF xRectF;
+            public Color xColor;
+            public Rectangle xGetRect()
+            {
+                Rectangle rectangle = new Rectangle();
+
+                rectangle.X = (int)xRectF.X;
+                rectangle.Y = (int)xRectF.Y;
+                rectangle.Width = (int)xRectF.Width;
+                rectangle.Height = (int)xRectF.Height;
+
+                return rectangle;
+            }
+        }
         private void DLCalPageOneStepIndex(object obj)
         {
             threadPara para = (threadPara)obj;
@@ -2149,30 +2166,33 @@ namespace Allinone.OPSpace.ResultSpace
             watchThreadTime.Restart();
 
             PageClass page = m_EnvNow.PageList[pageindex];
-
+            //m_EnvNow.ResetRunStatus();
             int pageindex2 = page.No;
             Universal.CalPageIndex = pageindex;
 
             AlbumWork.SetPageTestState(envindex, pageindex2, false);
-
-            PageClass page0 = AlbumWork.ENVList[envindex].PageList[pageindex2];
-            foreach (AnalyzeClass analyze in page0.AnalyzeRoot.BranchList)
-            {
-                if (analyze.CheckAnalyzeReadBarcode())
-                {
-                    analyze.ResetAnalyzeBarcodeStr();
-                    break;
-                }
-            }
+            PageClass page1 = AlbumWork.ENVList[envindex].PageList[pageindex2];
+            //AlbumWork.ResetRunStatus();
+            //page1.ResetRunStatus();
+            //PageClass page0 = AlbumWork.ENVList[envindex].PageList[pageindex2];
+            //foreach (AnalyzeClass analyze in page0.AnalyzeRoot.BranchList)
+            //{
+            //    if (analyze.CheckAnalyzeReadBarcode())
+            //    {
+            //        analyze.ResetAnalyzeBarcodeStr();
+            //        break;
+            //    }
+            //}
 
             Point ptRestore = new Point(m_AlignFristOffset.X, m_AlignFristOffset.Y);
             //偏移所有框的位置
-            AlbumWork.SetOffset(envindex, pageindex2, ptRestore, true);
+            //AlbumWork.SetOffset(envindex, pageindex2, ptRestore, true);
             AlbumWork.A08_RunProcess(PageOPTypeEnum.P00, pageindex2, envindex);
             AlbumWork.SetPageTestState(envindex, pageindex2, true);
 
             RunStatusCollectionTemp.Clear();
-            PageClass page1 = AlbumWork.ENVList[envindex].PageList[pageindex2];
+            //PageClass page1 = AlbumWork.ENVList[envindex].PageList[pageindex2];
+            //page1.ResetRunStatus();
             page1.FillRunStatus(RunStatusCollectionTemp);
 
             ////填入条码
@@ -2183,7 +2203,9 @@ namespace Allinone.OPSpace.ResultSpace
 
             foreach (WorkStatusClass workStatusClass in RunStatusCollectionTemp.WorkStatusList)
             {
-                RunStatusCollection.Add(workStatusClass.Clone());
+                if (workStatusClass.Reason != ReasonEnum.PASS)
+                    RunStatusCollection.Add(workStatusClass.Clone());
+                //RunStatusCollection.Add(workStatusClass);
             }
 
             EnvAnalyzePostionSettings envAnalyzePostion = new EnvAnalyzePostionSettings(AlbumWork.ENVList[envindex].GeneralPosition);
@@ -2234,33 +2256,41 @@ namespace Allinone.OPSpace.ResultSpace
 
                 dataMapping.PtfCenter = new PointF(page.PageRunLocation.X + (float)(drawcol * envAnalyzePostion.GetImageCountXoffset * 1.0 / page.m_Mapping_Col),
                                                                             page.PageRunLocation.Y - (float)(drawrow * envAnalyzePostion.GetImageCountYoffset * 1.0 / page.m_Mapping_Row));
-                
 
-                if (!page.AnalyzeRoot.BranchList[i].CheckAnalyzeReadBarcode())
+
+                #region
+
+                //这里添加测试完成页面的结果
+                foreach (AnalyzeClass analyze in page1.AnalyzeRoot.BranchList)
                 {
+                    string a1 = analyze.ToAnalyzeString();
+                    string a2 = page.AnalyzeRoot.BranchList[i].ToAnalyzeString();
 
-                    //这里添加测试完成页面的结果
-                    foreach (AnalyzeClass analyze in page1.AnalyzeRoot.BranchList)
+                    if (a1 == a2)
                     {
-                        string a1 = analyze.ToAnalyzeString();
-                        string a2 = page.AnalyzeRoot.BranchList[i].ToAnalyzeString();
+                        dataMapping.ReportBinValue = analyze.GetAnalyzeErrorType();
 
-                        if (a1 == a2)
+                        if (dataMapping.ReportBinValue == 4)
+                        {
+                            graphics.DrawImage(analyze.PADPara.bmpMeasureOutput,
+                                                        new RectangleF(new PointF(0 + itemwidth * drawcol, 0 + itemheight * drawrow), new Size(itemwidth, itemheight)),
+                                                        new RectangleF(new PointF(0, 0), analyze.PADPara.bmpMeasureOutput.Size),
+                                                        GraphicsUnit.Pixel);
+                            dataMapping.bmpResult.Dispose();
+                            dataMapping.bmpResult = new Bitmap(analyze.PADPara.bmpMeasureOutput);
+                        }
+                        else
                         {
                             graphics.DrawImage(analyze.bmpWIP,
-                                                              new RectangleF(new PointF(0 + itemwidth * drawcol, 0 + itemheight * drawrow), new Size(itemwidth, itemheight)),
-                                                              new RectangleF(new PointF(0, 0), analyze.bmpWIP.Size),
-                                                              GraphicsUnit.Pixel);
-
-                            dataMapping.ReportBinValue = analyze.GetAnalyzeErrorType();
-
+                                                          new RectangleF(new PointF(0 + itemwidth * drawcol, 0 + itemheight * drawrow), new Size(itemwidth, itemheight)),
+                                                          new RectangleF(new PointF(0, 0), analyze.bmpWIP.Size),
+                                                          GraphicsUnit.Pixel);
                             dataMapping.bmpResult.Dispose();
                             dataMapping.bmpResult = new Bitmap(analyze.bmpWIP);
-
                             Graphics graphicsx = Graphics.FromImage(dataMapping.bmpResult);
-
                             List<RectangleF> list = new List<RectangleF>();
                             List<RectangleF> list_ng = new List<RectangleF>();
+                            //List<DrawResultClass> list_draw = new List<DrawResultClass>();
                             //收集内框并画出
                             foreach (AnalyzeClass analyze2 in analyze.BranchList)
                             {
@@ -2284,32 +2314,24 @@ namespace Allinone.OPSpace.ResultSpace
                                 graphics.DrawRectangles(new Pen(Color.Red, 3), list_ng.ToArray());
                                 graphicsx.DrawRectangles(new Pen(Color.Red, 3), list_ng.ToArray());
                             }
-                            
-                            graphicsx.Dispose();
 
-                            break;
+                            graphicsx.Dispose();
+                            graphics.Dispose();
                         }
-                    }
-                    RunDataMappingCollection.Add(dataMapping);
-                }
-                else
-                {
-                    foreach (AnalyzeClass analyze in page1.AnalyzeRoot.BranchList)
-                    {
-                        if (analyze.CheckAnalyzeReadBarcode())
-                        {
-                            Universal.CalTestBarcode = analyze.GetAnalyzeBarcodeStr();
-                            OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, Universal.CalTestBarcode);
-                        }
+
+                        break;
                     }
                 }
+                RunDataMappingCollection.Add(dataMapping);
+
+                #endregion
             }
 
             //graphics.Dispose();
             //Universal.SDM2_BMP_SHOW_CURRENT.Save("D:\\TEST001.BMP");
             ////放出图像显示
             //OnTriggerShowImageCurrent(bmpshowCurrent);
-            OnTrigger(ResultStatusEnum.SHOW_CURRENT_IMAGE);
+            //OnTrigger(ResultStatusEnum.SHOW_CURRENT_IMAGE);
 
             watchThreadTime.Stop();
             long _time = watchThreadTime.ElapsedMilliseconds;
@@ -2328,31 +2350,32 @@ namespace Allinone.OPSpace.ResultSpace
 
             ////还原所有框的位置
             //ptRestore = new Point(-m_AlignFristOffset.X, -(m_AlignFristOffset.Y));
-            AlbumWork.SetOffset(envindex, pageindex2, ptRestore, false);
+            //AlbumWork.SetOffset(envindex, pageindex2, ptRestore, false);
+            OnTrigger(ResultStatusEnum.SHOW_CURRENT_IMAGE);
         }
 
-        private void DLCalPageIndex(object obj)
-        {
-            int pageindex = (int)obj;
-            AlbumWork.SetPageTestState(pageindex, false);
-            AlbumWork.A08_RunProcess(PageOPTypeEnum.P00, pageindex);
-            AlbumWork.SetPageTestState(pageindex, true);
-        }
-        private void DLCalPageIndexSDM2(object obj)
-        {
-            int pageindex = (int)obj;
-            m_EnvNow.PageList[pageindex].CalComplete = false;
-            m_EnvNow.A08_RunProcess(PageOPTypeEnum.P00, pageindex);
-            m_EnvNow.PageList[pageindex].CalComplete = true;
-        }
-        bool m_EnvTrainOK = false;
-        private void DLTrainSDM2(object obj)
-        {
-            m_EnvTrainOK = false;
-            m_EnvNow.ResetTrainStatus();
-            m_EnvNow.A00_TrainProcess(true);
-            m_EnvTrainOK = true;
-        }
+        //private void DLCalPageIndex(object obj)
+        //{
+        //    int pageindex = (int)obj;
+        //    AlbumWork.SetPageTestState(pageindex, false);
+        //    AlbumWork.A08_RunProcess(PageOPTypeEnum.P00, pageindex);
+        //    AlbumWork.SetPageTestState(pageindex, true);
+        //}
+        //private void DLCalPageIndexSDM2(object obj)
+        //{
+        //    int pageindex = (int)obj;
+        //    m_EnvNow.PageList[pageindex].CalComplete = false;
+        //    m_EnvNow.A08_RunProcess(PageOPTypeEnum.P00, pageindex);
+        //    m_EnvNow.PageList[pageindex].CalComplete = true;
+        //}
+        //bool m_EnvTrainOK = false;
+        //private void DLTrainSDM2(object obj)
+        //{
+        //    m_EnvTrainOK = false;
+        //    m_EnvNow.ResetTrainStatus();
+        //    m_EnvNow.A00_TrainProcess(true);
+        //    m_EnvTrainOK = true;
+        //}
 
         public override void Reset()
         {
@@ -2969,7 +2992,7 @@ namespace Allinone.OPSpace.ResultSpace
 
                     string mainx6_picture_path = Universal.MainX6_Picture_Path + "\\" + (IsPass ? "P-" : "F-") + Universal.CalTestBarcode;
 
-                    if(INI.IsCollectPicturesSingle)
+                    if (INI.IsCollectPicturesSingle)
                     {
                         if (!Directory.Exists(mainx6_picture_path))
                             Directory.CreateDirectory(mainx6_picture_path);
@@ -2977,26 +3000,26 @@ namespace Allinone.OPSpace.ResultSpace
 
                     foreach (DataMappingClass keyassign in BranchList)
                     {
-                        switch(keyassign.ReportBinValue)
+                        switch (keyassign.ReportBinValue)
                         {
                             case 0://PASS
                                 INI.chipTestPassCount++;
                                 break;
-                            case 1://无胶
+                            case 1://定位错误
                                 INI.chipN1Count++;
                                 break;
-                            case 2://尺寸
+                            case 2://检测错误
                                 INI.chipN2Count++;
                                 break;
-                            case 3://溢胶
+                            case 3://量测错误
                                 INI.chipN3Count++;
                                 break;
-                            case 4://胶水异常
+                            case 4://表面边角缺陷
                                 INI.chipN4Count++;
                                 break;
-                            case 5://无芯片
-                                INI.chipN5Count++;
-                                break;
+                                //case 5://无芯片
+                                //    INI.chipN5Count++;
+                                //    break;
                         }
 
                         m_EnvNow.DrawMapping[imappingindexx] = keyassign.ReportBinValue;
@@ -3061,6 +3084,45 @@ namespace Allinone.OPSpace.ResultSpace
         bool IsInRange(int FromValue, int CompValue, int DiffValue)
         {
             return (FromValue >= CompValue - DiffValue) && (FromValue <= CompValue + DiffValue);
+        }
+        Color _getColor(int eIndex)
+        {
+            return MappingClass.GetBinColor(eIndex);
+            //Color eColor = Color.Green;
+            //switch (eIndex)
+            //{
+            //    case 1:
+            //        eColor = Color.Cyan;
+            //        break;
+            //    case 2:
+            //        eColor = Color.Violet;
+            //        break;
+            //    case 3:
+            //        eColor = Color.Yellow;
+            //        break;
+            //    case 4:
+            //        eColor = Color.Red;
+            //        break;
+            //    case 5:
+            //        eColor = Color.Purple;
+            //        break;
+            //    case 6:
+            //        eColor = Color.Blue;
+            //        break;
+            //    case 7:
+            //        eColor = Color.Orange;
+            //        break;
+            //    case 8:
+            //        eColor = Color.Fuchsia;
+            //        break;
+            //    case 9:
+            //        eColor = Color.LightPink;
+            //        break;
+            //    default:
+            //        eColor = Color.Green;
+            //        break;
+            //}
+            //return eColor;
         }
 
         List<string> AssignRankList = new List<string>();
@@ -3302,7 +3364,7 @@ namespace Allinone.OPSpace.ResultSpace
                     if (!Directory.Exists(mainx6_path + "\\000"))
                         Directory.CreateDirectory(mainx6_path + "\\000");
 
-                    EnvClass env = AlbumWork.ENVList[0];
+                    EnvClass env = m_EnvNow;
 
                     int qi = 0;
                     foreach (PageClass page in env.PageList)

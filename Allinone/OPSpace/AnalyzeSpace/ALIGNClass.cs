@@ -29,7 +29,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public float MTOffset = 0f;         //Check Offset Value
         public float MTResolution = 0.038f;  //Resolution Value
         public AlignModeEnum AlignMode = AlignModeEnum.AREA;    //Use Area or Borader Symptom for this analyze
-        
+
         xTrainingInfoF AUTrainInfoF = new xTrainingInfoF();
         AUFind AUFIND = new AUFind();
         xTrainingInfo xInfo = new xTrainingInfo();
@@ -46,8 +46,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
         #region On Line Data
 
-     public   Bitmap bmpPattern;
-     public   Bitmap bmpMask;
+        public Bitmap bmpPattern;
+        public Bitmap bmpMask;
         public Bitmap bmpContour;
 
         Bitmap bmpRunInput = new Bitmap(1, 1);
@@ -120,7 +120,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public void FromString(string str)
         {
             string[] strs = str.Split(Universal.SeperateCharB);
-            
+
             AlignMethod = (AlignMethodEnum)int.Parse(strs[0]);
             MTPSample = int.Parse(strs[1]);
             MTCannyH = int.Parse(strs[2]);
@@ -154,7 +154,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             if (str[0] != "02.Align")
                 return;
 
-           // float value = float.Parse(valuestring);
+            // float value = float.Parse(valuestring);
 
             switch (str[1])
             {
@@ -226,10 +226,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
             AbsAlignMode = AbsoluteAlignEnum.NONE;
             ABSOffset = 0f;         //Check Offset Value
         }
-        
+
         #region Application Operation
-        public bool AlignTrainProcess(Bitmap bmpinput,ref Bitmap bmppattern,Bitmap bmpmask,
-            int brightness,int contrast,string relateanalyzestr,PassInfoClass passinfo,bool isreservebmp)
+        public bool AlignTrainProcess(Bitmap bmpinput, ref Bitmap bmppattern, Bitmap bmpmask,
+            int brightness, int contrast, string relateanalyzestr, PassInfoClass passinfo, bool isreservebmp)
         {
             string str = "";
             bool isgood = true;
@@ -254,23 +254,23 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
 
 
-            bmpMask =new Bitmap( bmpmask);
-            
+            bmpMask = new Bitmap(bmpmask);
+
 
             //RelateAnalyzeInformation = relateanalyzeinformation;
             PassInfo = new PassInfoClass(passinfo, OPLevelEnum.COPY);
-            
-            switch(AlignMethod)
+
+            switch (AlignMethod)
             {
                 case AlignMethodEnum.NONE:
 
                     str = relateanalyzestr + " Use Method None Align For Image Output";
 
                     processstring += str + Environment.NewLine;
-                                        
+
                     break;
                 case AlignMethodEnum.AUFIND:
-               // case AlignMethodEnum.AUMATCH:
+                    // case AlignMethodEnum.AUMATCH:
                     //改變亮度及對比
 
                     processstring += relateanalyzestr + " Set Brightness to " + brightness.ToString() + " and Contrast to " + contrast.ToString() + Environment.NewLine;
@@ -336,7 +336,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         /// <param name="brightness"></param>
         /// <param name="contrast"></param>
         /// <returns></returns>
-        bool AuFindTrain(Bitmap bmppattern,Bitmap bmpmask, int brightness, int contrast)
+        bool AuFindTrain(Bitmap bmppattern, Bitmap bmpmask, int brightness, int contrast)
         {
             const int downsampleratiodefault = 88;
 
@@ -358,8 +358,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 bmpmask = new Bitmap(bmpmask, new Size((int)(bmpmask.Width / mySize), (int)(bmpmask.Height / mySize)));
             }
 
-                //畫入 image 中待處理
-                AUUtility.DrawBitmapToAUGrayImg8(bmppattern, ref imgpattern);
+            //畫入 image 中待處理
+            AUUtility.DrawBitmapToAUGrayImg8(bmppattern, ref imgpattern);
             AUUtility.DrawBitmapToAUGrayImg8(bmpmask, ref imgmask);
             AUUtility.DrawBitmapToAUColorImg24(bmppattern, ref imgResult);
             //bmpmask.Save(Universal.TESTPATH + "\\ANALYZETEST\\FROMASK32BMP" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
@@ -383,7 +383,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             AUTrainInfoF.nCannyThresholdHigh = MTCannyH;
             AUTrainInfoF.nCannyThresholdLow = MTCannyL;
             AUTrainInfoF.fRotationTolerance = MTRotation;
-            AUTrainInfoF.fScalingTolerance =  MTScaling;
+            AUTrainInfoF.fScalingTolerance = MTScaling;
             AUTrainInfoF.eFMode = eFindMode.eFindMode_GHT;
 
             ms = mytime.msDuriation;
@@ -393,11 +393,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //    AUFIND = new AUFind();
             //訓練圖像
 
-                isgood = AUFIND.Training(imgpattern, imgmask, AUTrainInfoF, MTCannyAuto);
-                
-           
-                //bmppattern.Save("D:\\pattern.png");
-                //bmpmask.Save("D:\\mask.png");
+            isgood = AUFIND.Training(imgpattern, imgmask, AUTrainInfoF, MTCannyAuto);
+
+
+            //bmppattern.Save("D:\\pattern.png");
+            //bmpmask.Save("D:\\mask.png");
 
 
             AUFIND.SetMaxOcc(MTMaxOcc);
@@ -408,9 +408,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //bmppattern.Save("D:\\testtest\\Pattern.png");
             //bmpmask.Save("D:\\testtest\\Mask.png");
             //if(bmpmask.Width!=1)
-            AUFIND.DrawResultContour(imgResult,10, Color.Lime.R, Color.Lime.G, Color.Lime.B);
+            AUFIND.DrawResultContour(imgResult, 10, Color.Lime.R, Color.Lime.G, Color.Lime.B);
             //     AUFIND.DrawTemplateContour(imgResult, Color.Lime.R, Color.Lime.G, Color.Lime.B);
-            
+
 
             if (bmpContour != null)
                 bmpContour.Dispose();
@@ -418,7 +418,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             bmpContour = new Bitmap(bmppattern.Width, bmppattern.Height);
             AUUtility.DrawAUColorImg24ToBitmap(imgResult, ref bmpContour);
 
-       //     bmpContour.Save("d:\\save.png");
+            //     bmpContour.Save("d:\\save.png");
             ms = mytime.msDuriation;
             mytime.Cut();
 
@@ -434,7 +434,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             imgpattern.Dispose();
             imgmask.Dispose();
             imgResult.Dispose();
-            
+
             return isgood;
         }
 
@@ -456,7 +456,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             JzFindObjectClass jzfind = new JzFindObjectClass();
             jzfind.Find(bmpmask, Color.Red);
-            if(jzfind.FoundList.Count>0)
+            if (jzfind.FoundList.Count > 0)
             {
                 //bmpmask.Save("D:\\testtest\\masktemp.png");
 
@@ -469,7 +469,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             AUUtility.DrawBitmapToAUGrayImg8(bmpmask, ref imgmask);
             AUUtility.DrawBitmapToAUColorImg24(bmppattern, ref imgResult);
 
-           
+
 
             //設定 Train 的參數
             xInfo.eAccuracy = eMatchingAccuracy.eMatchingAccuracy_High; //Set High-Accuracy
@@ -532,7 +532,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             return AuFindTrain(bmpPattern, bmpMask, brightness, contrast);
         }
 
-        public bool CheckAbsOffset(PointF ptfOrg, PointF ptfRun,RectangleF oprectf)
+        public bool CheckAbsOffset(PointF ptfOrg, PointF ptfRun, RectangleF oprectf)
         {
             bool ret = false;
             if (AbsAlignMode == AbsoluteAlignEnum.RELATION)
@@ -567,7 +567,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 if (xshiftrunxx > ABSOffset || yshiftrunyy > ABSOffset)
                 //if(Offset > ABSOffset)
                 {
-                    
+
                     ret = true;
                     //isgood = false;
                     //PassInfo.BiasOffset = "偏移 " + Offset.ToString("0.00");
@@ -1021,7 +1021,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         /// <param name="result"></param>
         /// <param name="imginput24"></param>
         /// <param name="imgoutput24"></param>
-        public void ScaleRotate(xFindResult result,AUColorImg24 imginput24,ref AUColorImg24 imgoutput24)
+        public void ScaleRotate(xFindResult result, AUColorImg24 imginput24, ref AUColorImg24 imgoutput24)
         {
             imgoutput24.Dispose();
             imgoutput24 = new AUColorImg24(imginput24.GetWidth(), imginput24.GetHeight());
@@ -1050,7 +1050,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             Rotation = result.fAngle;
             Offset = (float)Math.Sqrt(Math.Pow(fX, 2) + Math.Pow(fY, 2));
             Offset *= MTResolution;
-            
+
             AlignDegree = result.fAngle;
         }
 
@@ -1144,9 +1144,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     (float)fTargetCY,
                     //Result.fCenterX, Result.fCenterY,
                     (float)fX1, (float)fY1,
-                    result.fAngle, 
-                    1.0f, 
-                    1.0f, 
+                    result.fAngle,
+                    1.0f,
+                    1.0f,
                     eInterpolationBits.eInterpolationBits_8);
 
             //取得旋轉和偏移的值
@@ -1208,7 +1208,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             //AUFIND.Dispose(); //Don't know why
 
-            if(bmpMask != null)
+            if (bmpMask != null)
                 bmpMask.Dispose();
 
             if (bmpPattern != null)
@@ -1287,18 +1287,18 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 trainstatuscollection.Add(trainstatus);
             }
         }
-        public void FillTrainStatus(WorkStatusCollectionClass trainstatuscollection,string filltoanalyzestr)
+        public void FillTrainStatus(WorkStatusCollectionClass trainstatuscollection, string filltoanalyzestr)
         {
             foreach (WorkStatusClass trainstatus in TrainStatusCollection.WorkStatusList)
             {
-                if(filltoanalyzestr == null)
+                if (filltoanalyzestr == null)
                 {
-                    if(trainstatus.LogString == "")
+                    if (trainstatus.LogString == "")
                     {
                         trainstatuscollection.Add(trainstatus);
                     }
                 }
-                else 
+                else
                 {
                     if (trainstatus.LogString.IndexOf(filltoanalyzestr) < 0)
                     {
@@ -1310,9 +1310,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
         }
         public void AddTrainLogString(string logstr)
         {
-            foreach(WorkStatusClass works in TrainStatusCollection.WorkStatusList)
+            foreach (WorkStatusClass works in TrainStatusCollection.WorkStatusList)
             {
-                if(works.LogString.IndexOf(logstr) < 0)
+                if (works.LogString.IndexOf(logstr) < 0)
                 {
                     works.LogString += logstr;
                 }
@@ -1328,7 +1328,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 }
             }
         }
-        public bool AuFindSimilar(Bitmap bmpinput,int maxocc,float tolerance,List<DoffsetClass> doffsetlist)
+        public bool AuFindSimilar(Bitmap bmpinput, int maxocc, float tolerance, List<DoffsetClass> doffsetlist)
         {
             bool ret = false;
 
@@ -1337,11 +1337,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             AUGrayImg8 imginput = new AUGrayImg8();
             AUUtility.DrawBitmapToAUGrayImg8(bmpinput, ref imginput);
-            
+
             int resultcount = AUFIND.Find(imginput);
 
             xFindResult result = new xFindResult();
-            
+
             int i = 0;
 
             Rectangle rect = new Rectangle(0, 0, bmpPattern.Width, bmpPattern.Height);
@@ -1350,7 +1350,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //bmpRunOutput = new Bitmap(bmpinput);
 
             while (i < resultcount)
-            {   
+            {
                 AUFIND.GetResult(out result, i);
 
                 if (result.fScore >= tolerance)
@@ -1368,7 +1368,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
 
             //bmpRunOutput.Save(Universal.TESTPATH + "\\ANALYZETEST\\FOUNDRESULT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
-            
+
             return ret;
         }
         #endregion
@@ -1477,7 +1477,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             Graphics g = Graphics.FromImage(bmp);
 
-            rect.Location = new Point((int)centerf.X,(int)centerf.Y);
+            rect.Location = new Point((int)centerf.X, (int)centerf.Y);
             rect.X = rect.X - (rect.Width / 2);
             rect.Y = rect.Y - (rect.Height / 2);
 
@@ -1485,7 +1485,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             g.Dispose();
 
         }
-        bool IsRectBounded(Rectangle rect,Rectangle boundrect,PointF centerf)
+        bool IsRectBounded(Rectangle rect, Rectangle boundrect, PointF centerf)
         {
             rect.Location = new Point((int)centerf.X, (int)centerf.Y);
             rect.X = rect.X - (rect.Width / 2);
@@ -1494,7 +1494,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             Rectangle recttmp = rect;
 
             recttmp.Intersect(boundrect);
-            
+
             return rect == recttmp;
         }
 

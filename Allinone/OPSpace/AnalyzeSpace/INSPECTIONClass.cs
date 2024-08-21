@@ -333,7 +333,13 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //}
             //int GetMaxArea = JzFind.GetMaxArea(10, 10);
             int GetMaxArea = JzFind.GetMaxArea();
-
+            int getOverAreaCount = JzFind.Count;
+            switch (Universal.OPTION)
+            {
+                case OptionEnum.MAIN_SDM3:
+                    getOverAreaCount = JzFind.IsCheckOverAreaCount(IBArea);
+                    break;
+            }
             if (GetMaxArea > IBArea)
             {
                 isgood = false;
@@ -354,12 +360,14 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //        DrawRect(bmpoutput, found.rect, new Pen(Color.Lime, 10), 10);
                 //}
             }
-            else if (JzFind.Count > IBCount && IBCount != -1)
+            else if (getOverAreaCount > IBCount && IBCount != -1)
+            //else if (JzFind.Count > IBCount && IBCount != -1)
             {
                 isgood = false;
 
                 processstring += "Error in " + RelateAnalyzeString + " Inspection Count " + JzFind.Count.ToString() + " > " + IBCount.ToString() + Environment.NewLine;
-                errorstring += RelateAnalyzeString + " Inspection Count " + JzFind.Count.ToString() + " > " + IBCount.ToString() + Environment.NewLine;
+                errorstring += RelateAnalyzeString + " Inspection Count " + getOverAreaCount.ToString() + " > " + IBCount.ToString() + Environment.NewLine;
+                //errorstring += RelateAnalyzeString + " Inspection Count " + JzFind.Count.ToString() + " > " + IBCount.ToString() + Environment.NewLine;
 
                 reason = ReasonEnum.NG;
 
@@ -371,7 +379,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
             else
             {
                 processstring = "Inspection Max Area " + GetMaxArea.ToString() + " < " + IBArea.ToString()
-                    + ", Count " + JzFind.Count.ToString() + " < " + IBCount.ToString() + Environment.NewLine;
+                    + ", Count " + getOverAreaCount.ToString() + " < " + IBCount.ToString() + Environment.NewLine;
+
+                //processstring = "Inspection Max Area " + GetMaxArea.ToString() + " < " + IBArea.ToString()
+                //   + ", Count " + JzFind.Count.ToString() + " < " + IBCount.ToString() + Environment.NewLine;
             }
             //Universal.IsMultiThread = true;
             if (!isgood && PassInfo.OperatePath.IndexOf("80001") > -1)

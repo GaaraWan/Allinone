@@ -475,8 +475,10 @@ namespace Allinone.UISpace.RUNUISpace
                     label19.Text = "定位错误";
                     label18.Text = "检测错误";
                     label17.Text = "量测错误";
+                    label16.Text = "表面边角缺陷";
+                    //label21.Text = "边角缺陷";
 
-                    label16.Visible = false;
+                    //label16.Visible = false;
                     label21.Visible = false;
 
                     break;
@@ -1333,6 +1335,8 @@ namespace Allinone.UISpace.RUNUISpace
                 }
             }
 
+            if (Universal.OPTION == OptionEnum.MAIN_SDM3)
+                return;
 
             if (runstatuscollection.NGCOUNT == 0)
                 return;
@@ -1380,7 +1384,7 @@ namespace Allinone.UISpace.RUNUISpace
 
             switch (Universal.OPTION)
             {
-                case OptionEnum.MAIN_SDM3:
+                //case OptionEnum.MAIN_SDM3:
                 case OptionEnum.MAIN_SDM2:
 
                     if (!Directory.Exists(Universal.MainSDM2NG_Path + debugsavedatetimestring))
@@ -1490,7 +1494,7 @@ namespace Allinone.UISpace.RUNUISpace
 
                 switch (Universal.OPTION)
                 {
-                    case OptionEnum.MAIN_SDM3:
+                    //case OptionEnum.MAIN_SDM3:
                     case OptionEnum.MAIN_SDM2:
 
                         if (runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure == AnanlyzeProcedureEnum.GLUEINSPECT)

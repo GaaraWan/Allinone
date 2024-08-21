@@ -225,7 +225,20 @@ namespace Allinone.UISpace.CTRLUISpace
 
             switch (Universal.OPTION)
             {
+
                 case OptionEnum.MAIN_SDM3:
+
+                    switch (Universal.CAMACT)
+                    {
+                        case CameraActionMode.CAM_MOTOR_MODE2:
+
+                            btnRobot.Visible = false;
+                            btnTouchMotor.Visible = true;
+
+                            break;
+                    }
+                    break;
+
                 case OptionEnum.MAIN_SDM2:
                     switch (Universal.CAMACT)
                     {

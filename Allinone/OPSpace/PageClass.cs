@@ -421,7 +421,7 @@ namespace Allinone.OPSpace
             }
         }
 
-        public PageClass Clone()
+        public PageClass Clone(bool eCloneDeepPicture = true)
         {
             int i = 0;
 
@@ -440,13 +440,17 @@ namespace Allinone.OPSpace
 
             newpage.AnalyzeRootArray = new AnalyzeClass[PAGEOPTYPECOUNT];
 
-            i = 0;
-            while (i < PAGEOPTYPECOUNT)
+            //if (eCloneDeepPicture)
             {
-                newpage.AnalyzeRootArray[i] = this.AnalyzeRootArray[i].Clone(true);
+                i = 0;
+                while (i < PAGEOPTYPECOUNT)
+                {
+                    newpage.AnalyzeRootArray[i] = this.AnalyzeRootArray[i].Clone(new Point(0, 0), 0d, false, true, eCloneDeepPicture, true);
 
-                i++;
+                    i++;
+                }
             }
+
             newpage.PassInfo = new PassInfoClass(this.PassInfo, OPLevelEnum.COPY);
 
             newpage.bmpORG = new Bitmap[PAGEOPTYPECOUNT];

@@ -195,6 +195,12 @@ namespace Allinone
         [Description("晶片溢胶检查黑边模式")]
         GLUECHECK_BlackEdge = 2,
 
+        /// <summary>
+        /// 基板表面边角检查
+        /// </summary>
+        [Description("基板表面边角检查")]
+        PLACODE_CHECK = 3,
+
     }
 
     /// <summary>

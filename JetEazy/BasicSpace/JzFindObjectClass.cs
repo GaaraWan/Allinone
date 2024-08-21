@@ -1302,6 +1302,19 @@ namespace JetEazy.BasicSpace
             }
             return IsOK;
         }
+        public int IsCheckOverAreaCount(int area)
+        {
+            int isumcount = 0;
+
+            foreach (FoundClass found in FoundList)
+            {
+                if (found.Area >= area)
+                {
+                    isumcount++;
+                }
+            }
+            return isumcount;
+        }
         public int GetArea(int Index)
         {
             if (FoundList.Count == 0)

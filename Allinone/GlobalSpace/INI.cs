@@ -1026,15 +1026,37 @@ namespace Allinone
             chipTestFailCount = chipN1Count + chipN2Count + chipN3Count + chipN4Count;
             chipTestAllCount = passcount + chipTestFailCount;
             string str = string.Empty;
-            str += "总颗数：" + chipTestAllCount.ToString() + " pcs" + Environment.NewLine;
-            str += "Pass颗数：" + passcount.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, passcount) + ")" + Environment.NewLine;
-            str += "Fail颗数：" + chipTestFailCount.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipTestFailCount) + ")" + Environment.NewLine;
-            //str += "无芯片颗数：" + chipTestNoChipCount.ToString() +" pcs"+ Environment.NewLine;
-            str += "无胶颗数：" + chipN1Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN1Count) + ")" + Environment.NewLine;
-            str += "尺寸错误颗数：" + chipN2Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN2Count) + ")" + Environment.NewLine;
-            str += "晶片溢胶颗数：" + chipN3Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN3Count) + ")" + Environment.NewLine;
-            str += "胶水宽度异常颗数：" + chipN4Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN4Count) + ")" + Environment.NewLine;
-            str += "无芯片颗数：" + chipN5Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN5Count) + ")" + Environment.NewLine;
+            
+            switch(Universal.OPTION)
+            {
+                case OptionEnum.MAIN_SDM2:
+
+                    str += "总颗数：" + chipTestAllCount.ToString() + " pcs" + Environment.NewLine;
+                    str += "Pass颗数：" + passcount.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, passcount) + ")" + Environment.NewLine;
+                    str += "Fail颗数：" + chipTestFailCount.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipTestFailCount) + ")" + Environment.NewLine;
+                    //str += "无芯片颗数：" + chipTestNoChipCount.ToString() +" pcs"+ Environment.NewLine;
+                    str += "无胶颗数：" + chipN1Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN1Count) + ")" + Environment.NewLine;
+                    str += "尺寸错误颗数：" + chipN2Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN2Count) + ")" + Environment.NewLine;
+                    str += "晶片溢胶颗数：" + chipN3Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN3Count) + ")" + Environment.NewLine;
+                    str += "胶水宽度异常颗数：" + chipN4Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN4Count) + ")" + Environment.NewLine;
+                    str += "无芯片颗数：" + chipN5Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN5Count) + ")" + Environment.NewLine;
+
+
+                    break;
+                case OptionEnum.MAIN_SDM3:
+
+                    str += "总颗数：" + chipTestAllCount.ToString() + " pcs" + Environment.NewLine;
+                    str += "Pass颗数：" + passcount.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, passcount) + ")" + Environment.NewLine;
+                    str += "Fail颗数：" + chipTestFailCount.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipTestFailCount) + ")" + Environment.NewLine;
+                    //str += "无芯片颗数：" + chipTestNoChipCount.ToString() +" pcs"+ Environment.NewLine;
+                    str += "定位错误颗数：" + chipN1Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN1Count) + ")" + Environment.NewLine;
+                    str += "检测错误颗数：" + chipN2Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN2Count) + ")" + Environment.NewLine;
+                    str += "量测错误颗数：" + chipN3Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN3Count) + ")" + Environment.NewLine;
+                    str += "表面边角缺陷颗数：" + chipN4Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN4Count) + ")" + Environment.NewLine;
+                    
+
+                    break;
+            }
 
             //str += "总颗数：" + Environment.NewLine + chipTestAllCount.ToString() + Environment.NewLine;
             //str += "Pass颗数：" + Environment.NewLine + chipTestPassCount.ToString() + Environment.NewLine;

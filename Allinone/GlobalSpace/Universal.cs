@@ -45,7 +45,7 @@ namespace Allinone
         public static bool IsNoUseIO = false;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2024/08/13";
+        public static string VersionDate = "2024/08/21";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
         public static OptionEnum OPTION = OptionEnum.MAIN_SDM3;
