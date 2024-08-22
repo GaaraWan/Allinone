@@ -498,6 +498,13 @@ namespace Allinone.BasicSpace
             get { return INI.IsOpenCheckRepeatCode; }
             set { INI.IsOpenCheckRepeatCode = value; }
         }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 比对 false:不比对 注:需要先开启 是否比对重复码")]
+        [DisplayName("A02.是否比对当前批号重复码")]
+        public bool IsOpenCheckCurLotRepeatCode
+        {
+            get { return INI.IsOpenCheckCurLotRepeatCode; }
+            set { INI.IsOpenCheckCurLotRepeatCode = value; }
+        }
 
         [CategoryAttribute(cat2), DescriptionAttribute("true: 只显示当前图片 false:正常显示")]
         [DisplayName("是否只显示当前图片")]

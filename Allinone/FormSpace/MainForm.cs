@@ -1059,6 +1059,14 @@ namespace Allinone.FormSpace
                                                     JzMainSDPositionParas.INSPECT_NGINDEX = 0;
                                                     JzMainSDPositionParas.SaveRecord();
 
+                                                    if (INI.IsOpenCheckRepeatCode)
+                                                    {
+                                                        if (INI.IsOpenCheckCurLotRepeatCode)
+                                                        {
+                                                            JzMainSDPositionParas.MySqlCreateTable();
+                                                        }
+                                                    }
+
                                                     X6_LASER_CLIENT.Log.Log2("tcpdata.RecipeName:" + tcpdata.RecipeName);
                                                     X6_LASER_CLIENT.Log.Log2("tcpdata.LotName:" + tcpdata.LotName);
                                                 }

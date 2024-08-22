@@ -1002,16 +1002,30 @@ namespace Allinone.OPSpace
             bool isgood = true;
             //收集所有页面读取到的二维码
             List<string> _collectCodeList = new List<string>();
+            List<string> _collectCodeList_single = new List<string>();
             for (int i = 0; i < PageList.Count; i++)
             {
                 if (PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList.Count > 0)
                 {
                     foreach (AnalyzeClass analyze in PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList)
                     {
+                        _collectCodeList_single.Clear();
                         string barcodeStr = analyze.GetAnalyzeOnlyBarcodeStr();
                         if (!string.IsNullOrEmpty(barcodeStr))
                         {
                             _collectCodeList.Add(barcodeStr);
+                            //插入数据
+                            if (INI.IsOpenCheckCurLotRepeatCode)
+                            {
+                                bool bOK = Universal.JZMAINSDPOSITIONPARA.MySqlTableInsert(barcodeStr) >= 0;
+                                if (!bOK)
+                                {
+                                    _collectCodeList_single.Add(barcodeStr);
+                                    bOK = analyze.CheckRepeatCode(_collectCodeList_single);
+                                    analyze.IsVeryGood = bOK || analyze.IsByPass;
+                                    isgood &= bOK;
+                                }
+                            }
                         }
                     }
                 }
@@ -1023,8 +1037,9 @@ namespace Allinone.OPSpace
                 {
                     foreach (AnalyzeClass analyze in PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList)
                     {
-                        isgood &= analyze.CheckRepeatCode(_collectCodeList);
-                        analyze.IsVeryGood = isgood || analyze.IsByPass;
+                        bool bOK = analyze.CheckRepeatCode(_collectCodeList);
+                        analyze.IsVeryGood = bOK || analyze.IsByPass;
+                        isgood &= bOK;
                     }
                 }
             }

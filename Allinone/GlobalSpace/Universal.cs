@@ -45,14 +45,14 @@ namespace Allinone
         public static bool IsNoUseIO = false;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2024/08/21";
+        public static string VersionDate = "2024/08/22";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
-        public static OptionEnum OPTION = OptionEnum.MAIN_SDM3;
+        public static OptionEnum OPTION = OptionEnum.MAIN_X6;
 
-        public static CameraActionMode CAMACT = CameraActionMode.CAM_MOTOR_MODE2;
+        public static CameraActionMode CAMACT = CameraActionMode.CAM_MOTOR_LINESCAN;
         public static RobotType myRobotType = RobotType.NONE;
-        public static DiskType myDiskType = DiskType.DISK_D;
+        public static DiskType myDiskType = DiskType.DISK_C;
 
         #region 德龙激光
 
@@ -1990,6 +1990,13 @@ namespace Allinone
 
                             JZMAINSDPOSITIONPARA = new JzMainSDPositionParaClass(Universal.WORKPATH + "\\pos");
                             JZMAINSDPOSITIONPARA.Initial();
+                            //JZMAINSDPOSITIONPARA.SaveMySqlControl();
+                            JZMAINSDPOSITIONPARA.SetLogPath("D:\\log\\log.db.collect");
+
+                            //JZMAINSDPOSITIONPARA.MySqlCreateTable();
+                            //JZMAINSDPOSITIONPARA.MySqlTableInsert("TT000ZQ01");
+                            //JZMAINSDPOSITIONPARA.MySqlTableInsert("TT000ZQ02");
+                            //JZMAINSDPOSITIONPARA.MySqlTableInsert("TT000ZQ01");
 
                             break;
 

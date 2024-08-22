@@ -5187,7 +5187,7 @@ namespace Allinone.OPSpace
 
                         switch (OPTION)
                         {
-                            //case OptionEnum.MAIN_X6:
+                            case OptionEnum.MAIN_X6:
                             case OptionEnum.MAIN_SDM2:
                             case OptionEnum.MAIN_SDM3:
                                 break;
@@ -5333,7 +5333,7 @@ namespace Allinone.OPSpace
                             {
                                 switch (OPTION)
                                 {
-                                    //case OptionEnum.MAIN_X6:
+                                    case OptionEnum.MAIN_X6:
                                     case OptionEnum.MAIN_SDM2:
                                     case OptionEnum.MAIN_SDM3:
                                         break;
