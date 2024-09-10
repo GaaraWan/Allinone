@@ -42,6 +42,7 @@
             this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.button14 = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.button2 = new System.Windows.Forms.Button();
             this.numericUpDown3 = new System.Windows.Forms.NumericUpDown();
@@ -61,7 +62,7 @@
             this.button12 = new System.Windows.Forms.Button();
             this.DS = new JzDisplay.UISpace.DispUI();
             this.button13 = new System.Windows.Forms.Button();
-            this.button14 = new System.Windows.Forms.Button();
+            this.checkBox6 = new System.Windows.Forms.CheckBox();
             this.groupBox4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown6)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown4)).BeginInit();
@@ -165,6 +166,7 @@
             // groupBox3
             // 
             this.groupBox3.BackColor = System.Drawing.SystemColors.Control;
+            this.groupBox3.Controls.Add(this.checkBox6);
             this.groupBox3.Controls.Add(this.checkBox5);
             this.groupBox3.Controls.Add(this.checkBox4);
             this.groupBox3.Controls.Add(this.checkBox3);
@@ -173,7 +175,7 @@
             this.groupBox3.Controls.Add(this.checkBox1);
             this.groupBox3.Location = new System.Drawing.Point(221, 7);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(124, 128);
+            this.groupBox3.Size = new System.Drawing.Size(124, 146);
             this.groupBox3.TabIndex = 7;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "同位指定";
@@ -211,7 +213,7 @@
             // button3
             // 
             this.button3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button3.Location = new System.Drawing.Point(43, 97);
+            this.button3.Location = new System.Drawing.Point(43, 115);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(75, 25);
             this.button3.TabIndex = 1;
@@ -251,6 +253,16 @@
             this.groupBox2.TabIndex = 6;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "外圍尋找";
+            // 
+            // button14
+            // 
+            this.button14.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button14.Location = new System.Drawing.Point(9, 97);
+            this.button14.Name = "button14";
+            this.button14.Size = new System.Drawing.Size(75, 25);
+            this.button14.TabIndex = 40;
+            this.button14.Text = "尋找相似2";
+            this.button14.UseVisualStyleBackColor = false;
             // 
             // label3
             // 
@@ -456,15 +468,15 @@
             this.button13.UseVisualStyleBackColor = false;
             this.button13.Visible = false;
             // 
-            // button14
+            // checkBox6
             // 
-            this.button14.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button14.Location = new System.Drawing.Point(9, 97);
-            this.button14.Name = "button14";
-            this.button14.Size = new System.Drawing.Size(75, 25);
-            this.button14.TabIndex = 40;
-            this.button14.Text = "尋找相似2";
-            this.button14.UseVisualStyleBackColor = false;
+            this.checkBox6.AutoSize = true;
+            this.checkBox6.Location = new System.Drawing.Point(6, 93);
+            this.checkBox6.Name = "checkBox6";
+            this.checkBox6.Size = new System.Drawing.Size(120, 16);
+            this.checkBox6.TabIndex = 7;
+            this.checkBox6.Text = "参数资料(同位置)";
+            this.checkBox6.UseVisualStyleBackColor = true;
             // 
             // KBAOIForm
             // 
@@ -539,5 +551,6 @@
         private System.Windows.Forms.CheckBox checkBox5;
         private System.Windows.Forms.Button button13;
         private System.Windows.Forms.Button button14;
+        private System.Windows.Forms.CheckBox checkBox6;
     }
 }

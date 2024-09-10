@@ -1021,6 +1021,7 @@ namespace Allinone.OPSpace
                                 if (!bOK)
                                 {
                                     _collectCodeList_single.Add(barcodeStr);
+                                    _collectCodeList_single.Add(barcodeStr);
                                     bOK = analyze.CheckRepeatCode(_collectCodeList_single);
                                     analyze.IsVeryGood = bOK || analyze.IsByPass;
                                     isgood &= bOK;
@@ -1037,9 +1038,12 @@ namespace Allinone.OPSpace
                 {
                     foreach (AnalyzeClass analyze in PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList)
                     {
-                        bool bOK = analyze.CheckRepeatCode(_collectCodeList);
-                        analyze.IsVeryGood = bOK || analyze.IsByPass;
-                        isgood &= bOK;
+                        //if (analyze.IsVeryGood)
+                        {
+                            bool bOK = analyze.CheckRepeatCode(_collectCodeList);
+                            analyze.IsVeryGood = bOK || analyze.IsByPass;
+                            isgood &= bOK;
+                        }
                     }
                 }
             }

@@ -20,6 +20,7 @@ using JetEazy.DBSpace;
 using JzASN.OPSpace;
 using Allinone.OPSpace.CPDSpace;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace Allinone.OPSpace
 {
@@ -1356,6 +1357,33 @@ namespace Allinone.OPSpace
             //myProcessStringList.Add("Start " + env.ToEnvString() + " Preprocess.");
 
             isgood &= env.A08_RunProcess(pageoptype);
+
+            //string dataStr = string.Empty;
+            //foreach (PageClass page in env.PageList)
+            //{
+            //    foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+            //    {
+            //        dataStr += analyze.ALIGNPara.AlignOffset.X.ToString() + "," + analyze.ALIGNPara.AlignOffset.Y.ToString() + Environment.NewLine;
+            //    }
+            //}
+            //System.IO.StreamWriter stm = null;
+
+            //try
+            //{
+            //    stm = new System.IO.StreamWriter($"D:\\AllinoneOffset_{DateTime.Now.ToString("yyyyMMddHHmmss")}.csv", false, System.Text.Encoding.Default);
+            //    stm.Write(dataStr);
+            //    stm.Flush();
+            //    stm.Close();
+            //    stm.Dispose();
+            //    stm = null;
+            //}
+            //catch (Exception ex)
+            //{
+                
+            //}
+
+            //if (stm != null)
+            //    stm.Dispose();
 
             return isgood;
         }

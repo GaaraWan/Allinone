@@ -125,7 +125,7 @@ namespace Allinone.OPSpace
         public List<AnalyzeClass> BranchList = new List<AnalyzeClass>();
 
         public List<int> PrepareRemovalNoList = new List<int>();    //預備刪除的學習編號
-
+        //public List<RectangleF> CurrentRelationPositionRectF = new List<RectangleF>();
         string NoSaveStr
         {
             get
@@ -1018,6 +1018,187 @@ namespace Allinone.OPSpace
             }
             return 0;
         }
+        /// <summary>
+        /// 获取当前框子框的相对位置 收集到list —— CurrentRelationPositionRectF
+        /// </summary>
+        public void GetBranchOffsetPosition()
+        {
+            //CurrentRelationPositionRectF.Clear();
+            //foreach (AnalyzeClass analyzeClass in BranchList)
+            //{
+            //    PointF ptfOffset = new PointF(analyzeClass.myOPRectF.X - myOPRectF.X, analyzeClass.myOPRectF.Y - myOPRectF.Y);
+            //    RectangleF myrect = new RectangleF(ptfOffset, analyzeClass.myOPRectF.Size);
+            //    CurrentRelationPositionRectF.Add(myrect);
+            //}
+        }
+        public int GetBranchOffsetPositionIndex(RectangleF eRectF)
+        {
+            //if (CurrentRelationPositionRectF.Count == 0)
+            //    return -1;
+            //int i = 0;
+            //foreach (RectangleF rectangleF in CurrentRelationPositionRectF)
+            //{
+            //    if (rectangleF.IntersectsWith(eRectF))
+            //        break;
+
+            //    i++;
+            //}
+
+            //if (i >= CurrentRelationPositionRectF.Count)
+            //    return -2;
+
+            //return i;
+            return 0;
+        }
+        public bool IsHaveBranchSeed()
+        {
+            if (NORMALPara.IsSeed)
+                return true;
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                if (analyzeClass.NORMALPara.IsSeed)
+                    return true;
+                else
+                {
+                    bool bOK = analyzeClass.IsHaveBranchSeed();
+                    if (bOK)
+                        return true;
+                }
+            }
+            return false;
+        }
+        public bool IsHaveBranchSeedGood()
+        {
+            if (NORMALPara.IsSeed)
+            {
+                if (IsVeryGood)
+                    return true;
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                if (analyzeClass.NORMALPara.IsSeed)
+                {
+                    if (analyzeClass.IsVeryGood)
+                        return true;
+                }
+                else
+                {
+                    bool bOK = analyzeClass.IsHaveBranchSeedGood();
+                    if (bOK)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        #region 胶水检测
+        public int GetAnalyzeGlueErrorType()
+        {
+            if (PADPara.PADMethod == PADMethodEnum.NONE)
+                return 0;
+            if (string.IsNullOrEmpty(PADPara.DescStr))
+            {
+                return 0;
+            }
+            else
+            {
+                if (PADPara.DescStr.Contains("无胶"))
+                {
+                    return 1;
+                }
+                else if (PADPara.DescStr.Contains("尺寸"))
+                {
+                    return 2;
+                }
+                else if (PADPara.DescStr.Contains("溢胶"))
+                {
+                    return 3;
+                }
+                else if (PADPara.DescStr.Contains("胶水异常"))
+                {
+                    return 4;
+                }
+                else
+                {
+                    
+                }
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                int index = analyzeClass.GetAnalyzeGlueErrorType();
+                if (index != 0)
+                    return index;
+            }
+            return 5;
+        }
+        public string GetAnalyzeGlueErrorTypeDesc()
+        {
+            string descStr = string.Empty;
+            if (PADPara.PADMethod == PADMethodEnum.NONE)
+                descStr = string.Empty;
+            if (string.IsNullOrEmpty(PADPara.DescStr))
+            {
+                descStr = string.Empty;
+            }
+            else
+            {
+                if (PADPara.DescStr.Contains("无胶"))
+                {
+                    descStr = "无胶";
+                }
+                else if (PADPara.DescStr.Contains("尺寸"))
+                {
+                    descStr = "尺寸";
+                }
+                else if (PADPara.DescStr.Contains("溢胶"))
+                {
+                    descStr = "溢胶";
+                }
+                else if (PADPara.DescStr.Contains("胶水异常"))
+                {
+                    descStr = "胶水异常";
+                }
+                else
+                {
+                    descStr = PADPara.DescStr;
+                }
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                descStr += analyzeClass.GetAnalyzeGlueErrorTypeDesc();
+            }
+            return descStr;
+        }
+        public string GetAnalyzeGlueErrorTypeReport()
+        {
+            string descStr = string.Empty;
+            if (PADPara.PADMethod == PADMethodEnum.NONE)
+                descStr = string.Empty;
+            if (string.IsNullOrEmpty(PADPara.DescStr))
+            {
+                CalculateChipWidth();
+                descStr = ToReportString1();
+            }
+            else
+            {
+                if (PADPara.DescStr.Contains("胶水异常"))
+                {
+                    CalculateChipWidth();
+                    descStr = ToReportString1();
+                }
+                else
+                {
+                    descStr = ",,,,,,,,";
+                }
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                descStr += analyzeClass.GetAnalyzeGlueErrorTypeReport();
+            }
+            return descStr;
+        }
+        #endregion
+
 
         public void FillToList(List<AnalyzeClass> analyzelist)
         {
@@ -4420,7 +4601,20 @@ namespace Allinone.OPSpace
 
                 //}
                 ALIGNPara.Score = -1;
-                isgood &= ALIGNPara.AuFindRun(bmpWIP, ref bmpOUTPUT, istrain, Brightness, Contrast);
+             
+
+                switch(ALIGNPara.AlignMethod)
+                {
+#if USEHIKROT
+                    case AlignMethodEnum.HIK_FIND:
+                        isgood &= ALIGNPara.HikFindRun(bmpWIP, ref bmpOUTPUT, istrain, Brightness, Contrast);
+                        break;
+#endif
+                    default:
+                        isgood &= ALIGNPara.AuFindRun(bmpWIP, ref bmpOUTPUT, istrain, Brightness, Contrast);
+                        break;
+                }
+
                 ALIGNPara.IsTempSave = false;
 
                 //if (!istrain)
@@ -5930,7 +6124,7 @@ namespace Allinone.OPSpace
         /// <param name="bmpinput"></param>
         /// <param name="offsetpoint"></param>
         /// <returns></returns>
-        #endregion
+#endregion
         #region Inspection Operation
 
         bool I01_InspectionProcess(bool istrain)

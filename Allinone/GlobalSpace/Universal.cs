@@ -45,7 +45,7 @@ namespace Allinone
         public static bool IsNoUseIO = false;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2024/08/22";
+        public static string VersionDate = "2024/09/10";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
         public static OptionEnum OPTION = OptionEnum.MAIN_X6;
@@ -477,7 +477,11 @@ namespace Allinone
             #region 测试代码
 
             ////JzFindObjectClass jzFindObjectClass = new JzFindObjectClass();
-            //Bitmap bmpinput = new Bitmap("D:\\_tmp\\P00-001.png");
+            //Bitmap bmpinput = new Bitmap("D:\\JETEAZY\\ALLINONE-MAIN_X6\\PIC\\00009\\000\\P00-000.png");
+            //Bitmap bmpsave = new Bitmap(bmpinput, bmpinput.Width / 4, bmpinput.Height / 4);
+            //bmpsave.Save("D:\\JETEAZY\\ALLINONE-MAIN_X6\\PIC\\00009\\000\\P00-000_0.png", ImageFormat.Png);
+            //bmpinput.Dispose();
+            //bmpsave.Dispose();
             //Bitmap bmppattern = new Bitmap("D:\\_tmp\\pattern.png");
 
             ////pictureBox1.Image = new Bitmap("test.png");

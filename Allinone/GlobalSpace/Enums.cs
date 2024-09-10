@@ -47,6 +47,8 @@ namespace Allinone
 
         AUFIND = 0,
         AUMATCH = 1,
+
+        HIK_FIND = 2,
     }
     public enum AlignModeEnum : int
     {
@@ -196,9 +198,9 @@ namespace Allinone
         GLUECHECK_BlackEdge = 2,
 
         /// <summary>
-        /// 基板表面边角检查
+        /// 表面缺陷检查
         /// </summary>
-        [Description("基板表面边角检查")]
+        [Description("表面缺陷检查")]
         PLACODE_CHECK = 3,
 
     }

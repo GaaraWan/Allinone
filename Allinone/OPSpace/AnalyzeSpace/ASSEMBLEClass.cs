@@ -1214,7 +1214,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             publicproperties.Add(new myProperty("ExtendY", "01.Normal"));
             publicproperties.Add(new myProperty("RelateASN", "01.Normal"));
             publicproperties.Add(new myProperty("RelateASNItem", "01.Normal"));
-            //publicproperties.Add(new myProperty("IsSeed", "01.Normal"));
+            publicproperties.Add(new myProperty("IsSeed", "01.Normal"));
 
             publicproperties.Add(new myProperty("AlignMethod", "02.Align"));
             publicproperties.Add(new myProperty("AlignMode", "02.Align"));

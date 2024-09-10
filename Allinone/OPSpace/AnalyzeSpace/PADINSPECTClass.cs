@@ -701,7 +701,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //56ms
             if (isgood)
             {
-                Bitmap bmpsize = new Bitmap(bmpinput, Resize(bmpinput.Size, -3));
+                Bitmap bmpsize = new Bitmap(bmpinput, Resize(bmpinput.Size, _from_bmpinputSize_to_iSized()));
                 AForge.Imaging.Filters.HistogramEqualization histogramEqualization11 =
                     new AForge.Imaging.Filters.HistogramEqualization();
                 Bitmap bmphistogramEqualization11 = histogramEqualization11.Apply(bmpsize);
@@ -729,7 +729,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                                                            bmphistogramEqualization11.Width,
                                                                            bmphistogramEqualization11.Height);
 
-                RectangleF rectangletemp2 = ResizeWithLocation2(rectangletemp, 3);
+                RectangleF rectangletemp2 = ResizeWithLocation2(rectangletemp, _from_bmpinputSize_to_iSized());
 
                 double iwidthtmp = Math.Max(rectangletemp2.Width, rectangletemp2.Height);
                 double iheighttmp = Math.Min(rectangletemp2.Width, rectangletemp2.Height);
@@ -1000,7 +1000,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //这里是寻找点的起点位置
                 //rect.Inflate(-5, -5);
                 rect.Inflate(-(int)(CalExtendX * Resolution_Mil), -(int)(CalExtendY * Resolution_Mil));
-
+                BoundRect(ref rect, bitmap.Size);
                 if (m_IsSaveTemp)
                 {
                     bitmap.Save("D:\\testtest\\" + RelateAnalyzeString + "imginputorg" + ".png", System.Drawing.Imaging.ImageFormat.Png);
@@ -1033,105 +1033,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         gx.Dispose();
                         break;
                 }
-                
-                //
-
-                //if (m_IsSaveTemp)
-                //{
-                //    bitmap.Save("D:\\testtest\\" + RelateAnalyzeString + "imginputrectout" + ".png", System.Drawing.Imaging.ImageFormat.Png);
-                //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
-                //}
 
                 int i = 0;
                 int j = 0;
-                //while (i < (int)BorderTypeEnum.COUNT)
-                //{
-
-                //    switch (PADChipSizeMode)
-                //    {
-
-                //        case PADChipSize.CHIP_V5:
-
-                //            Rectangle recttempcorner = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
-                //            bitmap0 = new Bitmap(bmpInput);
-
-                //            switch ((BorderTypeEnum)i)
-                //            {
-                //                case BorderTypeEnum.LEFT:
-                //                    recttempcorner = new Rectangle(0, rect.Y, rect.X, rect.Height);
-                //                    break;
-                //                case BorderTypeEnum.TOP:
-                //                    recttempcorner = new Rectangle(rect.X, 0, rect.Width, rect.Y);
-                //                    break;
-                //                case BorderTypeEnum.RIGHT:
-                //                    recttempcorner = new Rectangle(rect.Right, rect.Y, bitmap0.Width - rect.Right, rect.Height);
-                //                    break;
-                //                case BorderTypeEnum.BOTTOM:
-                //                    recttempcorner = new Rectangle(rect.X, rect.Bottom, rect.Width, bitmap0.Height - rect.Bottom);
-                //                    break;
-                //            }
-
-                //            Bitmap bitmap1 = (Bitmap)bitmap0.Clone(recttempcorner,
-                //                System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-
-                //            bitmap = _getV5bmpInput(bitmap1, (BorderTypeEnum)i);
-                //            _get_border_pointf_v5(bitmap, recttempcorner, (BorderTypeEnum)i, out glues[i]);
-
-
-                //            break;
-
-                //        case PADChipSize.CHIP_V1:
-                //            _get_border_pointfEx01(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
-                //            //_get_border_pointf(bitmap, rect, (BorderTypeEnum)i, out glues[i]);
-                //            break;
-                //        case PADChipSize.CHIP_V3:
-                //            _get_border_pointf_v3_1(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
-                //            break;
-                //        case PADChipSize.CHIP_V6:
-
-                //            if (m_IsSaveTemp)
-                //            {
-                //                PADTempRegion.bmpThreshold.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpThreshold" + ".png", System.Drawing.Imaging.ImageFormat.Png);
-                //                //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
-                //            }
-
-                //            _get_border_pointf_v6_1(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
-                //            break;
-                //        case PADChipSize.CHIP_V8:
-
-                //            if (m_IsSaveTemp)
-                //            {
-                //                PADTempRegion.bmpThreshold.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpThreshold" + ".png", System.Drawing.Imaging.ImageFormat.Png);
-                //                //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
-                //            }
-
-                //            if (INI.chipUseAI)
-                //                _get_border_pointf_v8_1(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
-                //            else
-                //                _get_border_pointf_v6_1(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
-
-                //            break;
-                //        case PADChipSize.CHIP_V2:
-                //        //_get_border_pointf_v2(bitmap, rect, (BorderTypeEnum)i, out glues[i]);
-                //        //break;
-                //        case PADChipSize.CHIP_NORMAL:
-                //        default:
-
-                //            SetDilatation3x3(ref PADTempRegion.bmpThreshold, 2);
-                //            SetErosion3x3(ref PADTempRegion.bmpThreshold, 2);
-
-                //            //if (m_IsSaveTemp)
-                //            //{
-                //            //    PADTempRegion.bmpThreshold.Save("D:\\testtest\\" + RelateAnalyzeString + "bitmap1" + ".png", System.Drawing.Imaging.ImageFormat.Png);
-                //            //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
-                //            //}
-
-                //            _get_border_pointf_v3(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
-                //            break;
-                //    }
-                //    i++;
-                //}
 
                 //多线程计算4条边
                 switch (PADChipSizeMode)
@@ -5184,8 +5088,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
             int _minsize = Math.Min(eRect.Width, eRect.Height);
             if (_minsize >= 1500)
                 m_samplinggap = 137;
-            else
+            else if (_minsize >= 800)
                 m_samplinggap = 37;
+            else
+                m_samplinggap = 11;
 
             double maxv = -1000;
             double minv = 1000;
@@ -8102,6 +8008,22 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             double angleOfLine = Math.Atan2((p2.Y - p1.Y), (p2.X - p1.X)) * 180 / Math.PI;
             return angleOfLine;
+        }
+
+        public void BoundRect(ref Rectangle InnerRect, Size BoundSize)
+        {
+            InnerRect.X = Math.Min(Math.Max(InnerRect.X, 0), (BoundSize.Width - InnerRect.Width < 0 ? 0 : BoundSize.Width - InnerRect.Width));
+            InnerRect.Y = Math.Min(Math.Max(InnerRect.Y, 0), (BoundSize.Height - InnerRect.Height < 0 ? 0 : BoundSize.Height - InnerRect.Height));
+
+            if (BoundSize.Width <= InnerRect.X + InnerRect.Width)
+                InnerRect.Width = BoundValue(InnerRect.Width, BoundSize.Width - InnerRect.X, 1);
+            if (BoundSize.Height <= InnerRect.Height + InnerRect.Height)
+                InnerRect.Height = BoundValue(InnerRect.Height, BoundSize.Height - InnerRect.Y, 1);
+        }
+        public int BoundValue(int Value, int Max, int Min)
+        {
+            return Math.Max(Math.Min(Value, Max), Min);
+
         }
         #endregion
 

@@ -2197,13 +2197,13 @@ namespace Allinone.OPSpace.ResultSpace
             int itemheight = 230;
             foreach (AnalyzeClass analyze in page1.AnalyzeRoot.BranchList)
             {
-                if (itemwidth < analyze.PADPara.bmpMeasureOutput.Width)
+                if (itemwidth < analyze.bmpPATTERN.Width)
                 {
-                    itemwidth = analyze.PADPara.bmpMeasureOutput.Width;
+                    itemwidth = analyze.bmpPATTERN.Width;
                 }
-                if (itemheight < analyze.PADPara.bmpMeasureOutput.Height)
+                if (itemheight < analyze.bmpPATTERN.Height)
                 {
-                    itemheight = analyze.PADPara.bmpMeasureOutput.Height;
+                    itemheight = analyze.bmpPATTERN.Height;
                 }
             }
 
@@ -2268,10 +2268,65 @@ namespace Allinone.OPSpace.ResultSpace
 
                         if (a1 == a2)
                         {
-                            graphics.DrawImage(analyze.PADPara.bmpMeasureOutput,
-                                                              new RectangleF(new PointF(0 + itemwidth * drawcol, 0 + itemheight * drawrow), new Size(itemwidth, itemheight)),
-                                                              new RectangleF(new PointF(0, 0), analyze.PADPara.bmpMeasureOutput.Size),
-                                                              GraphicsUnit.Pixel);
+                            Bitmap bmpAll = new Bitmap(1, 1);
+                            if (analyze.PADPara.PADMethod == PADMethodEnum.NONE)
+                            {
+                                bmpAll.Dispose();
+                                bmpAll = new Bitmap(analyze.bmpWIP);
+                            }
+                            else
+                            {
+                                bmpAll.Dispose();
+                                bmpAll = new Bitmap(analyze.PADPara.bmpMeasureOutput);
+                            }
+                            Graphics graphics1 = Graphics.FromImage(bmpAll);
+
+                            if (analyze.BranchList.Count > 0)
+                            {
+                                foreach (AnalyzeClass analyze2 in analyze.BranchList)
+                                {
+                                    RectangleF rx = new RectangleF();
+                                    rx.X = analyze2.myOPRectF.X - analyze.ALIGNPara.AlignOffset.X;// + analyze2.NORMALPara.ExtendX;// - analyze.myOPRectF.X;
+                                    rx.Y = analyze2.myOPRectF.Y - analyze.ALIGNPara.AlignOffset.Y;// + analyze2.NORMALPara.ExtendY;// - analyze.myOPRectF.Y;
+                                    rx.Width = analyze2.myOPRectF.Width;// - analyze2.NORMALPara.ExtendX * 2;
+                                    rx.Height = analyze2.myOPRectF.Height;// - analyze2.NORMALPara.ExtendY * 2;
+
+                                    if (analyze2.PADPara.PADMethod == PADMethodEnum.NONE)
+                                    {
+                                        graphics1.DrawImage(analyze2.bmpWIP,
+                                                            rx,
+                                                            new RectangleF(new PointF(0, 0), analyze2.bmpWIP.Size),
+                                                            GraphicsUnit.Pixel);
+                                    }
+                                    else
+                                    {
+                                        graphics1.DrawImage(analyze2.PADPara.bmpMeasureOutput,
+                                                          rx,
+                                                          new RectangleF(new PointF(0, 0), analyze2.PADPara.bmpMeasureOutput.Size),
+                                                          GraphicsUnit.Pixel);
+                                    }
+
+                                    
+                                }
+                            }
+
+                            graphics1.Dispose();
+
+                            graphics.DrawImage(bmpAll,
+                                                       new RectangleF(new PointF(0 + itemwidth * drawcol, 0 + itemheight * drawrow), new Size(itemwidth, itemheight)),
+                                                       new RectangleF(new PointF(0, 0), bmpAll.Size),
+                                                       GraphicsUnit.Pixel);
+
+                            //if (analyze.PADPara.PADMethod == PADMethodEnum.NONE)
+                            //    graphics.DrawImage(bmpAll,
+                            //                           new RectangleF(new PointF(0 + itemwidth * drawcol, 0 + itemheight * drawrow), new Size(itemwidth, itemheight)),
+                            //                           new RectangleF(new PointF(0, 0), analyze.PADPara.bmpMeasureOutput.Size),
+                            //                           GraphicsUnit.Pixel);
+                            //else
+                            //    graphics.DrawImage(bmpAll,
+                            //                                      new RectangleF(new PointF(0 + itemwidth * drawcol, 0 + itemheight * drawrow), new Size(itemwidth, itemheight)),
+                            //                                      new RectangleF(new PointF(0, 0), analyze.PADPara.bmpMeasureOutput.Size),
+                            //                                      GraphicsUnit.Pixel);
 
                             //graphics.DrawImage(analyze.PADPara.bmpMeasureOutput,
                             //                                  new RectangleF(new PointF(0, 0), Universal.SDM2_BMP_SHOW_CURRENT.Size),
@@ -2279,75 +2334,114 @@ namespace Allinone.OPSpace.ResultSpace
                             //                                  GraphicsUnit.Pixel);
 
                             //Universal.SDM2_BMP_SHOW_CURRENT = (Bitmap)analyze.PADPara.bmpMeasureOutput.Clone();
-                                //new Bitmap(analyze.PADPara.bmpMeasureOutput);
+                            //new Bitmap(analyze.PADPara.bmpMeasureOutput);
 
                             dataMapping.bmpResult.Dispose();
-                            dataMapping.bmpResult = new Bitmap(analyze.PADPara.bmpMeasureOutput);
+                            dataMapping.bmpResult = new Bitmap(bmpAll);
 
-                            if (analyze.IsVeryGood)
+                            if (analyze.BranchList.Count > 0)
                             {
-                                dataMapping.ReportBinValue = 0;
-                                if (analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK
-                                    || analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK_BlackEdge)
+                                string myDescTemp = analyze.GetAnalyzeGlueErrorTypeDesc();
+                                if (string.IsNullOrEmpty(myDescTemp))
                                 {
-                                    if (string.IsNullOrEmpty(analyze.PADPara.DescStr))
+                                    dataMapping.ReportBinValue = 0;
+                                }
+                                else
+                                {
+                                    if (myDescTemp.Contains("无胶"))
                                     {
-                                        analyze.CalculateChipWidth();
-                                        dataMapping.ReportStr = analyze.ToReportString1();
+                                        dataMapping.ReportBinValue = 1;
+                                    }
+                                    else if (myDescTemp.Contains("尺寸"))
+                                    {
+                                        dataMapping.ReportBinValue = 2;
+                                    }
+                                    else if (myDescTemp.Contains("溢胶"))
+                                    {
+                                        dataMapping.ReportBinValue = 3;
+                                    }
+                                    else if (myDescTemp.Contains("胶水异常"))
+                                    {
+                                        dataMapping.ReportBinValue = 4;
                                     }
                                     else
                                     {
-                                        if (analyze.PADPara.DescStr.Contains("无胶"))
+                                        dataMapping.ReportBinValue = 5;
+                                    }
+                                }
+
+                                //dataMapping.ReportBinValue = analyze.GetAnalyzeGlueErrorType();
+                                dataMapping.ReportStr = analyze.GetAnalyzeGlueErrorTypeReport();
+                            }
+                            else
+                            {
+
+                                if (analyze.IsVeryGood)
+                                {
+                                    dataMapping.ReportBinValue = 0;
+                                    if (analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK
+                                        || analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK_BlackEdge)
+                                    {
+                                        if (string.IsNullOrEmpty(analyze.PADPara.DescStr))
                                         {
-                                            dataMapping.ReportBinValue = 1;
-                                        }
-                                        else if (analyze.PADPara.DescStr.Contains("尺寸"))
-                                        {
-                                            dataMapping.ReportBinValue = 2;
-                                        }
-                                        else if (analyze.PADPara.DescStr.Contains("溢胶"))
-                                        {
-                                            dataMapping.ReportBinValue = 3;
-                                        }
-                                        else if (analyze.PADPara.DescStr.Contains("胶水异常"))
-                                        {
-                                            dataMapping.ReportBinValue = 4;
                                             analyze.CalculateChipWidth();
                                             dataMapping.ReportStr = analyze.ToReportString1();
                                         }
                                         else
                                         {
-                                            dataMapping.ReportBinValue = 5;
+                                            if (analyze.PADPara.DescStr.Contains("无胶"))
+                                            {
+                                                dataMapping.ReportBinValue = 1;
+                                            }
+                                            else if (analyze.PADPara.DescStr.Contains("尺寸"))
+                                            {
+                                                dataMapping.ReportBinValue = 2;
+                                            }
+                                            else if (analyze.PADPara.DescStr.Contains("溢胶"))
+                                            {
+                                                dataMapping.ReportBinValue = 3;
+                                            }
+                                            else if (analyze.PADPara.DescStr.Contains("胶水异常"))
+                                            {
+                                                dataMapping.ReportBinValue = 4;
+                                                analyze.CalculateChipWidth();
+                                                dataMapping.ReportStr = analyze.ToReportString1();
+                                            }
+                                            else
+                                            {
+                                                dataMapping.ReportBinValue = 5;
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            else
-                            {
-                                dataMapping.ReportStr = string.Empty;
-                                if (analyze.PADPara.DescStr.Contains("无胶"))
-                                {
-                                    dataMapping.ReportBinValue = 1;
-                                }
-                                else if (analyze.PADPara.DescStr.Contains("尺寸"))
-                                {
-                                    dataMapping.ReportBinValue = 2;
-                                }
-                                else if (analyze.PADPara.DescStr.Contains("溢胶"))
-                                {
-                                    dataMapping.ReportBinValue = 3;
-                                }
-                                else if (analyze.PADPara.DescStr.Contains("胶水异常"))
-                                {
-                                    dataMapping.ReportBinValue = 4;
-                                    analyze.CalculateChipWidth();
-                                    dataMapping.ReportStr = analyze.ToReportString1();
-                                }
                                 else
                                 {
-                                    dataMapping.ReportBinValue = 5;
+                                    dataMapping.ReportStr = string.Empty;
+                                    if (analyze.PADPara.DescStr.Contains("无胶"))
+                                    {
+                                        dataMapping.ReportBinValue = 1;
+                                    }
+                                    else if (analyze.PADPara.DescStr.Contains("尺寸"))
+                                    {
+                                        dataMapping.ReportBinValue = 2;
+                                    }
+                                    else if (analyze.PADPara.DescStr.Contains("溢胶"))
+                                    {
+                                        dataMapping.ReportBinValue = 3;
+                                    }
+                                    else if (analyze.PADPara.DescStr.Contains("胶水异常"))
+                                    {
+                                        dataMapping.ReportBinValue = 4;
+                                        analyze.CalculateChipWidth();
+                                        dataMapping.ReportStr = analyze.ToReportString1();
+                                    }
+                                    else
+                                    {
+                                        dataMapping.ReportBinValue = 5;
+                                    }
                                 }
                             }
+
                             break;
                         }
                     }

@@ -66,6 +66,7 @@ namespace Allinone.FormSpace
         CheckBox IsMask;
         CheckBox IsTest;
         CheckBox IsTest2_Relative;
+        CheckBox IsTest3_RelativePos;
 
         CheckBox IsRegionPara;
         CheckBox IsTestPara;
@@ -126,6 +127,7 @@ namespace Allinone.FormSpace
             //IsRegionPara = checkBox5;
             IsTestPara = checkBox4;
             IsTest2_Relative = checkBox5;
+            IsTest3_RelativePos = checkBox6;
 
             btnFindSimiliar = button2;
             btnFindSimiliar.Tag = TagEnum.FINDSIMILIAR;
@@ -1319,7 +1321,30 @@ namespace Allinone.FormSpace
                                 break;
                         }
                     }
+                    else if (IsTest3_RelativePos.Checked)
+                    {
+                        //同位資料參數
+                        switch (Universal.PassOption)
+                        {
+                            case UserOptionEnum.ALL:
+                                PAGEUI.FindMarkSameParaPos();
+                                switch (Universal.OPTION)
+                                {
+                                    case JetEazy.OptionEnum.MAIN_SERVICE:
+                                    case JetEazy.OptionEnum.MAIN_X6:
+                                    case JetEazy.OptionEnum.MAIN_SDM1:
+                                    case JetEazy.OptionEnum.MAIN_SDM2:
+                                    case OptionEnum.MAIN_SDM3:
+                                        FindMarkSameParaPos();
+                                        break;
+                                }
 
+                                break;
+                            case UserOptionEnum.SIDE:
+                                PAGEUI.FindMarkSameParaPos();
+                                break;
+                        }
+                    }
                     JzToolsClass.myShowCursor(1);
 
                     m_stopwatch.Stop();
@@ -2202,7 +2227,54 @@ namespace Allinone.FormSpace
             }
 
         }
+        /// <summary>
+        /// 同位相同位置的框的参数
+        /// </summary>
+        public void FindMarkSameParaPos()
+        {
+            foreach (PageClass page in ENVNow.PageList)
+            {
+                if (page.No == PAGEUI.PageNow.No)
+                {
+                    continue;
+                }
 
+                ConverAnalyzeToList(page.AnalyzeRoot);
+
+                int i = 0;
+                int count = RawAnalyzeList.Count;
+                while (i < count)
+                {
+                    AnalyzeClass analyze = RawAnalyzeList[i];
+                    //if (analyze.No != PAGEUI.AnalyzeSelectNow.No && analyze.PageNo != PAGEUI.AnalyzeSelectNow.PageNo)
+                    {
+                        //同等級的參數 同位
+                        if (analyze.Level == PAGEUI.AnalyzeSelectNow.Level)
+                        {
+                            RectangleF r1 = PAGEUI.AnalyzeSelectNow.myOPRectF;
+                            r1.Inflate(-PAGEUI.AnalyzeSelectNow.ExtendX, -PAGEUI.AnalyzeSelectNow.ExtendY);
+                            RectangleF r2 = analyze.myOPRectF;
+                            r2.Inflate(-analyze.ExtendX, -analyze.ExtendY);
+                            if (r1.IntersectsWith(r2))
+                            {
+                                analyze.ExtendX = PAGEUI.AnalyzeSelectNow.ExtendX;
+                                analyze.ExtendY = PAGEUI.AnalyzeSelectNow.ExtendY;
+                                analyze.IsSeed = PAGEUI.AnalyzeSelectNow.IsSeed;
+                                //analyze.NORMALPara.FromString(PAGEUI.AnalyzeSelectNow.NORMALPara.ToString());
+                                analyze.ALIGNPara.FromString(PAGEUI.AnalyzeSelectNow.ALIGNPara.ToString());
+                                analyze.MEASUREPara.FromString(PAGEUI.AnalyzeSelectNow.MEASUREPara.ToString());
+                                analyze.AOIPara.FromString(PAGEUI.AnalyzeSelectNow.AOIPara.ToString());
+                                analyze.INSPECTIONPara.FromString(PAGEUI.AnalyzeSelectNow.INSPECTIONPara.ToString());
+                                analyze.OCRPara.FromString(PAGEUI.AnalyzeSelectNow.OCRPara.ToString());
+                                analyze.PADPara.FromString(PAGEUI.AnalyzeSelectNow.PADPara.ToString());
+                            }
+                        }
+                    }
+                    i++;
+                }
+
+            }
+        }
         /// <summary>
         /// 自動新增分支資料 带角度的新增
         /// </summary>

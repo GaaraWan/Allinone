@@ -769,7 +769,7 @@ namespace Allinone.FormSpace
                         break;
                 }
 
-                switch(OPTION)
+                switch (OPTION)
                 {
                     case OptionEnum.MAIN_SDM2:
                     case OptionEnum.MAIN_SDM3:
@@ -825,7 +825,7 @@ namespace Allinone.FormSpace
                     }
                 }
 
-                switch(Universal.OPTION)
+                switch (Universal.OPTION)
                 {
                     case JetEazy.OptionEnum.MAIN_SERVICE:
                     case OptionEnum.MAIN_X6:
@@ -848,7 +848,7 @@ namespace Allinone.FormSpace
                 //switch(Universal.MACHINECollection.MACHINE.mRobotType)
                 //{
                 //    case RobotType.NONE:
-                        
+
                 //        break;
                 //}
 
@@ -1726,7 +1726,7 @@ namespace Allinone.FormSpace
                 case OptionEnum.MAIN_SDM2:
                 case OptionEnum.MAIN_SDM1:
                 case OptionEnum.MAIN_SD:
-                    ESSUI.ShowPLC_RxTime(Universal.VersionDate + "_" + 
+                    ESSUI.ShowPLC_RxTime(Universal.VersionDate + "_" +
                         Universal.OPTION.ToString() + " " + JzScanTimeMS.ToString() + "ms "
                         + MACHINECollection.GetFps());
                     break;
@@ -2508,7 +2508,7 @@ namespace Allinone.FormSpace
 
                     CTRLUI.SetEnable(true);
 
-                    switch(OPTION)
+                    switch (OPTION)
                     {
                         case OptionEnum.MAIN_SDM3:
                         case OptionEnum.MAIN_SDM2:
@@ -5133,8 +5133,12 @@ namespace Allinone.FormSpace
                                 {
                                     if (Universal.IsNoUseIO)
                                     {
-                                        MappingUI.bmpTray.Save(Universal.CalTestPath + "\\" + Universal.CalTestBarcode + ".jpg",
+                                        //MappingUI.bmpTray.Save(Universal.CalTestPath + "\\" + Universal.CalTestBarcode + ".jpg",
+                                        //       System.Drawing.Imaging.ImageFormat.Jpeg);
+                                        Bitmap bmptraytemp = new Bitmap(MappingUI.bmpTray);
+                                        bmptraytemp.Save(Universal.CalTestPath + "\\" + Universal.CalTestBarcode + ".jpg",
                                                System.Drawing.Imaging.ImageFormat.Jpeg);
+                                        bmptraytemp.Dispose();
                                     }
                                     else
                                     {
@@ -5142,8 +5146,13 @@ namespace Allinone.FormSpace
                                         if (!System.IO.Directory.Exists(_mapping_path))
                                             System.IO.Directory.CreateDirectory(_mapping_path);
 
-                                        MappingUI.bmpTray.Save(_mapping_path + "\\" + Universal.CalTestBarcode + ".jpg",
+                                        //MappingUI.bmpTray.Save(_mapping_path + "\\" + Universal.CalTestBarcode + ".jpg",
+                                        //       System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                                        Bitmap bmptraytemp = new Bitmap(MappingUI.bmpTray);
+                                        bmptraytemp.Save(_mapping_path + "\\" + Universal.CalTestBarcode + ".jpg",
                                                System.Drawing.Imaging.ImageFormat.Jpeg);
+                                        bmptraytemp.Dispose();
                                     }
                                 }
                                 catch (Exception ex)
@@ -6961,7 +6970,7 @@ namespace Allinone.FormSpace
 
         #region MAIN_SDM2
 
-        
+
 
         //int m_UIWidth = 100;
         public void TrayMappingInit()
@@ -7078,7 +7087,7 @@ namespace Allinone.FormSpace
         {
             pnlMappingUI.BackgroundImage = MappingUI.bmpTray;
 
-            
+
         }
         public void ClearTrayMapping()
         {
@@ -7354,6 +7363,9 @@ namespace Allinone.FormSpace
 
         public int _changeModelBackgroudImage()
         {
+            int iret = -1;
+            JetEazy.LoggerClass.Instance.WriteLog("更换底图模板");
+
             if (Universal.IsNoUseCCD)
             {
                 string strPath3 = RESULT.myResult.GetLastDirPath(Universal.DEBUGSRCPATH);
@@ -7388,6 +7400,41 @@ namespace Allinone.FormSpace
             if (iscollecttemp)
                 INI.IsCollectPictures = true;
 
+            //检查是否有种子和种子是否测试OK
+            bool bOK = false;
+            foreach (PageClass page in env.PageList)
+            {
+                foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                {
+                    bOK = analyze.IsHaveBranchSeed();
+                    if (bOK)
+                        break;
+                }
+            }
+            if (!bOK)
+            {
+                JetEazy.LoggerClass.Instance.WriteLog("更换底图模板没有设置种子");
+                _almPopForm("更换底图模板没有设置种子", false);
+                return -1;//没有设种子
+            }
+
+            //检查是否有种子和种子是否测试OK
+            bOK = true;
+            foreach (PageClass page in env.PageList)
+            {
+                foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                {
+                    bOK &= analyze.IsHaveBranchSeedGood();
+                }
+            }
+            if (!bOK)
+            {
+                JetEazy.LoggerClass.Instance.WriteLog("更换底图模板种子测试FAIL");
+                _almPopForm("更换底图模板种子测试FAIL", false);
+                return -2;//种子测试NG
+            }
+
+
             //计算并写入偏移值
             foreach (PageClass page in env.PageList)
             {
@@ -7407,6 +7454,7 @@ namespace Allinone.FormSpace
 
             AlbumNow.A00_TrainProcess(true);
             AlbumNow.Save();
+            JetEazy.LoggerClass.Instance.WriteLog("更换底图模板完成");
             return 0;
         }
 
@@ -7605,6 +7653,19 @@ namespace Allinone.FormSpace
 
             if (stm != null)
                 stm.Dispose();
+        }
+
+        private void _almPopForm(string data, bool isok)
+        {
+            string say = data;
+            System.Threading.Tasks.Task task = new System.Threading.Tasks.Task(() =>
+            {
+                JetEazy.FormSpace.PopForm pop = new JetEazy.FormSpace.PopForm(say, isok);
+                //pop.Show();
+                pop.ShowDialog();
+            });
+            task.Start();
+            //isPass = !isPass;
         }
     }
 }

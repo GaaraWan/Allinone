@@ -2872,6 +2872,54 @@ namespace Allinone.UISpace
             //ConverAnalyzeToList(AnalyzeRootNow);
             //ATREEUI.SetAnalyzeTree(AnalyzeList);
         }
+        /// <summary>
+        /// 同位相同位置的框的参数
+        /// </summary>
+        public void FindMarkSameParaPos()
+        {
+            int i = 0;
+            int count = AnalyzeList.Count;
+            while (i < count)
+            {
+                AnalyzeClass analyze = AnalyzeList[i];
+                if (analyze.No != AnalyzeSelectNow.No)
+                {
+
+                    //if (analyze.AliasName == "A00-03-0086")
+                    //    analyze.AliasName = analyze.AliasName;
+
+                    //同等級的參數 同位
+                    if (analyze.Level == AnalyzeSelectNow.Level)
+                    {
+                        RectangleF r1 = AnalyzeSelectNow.myOPRectF;
+                        r1.Inflate(-AnalyzeSelectNow.ExtendX, -AnalyzeSelectNow.ExtendY);
+                        RectangleF r2 = analyze.myOPRectF;
+                        r2.Inflate(-analyze.ExtendX, -analyze.ExtendY);
+                        if (r1.IntersectsWith(r2))
+                        {
+                            bool bOK = true;
+
+                            analyze.ExtendX = AnalyzeSelectNow.ExtendX;
+                            analyze.ExtendY = AnalyzeSelectNow.ExtendY;
+                            analyze.IsSeed = AnalyzeSelectNow.IsSeed;
+
+                            //analyze.NORMALPara.FromString(AnalyzeSelectNow.NORMALPara.ToString());
+                            analyze.ALIGNPara.FromString(AnalyzeSelectNow.ALIGNPara.ToString());
+                            analyze.MEASUREPara.FromString(AnalyzeSelectNow.MEASUREPara.ToString());
+                            analyze.AOIPara.FromString(AnalyzeSelectNow.AOIPara.ToString());
+                            analyze.INSPECTIONPara.FromString(AnalyzeSelectNow.INSPECTIONPara.ToString());
+                            analyze.OCRPara.FromString(AnalyzeSelectNow.OCRPara.ToString());
+                            analyze.PADPara.FromString(AnalyzeSelectNow.PADPara.ToString());
+
+                        }
+
+
+                    }
+                }
+                i++;
+            }
+
+        }
 
         Rectangle MergeTwoRects(Rectangle rect1, Rectangle rect2)
         {

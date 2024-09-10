@@ -9,6 +9,9 @@ using System.Drawing.Imaging;
 using JetEazy;
 using AUVision;
 using JetEazy.BasicSpace;
+using VisionDesigner.AlmightyPatMatch;
+using System.Runtime.InteropServices;
+using VisionDesigner;
 
 namespace Allinone.OPSpace.AnalyzeSpace
 {
@@ -34,6 +37,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
         AUFind AUFIND = new AUFind();
         xTrainingInfo xInfo = new xTrainingInfo();
         AUMatch AUMATCH = new AUMatch();
+
+        VisionDesigner.AlmightyPatMatch.CAlmightyPattern cAlmightyPatternObj = null;
+        VisionDesigner.AlmightyPatMatch.CAlmightyPatMatchTool cAlmightyPatmatchToolObj = null;
 
         public AbsoluteAlignEnum AbsAlignMode = AbsoluteAlignEnum.NONE;
         public float ABSOffset = 0f;         //Check Offset Value
@@ -268,6 +274,25 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                     processstring += str + Environment.NewLine;
 
+                    break;
+                case AlignMethodEnum.HIK_FIND:
+                    // case AlignMethodEnum.AUMATCH:
+                    //改變亮度及對比
+
+                    processstring += relateanalyzestr + " Set Brightness to " + brightness.ToString() + " and Contrast to " + contrast.ToString() + Environment.NewLine;
+                    
+                    str = relateanalyzestr + " Use Method HIK_FIND Align For Training";
+                    processstring += str + Environment.NewLine;
+#if USEHIKROT
+                    SetBrightContrast(bmpPattern, brightness, contrast);
+                    isgood = HikFindTrain(bmpPattern, bmpmask, brightness, contrast);
+
+                    if (isreservebmp)
+                    {
+                        bmppattern.Dispose();
+                        bmppattern = new Bitmap(bmpPattern);
+                    }
+#endif
                     break;
                 case AlignMethodEnum.AUFIND:
                     // case AlignMethodEnum.AUMATCH:
@@ -521,6 +546,163 @@ namespace Allinone.OPSpace.AnalyzeSpace
             imgResult.Dispose();
 
             return isgood;
+        }
+        bool HikFindTrain(Bitmap bmppattern, Bitmap bmpmask, int brightness, int contrast)
+        {
+            bool isgood = true;
+
+            //AUGrayImg8 imgpattern = new AUGrayImg8();
+            //AUGrayImg8 imgmask = new AUGrayImg8();
+            //AUColorImg24 imgpattern = new AUColorImg24();
+
+            JzTimes mytime = new JzTimes();
+            int ms = 0;
+            string str = "";
+
+            mytime.Cut();
+
+            if (MTPSample == -1)
+            {
+                bmppattern = new Bitmap(bmppattern, new Size((int)(bmppattern.Width / mySize), (int)(bmppattern.Height / mySize)));
+                bmpmask = new Bitmap(bmpmask, new Size((int)(bmpmask.Width / mySize), (int)(bmpmask.Height / mySize)));
+            }
+
+            //AUUtility.DrawBitmapToAUColorImg24(bmppattern, ref imgpattern);
+            ////AUUtility.DrawBitmapToAUGrayImg8(bmpmask, ref imgmask);
+            ////AUUtility.DrawBitmapToAUColorImg24(bmppattern, ref imgResult);
+            //AUUtility.DrawAUColorImg24ToBitmap(imgpattern, ref bmpContour);
+
+            // CreatePatternInstance
+            if (cAlmightyPatternObj == null)
+                cAlmightyPatternObj = new VisionDesigner.AlmightyPatMatch.CAlmightyPattern();
+
+            //Set type
+
+            cAlmightyPatternObj.Type = PatMatchAlgorithmType.HPFeature;
+
+            // Set input image
+            Bitmap bmp24 = bmppattern.Clone(new Rectangle(0, 0, bmppattern.Width, bmppattern.Height), PixelFormat.Format8bppIndexed);
+
+            VisionDesigner.CMvdImage cInputImg = BitmapToCMvdImage(bmp24);
+            if (cInputImg.PixelFormat != MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08)
+            {
+                //当前程序仅支持mono8。因此像素格会转换.
+                cInputImg.ConvertImagePixelFormat(MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08);
+            }
+
+            //cInputImg.InitImage("InputTest.bmp");
+
+            cAlmightyPatternObj.InputImage = cInputImg;
+            cAlmightyPatternObj.RegionImage = cInputImg;
+            // Set ROI region (optional)
+
+            var region1 = new VisionDesigner.CMvdRectangleF(cInputImg.Width * 0.5f, cInputImg.Height * 0.5f, cInputImg.Width * 0.25f, cInputImg.Height * 0.25f);
+            region1 = new VisionDesigner.CMvdRectangleF(cInputImg.Width * 0.5f, cInputImg.Height * 0.5f, cInputImg.Width * 1f, cInputImg.Height * 1f);
+
+            cAlmightyPatternObj.RegionList.Add(new CAlmightyPatMatchRegion(region1, true));
+
+            // Set basic parameter
+
+            cAlmightyPatternObj.BasicParam.FixPoint = new VisionDesigner.MVD_POINT_F(Convert.ToSingle(cInputImg.Width) / 2, Convert.ToSingle(cInputImg.Height) / 2);
+
+            // Train
+
+            cAlmightyPatternObj.Train();
+
+            //// Export Pattern(optional)
+
+            //cAlmightyPatternObj.ExportPattern("HPPattern.hpmxml");
+
+            //// Import Pattern(optional)
+
+            //cAlmightyPatternObj.ImportPattern("HPPattern.hpmxml");
+
+            // Get the result
+
+            VisionDesigner.AlmightyPatMatch.CAlmightyPatternResult cAlmightyPatternRes = cAlmightyPatternObj.GetPatternResult();
+
+            Console.WriteLine("Pattern Size: ({0},{1})", cAlmightyPatternRes.Size.nWidth, cAlmightyPatternRes.Size.nHeight);
+
+            ms = mytime.msDuriation;
+            mytime.Cut();
+
+            if (isgood)
+            {
+                str = "Pattern Training Successful.";
+            }
+            else
+            {
+                str = "Pattern Training Error.";
+            }
+
+            return isgood;
+        }
+        /// <summary>
+        /// Bitmap 转成 CMvdImage
+        /// </summary>
+        /// <param name="bmpInputImg"></param>
+        /// <returns></returns>
+        private CMvdImage BitmapToCMvdImage(Bitmap bmpInputImg)
+        {
+            CMvdImage cMvdImage = new CMvdImage();
+            System.Drawing.Imaging.PixelFormat bitPixelFormat = bmpInputImg.PixelFormat;
+            BitmapData bmData = bmpInputImg.LockBits(new Rectangle(0, 0, bmpInputImg.Width, bmpInputImg.Height), ImageLockMode.ReadOnly, bitPixelFormat);//锁定
+
+            if (bitPixelFormat == System.Drawing.Imaging.PixelFormat.Format8bppIndexed)
+            {
+                Int32 bitmapDataSize = bmData.Stride * bmData.Height;//bitmap图像缓存长度
+                int offset = bmData.Stride - bmData.Width;
+                Int32 ImageBaseDataSize = bmData.Width * bmData.Height;//imageBaseData_V2图像真正的缓存长度
+                byte[] _BitImageBufferBytes = new byte[bitmapDataSize];
+                byte[] _ImageBaseDataBufferBytes = new byte[ImageBaseDataSize];
+                Marshal.Copy(bmData.Scan0, _BitImageBufferBytes, 0, bitmapDataSize);
+                int bitmapIndex = 0;
+                int ImageBaseDataIndex = 0;
+                for (int i = 0; i < bmData.Height; i++)
+                {
+                    for (int j = 0; j < bmData.Width; j++)
+                    {
+                        _ImageBaseDataBufferBytes[ImageBaseDataIndex++] = _BitImageBufferBytes[bitmapIndex++];
+                    }
+                    bitmapIndex += offset;
+                }
+                MVD_IMAGE_DATA_INFO stImageData = new MVD_IMAGE_DATA_INFO();
+                stImageData.stDataChannel[0].nRowStep = (uint)bmData.Width;
+                stImageData.stDataChannel[0].nLen = (uint)ImageBaseDataSize;
+                stImageData.stDataChannel[0].nSize = (uint)ImageBaseDataSize;
+                stImageData.stDataChannel[0].arrDataBytes = _ImageBaseDataBufferBytes;
+                cMvdImage.InitImage((uint)bmData.Width, (uint)bmData.Height, MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08, stImageData);
+            }
+            else if (bitPixelFormat == System.Drawing.Imaging.PixelFormat.Format24bppRgb)
+            {
+                Int32 bitmapDataSize = bmData.Stride * bmData.Height;//bitmap图像缓存长度
+                int offset = bmData.Stride - bmData.Width * 3;
+                Int32 ImageBaseDataSize = bmData.Width * bmData.Height * 3;//imageBaseData_V2图像真正的缓存长度
+                byte[] _BitImageBufferBytes = new byte[bitmapDataSize];
+                byte[] _ImageBaseDataBufferBytes = new byte[ImageBaseDataSize];
+                Marshal.Copy(bmData.Scan0, _BitImageBufferBytes, 0, bitmapDataSize);
+                int bitmapIndex = 0;
+                int ImageBaseDataIndex = 0;
+                for (int i = 0; i < bmData.Height; i++)
+                {
+                    for (int j = 0; j < bmData.Width; j++)
+                    {
+                        _ImageBaseDataBufferBytes[ImageBaseDataIndex++] = _BitImageBufferBytes[bitmapIndex + 2];
+                        _ImageBaseDataBufferBytes[ImageBaseDataIndex++] = _BitImageBufferBytes[bitmapIndex + 1];
+                        _ImageBaseDataBufferBytes[ImageBaseDataIndex++] = _BitImageBufferBytes[bitmapIndex];
+                        bitmapIndex += 3;
+                    }
+                    bitmapIndex += offset;
+                }
+                MVD_IMAGE_DATA_INFO stImageData = new MVD_IMAGE_DATA_INFO();
+                stImageData.stDataChannel[0].nRowStep = (uint)bmData.Width * 3;
+                stImageData.stDataChannel[0].nLen = (uint)ImageBaseDataSize;
+                stImageData.stDataChannel[0].nSize = (uint)ImageBaseDataSize;
+                stImageData.stDataChannel[0].arrDataBytes = _ImageBaseDataBufferBytes;
+                cMvdImage.InitImage((uint)bmData.Width, (uint)bmData.Height, MVD_PIXEL_FORMAT.MVD_PIXEL_RGB_RGB24_C3, stImageData);
+            }
+            bmpInputImg.UnlockBits(bmData);  // 解除锁定
+            return cMvdImage;
         }
 
         public bool IsSeedTrain()
@@ -931,6 +1113,348 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     bmpoutput = new Bitmap(bmpinput);
 
 
+
+                if (MTPSample == -1)
+                    bmpoutput = new Bitmap(bmpoutput, bmpPattern.Size);
+
+                //string strpath2 = "D:\\TestTest\\" + Universal.RESULT.myResult.RELATECOLORSTR + "\\" + RelateAnalyzeString + "\\";
+                //bmpoutput.Save(strpath2 + "Input2" + ".png");
+
+            }
+
+            imginput.Dispose();
+            imginput24.Dispose();
+            imgoutput24.Dispose();
+
+
+            if (bmpoutput.Width > 1)
+            {
+                workstatus.SetWorkStatus(bmpPattern, bmpoutput, bmpPattern, reason, errorstring, processstring, PassInfo);
+            }
+            else
+            {
+                if (bmpPattern == null || bmpinput == null)
+                    workstatus.SetWorkStatus(new Bitmap(1, 1), bmpinput, new Bitmap(1, 1), reason, errorstring, processstring, PassInfo);
+                else
+                    workstatus.SetWorkStatus(bmpPattern, bmpinput, bmpPattern, reason, errorstring, processstring, PassInfo);
+            }
+
+            if (istrain)
+                TrainStatusCollection.Add(workstatus);
+            else
+                RunStatusCollection.Add(workstatus);
+
+            if (isgood)
+            {
+                //Checking Offset Result
+                if (MTOffset != 0)
+                {
+                    WorkStatusClass biasrunstatus = new WorkStatusClass(AnanlyzeProcedureEnum.BIAS);
+
+                    if (Offset > MTOffset)
+                    {
+                        isgood = false;
+                        //PassInfo.BiasOffset = "偏移 " + Offset.ToString("0.00");
+                        processstring = "The Offset is " + Offset.ToString("0.00") + " > " + MTOffset.ToString("0.00") + " Error." + Environment.NewLine;
+                        errorstring = RelateAnalyzeString + "The Offset is " + Offset.ToString("0.00") + " > " + MTOffset.ToString("0.00") + " Error." + Environment.NewLine;
+                        reason = ReasonEnum.NG;
+                        //CheckGood = false;
+                        //if (!System.IO.Directory.Exists(Universal.MainX6_Path))
+                        //    System.IO.Directory.CreateDirectory(Universal.MainX6_Path);
+
+                        if (INI.IsCollectErrorSmall)
+                        {
+                            if (!System.IO.Directory.Exists(Universal.MainX6_Path + "\\offset"))
+                                System.IO.Directory.CreateDirectory(Universal.MainX6_Path + "\\offset");
+
+                            //bmpInput.Save(Universal.MainX6_Path + "\\" + RelateAnalyzeString + "_Input" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                            bmpoutput.Save(Universal.MainX6_Path + "\\offset" + "\\" + RelateAnalyzeString + "_Output" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                            bmpPattern.Save(Universal.MainX6_Path + "\\offset" + "\\" + RelateAnalyzeString + "_Pattern" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        }
+
+                        //Add Codes 2017/08/19
+                        //Draw Offset Lines
+                        //
+                    }
+                    else
+                    {
+                        //PassInfo.BiasOffset = "偏移 " + Offset.ToString("0.00");
+                        processstring = "The Offset is " + Offset.ToString("0.00") + " < " + MTOffset.ToString("0.00") + " Pass." + Environment.NewLine;
+                        errorstring = "";
+                        reason = ReasonEnum.PASS;
+                    }
+
+                    biasrunstatus.SetWorkStatus(bmpPattern, bmpoutput, bmpPattern, reason, errorstring, processstring, PassInfo);
+
+                    if (istrain)
+                        TrainStatusCollection.Add(biasrunstatus);
+                    else
+                        RunStatusCollection.Add(biasrunstatus);
+                }
+            }
+
+            //IsPass = isgood;
+            CheckGood = isgood;
+            return isgood;
+        }
+        public bool HikFindRun(Bitmap bmpinput, ref Bitmap bmpoutput, bool istrain, int brightness, int contrast)
+        {
+            bool isgood = true;
+            CheckGood = true;
+            //bmpoutput.Dispose();
+            bmpoutput = new Bitmap(1, 1);
+
+            if (MTPSample == -1)
+            {
+
+                if (bmpinput.Width / mySize < 1)
+                    bmpinput = new Bitmap(bmpinput);
+                else
+                    bmpinput = new Bitmap(bmpinput, new Size((int)(bmpinput.Width / mySize), (int)(bmpinput.Height / mySize)));
+                //   bmpmask = new Bitmap(bmpmask, new Size((int)(bmpmask.Width / mySize), (int)(bmpmask.Height / mySize)));
+            }
+
+            WorkStatusClass workstatus = new WorkStatusClass(AnanlyzeProcedureEnum.ALIGNRUN);
+            string processstring = "Start " + RelateAnalyzeString + " Alignment " + (istrain ? "<TRAIN>" : "<RUN>") + " Run." + Environment.NewLine;
+            string errorstring = "";
+            ReasonEnum reason = ReasonEnum.PASS;
+
+            switch (AlignMethod)
+            {
+                case AlignMethodEnum.NONE:
+
+                    processstring += "Alignment For NONE." + Environment.NewLine;
+
+                    bmpoutput.Dispose();
+                    //bmpoutput = new Bitmap(bmpinput);
+                    bmpoutput = (Bitmap)bmpinput.Clone();
+
+                    //SetBrightContrast(bmpoutput, brightness, contrast);
+
+                    //IsPass = true;
+                    workstatus.SetWorkStatus(bmpPattern, bmpoutput, bmpPattern, reason, errorstring, processstring, PassInfo);
+
+                    return true;
+            }
+
+            JzTimes mytime = new JzTimes();
+            int resultcount = 0;
+            int ms = 0;
+
+            // CreateToolInstance
+            if (cAlmightyPatmatchToolObj == null)
+                cAlmightyPatmatchToolObj = new VisionDesigner.AlmightyPatMatch.CAlmightyPatMatchTool();
+
+            //Set type
+
+            cAlmightyPatmatchToolObj.Type = PatMatchAlgorithmType.HPFeature;
+
+            //// Set ROI region (optional)
+
+            var region2 = new VisionDesigner.CMvdRectangleF(bmpinput.Width * 0.5f, bmpinput.Height * 0.5f, bmpinput.Width, bmpinput.Height);
+            cAlmightyPatmatchToolObj.RegionList.Add(new CAlmightyPatMatchRegion(region2, true));
+
+            // Set basic parameter
+
+            cAlmightyPatmatchToolObj.BasicParam.ShowOutlineStatus = true;
+
+            // Set Pattern
+
+            cAlmightyPatmatchToolObj.Pattern = cAlmightyPatternObj;
+
+
+
+            AUGrayImg8 imginput = new AUGrayImg8();
+            AUColorImg24 imginput24 = new AUColorImg24();
+            AUColorImg24 imgoutput24 = new AUColorImg24();
+            bmpRunInput.Dispose();
+            bmpRunInput = (Bitmap)bmpinput.Clone();
+
+            processstring += "Set Brightness " + brightness.ToString() + " ,Contrast " + contrast.ToString() + "." + Environment.NewLine;
+            SetBrightContrast(bmpRunInput, brightness, contrast);
+
+            AUUtility.DrawBitmapToAUColorImg24(bmpinput, ref imginput24);
+
+            //Universal.IsMultiThread = false;
+            //IsTempSave = true;
+            if (IsTempSave)
+            {
+                //xTrainingInfoF tmpInfo = new xTrainingInfoF();
+                //AUFIND.GetTrainingInfo(out tmpInfo);
+                string strpath = "D:\\TestTest\\" + Universal.RESULT.myResult.RELATECOLORSTR + "\\" + RelateAnalyzeString + "\\";
+                if (!Directory.Exists(strpath))
+                    Directory.CreateDirectory(strpath);
+                if (!Directory.Exists(strpath + "Data\\"))
+                    Directory.CreateDirectory(strpath + "Data\\");
+
+                Bitmap bmpsavePatt = new Bitmap(bmpPattern, new Size((int)(bmpPattern.Width / mySize), (int)(bmpPattern.Height / mySize)));
+
+                bmpsavePatt.Save(strpath + "\\TRAINPATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+
+                bmpsavePatt.Dispose();
+                //bmpMask Should Disposed if there is no inspection to do
+                //    if (!(bmpMask.Width == 1 && bmpMask.Height == 1))
+
+                Bitmap bmpsavemask = new Bitmap(bmpMask, new Size((int)(bmpMask.Width / mySize), (int)(bmpMask.Height / mySize)));
+                bmpsavemask.Save(strpath + "\\TRAINMASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                bmpsavemask.Dispose();
+                bmpRunInput.Save(strpath + "Data\\" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+
+            }
+            processstring += "Do Run Alignment." + Environment.NewLine;
+
+            // Set input image
+            Bitmap bmp24 = bmpinput.Clone(new Rectangle(0, 0, bmpinput.Width, bmpinput.Height), PixelFormat.Format8bppIndexed);
+            VisionDesigner.CMvdImage cInputImg2 = BitmapToCMvdImage(bmp24);
+            if (cInputImg2.PixelFormat != MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08)
+            {
+                //当前程序仅支持mono8。因此像素格会转换.
+                cInputImg2.ConvertImagePixelFormat(MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08);
+            }
+            //cInputImg2.InitImage("InputTest2.bmp");
+
+            cAlmightyPatmatchToolObj.InputImage = cInputImg2;
+
+            // Running
+
+            cAlmightyPatmatchToolObj.Run();
+
+            // Get the result
+
+            VisionDesigner.AlmightyPatMatch.CAlmightyPatMatchResult cHPMatchRes = cAlmightyPatmatchToolObj.Result;
+
+            //foreach (var item in cHPMatchRes.MatchInfoList)
+
+            //{
+                
+            //    Console.WriteLine("MatchPoint: ({0},{1})", item.MatchPoint.fX, item.MatchPoint.fY);
+                
+            //}
+            resultcount = cHPMatchRes.MatchInfoList.Count;
+
+            bmpRunInput.Dispose();
+            ms = mytime.msDuriation;
+
+            //檢查訓練後的數目是否和MaxOCC相同
+            if (istrain)
+            {
+                if (resultcount > MTMaxOcc)
+                {
+                    isgood = false;
+                    //CheckGood = false;
+                    processstring += "Error For More Than " + MTMaxOcc + " Results." + Environment.NewLine;
+                    errorstring += RelateAnalyzeString + " Error For More Than " + MTMaxOcc + " Results." + Environment.NewLine;
+                    reason = ReasonEnum.NG;
+                }
+                else if (resultcount < MTMaxOcc)
+                {
+                    isgood = false;
+                    //CheckGood = false;
+                    //bmpPattern.Save(Universal.TESTPATH + "\\ANALYZETEST\\TRAINPATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    //bmpMask.Save(Universal.TESTPATH + "\\ANALYZETEST\\TRAINMASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    //bmpRunInput.Save(Universal.TESTPATH + "\\ANALYZETEST\\RUNINPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+
+                    processstring += "Error For Less Than " + MTMaxOcc + " Results." + Environment.NewLine;
+                    errorstring += RelateAnalyzeString + " Error For Less Than " + MTMaxOcc + " Results." + Environment.NewLine;
+                    reason = ReasonEnum.NG;
+                }
+            }
+            else
+            {
+                if (resultcount < MTMaxOcc)
+                {
+                    isgood = false;
+                    //CheckGood = false;
+                    processstring += "Error For Less Than " + MTMaxOcc + " Results." + Environment.NewLine;
+                    errorstring += RelateAnalyzeString + " Error For Less Than " + MTMaxOcc + " Results." + Environment.NewLine;
+                    reason = ReasonEnum.NG;
+                }
+            }
+
+            if (resultcount >= MTMaxOcc && isgood)
+            {
+                if (MTPSample == -1)
+                {
+                    Bitmap bmpparre = new Bitmap(bmpPattern, new Size((int)(bmpPattern.Width / mySize), (int)(bmpPattern.Height / mySize)));
+                    imgoutput24 = new AUColorImg24(bmpparre.Width, bmpparre.Height);
+                    // imgoutput24.SetImage(130);
+                    AUUtility.DrawBitmapToAUColorImg24(bmpparre, ref imgoutput24);
+                }
+                else
+                {
+                    imgoutput24 = new AUColorImg24(bmpPattern.Width, bmpPattern.Height);
+                    // imgoutput24.SetImage(130);
+                    AUUtility.DrawBitmapToAUColorImg24(bmpPattern, ref imgoutput24);
+                }
+
+                if (AlignMethod == AlignMethodEnum.HIK_FIND)
+                {
+                    xFindResult result = new xFindResult();
+                    var item = cHPMatchRes.MatchInfoList[0];
+                    result.fCenterX = item.MatchBox.CenterX;
+                    result.fCenterY = item.MatchBox.CenterY;
+                    result.fAngle = item.MatchBox.Angle;
+                    result.fScale = item.Scale;
+                    result.fScore = item.Score;
+                    Score = result.fScore;
+
+                    if (Score < MTTolerance)
+                    {
+
+                        isgood = false;
+                        //CheckGood = false;
+                        processstring += "The Result Score is " + Score.ToString("0.00") + " < " + MTTolerance.ToString("0.00") + " Error." + Environment.NewLine;
+                        errorstring += RelateAnalyzeString + " The Result Score is " + Score.ToString("0.00") + " < " + MTTolerance.ToString("0.00") + " Error." + Environment.NewLine;
+                        reason = ReasonEnum.NG;
+                    }
+                    else
+                    {
+                        processstring += "The Result Score is " + Score.ToString("0.00") + " >= " + MTTolerance.ToString("0.00") + " Pass." + Environment.NewLine;
+                    }
+                    //      imginput.Save("d:\\temp2.png", eImageFormat.eImageFormat_PNG);
+                    if (isgood)
+                    {
+
+
+                        ScaleRotateEX2(result, imginput24, ref imgoutput24);
+
+                        processstring += "The Result Angle is " + Rotation.ToString("0.000") + " , Offset is " + Offset.ToString("0.000") + " ." + Environment.NewLine;
+                       
+                        if (IsTempSave)
+                        {
+
+                            string strpath = "D:\\TestTest\\" + Universal.RESULT.myResult.RELATECOLORSTR + "\\" + RelateAnalyzeString + "\\";
+                            if (!Directory.Exists(strpath))
+                                Directory.CreateDirectory(strpath);
+
+                            imginput24.Save(strpath + "Input" + ".png", eImageFormat.eImageFormat_PNG);
+                            imgoutput24.Save(strpath + "output" + ".png", eImageFormat.eImageFormat_PNG);
+
+                        }
+
+                        if (istrain)
+                        {
+                            OrgCenter = new PointF(result.fCenterX, result.fCenterY);
+                            AlignOffset = new PointF(0, 0);
+                        }
+                        else
+                        {
+                            RunCenter = new PointF(result.fCenterX, result.fCenterY);
+                            AlignOffset = new PointF(OrgCenter.X - result.fCenterX, OrgCenter.Y - result.fCenterY);
+                        }
+
+                    }
+
+                    if (isgood)
+                    {
+                        processstring += RelateAnalyzeString + " Alignment Successful." + Environment.NewLine;
+                    }
+                }
+                
+                if (isgood)
+                    AUUtility.DrawAUColorImg24ToBitmap(imgoutput24, ref bmpoutput);
+                else
+                    bmpoutput = new Bitmap(bmpinput);
 
                 if (MTPSample == -1)
                     bmpoutput = new Bitmap(bmpoutput, bmpPattern.Size);

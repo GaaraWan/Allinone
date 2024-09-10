@@ -331,6 +331,12 @@
     <Compile Include="FormSpace\ExportForm.designer.cs">
       <DependentUpon>ExportForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSpace\PopForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\PopForm.Designer.cs">
+      <DependentUpon>PopForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSpace\RobotHCFAForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -429,6 +435,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\ExportForm.resx">
       <DependentUpon>ExportForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\PopForm.resx">
+      <DependentUpon>PopForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\RobotHCFAForm.resx">
       <DependentUpon>RobotHCFAForm.cs</DependentUpon>

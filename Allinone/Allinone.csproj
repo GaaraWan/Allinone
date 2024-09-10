@@ -35,7 +35,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;xOPT_USE_THROUGH | xOPT_USE_THROUGH_CRYSTAL | xCollectGIF</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;xOPT_USE_THROUGH | xOPT_USE_THROUGH_CRYSTAL | xCollectGIF | xUSEHIKROT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -191,6 +191,22 @@
     <Reference Include="MoveGraphLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Allinone 20180821\JzASN\bin\Debug\MoveGraphLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="MVDAlmightyPatMatch.NET, Version=4.2.1.4, Culture=neutral, PublicKeyToken=d1775c00d24b42a0, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDAlmightyPatMatch.NET.dll</HintPath>
+    </Reference>
+    <Reference Include="MVDCore.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=1325730a174c0650, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Common\MVDCore.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MVDImage.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=ce2c144a3e6a9a93, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Common\MVDImage.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MVDShape.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=a59215ef735587a6, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Common\MVDShape.Net.dll</HintPath>
     </Reference>
     <Reference Include="netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
