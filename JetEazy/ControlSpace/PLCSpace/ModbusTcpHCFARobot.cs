@@ -1,5 +1,5 @@
 ﻿
-//#define NNMODBUS4_HCFA
+#define NNMODBUS4_HCFA
 
 #if NNMODBUS4_HCFA
 

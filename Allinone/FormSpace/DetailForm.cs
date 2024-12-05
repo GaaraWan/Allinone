@@ -20,6 +20,9 @@ using Allinone.UISpace;
 using JetEazy.PlugSpace;
 using Allinone.ControlSpace;
 using Allinone.ControlSpace.MachineSpace;
+using Allinone.BasicSpace;
+using System.Security.Cryptography;
+using static Allinone.UISpace.ALBUISpace.AllinoneAlbUI;
 
 namespace Allinone.FormSpace
 {
@@ -82,6 +85,8 @@ namespace Allinone.FormSpace
             SET_MUTIL_POSITION,
 
             SET_LED,
+
+            
         }
 
         int PAGEOPTYPECOUNT
@@ -161,6 +166,10 @@ namespace Allinone.FormSpace
         Button btnSetMutiPostion;
         Button btnLEDControl;
 
+        Button btnMark1;
+        Button btnMark2;
+        Button btnCommonFrm;
+
        public PageUI PAGEUI;
         EnvClass ENVNow;
         AnalyzeClass ANALYZENow;
@@ -171,6 +180,7 @@ namespace Allinone.FormSpace
         bool IsLearn = false;
 
         Timer myTimer = new Timer();
+        Timer myTimer2_mark = new Timer();
 
         bool IsMatching
         {
@@ -234,9 +244,22 @@ namespace Allinone.FormSpace
                 myTimer = new Timer();
                 myTimer.Interval = 500;
                 myTimer.Tick += myTimer_Tick;
+
+                myTimer2_mark = new Timer();
+                //myTimer2_mark.Enabled = true;
+                myTimer2_mark.Interval = 500;
+                myTimer2_mark.Tick += MyTimer2_mark_Tick;
             }
 
         }
+
+        private void MyTimer2_mark_Tick(object sender, EventArgs e)
+        {
+            btnMark1.BackColor = (m_RegionMark1 ? Color.Red : Color.FromArgb(192, 255, 192));
+            btnMark2.BackColor = (m_RegionMark2 ? Color.Red : Color.FromArgb(192, 255, 192));
+
+        }
+
         void Initial(CCDCollectionClass ccdcollection, EnvClass backupenv,
             VersionEnum version, OptionEnum opt, bool isstatic)
         {
@@ -246,7 +269,7 @@ namespace Allinone.FormSpace
             CCDCollection = ccdcollection;
 
             ENVNow = backupenv;
-
+            
             IsStatic = isstatic;
             //IsLearn = false;
             InitialInside();
@@ -300,6 +323,10 @@ namespace Allinone.FormSpace
             btnGOCurrentPosition=button19;
             btnSetMutiPostion = button20;
             btnLEDControl = button21;
+
+            btnMark1 = button22;
+            btnMark2 = button23;
+            btnCommonFrm = button24;
 
             chkMactching = checkBox1;
             cboMatchingMethod = comboBox3;
@@ -412,10 +439,20 @@ namespace Allinone.FormSpace
             CheckVersion();
             btnLEDControl.Visible = false;
 
+            btnMark1.Click += BtnMark1_Click;
+            btnMark2.Click += BtnMark2_Click;
+            btnCommonFrm.Click += BtnCommonFrm_Click;
+
+            pageUI1.CaptureTriggerAction += PageUI1_CaptureTriggerAction;
+
             #region 缩放
 
             switch (Universal.OPTION)
             {
+                case OptionEnum.MAIN_SDM5:
+                    btnOneKeyReget.Visible = true;
+                    btnOneKeyExposure.Visible = true;
+                    break;
                 case OptionEnum.MAIN_SDM3:
                 case OptionEnum.MAIN_SDM2:
                 case OptionEnum.MAIN_SDM1:
@@ -488,6 +525,141 @@ namespace Allinone.FormSpace
             }
 
             #endregion
+
+        }
+
+        frmMark mFrmMark = null;
+        private void BtnCommonFrm_Click(object sender, EventArgs e)
+        {
+            if (INI.ShowMarkFrm)
+                return;
+
+            mFrmMark = new frmMark(PageNow.Mark1Para);
+            mFrmMark.Show();
+        }
+
+        private void PageUI1_CaptureTriggerAction(RectangleF captureRectF)
+        {
+
+            if (!INI.ShowMarkFrm)
+                return;
+
+            RectangleF rectf_des = captureRectF;
+
+            if (m_RegionMark1)
+            {
+                BoundRect(ref captureRectF, PageNow.GetbmpORG().Size);
+                if (captureRectF.Width > 1 && captureRectF.Height > 1)
+                {
+                    m_RegionMark1 = false;
+
+                    MarkParaPropertyGridClass markParaPropertyGridClass = new MarkParaPropertyGridClass();
+                    markParaPropertyGridClass.RectF = captureRectF;
+                    markParaPropertyGridClass.chkThresholdValue = mFrmMark.markParaPropertyGridClass.chkThresholdValue;
+                    markParaPropertyGridClass.chkIsOpen = mFrmMark.markParaPropertyGridClass.chkIsOpen;
+                    markParaPropertyGridClass.chkblobmode = mFrmMark.markParaPropertyGridClass.chkblobmode;
+
+                    markParaPropertyGridClass.PtfCenter = calMarkBlob(PageNow.GetbmpORG(),
+                        captureRectF, markParaPropertyGridClass.chkThresholdValue, out rectf_des,
+                        markParaPropertyGridClass.chkblobmode == BlobMode.White);
+
+                    Bitmap bmpx = new Bitmap(PageNow.GetbmpORG());
+                    Graphics g = Graphics.FromImage(bmpx);
+                    RectangleF rectangleFmark0 = SimpleRectF(markParaPropertyGridClass.PtfCenter, 2, 2);
+
+                    g.DrawRectangles(new Pen(Color.Lime, 3), new RectangleF[] { rectangleFmark0 });
+                    g.DrawRectangles(new Pen(Color.Red, 3), new RectangleF[] { rectf_des });
+
+                    g.Dispose();
+                    mFrmMark.SetImage(bmpx);
+                    //DS2.SetDisplayImage(bmpx);
+                    //bmpx.Save("D:\\test.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+                    bmpx.Dispose();
+
+                    PageNow.Mark1Para = markParaPropertyGridClass.ToParaString();
+
+                    //ENVNow.GeneralLight = light2Settings.ToString();
+                    //JetEazy.BasicSpace.JzToolsClass.PassingString = light2Settings.ToString();
+                }
+            }
+        }
+
+        bool m_RegionMark1 = false;
+        bool m_RegionMark2 = false;
+
+        private void BtnMark2_Click(object sender, EventArgs e)
+        {
+            if (!INI.ShowMarkFrm)
+                return;
+            m_RegionMark2 = !m_RegionMark2;
+        }
+
+        private void BtnMark1_Click(object sender, EventArgs e)
+        {
+            if (!INI.ShowMarkFrm)
+                return;
+            m_RegionMark1 = !m_RegionMark1;
+        }
+        JzFindObjectClass m_Find = new JzFindObjectClass();
+        PointF calMarkBlob(Bitmap bmpinput, RectangleF cropRect, int threshold, out RectangleF maxrect, bool isfindWhite = true)
+        {
+            PointF ret = new PointF(cropRect.X + cropRect.Width / 2, cropRect.Y + cropRect.Height / 2);
+            maxrect = new RectangleF(cropRect.X + 1, cropRect.Y + 1, cropRect.Width - 2, cropRect.Height - 2);
+            Bitmap bmptemp = (Bitmap)bmpinput.Clone(cropRect, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            m_Find.AH_SetThreshold(ref bmptemp, threshold);
+            m_Find.AH_FindBlob(bmptemp, isfindWhite);
+
+            if (m_Find.FoundList.Count > 0)
+            {
+                int maxindex = m_Find.GetMaxRectIndex();
+                ret = new PointF((float)m_Find.FoundList[maxindex].rotatedRectangleF.fCX + cropRect.X,
+                                 (float)m_Find.FoundList[maxindex].rotatedRectangleF.fCY + cropRect.Y);
+
+                maxrect = new RectangleF(m_Find.rectMaxRect.X + cropRect.X, m_Find.rectMaxRect.Y + cropRect.Y, m_Find.rectMaxRect.Width, m_Find.rectMaxRect.Height);
+            }
+            bmptemp.Dispose();
+
+            return ret;
+        }
+        RectangleF SimpleRectF(PointF Pt, int Width, int Height)
+        {
+            RectangleF rect = SimpleRectF(Pt);
+            rect.Inflate(Width, Height);
+
+            return rect;
+        }
+        RectangleF SimpleRectF(PointF Pt)
+        {
+            return new RectangleF(Pt.X, Pt.Y, 1, 1);
+        }
+        public void BoundRect(ref Rectangle InnerRect, Size BoundSize)
+        {
+            InnerRect.X = Math.Min(Math.Max(InnerRect.X, 0), (BoundSize.Width - InnerRect.Width < 0 ? 0 : BoundSize.Width - InnerRect.Width));
+            InnerRect.Y = Math.Min(Math.Max(InnerRect.Y, 0), (BoundSize.Height - InnerRect.Height < 0 ? 0 : BoundSize.Height - InnerRect.Height));
+
+            if (BoundSize.Width <= InnerRect.X + InnerRect.Width)
+                InnerRect.Width = BoundValue(InnerRect.Width, BoundSize.Width - InnerRect.X, 1);
+            if (BoundSize.Height <= InnerRect.Height + InnerRect.Height)
+                InnerRect.Height = BoundValue(InnerRect.Height, BoundSize.Height - InnerRect.Y, 1);
+        }
+        public void BoundRect(ref RectangleF InnerRect, Size BoundSize)
+        {
+            InnerRect.X = Math.Min(Math.Max(InnerRect.X, 0), (BoundSize.Width - InnerRect.Width < 0 ? 0 : BoundSize.Width - InnerRect.Width));
+            InnerRect.Y = Math.Min(Math.Max(InnerRect.Y, 0), (BoundSize.Height - InnerRect.Height < 0 ? 0 : BoundSize.Height - InnerRect.Height));
+
+            if (BoundSize.Width <= InnerRect.X + InnerRect.Width)
+                InnerRect.Width = BoundValue(InnerRect.Width, BoundSize.Width - InnerRect.X, 1);
+            if (BoundSize.Height <= InnerRect.Height + InnerRect.Height)
+                InnerRect.Height = BoundValue(InnerRect.Height, BoundSize.Height - InnerRect.Y, 1);
+        }
+        public int BoundValue(int Value, int Max, int Min)
+        {
+            return Math.Max(Math.Min(Value, Max), Min);
+
+        }
+        public float BoundValue(float Value, float Max, float Min)
+        {
+            return Math.Max(Math.Min(Value, Max), Min);
 
         }
 
@@ -1332,11 +1504,14 @@ namespace Allinone.FormSpace
                     break;
 
                 case TagEnum.SET_MUTIL_POSITION:
+                    OneKeyPropertyGridClass oneKeyPropertyGrid = new OneKeyPropertyGridClass();
+                    oneKeyPropertyGrid.FromingStr(PageNow.sPagePostionPara);
 
                     frmSetMutil = new frmSetMutilPosition(PageNow.sPagePostion);
                     if (frmSetMutil.ShowDialog() == DialogResult.OK)
                     {
                         PageNow.sPagePostion = JzToolsClass.PassingString;
+                        PageNow.sPagePostionPara = oneKeyPropertyGrid.ToParaString();
                         INI.SaveKeyRecord();
                     }
                     frmSetMutil.Dispose();
@@ -1563,6 +1738,8 @@ namespace Allinone.FormSpace
         }
         private void myTimer_Tick(object sender, EventArgs e)
         {
+
+           
             if (IsMatching)
             {
                 PAGEUI.SetMatching(CCDCollection.GetBMP(cboCamIndex.SelectedIndex, true), MatchingMethod);
@@ -1576,10 +1753,28 @@ namespace Allinone.FormSpace
                         RegetCamIndex = cboCamIndex.Items.Count - 1;
                     if (Universal.OPTION != OptionEnum.R5 || RegetCamIndex != 0)
                     {
-                        PageNow.SetbmpORG(RegetPageOPType, CCDCollection.GetBMP(RegetCamIndex, true));
-                        PAGEUI.RegetPage(RegetPageOPType);
                         IsNeedToReget = false;
                         myTimer.Stop();
+                        if (Universal.IsNoUseIO)
+                        {
+                            string filepath = OpenFilePicker("", "");
+                            if (string.IsNullOrEmpty(filepath))
+                            {
+                                return;
+                            }
+                            Bitmap bmptempx = new Bitmap(filepath);
+                            Bitmap bmptempy = new Bitmap(bmptempx);
+                            PageNow.SetbmpORG(RegetPageOPType, bmptempy);
+                            bmptempx.Dispose();
+
+                        }
+                        else
+                        {
+                            PageNow.SetbmpORG(RegetPageOPType, CCDCollection.GetBMP(RegetCamIndex, true));
+                        }
+
+                        PAGEUI.RegetPage(RegetPageOPType);
+                        
                     }
                     else
                     {
@@ -1860,6 +2055,24 @@ namespace Allinone.FormSpace
             _msgProcessForm.Dispose();
 
         }
+
+        public string OpenFilePicker(string DefaultPath, string DefaultName)
+        {
+            string retStr = "";
+
+            OpenFileDialog dlg = new OpenFileDialog();
+
+            //dlg.Filter = "BMP Files (*.bmp)|*.BMP|" + "All files (*.*)|*.*";
+            dlg.Filter = DefaultPath;
+            dlg.FileName = DefaultName;
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                retStr = dlg.FileName;
+            }
+            return retStr;
+        }
+
         #endregion
     }
 }

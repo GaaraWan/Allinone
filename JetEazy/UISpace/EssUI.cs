@@ -216,6 +216,7 @@ namespace JetEazy.UISpace
                 case VersionEnum.AUDIX:
                     switch (OPTION)
                     {
+                        case OptionEnum.MAIN_SDM5:
                         case OptionEnum.MAIN_SERVICE:
                         case OptionEnum.MAIN_SDM3:
                         case OptionEnum.MAIN_SDM2:
@@ -257,6 +258,8 @@ namespace JetEazy.UISpace
             lblVer.Visible = true;
 
             pictureBox1.Controls.Add(lblVer);
+
+            //pictureBox1.BackgroundImage.Save("D:\\Esslogo.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 
         }
 

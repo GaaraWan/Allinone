@@ -465,6 +465,7 @@ namespace Allinone.FormSpace
 
                     switch (Universal.OPTION)
                     {
+                        case OptionEnum.MAIN_SDM5:
                         case OptionEnum.MAIN_SDM3:
                         case OptionEnum.MAIN_SDM2:
                             ESSUI.ShowPLC_RxTime(Universal.VersionDate + "_" + Universal.OPTION.ToString());
@@ -1097,7 +1098,7 @@ namespace Allinone.FormSpace
                                                     int iret = RUNUI.SetByPass(tcpdata.QcByPass, ref m_tcp_dataCheck);
                                                     if (iret == 0)
                                                     {
-                                                        X6_LASER_CLIENT.Log.Log2("tcpHandledata.Qc2ddata" + tcpHandledata.Qc2ddata);
+                                                        X6_LASER_CLIENT.Log.Log2("tcpdata.QcByPass OK");// + tcpdata.QcByPass);
 
                                                     }
                                                     X6_LASER_CLIENT.Send(tcpdata.CmdStr + (iret == 0 ? "0001" : "0003"));// 0001 切换成功 0003 切换失败
@@ -1885,7 +1886,7 @@ namespace Allinone.FormSpace
             //savelog(14);
 
 
-            if (MainTime.msDuriation > Universal.DISPLAYTICK)
+            if (MainTime.msDuriation > Universal.DISPLAYTICK && Universal.OPTION != OptionEnum.MAIN_X6)
             {
                 if (!RESULT.myResult.MainProcess.IsOn && !DISPUI.ISMOUSEDOWN)
                 {
@@ -3432,7 +3433,7 @@ namespace Allinone.FormSpace
                 env.Suicide();
                 AlbumNow.ENVList.RemoveAt(envindexinrcpui);
                 AlbumNow.ENVList.Insert(envindexinrcpui, backenv);
-
+                AlbumNow.ENVList[0].GeneralLight = JetEazy.BasicSpace.JzToolsClass.PassingString;
                 //AlbumNow.FillEnvAction(envindexinrcpui);
             }
             else
@@ -3699,6 +3700,72 @@ namespace Allinone.FormSpace
 
                     switch (Universal.OPTION)
                     {
+                        case OptionEnum.MAIN_SDM5:
+                            switch (machineevent) //加入IO檢測自動測試 四合一 
+                            {
+                                case MachineEventEnum.AUTOSTART:
+
+                                    switch (Universal.CAMACT)
+                                    {
+                                        case CameraActionMode.CAM_MOTOR_LINESCAN:
+                                        case CameraActionMode.CAM_MOTOR_MODE2:
+
+                                            #region MODE2
+                                            //读取步数=0  并且 读取测试完成信号
+                                            if (
+                                                //CamActClass.Instance.StepCurrent == 0 &&
+                                                //!((ControlSpace.MachineSpace.JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.Busy &&
+                                                !Universal.IsRunningTest
+                                                )
+                                            {
+                                                //不要執行包含在固定參數的參數
+                                                if (("," + INI.PRELOADSTATICNO + ",").IndexOf("," + RCPDB.DataNow.No.ToString() + ",") > -1)
+                                                    MessageBox.Show("Please Check " + RCPDB.DataNow.Name + " ID = " + RCPDB.DataNow.No.ToString() + ".");
+                                                else
+                                                {
+                                                    if (CheckAlbumCollection(RCPDB.DataNow.Version, true))
+                                                    {
+                                                        RESULT.TestMethod = TestMethodEnum.IO;
+                                                        RESULT.Calculate();
+
+
+                                                        if (RUNUI != null)
+                                                        {
+                                                            Universal.IsSaveRaw = RUNUI.IsSaveRaw;
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            #endregion
+
+                                            break;
+                                        default:
+
+
+                                            //不要執行包含在固定參數的參數
+                                            if (("," + INI.PRELOADSTATICNO + ",").IndexOf("," + RCPDB.DataNow.No.ToString() + ",") > -1)
+                                                MessageBox.Show("Please Check " + RCPDB.DataNow.Name + " ID = " + RCPDB.DataNow.No.ToString() + ".");
+                                            else
+                                            {
+                                                if (CheckAlbumCollection(RCPDB.DataNow.Version, true))
+                                                {
+                                                    RESULT.TestMethod = TestMethodEnum.IO;
+                                                    RESULT.Calculate();
+
+                                                    if (RUNUI != null)
+                                                    {
+                                                        Universal.IsSaveRaw = RUNUI.IsSaveRaw;
+                                                    }
+                                                }
+                                            }
+
+                                            break;
+                                    }
+
+                                    break;
+                            }
+                            break;
                         case OptionEnum.MAIN_SDM3:
                             switch (machineevent)
                             {
@@ -3785,6 +3852,8 @@ namespace Allinone.FormSpace
                                     {
                                         case CameraActionMode.CAM_MOTOR_LINESCAN:
                                         case CameraActionMode.CAM_MOTOR_MODE2:
+
+                                            CTRLUI_TriggerAction(ActionEnum.ACT_CIPMAPPING, "");
 
                                             #region MODE2
                                             //读取步数=0  并且 读取测试完成信号
@@ -5295,9 +5364,16 @@ namespace Allinone.FormSpace
                                     switch (Universal.OPTION)
                                     {
                                         case OptionEnum.MAIN_X6:
-                                            if (INI.JCET_IS_USE_SHOPFLOOR)
+                                            switch(Universal.CAMACT)
                                             {
-                                                RUNUI.AddInspectCurrentStrip(true);
+                                                case CameraActionMode.CAM_MOTOR_LINESCAN:
+                                                    break;
+                                                default:
+                                                    if (INI.JCET_IS_USE_SHOPFLOOR)
+                                                    {
+                                                        RUNUI.AddInspectCurrentStrip(true);
+                                                    }
+                                                    break;
                                             }
                                             break;
                                     }
@@ -5787,6 +5863,13 @@ namespace Allinone.FormSpace
                     ((ControlSpace.MachineSpace.JzMainSDM3MachineClass)MACHINECollection.MACHINE).PLCIO.Ready = _isready;
 
                     break;
+                case RunStatusEnum.SDM5_READY:
+
+                    _isready = ((ControlSpace.MachineSpace.JzMainSDM5MachineClass)MACHINECollection.MACHINE).PLCIO.Ready;
+                    _isready = !_isready;
+                    ((ControlSpace.MachineSpace.JzMainSDM5MachineClass)MACHINECollection.MACHINE).PLCIO.Ready = _isready;
+
+                    break;
                 case RunStatusEnum.SDM3_BYPASS:
 
                     ((ControlSpace.MachineSpace.JzMainSDM3MachineClass)MACHINECollection.MACHINE).PLCIO.Pass = false;
@@ -6053,6 +6136,156 @@ namespace Allinone.FormSpace
         {
             switch (Universal.OPTION)
             {
+                case OptionEnum.MAIN_X6:
+
+                    switch (action)
+                    {
+                        case ActionEnum.ACT_CIPMAPPING:
+                            if (INI.IsOpenCip)
+                            {
+                                ESSStatusEnum _currentStatu = ESSUI.GetMainStatus();
+                                #region 解析数据
+
+                                //1是正常打印的需要检测
+                                //0是没有打印不用检测
+                                //X是打印了异常内容比如打了个或其他标志
+
+                                string _cipdata = Universal.CipExtend.GetMappingStr;
+                                CommonLogClass.Instance.Log2($"AOI Mapping设定读取:{_cipdata}");
+                                string[] vs = _cipdata.Replace('\0', ' ').Split(';');
+                                List<string> vs2 = new List<string>();
+                                vs2.Clear();
+                                for (int i = 0; i < vs.Length; i++)
+                                {
+                                    if (!string.IsNullOrEmpty(vs[i]))
+                                    {
+                                        string[] vs1 = vs[i].Split(' ');
+                                        foreach (string s in vs1)
+                                        {
+                                            if (!string.IsNullOrEmpty(s))
+                                            {
+                                                vs2.Add(s);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                bool[] _qcbypass = new bool[vs2.Count];
+                                int j = 0;
+                                while (j < vs2.Count)
+                                {
+                                    _qcbypass[j] = vs2[j] == "0";
+                                    j++;
+                                }
+
+                                #endregion
+
+                                #region 设定数据
+
+                                _currentStatu = ESSUI.GetMainStatus();
+                                if (_currentStatu == ESSStatusEnum.RUN)
+                                {
+                                    if (!Universal.RESULT.myResult.MainProcess.IsOn)
+                                    {
+                                        if (RUNUI != null)
+                                        {
+                                            int iret = RUNUI.SetByPass(_qcbypass, ref m_tcp_dataCheck);
+                                            if (iret == 0)
+                                            {
+                                                //X6_HANDLE_CLIENT.Log.Log2("tcpHandledata.cipdata" + _cipdata);
+                                                CommonLogClass.Instance.Log2("AOI Mapping设定成功" + _cipdata);
+                                                if (opstr == "M")
+                                                {
+                                                    MessageBox.Show("AOI Mapping设定成功" + _cipdata);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (opstr == "M")
+                                                {
+                                                    MessageBox.Show("AOI Mapping设定失败" + _cipdata + "\r\n" + "AOI Mapping" + "return= " + iret.ToString() + " " + m_tcp_dataCheck);
+                                                }
+                                            }
+                                            //X6_HANDLE_CLIENT.Log.Log2("tcpCmd.CMD_QC2DDATA" + " return=" + iret.ToString() + " " + m_tcp_dataCheck);
+                                            //byte[] bytedata = new byte[36];
+                                            //bytedata[0] = 24;
+                                            //bytedata[4] = 4;
+                                            //bytedata[8] = 0;
+                                            //bytedata[32] = (iret == 0 ? (byte)1 : (byte)3);
+                                            //X6_HANDLE_CLIENT.Send(bytedata);
+                                            //X6_HANDLE_CLIENT.Send(tcpHandledata.CmdStr + (iret == 0 ? "0001" : "0003"));// 0001 切换成功 0003 切换失败
+
+                                            CommonLogClass.Instance.Log2("AOI Mapping" + "return= " + iret.ToString() + " " + m_tcp_dataCheck);
+                                        }
+                                        else
+                                        {
+                                            //byte[] bytedata = new byte[36];
+                                            //bytedata[0] = 24;
+                                            //bytedata[4] = 4;
+                                            //bytedata[8] = 0;
+                                            //bytedata[32] = (byte)3;
+                                            //X6_HANDLE_CLIENT.Send(bytedata);
+                                            //X6_HANDLE_CLIENT.Send(tcpHandledata.CmdStr + "0003");// 切换失败
+                                            CommonLogClass.Instance.Log2("AOI Mapping设定失败");
+                                            if (opstr == "M")
+                                            {
+                                                MessageBox.Show("AOI Mapping设定失败");
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //byte[] bytedata = new byte[36];
+                                        //bytedata[0] = 24;
+                                        //bytedata[4] = 4;
+                                        //bytedata[8] = 0;
+                                        //bytedata[32] = (byte)4;
+                                        //X6_HANDLE_CLIENT.Send(bytedata);
+                                        //X6_HANDLE_CLIENT.Send(tcpHandledata.CmdStr + "0004");//测试中
+                                        CommonLogClass.Instance.Log2("AOI测试中");
+                                        if (opstr == "M")
+                                        {
+                                            MessageBox.Show("AOI Mapping设定失败 AOI测试中");
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    //byte[] bytedata = new byte[36];
+                                    //bytedata[0] = 24;
+                                    //bytedata[4] = 4;
+                                    //bytedata[8] = 0;
+                                    //bytedata[32] = (byte)5;
+                                    //X6_HANDLE_CLIENT.Send(bytedata);
+                                    //X6_HANDLE_CLIENT.Send(tcpHandledata.CmdStr + "0005");//不在跑线状态
+                                    CommonLogClass.Instance.Log2("AOI不在跑线状态");
+                                    if (opstr == "M")
+                                    {
+                                        MessageBox.Show("AOI Mapping设定失败 AOI不在跑线状态");
+                                    }
+                                }
+
+                                #endregion
+
+                            }
+                            break;
+                    }
+
+                   
+
+                    break;
+
+                case OptionEnum.MAIN_SDM5:
+
+                    switch (action)
+                    {
+                        case ActionEnum.ACT_ONEKEYGETIMAGE:
+                            //RESULT.myResult.SetPara(AlbumNow, CCDCollection);
+                            RESULT.myResult.OneKeyGetImage();
+                            break;
+                    }
+
+                    break;
                 case OptionEnum.MAIN_SDM2:
                 case OptionEnum.MAIN_SDM1:
                 case OptionEnum.MAIN_SDM3:
@@ -7366,28 +7599,31 @@ namespace Allinone.FormSpace
             int iret = -1;
             JetEazy.LoggerClass.Instance.WriteLog("更换底图模板");
 
-            if (Universal.IsNoUseCCD)
-            {
-                string strPath3 = RESULT.myResult.GetLastDirPath(Universal.DEBUGSRCPATH);
-                CCDCollection.SetDebugPath(RESULT.myResult.LastDirPath);
-                CCDCollection.SetDebugEnvPath(0.ToString("000"));
-                CCDCollection.SetPageOPType(PageOPTypeEnum.P00.ToString());
-                //MyResult_EnvTriggerAction(ResultStatusEnum.CHANGEENVDIRECTORY, 0, PageOPTypeEnum.P00.ToString());
-                CCDCollection.GetImage();
-            }
+            //if (Universal.IsNoUseCCD)
+            //{
+            //    string strPath3 = RESULT.myResult.GetLastDirPath(Universal.DEBUGSRCPATH);
+            //    CCDCollection.SetDebugPath(RESULT.myResult.LastDirPath);
+            //    CCDCollection.SetDebugEnvPath(0.ToString("000"));
+            //    CCDCollection.SetPageOPType(PageOPTypeEnum.P00.ToString());
+            //    //MyResult_EnvTriggerAction(ResultStatusEnum.CHANGEENVDIRECTORY, 0, PageOPTypeEnum.P00.ToString());
+            //    CCDCollection.GetImage();
+            //}
 
             EnvClass env = AlbumNow.ENVList[0];
 
             //将图片放入测试中
             int i = 0;
-            foreach (PageClass page in env.PageList)
-            {
-                if (Universal.IsNoUseCCD)
-                    page.SetbmpRUN(PageOPTypeEnum.P00, CCDCollection.GetBMP(i, false));
-                else
-                    page.SetbmpRUN(PageOPTypeEnum.P00, CamActClass.Instance.GetImage(i)); //实测使用  先正常抓图 然后一键更换底图
-                i++;
-            }
+            //foreach (PageClass page in env.PageList)
+            //{
+            //    if (Universal.IsNoUseCCD)
+            //        page.SetbmpRUN(PageOPTypeEnum.P00, CCDCollection.GetBMP(i, false));
+            //    else
+            //    {
+                    
+            //        page.SetbmpRUN(PageOPTypeEnum.P00, CamActClass.Instance.GetImage(i)); //实测使用  先正常抓图 然后一键更换底图
+            //    }
+            //    i++;
+            //}
 
             bool iscollecttemp = INI.IsCollectPictures;//缓存这个变量
 
@@ -7442,13 +7678,28 @@ namespace Allinone.FormSpace
             }
 
             //更换底图
+            //i = 0;
+            //foreach (PageClass page in env.PageList)
+            //{
+            //    if (Universal.IsNoUseCCD)
+            //        page.SetbmpORG(PageOPTypeEnum.P00, CCDCollection.GetBMP(i, false));
+            //    else
+            //        page.SetbmpORG(PageOPTypeEnum.P00, CamActClass.Instance.GetImage(i)); //实测使用  先正常抓图 然后一键更换底图
+            //    i++;
+            //}
+
             i = 0;
             foreach (PageClass page in env.PageList)
             {
-                if (Universal.IsNoUseCCD)
-                    page.SetbmpORG(PageOPTypeEnum.P00, CCDCollection.GetBMP(i, false));
-                else
-                    page.SetbmpORG(PageOPTypeEnum.P00, CamActClass.Instance.GetImage(i)); //实测使用  先正常抓图 然后一键更换底图
+                Bitmap bmp = new Bitmap(page.GetbmpRUN());
+
+                page.SetbmpORG(PageOPTypeEnum.P00, bmp);
+
+                bmp.Dispose();
+                //if (Universal.IsNoUseCCD)
+                //    page.SetbmpORG(PageOPTypeEnum.P00, CCDCollection.GetBMP(i, false));
+                //else
+                //    page.SetbmpORG(PageOPTypeEnum.P00, CamActClass.Instance.GetImage(i)); //实测使用  先正常抓图 然后一键更换底图
                 i++;
             }
 

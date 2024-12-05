@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Drawing;
 using System.Drawing.Design;
 using System.Globalization;
 using System.Linq;
@@ -396,6 +397,19 @@ namespace Allinone.BasicSpace
             set { INI.tcp_handle_port = value; }
         }
 
+        [CategoryAttribute(cat0), DescriptionAttribute("Cip通讯使用 true使用  false不使用")]
+        [DisplayName("Cip通讯使用")]
+        public bool IsOpenCip
+        {
+            get { return INI.IsOpenCip; }
+            set
+            {
+                INI.IsOpenCip = value;
+                if (value)
+                    Universal.CipExtend.Init();
+            }
+        }
+
         const string cat1 = "01.MainX6分辨率设置";
         [CategoryAttribute(cat1), DescriptionAttribute("")]
         [DisplayName("分辨率宽度")]
@@ -505,6 +519,20 @@ namespace Allinone.BasicSpace
             get { return INI.IsOpenCheckCurLotRepeatCode; }
             set { INI.IsOpenCheckCurLotRepeatCode = value; }
         }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 开启 false:关闭 强制全检即跳过Mapping的不检测")]
+        [DisplayName("A03.是否强制全检")]
+        public bool IsOpenForceAllCheck
+        {
+            get { return INI.IsOpenForceAllCheck; }
+            set { INI.IsOpenForceAllCheck = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 开启 false:关闭 ")]
+        [DisplayName("A04.是否提前给信号")]
+        public bool IsOpenBehindOKSign
+        {
+            get { return INI.IsOpenBehindOKSign; }
+            set { INI.IsOpenBehindOKSign = value; }
+        }
 
         [CategoryAttribute(cat2), DescriptionAttribute("true: 只显示当前图片 false:正常显示")]
         [DisplayName("是否只显示当前图片")]
@@ -514,11 +542,18 @@ namespace Allinone.BasicSpace
             set { INI.IsOnlyShowCurrentImage = value; }
         }
         [CategoryAttribute(cat2), DescriptionAttribute("true: 收集 false:不收集")]
-        [DisplayName("是否收集结果图")]
+        [DisplayName("A05a.是否收集结果图")]
         public bool IsCollectPicturesSingle
         {
             get { return INI.IsCollectPicturesSingle; }
             set { INI.IsCollectPicturesSingle = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("")]
+        [DisplayName("A05b.保存图片的格式")]
+        public SaveImageFormat chipSaveImageFormat
+        {
+            get { return INI.chipSaveImageFormat; }
+            set { INI.chipSaveImageFormat = value; }
         }
 
         [CategoryAttribute(cat2), DescriptionAttribute("true: 开启 false:关闭")]
@@ -1001,6 +1036,43 @@ namespace Allinone.BasicSpace
             }
         }
 
+        public void FromingStr(string str)
+        {
+            string[] parts = str.Split(',');
+            if (parts.Length > 10)
+            {
+                keyx = float.Parse(parts[0]);
+                keyy = float.Parse(parts[1]);
+                keyz = float.Parse(parts[2]);
+                keyendx = float.Parse(parts[3]);
+                keyendy = float.Parse(parts[4]);
+                keyendz = float.Parse(parts[5]);
+                keyrow = int.Parse(parts[6]);
+                keycol = int.Parse(parts[7]);
+                keyoffsetx = float.Parse(parts[8]);
+                keyoffsety = float.Parse(parts[9]);
+                op_keyxyz = parts[10];
+            }
+        }
+        public string ToParaString()
+        {
+            string str = string.Empty;
+
+            str += keyx.ToString() + ",";
+            str += keyy.ToString() + ",";
+            str += keyz.ToString() + ",";
+            str += keyendx.ToString() + ",";
+            str += keyendy.ToString() + ",";
+            str += keyendz.ToString() + ",";
+            str += keyrow.ToString() + ",";
+            str += keycol.ToString() + ",";
+            str += keyoffsetx.ToString() + ",";
+            str += keyoffsety.ToString() + ",";
+            str += op_keyxyz.ToString() + ",";
+
+            return str;
+        }
+
     }
 
     public class CheckBaseParaPropertyGridClass
@@ -1018,7 +1090,7 @@ namespace Allinone.BasicSpace
         [Browsable(true)]
         public int chkThresholdValue { get; set; } = 128;
         [CategoryAttribute(cat1), DescriptionAttribute("")]
-        [DisplayName("A0.灰阶阈值")]
+        [DisplayName("A1.寻找方式")]
         //[TypeConverter(typeof(NumericUpDownTypeConverter))]
         //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 255)]
         [Browsable(true)]
@@ -1129,6 +1201,109 @@ namespace Allinone.BasicSpace
             str += ((int)chkblobmode).ToString() + ",";
 
             return str;
+        }
+
+    }
+
+    public class MarkParaPropertyGridClass
+    {
+        public MarkParaPropertyGridClass()
+        {
+
+        }
+        const string cat1 = "00.图像设定";
+
+        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [DisplayName("A0.灰阶阈值")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 255)]
+        [Browsable(true)]
+        public int chkThresholdValue { get; set; } = 128;
+        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [DisplayName("A1.寻找方式")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 255)]
+        [Browsable(true)]
+        [TypeConverter(typeof(JzEnumConverter))]
+        public BlobMode chkblobmode { get; set; } = BlobMode.White;
+
+
+        const string cat0 = "01.检测规格";
+
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("A0.开启Mark")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100000)]
+        [Browsable(true)]
+        public bool chkIsOpen { get; set; } = false;
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("A1.Mark世界中心")]
+        public PointF PtfCenter { get; set; } = new PointF();
+        [CategoryAttribute(cat0), DescriptionAttribute("")]
+        [DisplayName("A2.Mark世界寻找区域")]
+        public RectangleF RectF { get; set; } = new RectangleF();
+
+
+        public void FromingStr(string str)
+        {
+            string[] parts = str.Split(',');
+            if (parts.Length > 4)
+            {
+                chkIsOpen = parts[0] == "1";
+                chkThresholdValue = int.Parse(parts[1]);
+                chkblobmode = (BlobMode)int.Parse(parts[2]);
+
+                PtfCenter = StringToPointF(parts[3]);
+                RectF = StringToRectF(parts[4]);
+            }
+
+        }
+        public string ToParaString()
+        {
+            string str = string.Empty;
+
+            str += (chkIsOpen ? "1" : "0") + ",";
+            str += chkThresholdValue.ToString() + ",";
+            str += ((int)chkblobmode).ToString() + ",";
+            str += PointF000ToString(PtfCenter) + ",";
+            str += RectFToString(RectF) + ",";
+
+            return str;
+        }
+
+        public string PointF000ToString(PointF PTF)
+        {
+            return PTF.X.ToString("0.000") + ";" + PTF.Y.ToString("0.000");
+        }
+        public PointF StringToPointF(string Str)
+        {
+            string[] strs = Str.Split(';');
+            return new PointF(float.Parse(strs[0]), float.Parse(strs[1]));
+        }
+        public string RectFToString(RectangleF RectF)
+        {
+            string Str = "";
+
+            Str += RectF.X.ToString("0.00") + ";";
+            Str += RectF.Y.ToString("0.00") + ";";
+            Str += RectF.Width.ToString("0.00") + ";";
+            Str += RectF.Height.ToString("0.00");
+
+            return Str;
+        }
+        public RectangleF StringToRectF(string Str)
+        {
+            string[] strs = Str.Split(';');
+            RectangleF rectF = new RectangleF();
+
+            rectF.X = float.Parse(strs[0]);
+            rectF.Y = float.Parse(strs[1]);
+            rectF.Width = float.Parse(strs[2]);
+            rectF.Height = float.Parse(strs[3]);
+
+            return rectF;
+
+
         }
 
     }

@@ -25,6 +25,8 @@ namespace Allinone.FormSpace
             this.Activated += new EventHandler(BannerForm_Activated);
             ProBar = progressBar1;
             ProBar.Visible = false;
+
+         
         }
         public BannerForm(out ProgressBar proBar)
         {
@@ -36,6 +38,8 @@ namespace Allinone.FormSpace
             proBar = ProBar;
             ProBar.Visible = false;
             ProBar.Visible = true;
+
+            //this.BackgroundImage.Save("D:\\Banner.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
         }
         void BannerForm_Load(object sender, EventArgs e)
         {

@@ -901,19 +901,21 @@ namespace Allinone.OPSpace
         }
         public string GetAnalyzeBarcodeStr()
         {
+            //if (IsByPass)
+            //    return "不检测";
             if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX)
             {
                 return ReadBarcode2DRealStr;
             }
             if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
             {
-                string tempstr = $"No Compare;{ReadBarcode2DRealStr};{ReadBarcode2DGrade}";
+                string tempstr = $"No Compare;{Environment.NewLine}{ReadBarcode2DRealStr};{Environment.NewLine}{ReadBarcode2DGrade}";
                 if (INI.IsCheckBarcodeOpen)
                 {
                     if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
-                        tempstr = $"Compare [FAIL];Marking 2D[{Barcode_2D}];Read 2D[{ReadBarcode2DRealStr}];Grade[{ReadBarcode2DGrade}]";
+                        tempstr = $"Compare [FAIL];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}];{Environment.NewLine}Grade[{ReadBarcode2DGrade}]";
                     else
-                        tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];Marking 2D[{Barcode_2D}];Read 2D[{ReadBarcode2DRealStr}];Grade[{ReadBarcode2DGrade}]";
+                        tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}];{Environment.NewLine}Grade[{ReadBarcode2DGrade}]";
                 }
                 return tempstr;
                 //return ReadBarcode2DRealStr + ";" + ReadBarcode2DGrade;
@@ -966,6 +968,8 @@ namespace Allinone.OPSpace
         {
             if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
             {
+                if (IsByPass)
+                    return true;
                 return OCRPara.CheckRepeatCode(eCodes, bmpPATTERN, bmpWIP, PassInfo);
             }
             foreach (AnalyzeClass analyzeClass in BranchList)
@@ -1052,11 +1056,11 @@ namespace Allinone.OPSpace
         }
         public bool IsHaveBranchSeed()
         {
-            if (NORMALPara.IsSeed)
+            if (IsSeed)
                 return true;
             foreach (AnalyzeClass analyzeClass in BranchList)
             {
-                if (analyzeClass.NORMALPara.IsSeed)
+                if (analyzeClass.IsSeed)
                     return true;
                 else
                 {
@@ -1069,14 +1073,14 @@ namespace Allinone.OPSpace
         }
         public bool IsHaveBranchSeedGood()
         {
-            if (NORMALPara.IsSeed)
+            if (IsSeed)
             {
                 if (IsVeryGood)
                     return true;
             }
             foreach (AnalyzeClass analyzeClass in BranchList)
             {
-                if (analyzeClass.NORMALPara.IsSeed)
+                if (analyzeClass.IsSeed)
                 {
                     if (analyzeClass.IsVeryGood)
                         return true;
@@ -5092,6 +5096,33 @@ namespace Allinone.OPSpace
                         //SaveData(ALIGNPara.ToAlignParaString(), Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + " Info.txt");
                     }
                 }
+                else if (PADPara.PADMethod == PADMethodEnum.QLE_CHECK)
+                {
+                    bmpWIP.Dispose();
+                    bmpWIP = new Bitmap(bmpALIGNED);
+
+                    isgood &= P10_PADInspectionProcess(istrain);
+
+                    if (istrain)
+                        PADPara.FillTrainStatus(TrainStatusCollection, ToLogString());
+                    else
+                    {
+                        if (isoutputfilltrain)
+                            PADPara.FillRunStatus(TrainStatusCollection, ToLogString());
+                        else
+                            PADPara.FillRunStatus(RunStatusCollection, ToLogString());
+                    }
+
+                    if (!isgood && !istrain && IsTempSave)
+                    {
+                        //bmpPATTERN.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_PATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpWIP.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_WIP" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpMASK.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_MASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_OUTPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+
+                        //SaveData(ALIGNPara.ToAlignParaString(), Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + " Info.txt");
+                    }
+                }
             }
             //else
             //{
@@ -5396,7 +5427,7 @@ namespace Allinone.OPSpace
                 }
 
 
-                if (Universal.IsUseSeedFuntion)
+                if (Universal.IsUseSeedFuntion && false)
                 {
                     foreach (AnalyzeClass branchanalyze in BranchList)
                     {
@@ -6192,6 +6223,9 @@ namespace Allinone.OPSpace
                     case PADMethodEnum.PLACODE_CHECK:
                         isgood = PADPara.PB10_GlacodeInspectionProcess(bmpWIP, ref bmpOUTPUT);
                         break;
+                    case PADMethodEnum.QLE_CHECK:
+                        isgood = PADPara.PB10_QLECheckInspectionProcess(bmpWIP, ref bmpOUTPUT);
+                        break;
                 }
                 //isgood = PADPara.PB10_PADInspectionProcess(bmpWIP, ref bmpOUTPUT);
             }
@@ -6382,6 +6416,13 @@ namespace Allinone.OPSpace
                 PADPara.FillRunStatus(TrainStatusCollection, ToLogString());
             }
             else if (PADPara.PADMethod == PADMethodEnum.PLACODE_CHECK)
+            {
+                bmpWIP.Dispose();
+                bmpWIP = new Bitmap(PADPara.bmpPadFindOutput);
+
+                PADPara.FillRunStatus(TrainStatusCollection, ToLogString());
+            }
+            else if (PADPara.PADMethod == PADMethodEnum.QLE_CHECK)
             {
                 bmpWIP.Dispose();
                 bmpWIP = new Bitmap(PADPara.bmpPadFindOutput);

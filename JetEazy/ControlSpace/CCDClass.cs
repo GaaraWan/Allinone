@@ -587,6 +587,8 @@ namespace JetEazy.ControlSpace
             Graphics g = Graphics.FromImage(bmpAll);
             foreach (CCDRectRelateIndexClass ccdrelateindex in CCDRectRelateIndexList)
             {
+                if (BMPList[ccdrelateindex.Index] == null)
+                    continue;
                 Rectangle rect = ccdrelateindex.SizedRect;
                 rect.Offset(EXTEND, EXTEND);
 
@@ -6254,6 +6256,9 @@ namespace JetEazy.ControlSpace
                         string bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + relateindex.ToString("000") + Universal.GlobalImageTypeString;
 
                         if (!File.Exists(bmpstring))
+                            bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + relateindex.ToString("000") + ".jpg";
+
+                        if (!File.Exists(bmpstring))
                             bmpstring = SystemWORKPATH + "\\" + relateindex.ToString("000") + Universal.GlobalImageTypeString;
                         //bmplist.RemoveAt(relateindex);
                         //bmp.Dispose();
@@ -6495,12 +6500,13 @@ namespace JetEazy.ControlSpace
                                     case OptionEnum.MAIN_SDM2:
                                     case OptionEnum.MAIN_SDM1:
 
-                                        bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + (relateindex + basecount).ToString("000") + Universal.GlobalImageTypeString;
+                                       
+                                        bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + (relateindex + basecount).ToString("000") + ".jpg";
                                         if (!File.Exists(bmpstring))
                                             bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + Universal.GlobalImageTypeString;
 
                                         if (!File.Exists(bmpstring))
-                                            bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + (relateindex + basecount).ToString("000") + ".jpg";
+                                            bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + (relateindex + basecount).ToString("000") + Universal.GlobalImageTypeString;
                                         if (!File.Exists(bmpstring))
                                             bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + ".jpg";
 

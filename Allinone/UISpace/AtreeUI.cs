@@ -477,7 +477,7 @@ namespace Allinone.UISpace
 
                         branchanalyze.ALIGNPara.AlignMethod = AlignMethodEnum.AUFIND;
                         branchanalyze.ALIGNPara.AlignMode = AlignModeEnum.AREA;
-                        branchanalyze.ALIGNPara.MTOffset = 0f;
+                        branchanalyze.ALIGNPara.MTOffset = Universal.SetupDefaultOffsetValue;
                         branchanalyze.ALIGNPara.MTResolution = 0.038f;
                         branchanalyze.ALIGNPara.MTTolerance = 0.2f;
 

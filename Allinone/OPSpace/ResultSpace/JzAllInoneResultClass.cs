@@ -92,7 +92,7 @@ namespace Allinone.OPSpace.ResultSpace
             //SetRunningLight();
         }
 
-        private void MACHINE_TriggerAction(MachineEventEnum machineevent)
+        private void MACHINE_TriggerAction(MachineEventEnum machineevent, object obj = null)
         {
             switch (machineevent)
             {

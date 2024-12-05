@@ -224,7 +224,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             MTTolerance = 0.1f;    //Tolerance from 0.1 to 1.0
             MTIsSubPixel = false;   //Subpixel(NO Use Now)
 
-            MTOffset = 0f;         //Check Offset Value
+            MTOffset = Universal.SetupDefaultOffsetValue;         //Check Offset Value
             MTResolution = 0.01f;  //Resolution Value
             AlignMode = AlignModeEnum.AREA;    //Use Area or Borader Symptom for this analyze
 
@@ -581,7 +581,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
             cAlmightyPatternObj.Type = PatMatchAlgorithmType.HPFeature;
 
             // Set input image
-            Bitmap bmp24 = bmppattern.Clone(new Rectangle(0, 0, bmppattern.Width, bmppattern.Height), PixelFormat.Format8bppIndexed);
+            //Bitmap bmp24 = bmppattern.Clone(new Rectangle(0, 0, bmppattern.Width, bmppattern.Height), PixelFormat.Format8bppIndexed);
+            AForge.Imaging.Filters.Grayscale grayscale = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+            Bitmap bmp24 = grayscale.Apply(bmppattern);
+            //bmppattern.Save("D:\\Data\\bmp24" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+
 
             VisionDesigner.CMvdImage cInputImg = BitmapToCMvdImage(bmp24);
             if (cInputImg.PixelFormat != MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08)
@@ -590,24 +594,45 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 cInputImg.ConvertImagePixelFormat(MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08);
             }
 
+            string strvaluex = string.Empty;
+
+            //cAlmightyPatternObj.SetRunParam("PyramidScaleFlag", "0");
+            //cAlmightyPatternObj.SetRunParam("PyramidScaleRough", "10");
+            //cAlmightyPatternObj.SetRunParam("PyramidScaleFine", "1");
+
+            //cAlmightyPatternObj.SetRunParam("EdgeThresholdFlag", "0");
+            //cAlmightyPatternObj.SetRunParam("EdgeThreshold", "80");
+
+            //cAlmightyPatternObj.GetRunParam("PyramidScaleFlag", ref strvaluex);
             //cInputImg.InitImage("InputTest.bmp");
 
             cAlmightyPatternObj.InputImage = cInputImg;
-            cAlmightyPatternObj.RegionImage = cInputImg;
+            //cAlmightyPatternObj.RegionImage = cInputImg;
             // Set ROI region (optional)
-
+            cAlmightyPatternObj.RegionList.Clear();
+            float extendvalue = 0.8f;
             var region1 = new VisionDesigner.CMvdRectangleF(cInputImg.Width * 0.5f, cInputImg.Height * 0.5f, cInputImg.Width * 0.25f, cInputImg.Height * 0.25f);
-            region1 = new VisionDesigner.CMvdRectangleF(cInputImg.Width * 0.5f, cInputImg.Height * 0.5f, cInputImg.Width * 1f, cInputImg.Height * 1f);
+            region1 = new VisionDesigner.CMvdRectangleF(cInputImg.Width * 0.5f, cInputImg.Height * 0.5f, cInputImg.Width * extendvalue, cInputImg.Height * extendvalue);
 
             cAlmightyPatternObj.RegionList.Add(new CAlmightyPatMatchRegion(region1, true));
 
             // Set basic parameter
 
-            cAlmightyPatternObj.BasicParam.FixPoint = new VisionDesigner.MVD_POINT_F(Convert.ToSingle(cInputImg.Width) / 2, Convert.ToSingle(cInputImg.Height) / 2);
+            cAlmightyPatternObj.BasicParam.FixPoint = new VisionDesigner.MVD_POINT_F(Convert.ToSingle(cInputImg.Width * extendvalue) / 2, Convert.ToSingle(cInputImg.Height * extendvalue) / 2);
 
+            string errmessage = string.Empty;
             // Train
+            try
+            {
+                cAlmightyPatternObj.Train();
+            }
+            catch (Exception ex)
+            {
+                errmessage = ex.Message;
+                isgood = false;
+            }
 
-            cAlmightyPatternObj.Train();
+
 
             //// Export Pattern(optional)
 
@@ -619,9 +644,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             // Get the result
 
-            VisionDesigner.AlmightyPatMatch.CAlmightyPatternResult cAlmightyPatternRes = cAlmightyPatternObj.GetPatternResult();
+            //VisionDesigner.AlmightyPatMatch.CAlmightyPatternResult cAlmightyPatternRes = cAlmightyPatternObj.GetPatternResult();
+            //cAlmightyPatternRes.TrainedImage.SaveImage("D:\\Data\\" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + Universal.GlobalImageTypeString);
 
-            Console.WriteLine("Pattern Size: ({0},{1})", cAlmightyPatternRes.Size.nWidth, cAlmightyPatternRes.Size.nHeight);
+
+            //Console.WriteLine("Pattern Size: ({0},{1})", cAlmightyPatternRes.Size.nWidth, cAlmightyPatternRes.Size.nHeight);
 
             ms = mytime.msDuriation;
             mytime.Cut();
@@ -632,7 +659,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
             else
             {
-                str = "Pattern Training Error.";
+                str = $"Pattern Training Error.{errmessage}";
             }
 
             return isgood;
@@ -1250,28 +1277,30 @@ namespace Allinone.OPSpace.AnalyzeSpace
             cAlmightyPatmatchToolObj.Type = PatMatchAlgorithmType.HPFeature;
 
             //// Set ROI region (optional)
-
+            cAlmightyPatmatchToolObj.RegionList.Clear();
             var region2 = new VisionDesigner.CMvdRectangleF(bmpinput.Width * 0.5f, bmpinput.Height * 0.5f, bmpinput.Width, bmpinput.Height);
             cAlmightyPatmatchToolObj.RegionList.Add(new CAlmightyPatMatchRegion(region2, true));
 
             // Set basic parameter
 
-            cAlmightyPatmatchToolObj.BasicParam.ShowOutlineStatus = true;
+            cAlmightyPatmatchToolObj.BasicParam.ShowOutlineStatus = false;
 
             // Set Pattern
 
             cAlmightyPatmatchToolObj.Pattern = cAlmightyPatternObj;
 
+            cAlmightyPatmatchToolObj.SetRunParam("AngleStart", (-MTRotation).ToString());
+            cAlmightyPatmatchToolObj.SetRunParam("AngleEnd", MTRotation.ToString());
+            cAlmightyPatmatchToolObj.SetRunParam("MinScore", MTTolerance.ToString());
 
-
-            AUGrayImg8 imginput = new AUGrayImg8();
+            //AUGrayImg8 imginput = new AUGrayImg8();
             AUColorImg24 imginput24 = new AUColorImg24();
             AUColorImg24 imgoutput24 = new AUColorImg24();
-            bmpRunInput.Dispose();
-            bmpRunInput = (Bitmap)bmpinput.Clone();
+            //bmpRunInput.Dispose();
+            //bmpRunInput = (Bitmap)bmpinput.Clone();
 
-            processstring += "Set Brightness " + brightness.ToString() + " ,Contrast " + contrast.ToString() + "." + Environment.NewLine;
-            SetBrightContrast(bmpRunInput, brightness, contrast);
+            //processstring += "Set Brightness " + brightness.ToString() + " ,Contrast " + contrast.ToString() + "." + Environment.NewLine;
+            //SetBrightContrast(bmpRunInput, brightness, contrast);
 
             AUUtility.DrawBitmapToAUColorImg24(bmpinput, ref imginput24);
 
@@ -1304,7 +1333,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
             processstring += "Do Run Alignment." + Environment.NewLine;
 
             // Set input image
-            Bitmap bmp24 = bmpinput.Clone(new Rectangle(0, 0, bmpinput.Width, bmpinput.Height), PixelFormat.Format8bppIndexed);
+            //Bitmap bmp24 = bmpinput.Clone(new Rectangle(0, 0, bmpinput.Width, bmpinput.Height), PixelFormat.Format8bppIndexed);
+            AForge.Imaging.Filters.Grayscale grayscale = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+            Bitmap bmp24 = grayscale.Apply(bmpinput);
             VisionDesigner.CMvdImage cInputImg2 = BitmapToCMvdImage(bmp24);
             if (cInputImg2.PixelFormat != MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08)
             {
@@ -1323,16 +1354,18 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             VisionDesigner.AlmightyPatMatch.CAlmightyPatMatchResult cHPMatchRes = cAlmightyPatmatchToolObj.Result;
 
+            //cAlmightyPatmatchToolObj.InputImage.SaveImage("D:\\Data\\matchrun_" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + Universal.GlobalImageTypeString);
+
             //foreach (var item in cHPMatchRes.MatchInfoList)
 
             //{
-                
+
             //    Console.WriteLine("MatchPoint: ({0},{1})", item.MatchPoint.fX, item.MatchPoint.fY);
-                
+
             //}
             resultcount = cHPMatchRes.MatchInfoList.Count;
 
-            bmpRunInput.Dispose();
+            //bmpRunInput.Dispose();
             ms = mytime.msDuriation;
 
             //檢查訓練後的數目是否和MaxOCC相同
@@ -1464,7 +1497,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             }
 
-            imginput.Dispose();
+            //imginput.Dispose();
             imginput24.Dispose();
             imgoutput24.Dispose();
 

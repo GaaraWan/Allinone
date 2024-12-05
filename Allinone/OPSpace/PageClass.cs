@@ -12,6 +12,8 @@ using MoveGraphLibrary;
 using JetEazy;
 using ServiceMessageClass;
 using Allinone.BasicSpace;
+using Allinone.FormSpace;
+using JetEazy.BasicSpace;
 
 namespace Allinone.OPSpace
 {
@@ -30,6 +32,13 @@ namespace Allinone.OPSpace
             get
             {
                 return Universal.OPTION;
+            }
+        }
+        CameraActionMode CAMACT
+        {
+            get
+            {
+                return Universal.CAMACT;
             }
         }
 
@@ -52,6 +61,8 @@ namespace Allinone.OPSpace
         public string ExposureString = "";
         public string sPagePostion = "";
         public List<string> PagePostionList = new List<string>();
+        public string sPagePostionPara = "";
+        public string Mark1Para = "";
 
         public AnalyzeClass AnalyzeRoot
         {
@@ -156,9 +167,25 @@ namespace Allinone.OPSpace
         }
         public void SetbmpRUN(PageOPTypeEnum pageoptype, Bitmap bmp)
         {
-            //bmpRUN[(int)pageoptype].Dispose();
+            bmpRUN[(int)pageoptype].Dispose();
+            bmpRUN[(int)pageoptype] = new Bitmap(bmp);
+            //switch (OPTION)
+            //{
+            //    case OptionEnum.MAIN_X6:
+            //        switch(CAMACT)
+            //        {
+            //            case CameraActionMode.CAM_MOTOR_LINESCAN:
+            //                bmpRUN[(int)pageoptype] = (Bitmap)bmp.Clone();
+            //                break;
+            //        }
+            //        break;
+            //    default:
+            //        bmpRUN[(int)pageoptype] = new Bitmap(bmp);
+            //        break;
+            //}
+
             //bmpRUN[(int)pageoptype] = new Bitmap(bmp);
-            bmpRUN[(int)pageoptype] = (Bitmap)bmp.Clone();
+            //bmpRUN[(int)pageoptype] = (Bitmap)bmp.Clone();
         }
         public void SetbmpORG(PageOPTypeEnum pageoptype, Bitmap bmp)
         {
@@ -497,6 +524,14 @@ namespace Allinone.OPSpace
                 sPagePostion = strs[7];
                 PagePostionList = sPagePostion.Split(';').ToList();
             }
+            if (strs.Length > 8)
+            {
+                sPagePostionPara = strs[8];
+            }
+            if (strs.Length > 9)
+            {
+                Mark1Para = strs[9];
+            }
         }
         public override string ToString()
         {
@@ -510,6 +545,8 @@ namespace Allinone.OPSpace
             retstr += RelateToVersionString.ToUpper() + Universal.SeperateCharA;
             retstr += ExposureString + Universal.SeperateCharA;
             retstr += sPagePostion + Universal.SeperateCharA;
+            retstr += sPagePostionPara + Universal.SeperateCharA;
+            retstr += Mark1Para + Universal.SeperateCharA;
             retstr += "";
 
             PagePostionList = sPagePostion.Split(';').ToList();
@@ -881,20 +918,47 @@ namespace Allinone.OPSpace
         {
             bool isgood = true;
 
-            //switch(VERSION)
-            //{
-            //    case VersionEnum.ALLINONE:
-            //        switch(OPTION)
-            //        {
-            //            case OptionEnum.MAIN_SERVICE:
+            //计算Mark点
+            Point ptfOffset = new Point(0, 0);
+            switch (Universal.OPTION)
+            {
+                case OptionEnum.MAIN_X6:
+                    switch (Universal.CAMACT)
+                    {
+                        case CameraActionMode.CAM_MOTOR_LINESCAN:
+
+
+                            #region 计算Mark的偏移
+
+                            MarkParaPropertyGridClass markParaPropertyGridClass = new MarkParaPropertyGridClass();
+                            markParaPropertyGridClass.FromingStr(Mark1Para);
+                            if (markParaPropertyGridClass.chkIsOpen && false)
+                            {
+                                PointF ptfrun = calMarkBlob(bmpRUN[(int)pageoptype],
+                               markParaPropertyGridClass.RectF, markParaPropertyGridClass.chkThresholdValue, out RectangleF maxrectresult,
+                               markParaPropertyGridClass.chkblobmode == BlobMode.White);
+
+                                //ptfOffset.X = (int)(markParaPropertyGridClass.PtfCenter.X - ptfrun.X);
+                                //ptfOffset.Y = (int)(markParaPropertyGridClass.PtfCenter.Y - ptfrun.Y);
+
+                                ptfOffset.X = (int)(ptfrun.X - markParaPropertyGridClass.PtfCenter.X);
+                                ptfOffset.Y = (int)(ptfrun.Y - markParaPropertyGridClass.PtfCenter.Y);
+
+                            }
+                            else
+                                ptfOffset = new Point(0, 0);
 
 
 
-            //                return isgood;
-            //                break;
-            //        }
-            //        break;
-            //}
+                            #endregion
+
+
+                            SetOffset(ptfOffset, true);
+
+                            break;
+                    }
+                    break;
+            }
 
 
             if (Universal.IsUseSeedFuntion && false)
@@ -1417,6 +1481,28 @@ namespace Allinone.OPSpace
         bool IsInRange(int FromValue, int CompValue, int DiffValue)
         {
             return (FromValue >= CompValue - DiffValue) && (FromValue <= CompValue + DiffValue);
+        }
+
+        JzFindObjectClass m_Find = new JzFindObjectClass();
+        PointF calMarkBlob(Bitmap bmpinput, RectangleF cropRect, int threshold, out RectangleF maxrect, bool isfindWhite = true)
+        {
+            PointF ret = new PointF(cropRect.X + cropRect.Width / 2, cropRect.Y + cropRect.Height / 2);
+            maxrect = new RectangleF(cropRect.X + 1, cropRect.Y + 1, cropRect.Width - 2, cropRect.Height - 2);
+            Bitmap bmptemp = (Bitmap)bmpinput.Clone(cropRect, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            m_Find.AH_SetThreshold(ref bmptemp, threshold);
+            m_Find.AH_FindBlob(bmptemp, isfindWhite);
+
+            if (m_Find.FoundList.Count > 0)
+            {
+                int maxindex = m_Find.GetMaxRectIndex();
+                ret = new PointF((float)m_Find.FoundList[maxindex].rotatedRectangleF.fCX + cropRect.X,
+                                 (float)m_Find.FoundList[maxindex].rotatedRectangleF.fCY + cropRect.Y);
+
+                maxrect = new RectangleF(m_Find.rectMaxRect.X + cropRect.X, m_Find.rectMaxRect.Y + cropRect.Y, m_Find.rectMaxRect.Width, m_Find.rectMaxRect.Height);
+            }
+            bmptemp.Dispose();
+
+            return ret;
         }
 
         #endregion

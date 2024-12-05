@@ -575,6 +575,8 @@ namespace Allinone.OPSpace
         /// <returns></returns>
         public bool A08_RunProcess(PageOPTypeEnum pageoptype)
         {
+            
+
             bool isgood = true;
             List<PageClass> Temp = new List<PageClass>();
             for (int i = 0; i < PageList.Count; i++)

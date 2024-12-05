@@ -110,6 +110,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Debug\Camera_NET.dll</HintPath>
     </Reference>
+    <Reference Include="CIPCompolet64">
+      <HintPath>..\JzDlls\Cip\CIPCompolet64.dll</HintPath>
+    </Reference>
+    <Reference Include="CIPCompoletProxyLib">
+      <HintPath>..\JzDlls\Cip\CIPCompoletProxyLib.dll</HintPath>
+    </Reference>
+    <Reference Include="CIPCompoletProxyServer">
+      <HintPath>..\JzDlls\Cip\CIPCompoletProxyServer.exe</HintPath>
+    </Reference>
     <Reference Include="DirectShowLib-2010, Version=2.1.0.0, Culture=neutral, PublicKeyToken=67e7b740cdfc2d3f, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Debug\DirectShowLib-2010.dll</HintPath>
@@ -295,6 +304,7 @@
     <Compile Include="ControlSpace\MotoCanSpace\UsbCan.cs" />
     <Compile Include="ControlSpace\PLCAddressClass.cs" />
     <Compile Include="ControlSpace\PLCAlarmsClass.cs" />
+    <Compile Include="ControlSpace\PLCSpace\CipCompoletClass.cs" />
     <Compile Include="ControlSpace\PLCSpace\FatekClass.cs" />
     <Compile Include="ControlSpace\PLCSpace\LightControlClass.cs" />
     <Compile Include="ControlSpace\PLCSpace\Mitsubishi_FX3UClass.cs" />

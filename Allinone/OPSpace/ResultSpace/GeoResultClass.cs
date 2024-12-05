@@ -38,6 +38,7 @@ namespace Allinone.OPSpace.ResultSpace
         MAIN_SDM2= 18,
         MAIN_SERVICE=19,
         MAIN_SDM3 = 20,
+        MAIN_SDM5 = 21,
     };
 
     public class DupItemClass

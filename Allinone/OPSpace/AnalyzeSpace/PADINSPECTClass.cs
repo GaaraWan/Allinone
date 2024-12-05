@@ -10,6 +10,8 @@ using JetEazy.BasicSpace;
 using EzSegClientLib;
 using System.Drawing.Imaging;
 using System.IO;
+using FreeImageAPI;
+using System.Windows.Forms;
 
 namespace Allinone.OPSpace.AnalyzeSpace
 {
@@ -32,6 +34,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public PADThresholdEnum PADThresholdMode { get; set; } = PADThresholdEnum.Threshold;
         public PADCalModeEnum PADCalMode { get; set; } = PADCalModeEnum.BlacktoBlack;
         public PADChipSize PADChipSizeMode { get; set; } = PADChipSize.CHIP_NORMAL;
+        public AICategory PADAICategory { get; set; } = AICategory.Baseline;
 
         public double Resolution_Mil { get; set; } = 0.0254 / INI.MAINSD_PAD_MIL_RESOLUTION;//轉換爲 1 mil = 1.155 pixel
 
@@ -73,6 +76,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public double GlueMaxRight { get; set; } = 0.9;
         public double GlueMinRight { get; set; } = 0.1;
 
+
+        public double GleWidthUpper { get; set; } = 10;
+        public double GleWidthLower { get; set; } = 0;
+        public double GleHeightUpper { get; set; } = 10;
+        public double GleHeightLower { get; set; } = 0;
+        public double GleAreaUpper { get; set; } = 10;
+        public double GleAreaLower { get; set; } = 0;
+
+
+
         #endregion
 
         public double GlueMax { get; set; } = 180;
@@ -80,6 +93,12 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public bool GlueCheck { get; set; } = true;
         public double NoGlueThresholdValue { get; set; } = 0.7;
         public double BloodFillValueRatio { get; set; } = 0.33;
+
+        public bool ChipDirlevel { get; set; } = true;
+
+        public int FontSize { get; set; } = 35;
+        public int LineWidth { get; set; } = 5;
+        public bool ChipGleCheck { get; set; } = false;
 
         string m_format = "0.000";
 
@@ -165,6 +184,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             switch (PADMethod)
             {
+                case PADMethodEnum.QLE_CHECK:
                 case PADMethodEnum.PLACODE_CHECK:
                 case PADMethodEnum.PADCHECK:
                 case PADMethodEnum.GLUECHECK:
@@ -218,7 +238,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                     bitmap = new Bitmap(_getV6bmpInput(rect1));
                                     break;
                                 case PADChipSize.CHIP_V8:
-                                    bitmap = new Bitmap(_getV8bmpInput(rect1, _from_bmpinputSize_to_iSized()));
+                                    bitmap = new Bitmap(_getV8bmpInput(rect1, _from_bmpinputSize_to_iSized(imginput)));
                                     break;
                                 case PADChipSize.CHIP_NORMAL:
                                 default:
@@ -255,7 +275,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             switch (PADChipSizeMode)
                             {
                                 case PADChipSize.CHIP_V8:
-                                    bitmap = new Bitmap(blackAICal(m_PADRegion, 1));
+                                    bitmap = new Bitmap(blackAICal(m_PADRegion, -_from_bmpinputSize_to_iSized(imginput)));
                                     break;
                                 case PADChipSize.CHIP_NORMAL:
                                 default:
@@ -273,13 +293,13 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     }
 
 
-                    //if (m_IsSaveTemp)
+                    if (m_IsSaveTemp)
                     {
                         bmpPadFindOutput.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpPadFindOutput" + ".png", System.Drawing.Imaging.ImageFormat.Png);
                         //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
                     }
 
-                    
+
                     break;
 
                 case PADMethodEnum.NONE:
@@ -701,7 +721,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //56ms
             if (isgood)
             {
-                Bitmap bmpsize = new Bitmap(bmpinput, Resize(bmpinput.Size, _from_bmpinputSize_to_iSized()));
+                int isizeDispening = _from_bmpinputSize_to_iSized(bmpinput);
+
+                Bitmap bmpsize = new Bitmap(bmpinput, Resize(bmpinput.Size, isizeDispening));
                 AForge.Imaging.Filters.HistogramEqualization histogramEqualization11 =
                     new AForge.Imaging.Filters.HistogramEqualization();
                 Bitmap bmphistogramEqualization11 = histogramEqualization11.Apply(bmpsize);
@@ -721,7 +743,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 {
                     bmphistogramEqualization11.Save("D:\\testtest\\" + _CalPageIndex() +
                         RelateAnalyzeString + "NoDispensing" + ".png", System.Drawing.Imaging.ImageFormat.Png);
-                    
+
                 }
 
                 Rectangle rectangletemp = new Rectangle(extractBiggestBlob11.BlobPosition.X,
@@ -729,7 +751,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                                                            bmphistogramEqualization11.Width,
                                                                            bmphistogramEqualization11.Height);
 
-                RectangleF rectangletemp2 = ResizeWithLocation2(rectangletemp, _from_bmpinputSize_to_iSized());
+                RectangleF rectangletemp2 = ResizeWithLocation2(rectangletemp, -isizeDispening);
 
                 double iwidthtmp = Math.Max(rectangletemp2.Width, rectangletemp2.Height);
                 double iheighttmp = Math.Min(rectangletemp2.Width, rectangletemp2.Height);
@@ -740,7 +762,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //                                                          m_PADRegion.RegionForEdgeRect.Width,
                 //                                                          m_PADRegion.RegionForEdgeRect.Height);
 
-                //JzToolsClass jzToolsClass = new JzToolsClass();
+                JzToolsClass jzToolsClass = new JzToolsClass();
 
                 if (!IsInRangeRatio(m_PADRegion.RegionWidth, iwidthtmp, OWidthRatio))
                 {
@@ -751,8 +773,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     reason = ReasonEnum.NG;
 
                     bmpoutput.Dispose();
-                    bmpoutput = (Bitmap)bmpinput.Clone();// new Bitmap(bmpinput);
-                    //jzToolsClass.DrawRect(bmpoutput, rect1pattrem, new Pen(Color.Red, 5));
+                    //bmpoutput = (Bitmap)bmpinput.Clone();// new Bitmap(bmpinput);
+                    bmpoutput = new Bitmap(bmpinput);
+                    jzToolsClass.DrawRect(bmpoutput, rectangletemp2, new Pen(Color.Red, 5));
                     //if (INI.CHIP_NG_SHOW)
                     //{
                     //    bmpoutput.Dispose();
@@ -768,7 +791,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     reason = ReasonEnum.NG;
 
                     bmpoutput.Dispose();
-                    bmpoutput = (Bitmap)bmpinput.Clone();// new Bitmap(bmpinput);
+                    //bmpoutput = (Bitmap)bmpinput.Clone();// new Bitmap(bmpinput);
+                    bmpoutput = new Bitmap(bmpinput);
+                    jzToolsClass.DrawRect(bmpoutput, rectangletemp2, new Pen(Color.Red, 5));
                     //jzToolsClass.DrawRect(bmpoutput, rect1pattrem, new Pen(Color.Red, 5));
                     //if (INI.CHIP_NG_SHOW)
                     //{
@@ -790,7 +815,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             #region 先判断PAD的尺寸是否正确 和 正确定位到 及 判断PAD 区域里面的blob
 
             PADRegionClass PADTempRegion = new PADRegionClass();
-           
+
             if (isgood)
             {
                 //166ms
@@ -825,8 +850,19 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 }
 
                 #region 判断PAD 区域里面的blob
-              
-                //if (isgood)
+                if (ChipGleCheck)
+                    isgood = PADRegionCheckSize(bmpInput, PADBlobGrayThreshold, PADTempRegion, ref bmpoutput) == 0;
+                if (!isgood)
+                {
+                    isgood = false;
+                    processstring += "Error in " + RelateAnalyzeString + " Glue OVER " + Environment.NewLine;
+                    errorstring += RelateAnalyzeString + " Glue OVER " + Environment.NewLine;
+
+                    reason = ReasonEnum.NG;
+                    descstriing = "胶水异常";
+                }
+
+                if (isgood)
                 {
                     //78ms
                     PADRegionFindBlob(bmpInput, PADBlobGrayThreshold, PADTempRegion, ref bmpoutput);
@@ -969,6 +1005,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     bitmap0.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bitmap0" + ".png", System.Drawing.Imaging.ImageFormat.Png);
                     //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
                 }
+
+                int isize = _from_bmpinputSize_to_iSized(imginput);
                 switch (PADChipSizeMode)
                 {
                     case PADChipSize.CHIP_V1:
@@ -986,7 +1024,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         break;
                     case PADChipSize.CHIP_V8:
                         //bitmap = (Bitmap)_getV8bmpInput(rect1).Clone();
-                        bitmap = new Bitmap(_getV8bmpInput(rect1, _from_bmpinputSize_to_iSized()));
+                        bitmap = new Bitmap(_getV8bmpInput(rect1, isize));
                         break;
                     case PADChipSize.CHIP_V5:
                         break;
@@ -1000,7 +1038,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //这里是寻找点的起点位置
                 //rect.Inflate(-5, -5);
                 rect.Inflate(-(int)(CalExtendX * Resolution_Mil), -(int)(CalExtendY * Resolution_Mil));
-                BoundRect(ref rect, bitmap.Size);
+                //BoundRect(ref rect, bitmap.Size);
                 if (m_IsSaveTemp)
                 {
                     bitmap.Save("D:\\testtest\\" + RelateAnalyzeString + "imginputorg" + ".png", System.Drawing.Imaging.ImageFormat.Png);
@@ -1019,7 +1057,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 rectout.Inflate(minout, minout);
                 //g.DrawRectangle(new Pen(Color.Yellow), rectout);
 
-                
+
                 switch (PADChipSizeMode)
                 {
                     case PADChipSize.CHIP_V8:
@@ -1170,42 +1208,38 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
                         }
                         borderLineRun = new BorderLineRunClass[4];
+                        //int isize = _from_bmpinputSize_to_iSized(imginput);
                         i = 0;
                         while (i < (int)BorderTypeEnum.COUNT)
                         {
 
                             borderLineRun[i] = new BorderLineRunClass();
                             borderLineRun[i].bmp0 = (Bitmap)bitmap.Clone();// new Bitmap(bitmap);
-                            borderLineRun[i].bmp1 = new Bitmap(PADTempRegion.bmpThreshold,
-                                Resize(PADTempRegion.bmpThreshold.Size, _from_bmpinputSize_to_iSized()));
 
-                            RectangleF rectSize = ResizeWithLocation2(rect, _from_bmpinputSize_to_iSized());
+                            borderLineRun[i].bmp1 = new Bitmap(PADTempRegion.bmpThreshold,
+                                Resize(PADTempRegion.bmpThreshold.Size, isize));
+
+                            RectangleF rectSize = ResizeWithLocation2(rect, isize);
 
                             //(Bitmap)PADTempRegion.bmpThreshold.Clone();// new Bitmap(PADTempRegion.bmpThreshold);
                             borderLineRun[i].rect0 =
                                 new Rectangle((int)rectSize.X, (int)rectSize.Y, (int)rectSize.Width, (int)rectSize.Height);
-                                //new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+                            //new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
                             borderLineRun[i].Border = (BorderTypeEnum)i;
                             borderLineRun[i].index = i;
 
                             i++;
                         }
 
-                        //foreach (BorderLineRunClass item in borderLineRun)
-                        //{
-                        //    _get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index]);
-
-                        //}
-                        Parallel.ForEach(borderLineRun, item =>
+                        foreach (BorderLineRunClass item in borderLineRun)
                         {
-                            _get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index], _from_bmpinputSize_to_iSized());
+                            _get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index], -isize);
 
-                            //if (INI.chipUseAI)
-                            //    _get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index]);
-                            //else
-                            //    _get_border_pointf_v6_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index]);
-
-                        });
+                        }
+                        //Parallel.ForEach(borderLineRun, item =>
+                        //{
+                        //    _get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index], isize);
+                        //});
 
                         i = 0;
                         while (i < (int)BorderTypeEnum.COUNT)
@@ -1406,13 +1440,14 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 RectangleF _rectF = new RectangleF(0, 0, 1100, 290);
                 _rectF = new RectangleF(0, 0, 1100, 40);
                 g.FillRectangle(Brushes.Black, _rectF);
-                int linewidth = 1;
-                int fontsize = 8;
+                int linewidth = LineWidth;
+                int fontsize = FontSize;
+
                 //画图 及 显示比对图
                 i = 0;
                 int drawIndex = 0;
                 while (drawIndex < (int)BorderTypeEnum.COUNT)
-                    //Parallel.For(0, (int)BorderTypeEnum.COUNT, (drawIndex) =>
+                //Parallel.For(0, (int)BorderTypeEnum.COUNT, (drawIndex) =>
                 {
                     switch ((BorderTypeEnum)drawIndex)
                     {
@@ -1744,7 +1779,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             glues = null;
             if (isgood && GlueCheck)
             {
-                int sized = 2;
+
                 glues = new GlueRegionClass[(int)BorderTypeEnum.COUNT];
                 PointF[] pts = null;
                 PointF[] ptsIN = null;
@@ -1777,11 +1812,12 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     bitmap0.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bitmap0" + ".png", System.Drawing.Imaging.ImageFormat.Png);
                     //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
                 }
+                int sized = _from_bmpinputSize_to_iSized(imginput);
                 switch (PADChipSizeMode)
                 {
                     case PADChipSize.CHIP_V8:
                         //bitmap = (Bitmap)_getV8bmpInput(rect1).Clone();
-                        bitmap = new Bitmap(blackAICal(PADTempRegion, sized));
+                        bitmap = new Bitmap(blackAICal(PADTempRegion, -sized));
                         break;
                     case PADChipSize.CHIP_NORMAL:
                     default:
@@ -1834,17 +1870,20 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 int i = 0;
                 int j = 0;
-                
+
                 //多线程计算4条边
                 switch (PADChipSizeMode)
                 {
                     case PADChipSize.CHIP_V8:
-                      
+
                         if (m_IsSaveTemp)
                         {
                             PADTempRegion.bmpThreshold.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpThreshold" + ".png", System.Drawing.Imaging.ImageFormat.Png);
                             //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
                         }
+
+                        Bitmap bmpthresholdtemp = new Bitmap(PADTempRegion.bmpThreshold, Resize(PADTempRegion.bmpThreshold.Size, sized));
+
                         borderLineRun = new BorderLineRunClass[4];
                         i = 0;
                         while (i < (int)BorderTypeEnum.COUNT)
@@ -1852,10 +1891,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                             borderLineRun[i] = new BorderLineRunClass();
                             borderLineRun[i].bmp0 = (Bitmap)bitmap.Clone();// new Bitmap(bitmap);
-                            borderLineRun[i].bmp1 = new Bitmap(PADTempRegion.bmpThreshold,
-                                Resize(PADTempRegion.bmpThreshold.Size, -sized));
+                            borderLineRun[i].bmp1 = new Bitmap(bmpthresholdtemp);
 
-                            RectangleF rectSize = ResizeWithLocation2(rect, -sized);
+                            RectangleF rectSize = ResizeWithLocation2(rect, sized);
 
                             //(Bitmap)PADTempRegion.bmpThreshold.Clone();// new Bitmap(PADTempRegion.bmpThreshold);
                             borderLineRun[i].rect0 =
@@ -1867,6 +1905,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             i++;
                         }
 
+                        bmpthresholdtemp.Dispose();
+
                         //foreach (BorderLineRunClass item in borderLineRun)
                         //{
                         //    _get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index]);
@@ -1874,7 +1914,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         //}
                         Parallel.ForEach(borderLineRun, item =>
                         {
-                            _get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index], sized);
+                            _get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index], -sized);
 
                             //if (INI.chipUseAI)
                             //    _get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index]);
@@ -2077,6 +2117,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 RectangleF _rectF = new RectangleF(0, 0, 1100, 290);
                 g.FillRectangle(Brushes.Black, _rectF);
 
+                int fontsize = FontSize;// 34;
+                int linewidth = LineWidth;// 5;
+
                 //画图 及 显示比对图
                 i = 0;
                 int drawIndex = 0;
@@ -2108,16 +2151,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                     if (m_ischeckgluepass)
                     {
-                        g.DrawLines(new Pen(Color.Lime, 5), glues[drawIndex].GetPointF());
-                        g.DrawLines(new Pen(Color.Lime, 5), glues[drawIndex].GetPointFIN());
-                        g.DrawString(measureStr, new Font("宋体", 43), Brushes.Lime, 5, 5);
+                        g.DrawLines(new Pen(Color.Lime, linewidth), glues[drawIndex].GetPointF());
+                        g.DrawLines(new Pen(Color.Lime, linewidth), glues[drawIndex].GetPointFIN());
+                        g.DrawString(measureStr, new Font("宋体", fontsize), Brushes.Lime, 5, 5);
                         //g.DrawString(measureStr, new Font("宋体", 22), Brushes.Lime, _rectF);
                     }
                     else
                     {
-                        g.DrawLines(new Pen(Color.Red, 5), glues[drawIndex].GetPointF());
-                        g.DrawLines(new Pen(Color.Red, 5), glues[drawIndex].GetPointFIN());
-                        g.DrawString(measureStr, new Font("宋体", 43), Brushes.Red, 5, 5);
+                        g.DrawLines(new Pen(Color.Red, linewidth), glues[drawIndex].GetPointF());
+                        g.DrawLines(new Pen(Color.Red, linewidth), glues[drawIndex].GetPointFIN());
+                        g.DrawString(measureStr, new Font("宋体", fontsize), Brushes.Red, 5, 5);
                         //g.DrawString(measureStr, new Font("宋体", 22), Brushes.Red, _rectF);
                     }
 
@@ -2285,7 +2328,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         errorstring += RelateAnalyzeString + " PAD AREA OVER area= " + " , " + m_BadArea.ToString() + " , " + CheckDArea.ToString() + Environment.NewLine;
 
                         reason = ReasonEnum.NG;
-                        descstriing = "基本表面边角缺陷";
+                        descstriing = "基板表面边角缺陷";
                     }
                     else if (m_BadWidth > CheckDWidth)
                     {
@@ -2294,7 +2337,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         errorstring += RelateAnalyzeString + " PAD WIDTH OVER WIDTH= " + " , " + m_BadWidth.ToString() + " , " + CheckDWidth.ToString() + Environment.NewLine;
 
                         reason = ReasonEnum.NG;
-                        descstriing = "基本表面边角缺陷";
+                        descstriing = "基板表面边角缺陷";
                     }
                     else if (m_BadHeight > CheckDHeight)
                     {
@@ -2303,7 +2346,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         errorstring += RelateAnalyzeString + " PAD HEIGHT OVER HEIGHT= " + " , " + m_BadHeight.ToString() + " , " + CheckDHeight.ToString() + Environment.NewLine;
 
                         reason = ReasonEnum.NG;
-                        descstriing = "基本表面边角缺陷";
+                        descstriing = "基板表面边角缺陷";
                     }
                 }
 
@@ -2317,6 +2360,203 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 if (m_IsSaveTemp)
                 {
                     bmpPadFindOutput.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "PlacaodeFind" + (false ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+
+                    //bmp.Save("D:\\testtest\\" + RelateAnalyzeString + "PadFind" + (eIsTrain ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                }
+            }
+
+            //imginput.Dispose();
+            //imgoutput.Dispose();
+
+            runstatus.SetWorkStatus(bmpPattern,
+                                                   bmpInput,
+                                                   bmpoutput,
+                                                   reason,
+                                                   errorstring,
+                                                   processstring,
+                                                   PassInfo,
+                                                   descstriing);
+
+            RunStatusCollection.Add(runstatus);
+            IsPass = isgood;
+            m_DescStr = descstriing;
+            //if (INI.CHIP_forceALIGNRUN_pass)
+            //{
+            //    if (descstriing == "无芯片")
+            //        isgood = true;
+            //}
+
+            bmpMeasureOutput.Dispose();
+            bmpMeasureOutput = new Bitmap(bmpoutput);
+
+            bmpInput.Dispose();
+
+            return isgood;
+        }
+        public bool PB10_QLECheckInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
+        {
+            //0.025/0.022 = 1 mil/1 pixel
+            Resolution_Mil = 0.0254 / INI.MAINSD_PAD_MIL_RESOLUTION;
+            m_DescStr = string.Empty;
+
+            bmpMeasureOutput.Dispose();
+            //bmpMeasureOutput = new Bitmap(bmpinput);
+            bmpMeasureOutput = (Bitmap)bmpinput.Clone();
+
+            ////胶水检测使用mm换算单位
+            //switch (Universal.OPTION)
+            //{
+            //    case OptionEnum.MAIN_SDM1:
+            //    case OptionEnum.MAIN_SDM2:
+            //        Resolution_Mil = INI.MAINSD_PAD_MIL_RESOLUTION;
+            //        break;
+            //}
+
+            if (PADMethod == PADMethodEnum.NONE)
+            {
+                bmpoutput.Dispose();
+                bmpoutput = new Bitmap(bmpinput);
+                IsPass = true;
+                return true;
+            }
+
+            m_IsSaveTemp = INI.IsDEBUGCHIP;
+            bool isgood = true;
+
+            WorkStatusClass runstatus = new WorkStatusClass(AnanlyzeProcedureEnum.GLUEINSPECT);
+            string processstring = "Start " + RelateAnalyzeString + " PAD Inspection." + Environment.NewLine;
+            string errorstring = "";
+            string descstriing = "";
+            ReasonEnum reason = ReasonEnum.PASS;
+
+            bmpInput = new Bitmap(bmpinput);
+
+            //bmpPadFindOutput = new Bitmap(bmpinput);
+            //bmpPadBolbOutput = new Bitmap(bmpinput);
+            bmpPadFindOutput = (Bitmap)bmpinput.Clone();
+            //bmpPadBolbOutput = (Bitmap)bmpinput.Clone();
+
+            #region 先判断PAD的尺寸是否正确 和 正确定位到 及 判断PAD 区域里面的blob
+
+            PADRegionClass PADTempRegion = new PADRegionClass();
+
+            if (isgood)
+            {
+                //166ms
+                PADRegionFind(bmpInput, PADGrayThreshold, false, out PADTempRegion);
+
+                if (!IsInRangeEx(PADTempRegion.RegionAreaReal, GleAreaUpper, GleAreaLower))
+                {
+                    isgood = false;
+                    processstring += "Error in " + RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
+                    errorstring += RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
+
+                    reason = ReasonEnum.NG;
+                    descstriing = "胶水异常胶水面积不合格";
+                }
+                else if (!IsInRangeEx(PADTempRegion.RegionWidthReal, GleWidthUpper, GleWidthLower))
+                {
+                    isgood = false;
+                    processstring += "Error in " + RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + PADTempRegion.RegionWidth.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+                    errorstring += RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + PADTempRegion.RegionWidth.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+
+                    reason = ReasonEnum.NG;
+                    descstriing = "胶水异常胶水长度不合格";
+                }
+                else if (!IsInRangeEx(PADTempRegion.RegionHeightReal, GleHeightUpper, GleHeightLower))
+                {
+                    isgood = false;
+                    processstring += "Error in " + RelateAnalyzeString + " PAD HEIGHT OVER Ratio= " + OHeightRatio.ToString() + " , " + PADTempRegion.RegionHeight.ToString() + " , " + m_PADRegion.RegionHeight.ToString() + Environment.NewLine;
+                    errorstring += RelateAnalyzeString + " PAD HEIGHT OVER Ratio= " + OHeightRatio.ToString() + " , " + PADTempRegion.RegionHeight.ToString() + " , " + m_PADRegion.RegionHeight.ToString() + Environment.NewLine;
+
+                    reason = ReasonEnum.NG;
+                    descstriing = "胶水异常胶水宽度不合格";
+                }
+
+                bmpoutput.Dispose();
+                bmpoutput = new Bitmap(bmpPadFindOutput);
+
+                //if (!IsInRangeRatio(PADTempRegion.RegionArea, m_PADRegion.RegionArea, OAreaRatio))
+                //{
+                //    isgood = false;
+                //    processstring += "Error in " + RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
+                //    errorstring += RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
+
+                //    reason = ReasonEnum.NG;
+                //    descstriing = "胶水面积缺陷";
+                //}
+                //else if (!IsInRangeRatio(PADTempRegion.RegionWidth, m_PADRegion.RegionWidth, OWidthRatio))
+                //{
+                //    isgood = false;
+                //    processstring += "Error in " + RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + PADTempRegion.RegionWidth.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+                //    errorstring += RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + PADTempRegion.RegionWidth.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+
+                //    reason = ReasonEnum.NG;
+                //    descstriing = "胶水宽度缺陷";
+                //}
+                //else if (!IsInRangeRatio(PADTempRegion.RegionHeight, m_PADRegion.RegionHeight, OHeightRatio))
+                //{
+                //    isgood = false;
+                //    processstring += "Error in " + RelateAnalyzeString + " PAD HEIGHT OVER Ratio= " + OHeightRatio.ToString() + " , " + PADTempRegion.RegionHeight.ToString() + " , " + m_PADRegion.RegionHeight.ToString() + Environment.NewLine;
+                //    errorstring += RelateAnalyzeString + " PAD HEIGHT OVER Ratio= " + OHeightRatio.ToString() + " , " + PADTempRegion.RegionHeight.ToString() + " , " + m_PADRegion.RegionHeight.ToString() + Environment.NewLine;
+
+                //    reason = ReasonEnum.NG;
+                //    descstriing = "胶水高度缺陷";
+                //}
+
+                #region 判断chip表面的脏污
+
+                if (isgood)
+                {
+                    //78ms
+                    PADRegionFindBlob_QLE(bmpInput, PADBlobGrayThreshold, PADTempRegion, ref bmpoutput, 1, false);
+
+                    ////mil 計算
+
+                    //m_BadArea = m_BadArea / Resolution_Mil / Resolution_Mil;
+                    //m_BadWidth = m_BadWidth / Resolution_Mil;
+                    //m_BadHeight = m_BadHeight / Resolution_Mil;
+
+                    if (m_BadArea > CheckDArea)
+                    {
+                        isgood = false;
+                        processstring += "Error in " + RelateAnalyzeString + " PAD AREA OVER area= " + " , " + m_BadArea.ToString() + " , " + CheckDArea.ToString() + Environment.NewLine;
+                        errorstring += RelateAnalyzeString + " PAD AREA OVER area= " + " , " + m_BadArea.ToString() + " , " + CheckDArea.ToString() + Environment.NewLine;
+
+                        reason = ReasonEnum.NG;
+                        descstriing = "溢胶表面脏污面积缺陷";
+                    }
+                    else if (m_BadWidth > CheckDWidth)
+                    {
+                        isgood = false;
+                        processstring += "Error in " + RelateAnalyzeString + " PAD WIDTH OVER WIDTH= " + " , " + m_BadWidth.ToString() + " , " + CheckDWidth.ToString() + Environment.NewLine;
+                        errorstring += RelateAnalyzeString + " PAD WIDTH OVER WIDTH= " + " , " + m_BadWidth.ToString() + " , " + CheckDWidth.ToString() + Environment.NewLine;
+
+                        reason = ReasonEnum.NG;
+                        descstriing = "溢胶表面脏污宽度缺陷";
+                    }
+                    else if (m_BadHeight > CheckDHeight)
+                    {
+                        isgood = false;
+                        processstring += "Error in " + RelateAnalyzeString + " PAD HEIGHT OVER HEIGHT= " + " , " + m_BadHeight.ToString() + " , " + CheckDHeight.ToString() + Environment.NewLine;
+                        errorstring += RelateAnalyzeString + " PAD HEIGHT OVER HEIGHT= " + " , " + m_BadHeight.ToString() + " , " + CheckDHeight.ToString() + Environment.NewLine;
+
+                        reason = ReasonEnum.NG;
+                        descstriing = "溢胶表面脏污高度缺陷";
+                    }
+                }
+
+                #endregion
+            }
+
+            #endregion
+
+            if (!isgood)
+            {
+                if (m_IsSaveTemp)
+                {
+                    bmpPadFindOutput.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "QLEFind" + (false ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
                     //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
 
                     //bmp.Save("D:\\testtest\\" + RelateAnalyzeString + "PadFind" + (eIsTrain ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
@@ -3329,7 +3569,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             if (icount > 0)
             {
-
+                int linewidth = 5;
                 //画出图形
                 Graphics g = Graphics.FromImage(bmp);
                 JRotatedRectangleF jetrect = JetBlobFeature.ComputeMinRectangle(jetBlob, iMAXIndex);
@@ -3357,10 +3597,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //转换矩形的四个角
                 PointF[] _myPointFs = RectFToPointF(myRectF, -jetrect.fAngle);
 
-                Pen p = new Pen(Color.Violet, 2);
+                Pen p = new Pen(Color.Violet, linewidth);
                 p.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
 
-                Pen pBottom = new Pen(Color.Violet, 2);
+                Pen pBottom = new Pen(Color.Violet, linewidth);
                 pBottom.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
 
                 g.DrawLine(p, _myPointFs[0], _myPointFs[1]);
@@ -3381,10 +3621,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //转换矩形的四个角
                 _myPointFs = RectFToPointF(myRectF, -jetrect.fAngle);
 
-                p = new Pen(Color.Lime, 2);
+                p = new Pen(Color.Lime, linewidth);
                 p.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
 
-                pBottom = new Pen(Color.Lime, 2);
+                pBottom = new Pen(Color.Lime, linewidth);
                 pBottom.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
 
                 g.DrawLine(p, _myPointFs[0], _myPointFs[1]);
@@ -3396,6 +3636,70 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 OutPADRegion.RegionHeight = Math.Min(iWidth, iHeight);
                 OutPADRegion.RegionArea = iMAX;
                 OutPADRegion.SetPointF(_myPointFs);
+
+                //银胶
+                switch(PADMethod)
+                {
+                    case PADMethodEnum.QLE_CHECK:
+
+                        #region QLE
+
+                        RectangleF myRectFQle = SimpleRectF(ptCenter, (float)(CalExtendX * Resolution_Mil), (float)(CalExtendY * Resolution_Mil));
+                        //转换矩形的四个角
+                        _myPointFs = RectFToPointF(myRectFQle, -jetrect.fAngle);
+
+                        p = new Pen(Color.Blue, linewidth);
+                        p.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+
+                        pBottom = new Pen(Color.Blue, linewidth);
+                        pBottom.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+
+                        g.DrawLine(p, _myPointFs[0], _myPointFs[1]);
+                        g.DrawLine(p, _myPointFs[1], _myPointFs[2]);
+                        g.DrawLine(p, _myPointFs[2], _myPointFs[3]);
+                        g.DrawLine(pBottom, _myPointFs[0], _myPointFs[3]);
+
+                        OutPADRegion.SetPointFQLE(_myPointFs);
+                        //
+                        JzFindObjectClass jzFindObject = new JzFindObjectClass();
+                        Bitmap bmpQLE = (Bitmap)ebmpInput.Clone(myRectFQle, PixelFormat.Format24bppRgb);// new Bitmap(ebmpInput);
+                        jzFindObject.AH_SetThreshold(ref bmpQLE, 100);
+                        jzFindObject.AH_FindBlob(bmpQLE, false);
+                        Rectangle maxrecttemp = jzFindObject.rectMaxRect;
+
+                        OutPADRegion.RegionWidth = Math.Max(maxrecttemp.Width, maxrecttemp.Height);
+                        OutPADRegion.RegionHeight = Math.Min(maxrecttemp.Width, maxrecttemp.Height);
+                        OutPADRegion.RegionArea = jzFindObject.GetMaxArea();
+
+                        OutPADRegion.RegionWidthReal = Math.Max(maxrecttemp.Width, maxrecttemp.Height) * INI.MAINSD_PAD_MIL_RESOLUTION;
+                        OutPADRegion.RegionHeightReal = Math.Min(maxrecttemp.Width, maxrecttemp.Height) * INI.MAINSD_PAD_MIL_RESOLUTION;
+                        OutPADRegion.RegionAreaReal = jzFindObject.GetMaxArea() * INI.MAINSD_PAD_MIL_RESOLUTION * INI.MAINSD_PAD_MIL_RESOLUTION;
+
+                        maxrecttemp.X += (int)myRectFQle.X;
+                        maxrecttemp.Y += (int)myRectFQle.Y;
+
+                        string showmsg = $"长度{OutPADRegion.RegionWidthReal}mm,宽度{OutPADRegion.RegionHeightReal}mm,面积{OutPADRegion.RegionAreaReal}mm";
+                        g.DrawString(showmsg, new Font("宋体", FontSize), Brushes.Lime, new PointF(5, 5));
+                        g.DrawRectangle(new Pen(Color.Red, linewidth), maxrecttemp);
+                        //bmpQLE.Save("D:\\QLE.png", ImageFormat.Png);
+
+                        OutPADRegion.QleMaxRect = new Rectangle(maxrecttemp.X, maxrecttemp.Y, maxrecttemp.Width, maxrecttemp.Height);
+
+
+                        if (m_IsSaveTemp && !eIsTrain)
+                        {
+                            bmpQLE.Save("D:\\testtest\\" + RelateAnalyzeString + "GLEFind1X" + (eIsTrain ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                            //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+
+                            //bmp.Save("D:\\testtest\\" + RelateAnalyzeString + "PadFind" + (eIsTrain ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                        }
+
+                        bmpQLE.Dispose();
+
+                        #endregion
+
+                        break;
+                }
 
                 bmpPadFindOutput = (Bitmap)bmp.Clone();// new Bitmap(bmp);
 
@@ -3472,13 +3776,284 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 Graphics g = Graphics.FromImage(bmpdrawUse);
                 int penwidth = 5;
 
+                //RectangleF rect_max_meges = new RectangleF();
+
                 int i = 0;
                 while (i < checkListStr.Count)
                 {
                     iMAXIndex = int.Parse(checkListStr[i].Split(',')[1]);
                     JRotatedRectangleF jetrect0 = JetBlobFeature.ComputeMinRectangle(jetBlob, iMAXIndex);
                     JRotatedRectangleF jetrect = ResizeWithLocation2(jetrect0, iSized);
+
+                    PointF ptCenter = new PointF((float)jetrect.fCX, (float)jetrect.fCY);
+
+                    double iWidth = jetrect.fWidth;
+                    double iHeight = jetrect.fHeight;
+                    if (jetrect.fWidth < jetrect.fHeight)
+                    {
+                        iWidth = jetrect.fHeight;
+                        iHeight = jetrect.fWidth;
+                        jetrect.fAngle += 90;
+                    }
+
+                    RectangleF myRectF = SimpleRectF(ptCenter, (float)iWidth / 2, (float)iHeight / 2);
+                    //rect_max_meges = MergeTwoRects(rect_max_meges, myRectF);
+
+                    //原来的外框
+                    //转换矩形的四个角
+                    PointF[] _myPointFs = RectFToPointF(myRectF, -jetrect.fAngle);
+                    pointFs.Add(_myPointFs[0]);
+                    pointFs.Add(_myPointFs[1]);
+                    pointFs.Add(_myPointFs[2]);
+                    pointFs.Add(_myPointFs[3]);
+
+                    //if(eIsTrain)
+                    {
+                        Pen p = new Pen(Color.Violet, penwidth);
+                        p.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+
+                        Pen pBottom = new Pen(Color.Violet, penwidth);
+                        pBottom.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+
+                        g.DrawLine(p, _myPointFs[0], _myPointFs[1]);
+                        g.DrawLine(p, _myPointFs[1], _myPointFs[2]);
+                        g.DrawLine(p, _myPointFs[2], _myPointFs[3]);
+                        g.DrawLine(pBottom, _myPointFs[0], _myPointFs[3]);
+
+                        // mil 計算
+
+                        myRectF.Inflate(-(float)(ExtendX * Resolution_Mil), -(float)(ExtendY * Resolution_Mil));
+
+                        // pixel 計算
+
+                        //myRectF.Inflate(-ExtendX, -ExtendY);
+                        //内缩的点位
+                        //转换矩形的四个角
+                        _myPointFs = RectFToPointF(myRectF, -jetrect.fAngle);
+
+                        OutPADRegion.listPointF.Add(_myPointFs);
+
+                        p = new Pen(Color.Lime, penwidth);
+                        p.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+
+                        pBottom = new Pen(Color.Lime, penwidth);
+                        pBottom.DashStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+
+                        g.DrawLine(p, _myPointFs[0], _myPointFs[1]);
+                        g.DrawLine(p, _myPointFs[1], _myPointFs[2]);
+                        g.DrawLine(p, _myPointFs[2], _myPointFs[3]);
+                        g.DrawLine(pBottom, _myPointFs[0], _myPointFs[3]);
+                    }
+
+                    i++;
+                }
+
+                //List<string> checkListStr1 = new List<string>();
+                ////找到X坐标的最左和最右
+                //int j = 0;
+                //foreach (PointF ptf in pointFs)
+                //{
+                //    checkListStr1.Add($"{ptf.X.ToString()},{j.ToString()}");
+                //    j++;
+                //}
+                //checkListStr1.Sort((item1, item2) =>
+                //{ return float.Parse(item1.Split(',')[0]) >= float.Parse(item2.Split(',')[0]) ? 1 : -1; });
+                ////checkListStr1.Sort();
+                ////float ileftx = float.Parse(checkListStr1[0].Split(',')[0]);
+                ////float irightx = float.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[0]);
+
+                //PointF ptfleft = pointFs[int.Parse(checkListStr1[0].Split(',')[1])];
+                //PointF ptfright = pointFs[int.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[1])];
+
+                //checkListStr1.Clear();
+                ////找到Y坐标的最上和最下
+                //j = 0;
+                //foreach (PointF ptf in pointFs)
+                //{
+                //    checkListStr1.Add($"{ptf.Y.ToString()},{j.ToString()}");
+                //    j++;
+                //}
+                //checkListStr1.Sort((item1, item2) =>
+                //{ return float.Parse(item1.Split(',')[0]) >= float.Parse(item2.Split(',')[0]) ? 1 : -1; });
+                ////checkListStr1.Sort();
+                ////float itopy = float.Parse(checkListStr1[0].Split(',')[0]);
+                ////float ibottomy = float.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[0]);
+
+                //PointF ptftop = pointFs[int.Parse(checkListStr1[0].Split(',')[1])];
+                //PointF ptfbottom = pointFs[int.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[1])];
+
+                //double _angle = GetP1P2Angle(ptfleft, ptftop);
+                //OutPADRegion.Isleftoverright = !ChipDirlevel;// Math.Abs(_angle) < 45;
+                //PointF[] _myPointFs1 = _getEdgeConcor(jRotatedRectangleF.fAngle,
+                //                                                                   ptfleft, ptfright, ptftop, ptfbottom, BlackOffsetX, BlackOffsetY, OutPADRegion.Isleftoverright);
+
+                //checkListStr1.Clear();
+                //j = 0;
+                //foreach (PointF ptf in _myPointFs1)
+                //{
+                //    checkListStr1.Add($"{ptf.X.ToString()},{j.ToString()}");
+                //    j++;
+                //}
+                //checkListStr1.Sort((item1, item2) =>
+                //{ return float.Parse(item1.Split(',')[0]) >= float.Parse(item2.Split(',')[0]) ? 1 : -1; });
+                ////checkListStr1.Sort();
+                ////float ileftx = float.Parse(checkListStr1[0].Split(',')[0]);
+                ////float irightx = float.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[0]);
+
+                //float iLeft = _myPointFs1[int.Parse(checkListStr1[0].Split(',')[1])].X;
+                //float iRight = _myPointFs1[int.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[1])].X;
+
+                //checkListStr1.Clear();
+                ////找到Y坐标的最上和最下
+                //j = 0;
+                //foreach (PointF ptf in _myPointFs1)
+                //{
+                //    checkListStr1.Add($"{ptf.Y.ToString()},{j.ToString()}");
+                //    j++;
+                //}
+                //checkListStr1.Sort((item1, item2) =>
+                //{ return float.Parse(item1.Split(',')[0]) >= float.Parse(item2.Split(',')[0]) ? 1 : -1; });
+                ////checkListStr1.Sort();
+                ////float itopy = float.Parse(checkListStr1[0].Split(',')[0]);
+                ////float ibottomy = float.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[0]);
+
+                //float itop = _myPointFs1[int.Parse(checkListStr1[0].Split(',')[1])].Y;
+                //float iBottom = _myPointFs1[int.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[1])].Y;
+
+                Rectangle recttt = JzToolsClass.CvBoundingRect(pointFs);
                 
+                int d1 = (int)(BlackCalExtendX * Resolution_Mil);
+                int d2 = (int)(BlackCalExtendY * Resolution_Mil);
+                recttt.Inflate(d1, d2);
+
+                int offsetx = (int)(BlackOffsetX * Resolution_Mil);
+                int offsety = (int)(BlackOffsetY * Resolution_Mil);
+                recttt.X += offsetx;
+                recttt.Y += offsety;
+
+                double _angle = JzToolsClass.CvminareaRectPointFsAngle(pointFs);// * 180 / Math.PI;
+                if (ChipDirlevel)
+                {
+                    if (_angle < -15 || _angle > 15)
+                        _angle = 0;
+                }
+                PointF[] pointFs2 = RectFToPointF(recttt, -_angle);
+                //PointF[] pointFs2 = JzToolsClass.CvminareaRectPointFs(pointFs);
+
+
+                OutPADRegion.RegionForEdgeRect = new Rectangle(recttt.X, recttt.Y, recttt.Width, recttt.Height);
+
+                //PointF[] pointFs1 = new PointF[4];
+                //pointFs1[0] = new PointF(OutPADRegion.RegionForEdgeRect.X, OutPADRegion.RegionForEdgeRect.Y);
+                //pointFs1[1] = new PointF(OutPADRegion.RegionForEdgeRect.X + OutPADRegion.RegionForEdgeRect.Width, OutPADRegion.RegionForEdgeRect.Y);
+                //pointFs1[2] = new PointF(OutPADRegion.RegionForEdgeRect.X + OutPADRegion.RegionForEdgeRect.Width, OutPADRegion.RegionForEdgeRect.Y + OutPADRegion.RegionForEdgeRect.Height);
+                //pointFs1[3] = new PointF(OutPADRegion.RegionForEdgeRect.X, OutPADRegion.RegionForEdgeRect.Y + OutPADRegion.RegionForEdgeRect.Height);
+
+                //new Rectangle((int)rect_max_meges.X, (int)rect_max_meges.Y, (int)(rect_max_meges.Width), (int)(rect_max_meges.Height));
+
+                ////if(eIsTrain)
+                //{
+                Pen p1 = new Pen(Color.Green, penwidth);
+                p1.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+
+                //    Pen pBottom1 = new Pen(Color.Green, penwidth);
+                //    pBottom1.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+
+                //    g.DrawLine(p1, _myPointFs1[0], _myPointFs1[1]);
+                //    g.DrawLine(p1, _myPointFs1[1], _myPointFs1[2]);
+                //    g.DrawLine(p1, _myPointFs1[2], _myPointFs1[3]);
+                //    g.DrawLine(pBottom1, _myPointFs1[0], _myPointFs1[3]);
+                //}
+
+                g.DrawRectangle(p1, OutPADRegion.RegionForEdgeRect);
+                g.Dispose();
+
+                Bitmap bmpdrawUse2 = (Bitmap)ebmpInput.Clone();
+                Graphics g2 = Graphics.FromImage(bmpdrawUse2);
+                g2.Clear(Color.Black);
+                g2.FillPolygon(Brushes.White, pointFs2);
+                g2.Dispose();
+
+                bmpPadFindOutput.Dispose();
+                bmpPadFindOutput = (Bitmap)bmpdrawUse.Clone();// new Bitmap(bmp);
+                OutPADRegion.bmpChipForWetherGlue.Dispose();
+                OutPADRegion.bmpChipForWetherGlue = new Bitmap(bmpdrawUse);
+                bmpdrawUse.Dispose();
+
+                OutPADRegion.bmpThreshold.Dispose();
+                OutPADRegion.bmpThreshold = new Bitmap(bmpdrawUse2);
+                bmpdrawUse2.Dispose();
+
+                //OutPADRegion.SetPointFORG(pointFs1, jRotatedRectangleF.fAngle);
+                OutPADRegion.SetPointFORG(pointFs2, 0);
+            }
+
+            return 0;
+        }
+        private int PADRegionFind_BlackEdge_bak(Bitmap ebmpInput, int eThresholdValue, bool eIsTrain, out PADRegionClass OutPADRegion)
+        {
+            OutPADRegion = new PADRegionClass();
+            OutPADRegion.Reset();
+
+            //缩放倍数
+            int iSized = 5;
+            Bitmap bmpinputUse = new Bitmap(ebmpInput, new Size(ebmpInput.Width / iSized, ebmpInput.Height / iSized));
+            //Bitmap bmpinputUse = new Bitmap(ebmpInput, Resize(ebmpInput.Size, -iSized));
+            Bitmap bmpdrawUse = (Bitmap)ebmpInput.Clone();
+
+            int irange = eThresholdValue;
+            Bitmap bmp = (Bitmap)bmpinputUse.Clone();// new Bitmap(ebmpInput);
+            //Bitmap bmp2 = (Bitmap)bmpinputUse.Clone();//new Bitmap(ebmpInput);
+
+            JetGrayImg grayimage = new JetGrayImg(bmp);
+            JetImgproc.Threshold(grayimage, irange, grayimage);
+
+            int iMAX = -10000000;
+            int iMAXIndex = 0;
+
+            JetBlob jetBlob = new JetBlob();
+            jetBlob.Labeling(grayimage, JConnexity.Connexity4, JBlobLayer.WhiteLayer);
+            int icount = jetBlob.BlobCount;
+            List<string> checkListStr = new List<string>();
+            //找到最大面积
+            for (int i = 0; i < icount; i++)
+            {
+                int iArea = JetBlobFeature.ComputeIntegerFeature(jetBlob, i, JBlobIntFeature.Area);
+                if (iArea > 1000)
+                {
+                    //checkListStr.Add(i.ToString() + "," + iArea.ToString());
+                    checkListStr.Add(iArea.ToString() + "," + i.ToString());
+                }
+
+            }
+            //排序 从大到小排序
+            if (checkListStr.Count > 1)
+                checkListStr.Sort((item1, item2) =>
+                { return int.Parse(item1.Split(',')[0]) > int.Parse(item2.Split(',')[0]) ? -1 : 1; });
+            //checkListStr.Sort();
+            JRotatedRectangleF jRotatedRectangleF = new JRotatedRectangleF();
+            //JRotatedRectangleF jRotatedRectangleF2 = new JRotatedRectangleF();
+
+            if (checkListStr.Count > 0)
+            {
+                iMAXIndex = int.Parse(checkListStr[0].Split(',')[1]);
+                JRotatedRectangleF jetrect0x = JetBlobFeature.ComputeMinRectangle(jetBlob, iMAXIndex);
+                jRotatedRectangleF = ResizeWithLocation2(jetrect0x, iSized);
+                //jRotatedRectangleF2 = ResizeWithLocation2(jetrect0x, iSized);
+
+                List<PointF> pointFs = new List<PointF>();//收集所有的角点 以便于找到最大的旋转矩形
+                pointFs.Clear();
+                //画出图形 在原图上画出来
+                Graphics g = Graphics.FromImage(bmpdrawUse);
+                int penwidth = 5;
+
+                int i = 0;
+                while (i < checkListStr.Count)
+                {
+                    iMAXIndex = int.Parse(checkListStr[i].Split(',')[1]);
+                    JRotatedRectangleF jetrect0 = JetBlobFeature.ComputeMinRectangle(jetBlob, iMAXIndex);
+                    JRotatedRectangleF jetrect = ResizeWithLocation2(jetrect0, iSized);
+
                     PointF ptCenter = new PointF((float)jetrect.fCX, (float)jetrect.fCY);
 
                     double iWidth = jetrect.fWidth;
@@ -3576,7 +4151,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 PointF ptfbottom = pointFs[int.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[1])];
 
                 double _angle = GetP1P2Angle(ptfleft, ptftop);
-                OutPADRegion.Isleftoverright = Math.Abs(_angle) < 45;
+                OutPADRegion.Isleftoverright = !ChipDirlevel;// Math.Abs(_angle) < 45;
                 PointF[] _myPointFs1 = _getEdgeConcor(jRotatedRectangleF.fAngle,
                                                                                    ptfleft, ptfright, ptftop, ptfbottom, BlackOffsetX, BlackOffsetY, OutPADRegion.Isleftoverright);
 
@@ -3628,7 +4203,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     g.DrawLine(p1, _myPointFs1[2], _myPointFs1[3]);
                     g.DrawLine(pBottom1, _myPointFs1[0], _myPointFs1[3]);
                 }
-               
+
                 g.Dispose();
 
                 Bitmap bmpdrawUse2 = (Bitmap)ebmpInput.Clone();
@@ -3649,15 +4224,126 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 OutPADRegion.SetPointFORG(_myPointFs1, jRotatedRectangleF.fAngle);
             }
-            
+
             return 0;
         }
 
-        private int PADRegionFindBlob(Bitmap ebmpInput, 
-            int eThresholdValue, 
-            PADRegionClass eInputPADRegion, 
+        /// <summary>
+        /// 用来检测碰到锡球的算法
+        /// </summary>
+        /// <param name="ebmpInput"></param>
+        /// <param name="eThresholdValue"></param>
+        /// <param name="eInputPADRegion"></param>
+        /// <param name="ebmpOutput"></param>
+        /// <param name="iSized"></param>
+        /// <returns></returns>
+        private int PADRegionCheckSize(Bitmap ebmpInput,
+           int eThresholdValue,
+           PADRegionClass eInputPADRegion,
+           ref Bitmap ebmpOutput,
+           int iSized = 3)
+        {
+            int sizeblob = iSized;
+
+            int ret = 0;
+
+            Bitmap bmpdraw = (Bitmap)ebmpInput.Clone();
+            imginput = new Bitmap(ebmpInput);
+
+            if (m_IsSaveTemp)
+            {
+                imginput.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + $"_blob03sizeorg" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            Bitmap bmp = (Bitmap)imginput.Clone();
+            AForge.Imaging.Filters.YCbCrExtractChannel yCbCrExtractChannel = new AForge.Imaging.Filters.YCbCrExtractChannel(2);
+            bmp = yCbCrExtractChannel.Apply(bmp);
+            AForge.Imaging.Filters.ContrastStretch contrastStretch = new AForge.Imaging.Filters.ContrastStretch();
+            bmp = contrastStretch.Apply(bmp);
+            AForge.Imaging.Filters.HistogramEqualization histogramEqualization = new AForge.Imaging.Filters.HistogramEqualization();
+            bmp = histogramEqualization.Apply(bmp);
+            //AForge.Imaging.Filters.Grayscale grayscale1 = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+            //bmp = grayscale1.Apply(bmp);
+            AForge.Imaging.Filters.SISThreshold sISThreshold = new AForge.Imaging.Filters.SISThreshold();
+            bmp = sISThreshold.Apply(bmp);
+            AForge.Imaging.Filters.Closing closing = new AForge.Imaging.Filters.Closing();
+            bmp = closing.Apply(bmp);
+            AForge.Imaging.Filters.ExtractBiggestBlob extractBiggestBlob11 =
+                      new AForge.Imaging.Filters.ExtractBiggestBlob();
+            bmp = extractBiggestBlob11.Apply(bmp);
+
+            Rectangle rectangletemp = new Rectangle(extractBiggestBlob11.BlobPosition.X,
+                                                                           extractBiggestBlob11.BlobPosition.Y,
+                                                                           bmp.Width,
+                                                                           bmp.Height);
+            //算交集的rect
+            Rectangle rectangletemp1 = new Rectangle(extractBiggestBlob11.BlobPosition.X,
+                                                                       extractBiggestBlob11.BlobPosition.Y,
+                                                                       bmp.Width,
+                                                                       bmp.Height);
+
+            Bitmap bmp1 = extractBiggestBlob11.Apply(eInputPADRegion.bmpThreshold);
+            Rectangle chiprect = new Rectangle(extractBiggestBlob11.BlobPosition.X,
+                                                                           extractBiggestBlob11.BlobPosition.Y,
+                                                                           bmp1.Width,
+                                                                           bmp1.Height);
+
+            int intersectindex = 0;
+            List<Rectangle> blobrects2 = new List<Rectangle>();
+
+            //先判断chip与找到blob重合 再判断与周围锡球个数超过 3个则算NG
+            rectangletemp1.Intersect(chiprect);
+            if (rectangletemp1.Width * rectangletemp1.Height >= chiprect.Width * chiprect.Height)
+            {
+                //芯片周围的锡球
+                AForge.Imaging.BlobCounter blobCounter = new AForge.Imaging.BlobCounter(eInputPADRegion.bmpThreshold);
+                Rectangle[] blobrects = blobCounter.GetObjectsRectangles();
+
+                foreach (Rectangle rectangle in blobrects)
+                {
+                    if (rectangletemp.IntersectsWith(rectangle))
+                    {
+                        blobrects2.Add(rectangle);
+                        intersectindex++;
+                    }
+                }
+            }
+
+            if (intersectindex >= 3)
+            {
+                ret = -1;
+            }
+
+            Graphics g = Graphics.FromImage(bmpdraw);
+            RectangleF[] fs = new RectangleF[1];
+            fs[0] = rectangletemp;
+            g.DrawRectangles(new Pen(Color.Red, 3), fs);
+            if (blobrects2.Count > 0)
+            {
+                g.DrawRectangles(new Pen(Color.Red, 3), blobrects2.ToArray());
+            }
+            g.Dispose();
+
+            if (m_IsSaveTemp)
+            {
+                bmp.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + $"_blob03size{intersectindex.ToString()}" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                bmpdraw.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + $"_blob03size1" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            ebmpOutput = (Bitmap)bmpdraw.Clone();
+
+            imginput.Dispose();
+            bmp.Dispose();
+            bmpdraw.Dispose();
+            bmp1.Dispose();
+
+            return ret;
+        }
+        private int PADRegionFindBlob(Bitmap ebmpInput,
+            int eThresholdValue,
+            PADRegionClass eInputPADRegion,
             ref Bitmap ebmpOutput,
-            int iSized=3)
+            int iSized = 3)
         {
             //首先MASK 区域出来
 
@@ -3799,7 +4485,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             int eThresholdValue,
             PADRegionClass eInputPADRegion,
             ref Bitmap ebmpOutput,
-            int iSized = 3, bool eWhite = false,List<RectangleF> rectangleFs=null)
+            int iSized = 3, bool eWhite = false, List<RectangleF> rectangleFs = null)
         {
             //首先MASK 区域出来
 
@@ -3987,8 +4673,207 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             return 0;
         }
+        private int PADRegionFindBlob_QLE(Bitmap ebmpInput,
+            int eThresholdValue,
+            PADRegionClass eInputPADRegion,
+            ref Bitmap ebmpOutput,
+            int iSized = 3, bool eWhite = false, List<RectangleF> rectangleFs = null)
+        {
+            //首先MASK 区域出来
 
-        private PointF[] _getEdgeConcor(double angle, PointF ptfleft, PointF ptfright, PointF ptftop, PointF ptfbottom, double centeroffsetx = 0, double centeroffsety = 0,bool leftoverright=false)
+            m_BadArea = 0;
+            m_BadCount = 0;
+            m_BadWidth = 0;
+            m_BadHeight = 0;
+
+            int sizeblob = iSized;
+
+            Bitmap bmpdraw = (Bitmap)ebmpInput.Clone();// new Bitmap(ebmpInput);
+           //ebmpInput.Save("D:\\QLE.png", ImageFormat.Png);
+            imginput = new Bitmap(ebmpInput);
+            imgmask = new Bitmap(ebmpInput.Width, ebmpInput.Height);
+            Graphics gPrepared = Graphics.FromImage(imgmask);
+            gPrepared.Clear(Color.White);
+            if (eInputPADRegion.listPointF.Count > 0)
+            {
+                //Parallel.ForEach(eInputPADRegion.listPointF, (item) =>
+                //{
+                //    gPrepared.FillPolygon(Brushes.Black, item);
+                //});
+                foreach (PointF[] pts in eInputPADRegion.listPointF)
+                {
+                    gPrepared.FillPolygon(Brushes.Black, pts);
+                }
+            }
+            else
+            {
+                gPrepared.FillPolygon(Brushes.Black, eInputPADRegion.RegionPtFCorner);
+                gPrepared.FillPolygon(Brushes.White, eInputPADRegion.RegionPtFCornerQLE);
+            }
+
+            if (rectangleFs != null)
+            {
+                if (rectangleFs.Count > 0)
+                {
+                    gPrepared.FillRectangles(Brushes.White, rectangleFs.ToArray());
+                }
+            }
+
+            gPrepared.Dispose();
+
+            imginput = new Bitmap(imginput, new Size(imginput.Width / sizeblob, imginput.Height / sizeblob));
+            imgmask = new Bitmap(imgmask, new Size(imgmask.Width / sizeblob, imgmask.Height / sizeblob));
+
+            //imginput = new Bitmap(imginput, Resize(imginput.Size, -sizeblob));
+            //imgmask = new Bitmap(imgmask, Resize(imgmask.Size, -sizeblob));
+
+            m_JzFind.GetMaskedImage(imginput, imgmask, Color.White, Color.White, true);
+            //m_JzFind.GetMaskedImage(imginput, imgmask, Color.White, Color.White, true);
+            //imginput.Save("D:\\QLE.png", ImageFormat.Png);
+            int irange = eThresholdValue;
+            Bitmap bmp = (Bitmap)imginput.Clone();// new Bitmap(imginput);
+
+            switch (PADThresholdMode)
+            {
+                case PADThresholdEnum.Ostu_Threshold:
+
+                    AForge.Imaging.Filters.Grayscale grayscale = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+                    Bitmap bitmap1 = grayscale.Apply(bmp);
+
+                    AForge.Imaging.Filters.OtsuThreshold otsu = new AForge.Imaging.Filters.OtsuThreshold();
+                    Bitmap bitmap2 = otsu.Apply(bitmap1);
+
+                    bmp.Dispose();
+                    bmp = new Bitmap(bitmap2);
+
+                    bitmap1.Dispose();
+                    bitmap2.Dispose();
+
+                    break;
+            }
+
+            //Gray
+            AForge.Imaging.Filters.Grayscale grayscale1 = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+            bmp = grayscale1.Apply(bmp);
+
+            //Threshold
+            AForge.Imaging.Filters.Threshold threshold = new AForge.Imaging.Filters.Threshold(eThresholdValue);
+            bmp = threshold.Apply(bmp);
+
+            if (!eWhite)
+            {
+                //Invert
+                AForge.Imaging.Filters.Invert invert = new AForge.Imaging.Filters.Invert();
+                bmp = invert.Apply(bmp);
+            }
+
+            //BlobCounter
+            AForge.Imaging.BlobCounter blobCounter = new AForge.Imaging.BlobCounter();
+            blobCounter.ObjectsOrder = AForge.Imaging.ObjectsOrder.Area;
+            blobCounter.ProcessImage(bmp);
+            //Rectangle[] rectangles = blobCounter.GetObjectsRectangles();
+            AForge.Imaging.Blob[] blobs = blobCounter.GetObjectsInformation();
+
+            bool bNG = false;
+            Graphics g = Graphics.FromImage(bmpdraw);
+            //string msg = "标准长度:" + CheckDWidth.ToString() + ",标准宽度:" + CheckDHeight.ToString() + ",标准面积:" + CheckDArea.ToString() + Environment.NewLine;
+            //g.DrawString(msg, new Font("宋体", 22), Brushes.Lime, 5, 5);
+
+            string showmsg = $"长度{eInputPADRegion.RegionWidthReal}mm,宽度{eInputPADRegion.RegionHeightReal}mm,面积{eInputPADRegion.RegionAreaReal}mm";
+            g.DrawString(showmsg, new Font("宋体", FontSize), Brushes.Lime, 5, 15);
+
+            g.DrawPolygon(new Pen(Color.Blue, LineWidth), eInputPADRegion.RegionPtFCornerQLE);
+            g.DrawRectangle(new Pen(Color.Lime, LineWidth), eInputPADRegion.QleMaxRect);
+
+            if (blobs.Length > 0)
+            {
+                bNG = false;
+                RectangleF rectangleF = ResizeWithLocation3(blobs[0].Rectangle, sizeblob);
+                m_BadArea = blobs[0].Area * sizeblob * sizeblob * Resolution_Mil * Resolution_Mil;
+                m_BadWidth = rectangleF.Width * Resolution_Mil;
+                m_BadHeight = rectangleF.Height * Resolution_Mil;
+
+                //如果最大的方框都NG了 则是NG
+                if (m_BadWidth > CheckDWidth)
+                {
+                    //m_BadWidth = jetrect.fWidth;
+                    bNG = true;
+                    m_BadCount++;
+                }
+                else if (m_BadHeight > CheckDHeight)
+                {
+                    //m_BadHeight = jetrect.fHeight;
+                    bNG = true;
+                    m_BadCount++;
+                }
+                else if (m_BadArea > CheckDArea)
+                {
+                    //m_BadArea = iArea;
+                    bNG = true;
+                    m_BadCount++;
+                }
+                if (bNG)
+                {
+                    RectangleF[] fs = new RectangleF[1];
+                    fs[0] = rectangleF;
+                    g.DrawRectangles(new Pen(Color.Red, 7), fs);
+                    //g.DrawRectangle(new Pen(Color.Red, 3), blobs[0].Rectangle);
+                }
+
+                List<RectangleF> list = new List<RectangleF>();
+                foreach (AForge.Imaging.Blob blobx in blobs)
+                {
+                    rectangleF = ResizeWithLocation3(blobx.Rectangle, sizeblob);
+                    double _areax = blobs[0].Area * sizeblob * sizeblob * Resolution_Mil * Resolution_Mil;
+                    double _widthx = rectangleF.Width * Resolution_Mil;
+                    double _heightx = rectangleF.Height * Resolution_Mil;
+                    bool _bOK = true;
+                    //如果最大的方框都NG了 则是NG
+                    if (m_BadWidth > CheckDWidth)
+                    {
+                        _bOK = false;
+                    }
+                    else if (m_BadHeight > CheckDHeight)
+                    {
+                        _bOK = false;
+                    }
+                    else if (m_BadArea > CheckDArea)
+                    {
+                        _bOK = false;
+                    }
+                    if (!_bOK)
+                    {
+                        list.Add(blobx.Rectangle);
+                    }
+                }
+                if (list.Count > 0)
+                    g.DrawRectangles(new Pen(Color.Red, 3), list.ToArray());
+            }
+
+            g.Dispose();
+
+            if (m_IsSaveTemp && m_BadCount > 0)
+            {
+                bmp.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "_blob03" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            ebmpOutput = (Bitmap)bmpdraw.Clone();// new Bitmap(bmpdraw);
+            //bmpPadBolbOutput = (Bitmap)bmpdraw.Clone();//  new Bitmap(bmpdraw);
+
+            if (m_IsSaveTemp && m_BadCount > 0)
+            {
+                bmpdraw.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "_draw" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            imginput.Dispose();
+            imgmask.Dispose();
+            bmp.Dispose();
+            bmpdraw.Dispose();
+
+            return 0;
+        }
+
+        private PointF[] _getEdgeConcor(double angle, PointF ptfleft, PointF ptfright, PointF ptftop, PointF ptfbottom, double centeroffsetx = 0, double centeroffsety = 0, bool leftoverright = false)
         {
             JRotatedRectangleF jRotatedRectangleF = new JRotatedRectangleF();
             jRotatedRectangleF.fCX = (ptfleft.X + ptfright.X) / 2;
@@ -4027,7 +4912,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //jRotatedRectangleF.fWidth = GetPointLength(ptfleft, ptfbottom) + BlackCalExtendX * Resolution_Mil * 2;
                 //jRotatedRectangleF.fHeight = GetPointLength(ptfleft, ptftop) + BlackCalExtendY * Resolution_Mil * 2;
             }
-           
+
             jRotatedRectangleF.fAngle = angle;
 
             PointF[] pointFs = _getJRotatedRectangleFConcor(jRotatedRectangleF);
@@ -4047,7 +4932,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 jRotatedRectangleF1.fWidth = GetPointLength(ptfleft, ptfbottom) + (BlackCalExtendX + centeroffsetx) * Resolution_Mil * 2;
                 jRotatedRectangleF1.fHeight = GetPointLength(ptfleft, ptftop) + (BlackCalExtendY + centeroffsety) * Resolution_Mil * 2;
             }
-            
+
             jRotatedRectangleF1.fAngle = angle;
 
             PointF[] pointFs1 = _getJRotatedRectangleFConcor(jRotatedRectangleF1);
@@ -5783,7 +6668,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             bmpGlueOrg.Dispose();
         }
-        private void _get_border_pointf_v8_1(Bitmap ebmpInput, Bitmap ebmpInput0, Rectangle eRect, BorderTypeEnum borderType, out GlueRegionClass glueRegion,int iSized = 2)
+        private void _get_border_pointf_v8_1(Bitmap ebmpInput, Bitmap ebmpInput0, Rectangle eRect, BorderTypeEnum borderType, out GlueRegionClass glueRegion, int iSized = 2)
         {
             glueRegion = new GlueRegionClass();
             glueRegion.Reset();
@@ -5794,26 +6679,41 @@ namespace Allinone.OPSpace.AnalyzeSpace
             Bitmap bmpGlueOrg0 = new Bitmap(ebmpInput0);
             Rectangle m_rect_org = new Rectangle(eRect.X, eRect.Y, eRect.Width, eRect.Height);
             //m_rect_org.Inflate(-iwidth, -iwidth);
-            //if (m_IsSaveTemp)
-            //{
-            //    Bitmap bmpGlueOrg1 = new Bitmap(ebmpInput);
-            //    Graphics graphics = Graphics.FromImage(bmpGlueOrg1);
-            //    graphics.DrawRectangle(new Pen(Color.Red, 2), m_rect_org);
-            //    graphics.Dispose();
-            //    bmpGlueOrg1.Save("D:\\testtest\\x\\" + RelateAnalyzeString + borderType.ToString() + ".png",
-            //        System.Drawing.Imaging.ImageFormat.Png);
-            //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
-            //}
+            if (m_IsSaveTemp)
+            {
+                Bitmap bmpGlueOrg1 = new Bitmap(ebmpInput0);
+                Graphics graphics = Graphics.FromImage(bmpGlueOrg1);
+                graphics.DrawRectangle(new Pen(Color.Red, 2), m_rect_org);
+                graphics.Dispose();
+                bmpGlueOrg1.Save("D:\\testtest\\x\\x" + RelateAnalyzeString + borderType.ToString() + ".png",
+                    System.Drawing.Imaging.ImageFormat.Png);
+                //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+            }
 
             int j = 0;
             PointF pointF0 = new PointF();
             PointF pointF1 = new PointF();
             double[] m_distance = new double[10];
             int m_samplinggap = 21;
-            int iyoffset = (int)(m_samplinggap / 1.5);
+            //int iyoffset = (int)(m_samplinggap / 1.5);
+            //double maxv = -1000;
+            //double minv = 1000;
+            //m_samplinggap = 7;
+
+            //int m_samplinggap = 137;
+            //m_samplinggap = 37;
+
+            int _minsize = Math.Min(eRect.Width, eRect.Height);
+            if (_minsize >= 1500)
+                m_samplinggap = 137;
+            else if (_minsize >= 800)
+                m_samplinggap = 37;
+            else
+                m_samplinggap = 11;
+
             double maxv = -1000;
             double minv = 1000;
-            m_samplinggap = 7;
+            int iyoffset = (int)(m_samplinggap / 1.5);
 
             //int _minsize = Math.Min(eRect.Width, eRect.Height);
             //if (_minsize >= 1500)
@@ -5870,6 +6770,14 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //bitmap1.Dispose();
                 //bitmap2.Dispose();
 
+                //if (m_IsSaveTemp)
+                //{
+                //    //bitmap.Save("D:\\testtest\\x\\org" + RelateAnalyzeString + borderType.ToString() + "bmpInput_" + j.ToString() + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                //    bitmap0.Save("D:\\testtest\\x\\" + RelateAnalyzeString + borderType.ToString() + "bmpInput0_" + j.ToString() + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+                //}
+
+
                 JzFindObjectClass jzfind = new JzFindObjectClass();
 
                 switch (borderType)
@@ -5878,21 +6786,25 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         //pointF0 = jzfind.GetBoraderPoint(bitmap, true, true);
                         pointF0 = jzfind.GetBoraderPointv2(bitmap0, true, true, Color.FromArgb(0, 0, 0), true);
                         pointF1 = jzfind.GetBoraderPointv2(bitmap, true, true, Color.FromArgb(255, 255, 255));
+                        //pointF1 = jzfind.GetBoraderPointv2(bitmap, true, true, Color.FromArgb(0, 0, 0), true);
                         break;
                     case BorderTypeEnum.RIGHT:
                         //pointF0 = jzfind.GetBoraderPoint(bitmap, true, false);
                         pointF0 = jzfind.GetBoraderPointv2(bitmap0, true, false, Color.FromArgb(0, 0, 0), true);
                         pointF1 = jzfind.GetBoraderPointv2(bitmap, true, false, Color.FromArgb(255, 255, 255));
+                        //pointF1 = jzfind.GetBoraderPointv2(bitmap, true, false, Color.FromArgb(0, 0, 0), false);
                         break;
                     case BorderTypeEnum.TOP:
                         //pointF0 = jzfind.GetBoraderPoint(bitmap, false, true);
                         pointF0 = jzfind.GetBoraderPointv2(bitmap0, false, true, Color.FromArgb(0, 0, 0), true);
                         pointF1 = jzfind.GetBoraderPointv2(bitmap, false, true, Color.FromArgb(255, 255, 255));
+                        //pointF1 = jzfind.GetBoraderPointv2(bitmap, false, true, Color.FromArgb(0, 0, 0), false);
                         break;
                     case BorderTypeEnum.BOTTOM:
                         //pointF0 = jzfind.GetBoraderPoint(bitmap, false, false);
                         pointF0 = jzfind.GetBoraderPointv2(bitmap0, false, false, Color.FromArgb(0, 0, 0), true);
                         pointF1 = jzfind.GetBoraderPointv2(bitmap, false, false, Color.FromArgb(255, 255, 255));
+                        //pointF1 = jzfind.GetBoraderPointv2(bitmap, false, false, Color.FromArgb(0, 0, 0), true);
                         break;
                 }
 
@@ -5981,7 +6893,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 //if (m_IsSaveTemp)
                 //{
-                //    bitmap.Save("D:\\testtest\\x\\" + RelateAnalyzeString + borderType.ToString() + "bmpInput_" + j.ToString() + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                //    //bitmap.Save("D:\\testtest\\x\\" + RelateAnalyzeString + borderType.ToString() + "bmpInput_" + j.ToString() + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                //    bitmap0.Save("D:\\testtest\\x\\" + RelateAnalyzeString + borderType.ToString() + "bmpInput0_" + j.ToString() + ".png", System.Drawing.Imaging.ImageFormat.Png);
                 //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
                 //}
 
@@ -5994,6 +6907,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             //glueRegion.LengthMax = dataHistogram.MaxGrade;
             //glueRegion.LengthMin = dataHistogram.MinGrade;
+            
 
             glueRegion.LengthMax = maxv;
             glueRegion.LengthMin = minv;
@@ -6128,8 +7042,13 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             bmpGlueOrg.Dispose();
         }
+
         public class PADRegionClass
         {
+            public double RegionWidthReal { get; set; } = 10;
+            public double RegionHeightReal { get; set; } = 10;
+            public double RegionAreaReal { get; set; } = 100;
+
             public double RegionWidth { get; set; } = 10;
             public double RegionHeight { get; set; } = 10;
             public double RegionArea { get; set; } = 100;
@@ -6141,6 +7060,12 @@ namespace Allinone.OPSpace.AnalyzeSpace
             /// 原始的角点位置
             /// </summary>
             public PointF[] RegionPtFCornerORG = new PointF[4];
+
+            /// <summary>
+            /// QLE检测银胶的角点位置
+            /// </summary>
+            public PointF[] RegionPtFCornerQLE = new PointF[4];
+            public Rectangle QleMaxRect = new Rectangle(0, 0, 1, 1);
             public Rectangle RegionForEdgeRect = new Rectangle(0, 0, 1, 1);
             public Bitmap bmpThreshold = new Bitmap(1, 1);
             public JRotatedRectangleF jRotatedRectangleF2 = new JRotatedRectangleF();
@@ -6229,6 +7154,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                     RegionWidth = jRotatedRectangleF2.fWidth;
                     RegionHeight = jRotatedRectangleF2.fHeight;
+                }
+            }
+            public void SetPointFQLE(PointF[] eInputPtF)
+            {
+                if (eInputPtF.Length == 4)
+                {
+                    RegionPtFCornerQLE[0] = eInputPtF[0];
+                    RegionPtFCornerQLE[1] = eInputPtF[1];
+                    RegionPtFCornerQLE[2] = eInputPtF[2];
+                    RegionPtFCornerQLE[3] = eInputPtF[3];
                 }
             }
             //public 
@@ -6432,6 +7367,18 @@ namespace Allinone.OPSpace.AnalyzeSpace
             str += BlackCalExtendY.ToString() + Universal.SeperateCharB;
             str += BlackOffsetX.ToString() + Universal.SeperateCharB;
             str += BlackOffsetY.ToString() + Universal.SeperateCharB;
+            str += (ChipDirlevel ? "1" : "0") + Universal.SeperateCharB;
+            str += FontSize.ToString() + Universal.SeperateCharB;
+            str += LineWidth.ToString() + Universal.SeperateCharB;
+            str += ((int)PADAICategory).ToString() + Universal.SeperateCharB;     //0
+            str += (ChipGleCheck ? "1" : "0") + Universal.SeperateCharB;
+
+            str += GleWidthUpper.ToString() + Universal.SeperateCharB;
+            str += GleWidthLower.ToString() + Universal.SeperateCharB;
+            str += GleHeightUpper.ToString() + Universal.SeperateCharB;
+            str += GleHeightLower.ToString() + Universal.SeperateCharB;
+            str += GleAreaUpper.ToString() + Universal.SeperateCharB;
+            str += GleAreaLower.ToString() + Universal.SeperateCharB;
 
             str += "";
 
@@ -6519,6 +7466,34 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     BlackOffsetX = double.Parse(strs[31]);
                     BlackOffsetY = double.Parse(strs[32]);
                 }
+                if (strs.Length > 33)
+                {
+                    ChipDirlevel = strs[33] == "1";
+                }
+                if (strs.Length > 35)
+                {
+                    FontSize = int.Parse(strs[34]);
+                    LineWidth = int.Parse(strs[35]);
+                }
+                if (strs.Length > 36)
+                {
+                    if (string.IsNullOrEmpty(strs[36]))
+                        strs[36] = "0";
+                    PADAICategory = (AICategory)int.Parse(strs[36]);
+                }
+                if (strs.Length > 37)
+                {
+                    ChipGleCheck = strs[37] == "1";
+                }
+                if (strs.Length > 43)
+                {
+                    GleWidthUpper = double.Parse(strs[38]);
+                    GleWidthLower = double.Parse(strs[39]);
+                    GleHeightUpper = double.Parse(strs[40]);
+                    GleHeightLower = double.Parse(strs[41]);
+                    GleAreaUpper = double.Parse(strs[42]);
+                    GleAreaLower = double.Parse(strs[43]);
+                }
             }
         }
         public void Reset()
@@ -6544,6 +7519,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             CalExtendX = 66;
             CalExtendY = 66;
             BloodFillValueRatio = 0.33;
+            PADAICategory = AICategory.Baseline;
 
             GlueMaxTop = 0.6;
             GlueMinTop = 0.1;
@@ -6562,6 +7538,21 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             BlackOffsetX = 0;
             BlackOffsetY = 0;
+
+            ChipDirlevel = true;
+            ChipGleCheck = false;
+
+            FontSize = 35;
+            LineWidth = 5;
+
+            GleWidthUpper = 10;
+            GleWidthLower = 0;
+
+            GleHeightUpper = 10;
+            GleHeightLower = 0;
+
+            GleAreaUpper = 10;
+            GleAreaLower = 0;
 
         }
         public void FromPropertyChange(string changeitemstring, string valuestring)
@@ -6628,6 +7619,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 case "PADChipSizeMode":
                     PADChipSizeMode = (PADChipSize)Enum.Parse(typeof(PADChipSize), valuestring, true);
                     break;
+                case "PADAICategory":
+                    PADAICategory = (AICategory)Enum.Parse(typeof(AICategory), valuestring, true);
+                    break;
                 case "CalExtendX":
                     CalExtendX = double.Parse(valuestring);
                     break;
@@ -6675,6 +7669,39 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 case "BlackOffsetY":
                     BlackOffsetY = double.Parse(valuestring);
                     break;
+                case "ChipDirLevel":
+                    ChipDirlevel = bool.Parse(valuestring);
+                    break;
+                case "FontSize":
+                    FontSize = int.Parse(valuestring);
+                    break;
+                case "LineWidth":
+                    LineWidth = int.Parse(valuestring);
+                    break;
+                case "ChipGleCheck":
+                    ChipGleCheck = bool.Parse(valuestring);
+                    break;
+
+
+                case "GleWidthUpper":
+                    GleWidthUpper = double.Parse(valuestring);
+                    break;
+                case "GleWidthLower":
+                    GleWidthLower = double.Parse(valuestring);
+                    break;
+                case "GleHeightUpper":
+                    GleHeightUpper = double.Parse(valuestring);
+                    break;
+                case "GleHeightLower":
+                    GleHeightLower = double.Parse(valuestring);
+                    break;
+                case "GleAreaUpper":
+                    GleAreaUpper = double.Parse(valuestring);
+                    break;
+                case "GleAreaLower":
+                    GleAreaLower = double.Parse(valuestring);
+                    break;
+
             }
         }
 
@@ -6683,7 +7710,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             if (PADMethod == PADMethodEnum.PADCHECK
                 || PADMethod == PADMethodEnum.GLUECHECK
                 || PADMethod == PADMethodEnum.GLUECHECK_BlackEdge
-                || PADMethod == PADMethodEnum.PLACODE_CHECK)
+                || PADMethod == PADMethodEnum.PLACODE_CHECK
+                || PADMethod == PADMethodEnum.QLE_CHECK)
             {
                 TrainStatusCollection.Clear();
                 RunStatusCollection.Clear();
@@ -7189,11 +8217,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             get { return Universal.model; }
         }
-        private int _from_bmpinputSize_to_iSized()
+        private int _from_bmpinputSize_to_iSized(Bitmap bmpInputX)
         {
             int isized = 0;
-            int minSize = Math.Min(imginput.Size.Width, imginput.Size.Height);
-            if (minSize >= 1500)
+            if (bmpInputX == null)
+                return isized;
+            int minSize = Math.Min(bmpInputX.Size.Width, bmpInputX.Size.Height);
+            if (minSize >= 2000)
+                isized = -3;
+            else if (minSize >= 1500)
                 isized = -2;
             else if (minSize >= 1000)
                 isized = -1;
@@ -7220,8 +8252,28 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 img.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "imgPredict_Pre" + ".png",
                     System.Drawing.Imaging.ImageFormat.Png);
             }
+
+            var modeCx = ModelCategory.Baseline;
+            switch (PADAICategory)
+            {
+                case AICategory.Median:
+                    modeCx = ModelCategory.Median;
+                    break;
+                case AICategory.Small:
+                    modeCx = ModelCategory.Small;
+                    break;
+            }
+            var err = model.SwitchModel(modeCx);
+
             // 預測 (單張)
             Bitmap mask = model.Predict(img);
+
+            
+            //if (!err.Is(Errcode.OK))
+            //{
+            //    MessageBox.Show($"异常:({err.errCode},{err.errMsg})", "AI Init", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //}
+
             //mask = new Bitmap(mask, Resize(mask.Size, 2));
             //BitmapData bmpData = mask.LockBits(new Rectangle(0, 0, mask.Width, mask.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
@@ -7312,13 +8364,13 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
 
         #region BLACK EDGE CAL
-        private Bitmap blackAICal(PADRegionClass pADRegionClass,int iSized = 2)
+        private Bitmap blackAICal(PADRegionClass pADRegionClass, int iSized = 2)
         {
             if (!INI.chipUseAI)
                 return blackNormal(pADRegionClass);
             int isized = iSized;
             Bitmap img = new Bitmap(imginput, Resize(imginput.Size, -isized));
-                //new Size(imginput.Width / isized, imginput.Height / isized));
+            //new Size(imginput.Width / isized, imginput.Height / isized));
 
             PointF[] points = new PointF[pADRegionClass.RegionPtFCornerORG.Length];
             points[0] = ResizeWithLocation2(pADRegionClass.RegionPtFCornerORG[0], -isized);
@@ -7338,6 +8390,19 @@ namespace Allinone.OPSpace.AnalyzeSpace
             if (m_IsSaveTemp)
                 img.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpfloodfill_AiPre" + ".png",
                                    System.Drawing.Imaging.ImageFormat.Png);
+
+            var modeCx = ModelCategory.Baseline;
+            switch (PADAICategory)
+            {
+                case AICategory.Median:
+                    modeCx = ModelCategory.Median;
+                    break;
+                case AICategory.Small:
+                    modeCx = ModelCategory.Small;
+                    break;
+            }
+            var err = model.SwitchModel(modeCx);
+
             // 預測 (單張)
             Bitmap mask = model.Predict(img);
             if (m_IsSaveTemp)
@@ -7347,7 +8412,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
             return mask;
         }
-        private Bitmap blackNormal(PADRegionClass pADRegionClass,int iSized = 5)
+        private Bitmap blackNormal(PADRegionClass pADRegionClass, int iSized = 5)
         {
             int isizedx = 5;
             Bitmap bmphistogram = new Bitmap(imginput, new Size(imginput.Width / isizedx, imginput.Height / isizedx));
@@ -7724,6 +8789,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             return (FromValue >= (CompValue * (1 - (Ratio / 100d)))) && (FromValue <= (CompValue * (1 + (Ratio / 100d))));
         }
+        public bool IsInRangeEx(double FromValue, double MaxValue, double MinValue)
+        {
+            return (FromValue >= MinValue) && (FromValue <= MaxValue);
+        }
 
         public Rectangle SimpleRect(Point Pt, int Width, int Height)
         {
@@ -7833,6 +8902,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             Size retSize;
 
+            //if (Ratio > 0)
+            //    retSize = new Size(OrgSize.Width * Ratio, OrgSize.Height * Ratio);
+            //else
+            //    retSize = new Size(OrgSize.Width / -Ratio, OrgSize.Height / -Ratio);
+
             if (Ratio > 0)
                 retSize = new Size(OrgSize.Width << Ratio, OrgSize.Height << Ratio);
             else
@@ -7847,6 +8921,17 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             Size retSize;
             PointF retPtF;
+
+            //if (ratio > 0)
+            //{
+            //    retPtF = new PointF(rect.X * ratio, rect.Y * ratio);
+            //    retSize = new Size(rect.Width * ratio, rect.Height * ratio);
+            //}
+            //else
+            //{
+            //    retPtF = new PointF(rect.X / -ratio, rect.Y / -ratio);
+            //    retSize = new Size(rect.Width / -ratio, rect.Height / -ratio);
+            //}
 
             if (ratio > 0)
             {
@@ -7899,7 +8984,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 return jRotatedRectangleF;
             }
-           
+
             if (ratio > 0)
             {
                 jRotatedRectangleF.fCX = rect.fCX * ratio;
@@ -7909,10 +8994,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
             else if (ratio < 0)
             {
-                jRotatedRectangleF.fCX = rect.fCX / ratio;
-                jRotatedRectangleF.fCY = rect.fCY / ratio;
-                jRotatedRectangleF.fWidth = rect.fWidth / ratio;
-                jRotatedRectangleF.fHeight = rect.fHeight / ratio;
+                jRotatedRectangleF.fCX = rect.fCX / -ratio;
+                jRotatedRectangleF.fCY = rect.fCY / -ratio;
+                jRotatedRectangleF.fWidth = rect.fWidth / -ratio;
+                jRotatedRectangleF.fHeight = rect.fHeight / -ratio;
             }
 
             return jRotatedRectangleF;
@@ -7959,6 +9044,17 @@ namespace Allinone.OPSpace.AnalyzeSpace
             PointF retPtF;
             Point epoint = new Point((int)ptf.X, (int)ptf.Y);
 
+            //if (ratio > 0)
+            //{
+            //    retPtF = new PointF(epoint.X * ratio, epoint.Y * ratio);
+            //    //retSize = new Size(rect.Width << ratio, rect.Height << ratio);
+            //}
+            //else
+            //{
+            //    retPtF = new PointF(epoint.X / -ratio, epoint.Y / -ratio);
+            //    //retSize = new Size(rect.Width >> -ratio, rect.Height >> -ratio);
+            //}
+
             if (ratio > 0)
             {
                 retPtF = new PointF(epoint.X << ratio, epoint.Y << ratio);
@@ -8004,7 +9100,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //return new RectangleF(retPtF.X, retPtF.Y, retSize.Width, retSize.Height);
         }
 
-        public double GetP1P2Angle(PointF p1,PointF p2)
+        public double GetP1P2Angle(PointF p1, PointF p2)
         {
             double angleOfLine = Math.Atan2((p2.Y - p1.Y), (p2.X - p1.X)) * 180 / Math.PI;
             return angleOfLine;

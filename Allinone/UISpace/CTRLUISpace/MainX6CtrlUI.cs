@@ -35,6 +35,7 @@ namespace Allinone.UISpace
             GETIMAGEOK,
             GETIMAGEINDEX,
             RECONNECT_HANDLE_SERVER,
+            CIPMAPPING,
         }
 
 
@@ -80,6 +81,7 @@ namespace Allinone.UISpace
 
         Label lblReConnectServer;
         Label lblReConnectHandleServer;
+        Label lblCipMapping;
 
         JzTimes myJzTimer = new JzTimes();
         public MainX6CtrlUI()
@@ -109,6 +111,7 @@ namespace Allinone.UISpace
             lblReConnectHandleServer = label14;
             lblHandlerOK = label15;
             lblTcpComplete = label16;
+            lblCipMapping = label17;
 
             lblTopLight.Tag = TagEnum.TOPLIGHT;
             lblFrontLight.Tag = TagEnum.FRONTLIGHT;
@@ -122,6 +125,7 @@ namespace Allinone.UISpace
             lblGetImageIndex.Tag = TagEnum.GETIMAGEINDEX;
             lblReConnectHandleServer.Tag = TagEnum.RECONNECT_HANDLE_SERVER;
             lblTcpComplete.Tag = TagEnum.TCPCOMPLETE;
+            lblCipMapping.Tag = TagEnum.CIPMAPPING;
 
             lblTopLight.DoubleClick += lbl_DoubleClick;
             lblFrontLight.DoubleClick += lbl_DoubleClick;
@@ -135,11 +139,17 @@ namespace Allinone.UISpace
             lblGetImageIndex.DoubleClick += lbl_DoubleClick;
             lblTcpComplete.DoubleClick += lbl_DoubleClick;
             lblTcpComplete.BackColor = Color.Black;
-
+            lblCipMapping.DoubleClick += lbl_DoubleClick;
+            lblCipMapping.Visible = false;
 
             switch (Universal.OPTION)
             {
                 case OptionEnum.MAIN_X6:
+
+                    if (INI.IsOpenCip)
+                    {
+                        lblCipMapping.Visible = true;
+                    }
 
                     lblIsStart.Text = "取像";
                     lblIsGetImage.Text = "测试";
@@ -155,7 +165,9 @@ namespace Allinone.UISpace
                             lblGetImageIndex.Visible = false;
                             lblIsGetImageReset.Visible = false;
                             lblHandlerOK.Visible = false;
-                            //lblReConnectServer.Visible = false;
+                            lblReConnectServer.Visible = false;
+                            lblReConnectHandleServer.Visible = false;
+                            lblTcpComplete.Visible = false;
 
                             break;
                     }
@@ -224,6 +236,11 @@ namespace Allinone.UISpace
 
                     int _currentStep = CamActClass.Instance.StepCurrent;
                     _tcpSendCompleteOKSign(1, _currentStep, -1);
+
+                    break;
+                case TagEnum.CIPMAPPING:
+
+                    OnTrigger(ActionEnum.ACT_CIPMAPPING, "M");
 
                     break;
             }
@@ -492,5 +509,15 @@ namespace Allinone.UISpace
 
         }
 
+
+        public delegate void TriggerHandler(ActionEnum action, string opstr);
+        public event TriggerHandler TriggerAction;
+        public void OnTrigger(ActionEnum action, string opstr)
+        {
+            if (TriggerAction != null)
+            {
+                TriggerAction(action, opstr);
+            }
+        }
     }
 }

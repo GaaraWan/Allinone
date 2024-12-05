@@ -186,7 +186,7 @@ namespace JetEazy.BasicSpace
         [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         public static extern void mouse_event(long dwFlags, long dx, long dy, long cButtons, long dwExtraInfo);
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling=true)]
+        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
         public static extern bool ClipCursor(ref Rectangle rect);
 
         [DllImport("GdiPlus.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
@@ -589,7 +589,7 @@ namespace JetEazy.BasicSpace
 
             return rect;
         }
-        public Rectangle ResizeWithLocation(Rectangle rect,float ratio)
+        public Rectangle ResizeWithLocation(Rectangle rect, float ratio)
         {
             return new Rectangle((int)((float)rect.X * ratio), (int)((float)rect.Y * ratio), (int)((float)rect.Width * ratio), (int)((float)rect.Height * ratio));
         }
@@ -696,7 +696,7 @@ namespace JetEazy.BasicSpace
                 stm.Dispose();
                 stm = null;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 JetEazy.LoggerClass.Instance.WriteException(ex);
             }
@@ -2073,10 +2073,10 @@ namespace JetEazy.BasicSpace
         public string GetFromINIFormat(string str, char secondsplit)
         {
             string[] strs = str.Split('/');
-            
+
             return strs[0].Split(secondsplit)[1].Trim();
         }
-        public void FillupColor(Bitmap bmp,Color fillcolor)
+        public void FillupColor(Bitmap bmp, Color fillcolor)
         {
             Graphics g = Graphics.FromImage(bmp);
             g.Clear(fillcolor);
@@ -2134,6 +2134,42 @@ namespace JetEazy.BasicSpace
             g.Dispose();
 
             return bmp;
+        }
+
+        //using MyCvPointF = OpenCvSharp.
+        public static Rectangle CvBoundingRect(List<PointF> eInputPtfs)
+        {
+            List<OpenCvSharp.Point2f> point2Fs = new List<OpenCvSharp.Point2f>();
+            foreach (PointF p in eInputPtfs)
+            {
+                point2Fs.Add(new OpenCvSharp.Point2f(p.X, p.Y));
+            }
+
+            OpenCvSharp.Rect _cvrect = OpenCvSharp.Cv2.BoundingRect(point2Fs);
+            Rectangle rectangle = new Rectangle(_cvrect.X, _cvrect.Y, _cvrect.Width, _cvrect.Height);
+
+            return rectangle;
+        }
+        public static double CvminareaRectPointFsAngle(List<PointF> eInputPtfs)
+        {
+            List<OpenCvSharp.Point2f> point2Fs = new List<OpenCvSharp.Point2f>();
+            foreach (PointF p in eInputPtfs)
+            {
+                point2Fs.Add(new OpenCvSharp.Point2f(p.X, p.Y));
+            }
+
+            OpenCvSharp.RotatedRect _cvrect = OpenCvSharp.Cv2.MinAreaRect(point2Fs);
+            //PointF[] pointFs = new PointF[_cvrect.Points().Length];
+            //int i = 0;
+            //while (i < _cvrect.Points().Length)
+            //{
+            //    pointFs[i] = new PointF(_cvrect.Points()[i].X, _cvrect.Points()[i].Y);
+            //    i++;
+            //}
+
+            
+
+            return _cvrect.Angle;
         }
 
     }

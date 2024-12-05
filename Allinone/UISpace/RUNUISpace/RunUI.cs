@@ -486,6 +486,9 @@ namespace Allinone.UISpace.RUNUISpace
 
             switch (OPTION)
             {
+                case OptionEnum.MAIN_SDM5:
+                    btnReady.Visible = true;
+                    break;
                 case OptionEnum.MAIN_SDM2:
                 case OptionEnum.MAIN_SDM1:
                 case OptionEnum.MAIN_SDM3:
@@ -578,6 +581,9 @@ namespace Allinone.UISpace.RUNUISpace
         {
             switch (OPTION)
             {
+                case OptionEnum.MAIN_SDM5:
+                    OnTrigger(RunStatusEnum.SDM5_READY);
+                    break;
                 case OptionEnum.MAIN_SDM3:
                     OnTrigger(RunStatusEnum.SDM3_READY);
                     break;
@@ -1336,6 +1342,8 @@ namespace Allinone.UISpace.RUNUISpace
             }
 
             if (Universal.OPTION == OptionEnum.MAIN_SDM3)
+                return;
+            if (Universal.OPTION == OptionEnum.MAIN_SDM2)
                 return;
 
             if (runstatuscollection.NGCOUNT == 0)
@@ -2132,6 +2140,12 @@ namespace Allinone.UISpace.RUNUISpace
 
                 switch (Universal.OPTION)
                 {
+                    case OptionEnum.MAIN_SDM5:
+
+                        btnReadyBK(((ControlSpace.MachineSpace.JzMainSDM5MachineClass)Universal.MACHINECollection.MACHINE).PLCIO.Ready);
+                        
+
+                        break;
                     case OptionEnum.MAIN_X6:
 
                         if (!Universal.IsUseMappingUI)

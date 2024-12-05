@@ -71,6 +71,9 @@ namespace Allinone.FormSpace.Motor
                     case JetEazy.OptionEnum.MAIN_SDM3:
                         AXISUI[i].Initial(((JzMainSDM3MachineClass)MACHINECollection.MACHINE).PLCMOTIONCollection[i]);
                         break;
+                    case JetEazy.OptionEnum.MAIN_SDM5:
+                        AXISUI[i].Initial(((JzMainSDM5MachineClass)MACHINECollection.MACHINE).PLCMOTIONCollection[i]);
+                        break;
                 }
 
 

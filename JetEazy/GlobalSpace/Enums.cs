@@ -284,6 +284,11 @@ namespace JetEazy
         /// 矽品锡球检测 EPSON XYZR
         /// </summary>
         MAIN_SDM3 = 17,
+
+        /// <summary>
+        /// 矽品研磨检测机
+        /// </summary>
+        MAIN_SDM5 = 18,
     }
 
     public enum ESSStatusEnum
@@ -420,6 +425,11 @@ namespace JetEazy
         /// 一键取像
         /// </summary>
         ACT_ONEKEYGETIMAGE,
+
+        /// <summary>
+        /// 获取plc的mapping数据
+        /// </summary>
+        ACT_CIPMAPPING,
     }
 
     public enum MotionEnum : int
@@ -589,6 +599,8 @@ namespace JetEazy
 
         SDM3_READY,
         SDM3_BYPASS,
+
+        SDM5_READY,
 
         SHINNIGEND,
 

@@ -385,7 +385,7 @@ namespace Allinone.UISpace.CTRLUISpace
 
         bool IsEMCTriggered = false;
 
-        private void MACHINE_TriggerAction(MachineEventEnum machineevent)
+        private void MACHINE_TriggerAction(MachineEventEnum machineevent, object obj = null)
         {
             switch (machineevent)
             {

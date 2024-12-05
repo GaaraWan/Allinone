@@ -1782,6 +1782,7 @@ namespace JzDisplay.OPSpace
 
             switch(DISPLAYTYPE)
             {
+                case DisplayTypeEnum.NORMAL:
                 case DisplayTypeEnum.CAPTRUE:
                     RectangleF rectftmp = new RectangleF();
 

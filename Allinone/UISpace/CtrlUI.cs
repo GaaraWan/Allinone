@@ -28,6 +28,7 @@ namespace Allinone.UISpace
             }
         }
 
+        AllinoneSDM5CtrlUI AllinoneSDM5CTRL;
         AllinoneSDM3CtrlUI AllinoneSDM3CTRL;
         MainServiceCtrlUI MainServiceCTRL;
         AllinoneSDM2CtrlUI AllinoneSDM2CTRL;
@@ -167,6 +168,8 @@ namespace Allinone.UISpace
                             MainX6CTRL.Location = new Point(0, 0);
                             this.Controls.Add(MainX6CTRL);
 
+                            MainX6CTRL.TriggerAction += CTRL_TriggerAction;
+
                             break;
                         case OptionEnum.MAIN_SDM1:
                             AllinoneSDM1CTRL = new AllinoneSDM1CtrlUI();
@@ -175,7 +178,7 @@ namespace Allinone.UISpace
                             AllinoneSDM1CTRL.Location = new Point(0, 0);
                             this.Controls.Add(AllinoneSDM1CTRL);
 
-                            AllinoneSDM1CTRL.TriggerAction += AllinoneSDM1CTRL_TriggerAction;
+                            AllinoneSDM1CTRL.TriggerAction += CTRL_TriggerAction;
 
                             break;
                         case OptionEnum.MAIN_SDM2:
@@ -203,6 +206,16 @@ namespace Allinone.UISpace
 
                             MainServiceCTRL.Location = new Point(0, 0);
                             this.Controls.Add(MainServiceCTRL);
+
+                            break;
+                        case OptionEnum.MAIN_SDM5:
+                            AllinoneSDM5CTRL = new AllinoneSDM5CtrlUI();
+                            AllinoneSDM5CTRL.Initial(VERSION, OPTION, (JzMainSDM5MachineClass)machine);
+
+                            AllinoneSDM5CTRL.Location = new Point(0, 0);
+                            this.Controls.Add(AllinoneSDM5CTRL);
+
+                            AllinoneSDM5CTRL.TriggerAction += AllinoneSDM5CTRL_TriggerAction;
 
                             break;
                     }
@@ -235,7 +248,7 @@ namespace Allinone.UISpace
             }
         }
 
-        private void AllinoneSDM1CTRL_TriggerAction(ActionEnum action, string opstr)
+        private void CTRL_TriggerAction(ActionEnum action, string opstr)
         {
             TriggerAction(action, opstr);
         }
@@ -244,6 +257,10 @@ namespace Allinone.UISpace
             TriggerAction(action, opstr);
         }
         private void AllinoneSDM3CTRL_TriggerAction(ActionEnum action, string opstr)
+        {
+            TriggerAction(action, opstr);
+        }
+        private void AllinoneSDM5CTRL_TriggerAction(ActionEnum action, string opstr)
         {
             TriggerAction(action, opstr);
         }
@@ -264,6 +281,9 @@ namespace Allinone.UISpace
                 case VersionEnum.ALLINONE:
                     switch (OPTION)
                     {
+                        case OptionEnum.MAIN_SDM5:
+                            AllinoneSDM5CTRL.Tick();
+                            break;
                         case OptionEnum.MAIN_SDM3:
                             AllinoneSDM3CTRL.Tick();
                             break;
@@ -331,6 +351,9 @@ namespace Allinone.UISpace
                 case VersionEnum.ALLINONE:
                     switch (OPTION)
                     {
+                        case OptionEnum.MAIN_SDM5:
+                            AllinoneSDM5CTRL.SetEnable(isenable);
+                            break;
                         case OptionEnum.MAIN_SDM3:
                             AllinoneSDM3CTRL.SetEnable(isenable);
                             break;
@@ -416,6 +439,9 @@ namespace Allinone.UISpace
                             break;
                         case OptionEnum.MAIN_SDM3:
                             AllinoneSDM3CTRL.SDDispose();
+                            break;
+                        case OptionEnum.MAIN_SDM5:
+                            //AllinoneSDM5CTRL.SDDispose();
                             break;
                     }
                     break;

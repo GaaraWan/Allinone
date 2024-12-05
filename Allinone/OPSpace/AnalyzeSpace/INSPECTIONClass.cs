@@ -332,6 +332,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //    bmpoutput.Save("D:\\testtest\\bmpoutput.png", ImageFormat.Png);
             //}
             //int GetMaxArea = JzFind.GetMaxArea(10, 10);
+
+            //bmpoutput.Save($"D:\\testtest\\bmpoutput{RelateAnalyzeString}.png", ImageFormat.Png);
             int GetMaxArea = JzFind.GetMaxArea();
             int getOverAreaCount = JzFind.Count;
             switch (Universal.OPTION)
@@ -383,18 +385,6 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 //processstring = "Inspection Max Area " + GetMaxArea.ToString() + " < " + IBArea.ToString()
                 //   + ", Count " + JzFind.Count.ToString() + " < " + IBCount.ToString() + Environment.NewLine;
-            }
-            //Universal.IsMultiThread = true;
-            if (!isgood && PassInfo.OperatePath.IndexOf("80001") > -1)
-            {
-                //string strPath = Universal.TESTPATH + "\\ANALYZETEST\\Inspection\\" + RelateAnalyzeString + "\\";
-                //if (!System.IO.Directory.Exists(strPath))
-                //    System.IO.Directory.CreateDirectory(strPath);
-                ////RelateAnalyzeString = RelateAnalyzeString;
-                //bmpInput.Save(strPath + "Input"+ Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
-                //bmpoutput.Save(strPath + "Output"+ Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
-                //imgpattern.Save(strPath + "Pattern" + Universal.GlobalImageTypeString, eImageFormat.eImageFormat_PNG);
-                //this.bmpMask.Save(strPath + "Mask" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
             }
 
             if (!isgood)

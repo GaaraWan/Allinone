@@ -511,6 +511,12 @@ namespace JetEazy.CCDSpace.CamLinkDriver
             get { return m_TriggerComplete; }
             set { m_TriggerComplete = value; }
         }
+
+        public IntPtr ImagePbuffer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public int ImageWidth { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public int ImageHeight { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public int ImageRotate { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         public void EncoderReset()
         {
 
@@ -677,6 +683,11 @@ namespace JetEazy.CCDSpace.CamLinkDriver
             //}
 
             // - GrablinkSnapshotTrigger Sample Program
+        }
+
+        public FreeImageBitmap GetFreeImageBitmap(int size = 0)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

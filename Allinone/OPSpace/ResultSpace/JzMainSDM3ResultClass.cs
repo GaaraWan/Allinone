@@ -96,7 +96,7 @@ namespace Allinone.OPSpace.ResultSpace
             MainProcess = new ProcessClass();
         }
 
-        private void MACHINE_TriggerAction(MachineEventEnum machineevent)
+        private void MACHINE_TriggerAction(MachineEventEnum machineevent, object obj = null)
         {
             switch (machineevent)
             {

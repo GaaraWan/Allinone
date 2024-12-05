@@ -129,7 +129,7 @@ namespace Allinone.ControlSpace
             
         }
 
-        private void MACHINE_TriggerAction(MachineEventEnum machineevent)
+        private void MACHINE_TriggerAction(MachineEventEnum machineevent, object obj = null)
         {
             OnTrigger(machineevent);
         }
@@ -364,6 +364,9 @@ namespace Allinone.ControlSpace
                             break;
                         case OptionEnum.MAIN_SDM3:
                             Str = ((JzMainSDM3MachineClass)MACHINE).Fps();
+                            break;
+                        case OptionEnum.MAIN_SDM5:
+                            //Str = ((JzMainSDM5MachineClass)MACHINE).Fps();
                             break;
                         default:
 

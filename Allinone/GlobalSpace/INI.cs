@@ -189,7 +189,11 @@ namespace Allinone
         static string INIFILE = "";
 
         static JzToolsClass JzTools = new JzToolsClass();
-        
+
+        public static bool ShowMarkFrm = false;
+
+        public static bool IsOpenIOWindows = false;
+
         //[Baisc Control]
         public static string MACHINENAME = "ALLINONE";
         public static string MACHINENAMEID = "AOI001";
@@ -341,6 +345,12 @@ namespace Allinone
         public static string AI_Model_FilenamePath = string.Empty;
         public static bool IsOpenCheckRepeatCode = false;
         public static bool IsOpenCheckCurLotRepeatCode = false;
+        /// <summary>
+        /// 强制全检
+        /// </summary>
+        public static bool IsOpenForceAllCheck = false;
+        public static bool IsOpenBehindOKSign = false;
+        public static bool IsOpenCip = false;
 
         //Jcet Contorl
         public static bool JCET_IS_USE_SHOPFLOOR = false;
@@ -401,6 +411,8 @@ namespace Allinone
         /// </summary>
         public static bool IsDEBUGCHIP = false;
 
+
+
         public static int chipTestAllCount = 0;
         public static int chipTestPassCount = 0;
         public static int chipTestFailCount = 0;
@@ -413,6 +425,8 @@ namespace Allinone
         public static bool chipUseAI = false;
         public static string AI_IP = "127.0.0.1";
         public static int AI_Port = 9001;
+
+        public static SaveImageFormat chipSaveImageFormat = SaveImageFormat.IMAGE_JPEG;
 
 
         public static int ChkArea = 1000000;
@@ -622,6 +636,7 @@ namespace Allinone
             CAMBIASCOUNT = int.Parse(ReadINIValue("R32 Control", INIEnum.CAMBIASCOUNT.ToString(), CAMBIASCOUNT.ToString(), INIFILE));
             SFFACTORY = (FactoryShopfloor)Enum.Parse(typeof(FactoryShopfloor), ReadINIValue("R32 Control", INIEnum.SFFACTORY.ToString(), SFFACTORY.ToString(), INIFILE));
             SFPATHEXE = ReadINIValue("R32 Control", INIEnum.SFPATHEXE.ToString(), "null", INIFILE);
+            chipSaveImageFormat = (SaveImageFormat)int.Parse(ReadINIValue("Basic Control", "chipSaveImageFormat", ((int)chipSaveImageFormat).ToString(), INIFILE));
 
             ISQSMCALLSAVE = ReadINIValue("R32 Control", INIEnum.ISQSMCALLSAVE.ToString(), "0", INIFILE) == "1";
             ALLRESULTPIC = ReadINIValue("R32 Control", INIEnum.ALLRESULTPIC.ToString(), ALLRESULTPIC, INIFILE);
@@ -749,6 +764,9 @@ namespace Allinone
             IsSendHandlerTcpOKSign = ReadINIValue("MainX6 Control", "IsSendHandlerTcpOKSign", (IsSendHandlerTcpOKSign ? "1" : "0"), INIFILE) == "1";
             IsNoUseHandlerOKSign = ReadINIValue("MainX6 Control", "IsNoUseHandlerOKSign", (IsNoUseHandlerOKSign ? "1" : "0"), INIFILE) == "1";
 
+            IsOpenForceAllCheck = ReadINIValue("MainX6 Control", "IsOpenForceAllCheck", (IsOpenForceAllCheck ? "1" : "0"), INIFILE) == "1";
+            IsOpenBehindOKSign = ReadINIValue("MainX6 Control", "IsOpenBehindOKSign", (IsOpenBehindOKSign ? "1" : "0"), INIFILE) == "1";
+
             IsOpenCheckCurLotRepeatCode = ReadINIValue("MainX6 Control", "IsOpenCheckCurLotRepeatCode", (IsOpenCheckCurLotRepeatCode ? "1" : "0"), INIFILE) == "1";
             IsOpenCheckRepeatCode = ReadINIValue("MainX6 Control", "IsOpenCheckRepeatCode", (IsOpenCheckRepeatCode ? "1" : "0"), INIFILE) == "1";
             IsCollectErrorSmall = ReadINIValue("MainX6 Control", "IsCollectErrorSmall", (IsCollectErrorSmall ? "1" : "0"), INIFILE) == "1";
@@ -760,6 +778,7 @@ namespace Allinone
             IsCollectStripPictures = ReadINIValue("MainX6 Control", "IsCollectStripPictures", (IsCollectStripPictures ? "1" : "0"), INIFILE) == "1";
             IsCollectPicturesSingle = ReadINIValue("MainX6 Control", "IsCollectPicturesSingle", (IsCollectPicturesSingle ? "1" : "0"), INIFILE) == "1";
             AI_Model_FilenamePath = ReadINIValue("MainX6 Control", "AI_Model_FilenamePath", "", INIFILE);
+            IsOpenCip = ReadINIValue("MainX6 Control", "IsOpenCip", (IsOpenCip ? "1" : "0"), INIFILE) == "1";
 
             handle_delaytime = int.Parse(ReadINIValue("MainX6 Control", "handle_delaytime", handle_delaytime.ToString(), INIFILE));
 
@@ -849,7 +868,7 @@ namespace Allinone
             WriteINIValue("Basic Control", INIEnum.RETESTTIME.ToString(), RETESTTIME.ToString(), INIFILE);
 
             WriteINIValue("Basic Control", INIEnum.CHECKSNERRORCODE.ToString(), CHECKSNERRORCODE, INIFILE);
-
+            WriteINIValue("Basic Control", "chipSaveImageFormat", ((int)chipSaveImageFormat).ToString(), INIFILE);
             //Write [DFLY Control] Parameters
 
             WriteINIValue("DFLY Control", INIEnum.CAMERALOCATION.ToString(), CAMERALOCATION, INIFILE);
@@ -947,7 +966,9 @@ namespace Allinone
             WriteINIValue("MainX6 Control", "IsReadHandlerOKSign", (IsReadHandlerOKSign ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsSendHandlerTcpOKSign", (IsSendHandlerTcpOKSign ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsNoUseHandlerOKSign", (IsNoUseHandlerOKSign ? "1" : "0"), INIFILE);
+            WriteINIValue("MainX6 Control", "IsOpenBehindOKSign", (IsOpenBehindOKSign ? "1" : "0"), INIFILE);
 
+            WriteINIValue("MainX6 Control", "IsOpenForceAllCheck", (IsOpenForceAllCheck ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsOpenCheckCurLotRepeatCode", (IsOpenCheckCurLotRepeatCode ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsOpenCheckRepeatCode", (IsOpenCheckRepeatCode ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsCollectErrorSmall", (IsCollectErrorSmall ? "1" : "0"), INIFILE);
@@ -958,7 +979,8 @@ namespace Allinone
             WriteINIValue("MainX6 Control", "IsOnlyShowCurrentImage", (IsOnlyShowCurrentImage ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsCollectStripPictures", (IsCollectStripPictures ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsCollectPicturesSingle", (IsCollectPicturesSingle ? "1" : "0"), INIFILE);
-            
+            WriteINIValue("MainX6 Control", "IsOpenCip", (IsOpenCip ? "1" : "0"), INIFILE);
+
             WriteINIValue("MainX6 Control", "handle_delaytime", handle_delaytime.ToString(), INIFILE);
 
             WriteINIValue("MainX6_JCET Control", "JCET_IS_USE_SHOPFLOOR", (JCET_IS_USE_SHOPFLOOR ? "1" : "0"), INIFILE);

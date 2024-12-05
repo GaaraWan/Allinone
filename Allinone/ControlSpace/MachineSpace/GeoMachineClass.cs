@@ -38,6 +38,7 @@ namespace Allinone.ControlSpace.MachineSpace
         MAIN_SDM2 = 18,
         MAIN_SERVICE = 19,
         MAIN_SDM3 = 20,
+        MAIN_SDM5 = 21,
     };
 
 
@@ -75,6 +76,9 @@ namespace Allinone.ControlSpace.MachineSpace
         protected bool IsNoUseIO = false;
         protected bool IsNoUseMotor = false;
 
+        protected int TickCount = 5;
+        protected int CurrentIndex = 0;
+
         public int[] DelayTime = new int[10];
 
         //public WorkStatusCollectionClass RunStatusCollection = new WorkStatusCollectionClass();
@@ -94,6 +98,18 @@ namespace Allinone.ControlSpace.MachineSpace
         public abstract void GetOPString(string opstr);
         public abstract bool Initial(bool isnouseio,bool isnousemotor);
 
+        public virtual void Close()
+        {
+
+        }
+
+        public virtual string PLCFps()
+        {
+            return string.Empty;
+        }
+
+        //public abstract void SetNormalTemp(bool ebTemp);
+
         protected UInt16 HEX16(string HexStr)
         {
             return System.Convert.ToUInt16(HexStr, 16);
@@ -103,13 +119,23 @@ namespace Allinone.ControlSpace.MachineSpace
             return System.Convert.ToUInt32(HexStr, 16);
         }
 
-        public delegate void TriggerHandler(MachineEventEnum machineevent);
+        //public delegate void TriggerHandler(MachineEventEnum machineevent);
+        //public event TriggerHandler TriggerAction;
+        //public void OnTrigger(MachineEventEnum machineevent)
+        //{
+        //    if (TriggerAction != null)
+        //    {
+        //        TriggerAction(machineevent);
+        //    }
+        //}
+
+        public delegate void TriggerHandler(MachineEventEnum machineevent, object obj = null);
         public event TriggerHandler TriggerAction;
-        public void OnTrigger(MachineEventEnum machineevent)
+        public void OnTrigger(MachineEventEnum machineevent, object obj = null)
         {
             if (TriggerAction != null)
             {
-                TriggerAction(machineevent);
+                TriggerAction(machineevent, obj);
             }
         }
     }

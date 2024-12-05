@@ -82,10 +82,10 @@ namespace Allinone.OPSpace.ResultSpace
             VERSION = version;
             OPTION = option;
 
-            PlayerPass.SoundLocation = Universal.PlayerPASSPATH;
-            PlayerFail.SoundLocation = Universal.PlayerFAILPATH;
-            PlayerPass.Load();
-            PlayerFail.Load();
+            //PlayerPass.SoundLocation = Universal.PlayerPASSPATH;
+            //PlayerFail.SoundLocation = Universal.PlayerFAILPATH;
+            //PlayerPass.Load();
+            //PlayerFail.Load();
 
             DUP = new DupClass();
 
@@ -96,7 +96,7 @@ namespace Allinone.OPSpace.ResultSpace
             MainProcess = new ProcessClass();
         }
 
-        private void MACHINE_TriggerAction(MachineEventEnum machineevent)
+        private void MACHINE_TriggerAction(MachineEventEnum machineevent, object obj = null)
         {
             switch (machineevent)
             {
@@ -669,11 +669,11 @@ namespace Allinone.OPSpace.ResultSpace
                             para.ParaPageIndex = CamActClass.Instance.StepCurrent;
                             para.ParaEnvindex = EnvIndex;
 
-                            System.Threading.Thread thread_DL_Test = new System.Threading.Thread(DLCalPageOneStepIndex);
-                            thread_DL_Test.Start(para);
+                            //System.Threading.Thread thread_DL_Test = new System.Threading.Thread(DLCalPageOneStepIndex);
+                            //thread_DL_Test.Start(para);
                             //thread_DL_Test.Start(CamActClass.Instance.StepCurrent);
 
-                            //DLCalPageOneStepIndex(para);
+                            DLCalPageOneStepIndex(para);
                             //DLCalPageOneStepIndex(CamActClass.Instance.StepCurrent);
                             CamActClass.Instance.StepCurrent++;
 
@@ -2872,13 +2872,13 @@ namespace Allinone.OPSpace.ResultSpace
 
             if (IsPass)
             {
-                PlayerPass.Play();
+                //PlayerPass.Play();
                 OnTrigger(ResultStatusEnum.CALPASS);
                 //MACHINE.PLCIO.Pass = false;
             }
             else
             {
-                PlayerFail.Play();
+                //PlayerFail.Play();
                 OnTrigger(ResultStatusEnum.CALNG);
 
                 //if (INI.CHIP_force_pass)
@@ -3139,8 +3139,26 @@ namespace Allinone.OPSpace.ResultSpace
                         ////CheckList.Sort();
 
                         //从大到小排序
-                        CheckList.Sort((item1, item2) =>
-                        { return int.Parse(item1.Split(',')[0]) >= int.Parse(item2.Split(',')[0]) ? -1 : 1; });
+
+                        if (CheckList.Count > 1)
+                            CheckList.Sort((item1, item2) =>
+                            {
+                                if (item1 != null && item2 != null)
+                                {
+                                    int a = int.Parse(item1.Split(',')[0]);
+                                    int b = int.Parse(item2.Split(',')[0]);
+                                    if (a > b)
+                                        return -1;
+                                    else if (a < b)
+                                        return 1;
+                                    else if (a == b)
+                                        return 0;
+                                    else
+                                        return 0;
+                                }
+                                else
+                                    return 0;
+                            });
 
                         ////从小到大排序
                         //CheckList.Sort((item1, item2) =>
@@ -3463,7 +3481,19 @@ namespace Allinone.OPSpace.ResultSpace
             int qi = 0;
             foreach (PageClass page in env.PageList)
             {
-                page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                switch (INI.chipSaveImageFormat)
+                {
+                    case SaveImageFormat.IMAGE_BMP:
+                        page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".bmp", ImageFormat.Bmp);
+                        break;
+                    case SaveImageFormat.IMAGE_PNG:
+                        page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
+                        break;
+                    default:
+                        page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                        break;
+                }
+                
                 qi++;
             }
         }

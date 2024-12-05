@@ -1105,6 +1105,7 @@ namespace JetEazy.BasicSpace
         public int Area = 0;
         public Point FirstPoint = new Point();
         public bool IsChecked = false;
+        public JRotatedRectangleF rotatedRectangleF = new JRotatedRectangleF();
 
         JzToolsClass myJzTools = new JzToolsClass();
 
@@ -5721,6 +5722,9 @@ namespace JetEazy.BasicSpace
                                         recordblackIndex = x;
                                         if (isskip) break;
                                     }
+                                    pucPtr[2] = 255;
+                                    pucPtr[1] = 0;
+                                    pucPtr[0] = 0;
                                     pucPtr += 4;
                                     x++;
                                 }
@@ -5760,7 +5764,9 @@ namespace JetEazy.BasicSpace
                                         recordblackIndex = x;
                                         if (isskip) break;
                                     }
-                                    
+                                    pucPtr[2] = 255;
+                                    pucPtr[1] = 0;
+                                    pucPtr[0] = 0;
                                     pucPtr -= 4;
                                     x--;
                                 }
@@ -5804,7 +5810,9 @@ namespace JetEazy.BasicSpace
                                         recordblackIndex = y;
                                         if (isskip) break;
                                     }
-
+                                    pucPtr[2] = 255;
+                                    pucPtr[1] = 0;
+                                    pucPtr[0] = 0;
                                     pucPtr += iStride;
                                     y++;
                                 }
@@ -5845,8 +5853,9 @@ namespace JetEazy.BasicSpace
                                         recordblackIndex = y;
                                         if (isskip) break;
                                     }
-                                    
-
+                                    pucPtr[2] = 255;
+                                    pucPtr[1] = 0;
+                                    pucPtr[0] = 0;
                                     pucPtr -= iStride;
                                     y--;
                                 }
@@ -7078,9 +7087,9 @@ namespace JetEazy.BasicSpace
             g.Dispose();
         }
 
-        public void AH_SetThreshold(Bitmap bmpinput, ref Bitmap bmp, int iThresholdValue)
+        public void AH_SetThreshold(ref Bitmap bmp, int iThresholdValue)
         {
-            Bitmap _bmptmp = new Bitmap(bmpinput);
+            Bitmap _bmptmp = new Bitmap(bmp);
 
             JetGrayImg grayimage = new JetGrayImg(_bmptmp);
             JetImgproc.Threshold(grayimage, iThresholdValue, grayimage);
@@ -7104,6 +7113,7 @@ namespace JetEazy.BasicSpace
 
                 Rectangle rect = new Rectangle(iLeft, itop, iRight - iLeft, iBottom - itop);
                 FoundClass found = new FoundClass(rect, iArea);
+                found.rotatedRectangleF = JetBlobFeature.ComputeMinRectangle(jetBlob, i);
                 FoundList.Add(found);
             }
         }

@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label16 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
@@ -45,7 +46,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.jzTransparentPanel1 = new JetEazy.BasicSpace.JzTransparentPanel();
-            this.label16 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -71,6 +72,18 @@
             this.groupBox1.TabIndex = 197;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "IO Control";
+            // 
+            // label16
+            // 
+            this.label16.BackColor = System.Drawing.Color.Green;
+            this.label16.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label16.ForeColor = System.Drawing.Color.Yellow;
+            this.label16.Location = new System.Drawing.Point(150, 100);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(67, 18);
+            this.label16.TabIndex = 221;
+            this.label16.Text = "Tcp完成 ";
+            this.label16.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label15
             // 
@@ -259,22 +272,23 @@
             this.jzTransparentPanel1.Size = new System.Drawing.Size(173, 173);
             this.jzTransparentPanel1.TabIndex = 198;
             // 
-            // label16
+            // label17
             // 
-            this.label16.BackColor = System.Drawing.Color.Green;
-            this.label16.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label16.ForeColor = System.Drawing.Color.Yellow;
-            this.label16.Location = new System.Drawing.Point(150, 100);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(67, 18);
-            this.label16.TabIndex = 221;
-            this.label16.Text = "Tcp完成 ";
-            this.label16.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label17.BackColor = System.Drawing.Color.Green;
+            this.label17.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label17.ForeColor = System.Drawing.Color.Yellow;
+            this.label17.Location = new System.Drawing.Point(12, 236);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(184, 18);
+            this.label17.TabIndex = 218;
+            this.label17.Text = "CipMapping";
+            this.label17.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // MainX6CtrlUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.label17);
             this.Controls.Add(this.label14);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.jzTransparentPanel1);
@@ -306,5 +320,6 @@
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label label17;
     }
 }

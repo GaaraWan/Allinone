@@ -24,8 +24,17 @@ namespace JetEazy.Interface
         /// <param name="size">大于0 放大倍数 等于0 不变尺寸 小于0缩小倍数</param>
         /// <returns>返回图像</returns>
         System.Drawing.Bitmap GetPageBitmap(int size = 0);
+
+        FreeImageAPI.FreeImageBitmap GetFreeImageBitmap(int size = 0);
+
         //System.Drawing.Bitmap GetPageBitmap(int size);
         void EncoderReset();
         void ShowSetup();
+
+
+        IntPtr ImagePbuffer { get; set; }
+        int ImageWidth { get; set; }
+        int ImageHeight { get; set; }
+        int ImageRotate { get; set; }
     }
 }

@@ -255,6 +255,7 @@ namespace Allinone.UISpace.STPUISpace
             chkIsAllSize.Visible = false;
             switch (Universal.OPTION)
             {
+                case OptionEnum.MAIN_SDM5:
                 case OptionEnum.MAIN_SDM3:
                 case OptionEnum.MAIN_SDM2:
                 case OptionEnum.MAIN_SDM1:
@@ -878,6 +879,7 @@ namespace Allinone.UISpace.STPUISpace
                         case OptionEnum.MAIN_SD:
                             INIpropertyGrid.SelectedObject = m_mainsdGrid;
                             break;
+                        case OptionEnum.MAIN_SDM5:
                         case OptionEnum.MAIN_SDM3:
                         case OptionEnum.MAIN_SDM2:
                         case OptionEnum.MAIN_SDM1:

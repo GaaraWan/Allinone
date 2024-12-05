@@ -7,10 +7,19 @@ using System.IO;
 using System.Runtime.InteropServices;
 using JetEazy.ControlSpace;
 using JetEazy;
+using JetEazy.ControlSpace.PLCSpace;
 //using JetEazy.ControlSpace.PLCSpace;
 
 namespace Allinone.ControlSpace.IOSpace
 {
+    public enum AlarmsEnum : int
+    {
+        ALARMSCOUNT = 3,
+        ALARMS_ADR_SERIOUS = 0,
+        ALARMS_ADR_COMMON = 1,
+        ALARMS_ADR_WARNING = 2,
+    }
+
     public abstract class GeoIOClass
     {
         #region INI Access Functions
@@ -32,8 +41,8 @@ namespace Allinone.ControlSpace.IOSpace
         {
             string retStr = "";
             //StringBuilder temp = new StringBuilder(100);
-            StringBuilder temp = new StringBuilder(200);
-            int Length = GetPrivateProfileString(section, key, "", temp, 200, filepath);
+            StringBuilder temp = new StringBuilder(1024);
+            int Length = GetPrivateProfileString(section, key, "", temp, 1024, filepath);
 
             retStr = temp.ToString();
 
@@ -51,9 +60,12 @@ namespace Allinone.ControlSpace.IOSpace
 
         protected FATEKAddressClass[] ADDRESSARRAY;
         protected FatekPLCClass[] PLC;
+
+        protected FATEKAddressClass[] CIPADDRESSARRAY;
+        protected CipCompoletClass CIP;
         //protected Mitsubishi_FX3UClass[] PLC_FX3U;
         protected OptionEnum OPTION;
-        
+        protected PLCAlarmsClass[] PLCALARMS;
         public GeoIOClass()
         {
 
@@ -88,6 +100,10 @@ namespace Allinone.ControlSpace.IOSpace
             }
         }
 
+        protected Int32 HEXSigned32(string HexStr)
+        {
+            return System.Convert.ToInt32(HexStr, 16);
+        }
 
     }
 }

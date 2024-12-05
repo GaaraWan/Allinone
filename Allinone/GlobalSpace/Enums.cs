@@ -203,6 +203,12 @@ namespace Allinone
         [Description("表面缺陷检查")]
         PLACODE_CHECK = 3,
 
+        /// <summary>
+        /// 银胶缺陷检查
+        /// </summary>
+        [Description("银胶缺陷检查")]
+        QLE_CHECK = 4,
+
     }
 
     /// <summary>
@@ -294,6 +300,25 @@ namespace Allinone
         [Description("AI模式")]
         CHIP_V8 = 6,
 
+    }
+
+    public enum AICategory : int
+    {
+        /// <summary>
+        /// 基础模式
+        /// </summary>
+        [Description("Baseline")]
+        Baseline = 0,
+        /// <summary>
+        /// Median模式
+        /// </summary>
+        [Description("Median")]
+        Median = 1,
+        /// <summary>
+        /// Small模式
+        /// </summary>
+        [Description("Small")]
+        Small = 2,
     }
 
     public enum HeightMethodEnum : int
@@ -442,7 +467,12 @@ namespace Allinone
         RIGHT = 2,
         BOTTOM = 3,
     }
-
+    public enum SaveImageFormat : int
+    {
+        IMAGE_BMP = 0,
+        IMAGE_PNG = 1,
+        IMAGE_JPEG = 2,
+    }
 
 
 }

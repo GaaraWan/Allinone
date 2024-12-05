@@ -36,23 +36,24 @@ using AForge.Controls;
 using JetEazy.Interface;
 using JetEazy.CCDSpace.CamLinkDriver;
 using FreeImageAPI;
+using Allinone.BasicSpace;
 
 namespace Allinone
 {
     public class Universal : JetEazy.Universal
     {
         public static bool IsNoUseCCD = false;
-        public static bool IsNoUseIO = false;
+        public static bool IsNoUseIO = true;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2024/09/10";
+        public static string VersionDate = "2024/12/05";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
-        public static OptionEnum OPTION = OptionEnum.MAIN_X6;
+        public static OptionEnum OPTION = OptionEnum.MAIN_SDM2;
 
-        public static CameraActionMode CAMACT = CameraActionMode.CAM_MOTOR_LINESCAN;
-        public static RobotType myRobotType = RobotType.NONE;
-        public static DiskType myDiskType = DiskType.DISK_C;
+        public static CameraActionMode CAMACT = CameraActionMode.CAM_MOTOR_MODE2;
+        public static RobotType myRobotType = RobotType.HCFA;
+        public static DiskType myDiskType = DiskType.DISK_D;
 
         #region 德龙激光
 
@@ -67,7 +68,7 @@ namespace Allinone
         /// <summary>
         /// 连接DL的主程序Server
         /// </summary>
-        public static bool m_UseCommToDLHandle = OPTION == OptionEnum.MAIN_X6;
+        public static bool m_UseCommToDLHandle = (OPTION == OptionEnum.MAIN_X6 && CAMACT != CameraActionMode.CAM_STATIC);
 
         public static string ShowMessage = "";
         public static bool IsJcetChangeRecipe = false;
@@ -76,14 +77,37 @@ namespace Allinone
         public static JzTimes TimeCheckStop = new JzTimes();
         public static string StripVersionName = "";
 
+        ///// <summary>
+        ///// 用于德龙读取cip通讯 获取mapping数据
+        ///// </summary>
+        //public static bool IsUseCip = true;
+
         /// <summary>
         /// 显示mapping ui
         /// </summary>
-        public static bool IsUseMappingUI = 
-            (OPTION == OptionEnum.MAIN_X6 || OPTION == OptionEnum.MAIN_SERVICE);
+        public static bool IsUseMappingUI =
+            ((OPTION == OptionEnum.MAIN_X6 || OPTION == OptionEnum.MAIN_SERVICE) && CAMACT != CameraActionMode.CAM_STATIC);
         public static bool IsRunningTest = false;//是否在流程中
 
         public static bool IsUseThreadReviceTcp = false;
+        public static float SetupDefaultOffsetValue
+        {
+            get
+            {
+                float ret = 0f;
+
+                switch(OPTION)
+                {
+                    case OptionEnum.MAIN_X6:
+
+                        ret = 0.3f;
+
+                        break;
+                }
+
+                return ret;
+            }
+        }
 
         #endregion
 
@@ -243,6 +267,8 @@ namespace Allinone
         /// </summary>
         public static AllinoneCrystalEvent CRYSTALSERVEREVENT;
 
+        public static CipExtendClass CipExtend;
+
         public static ResultClass RESULT;
         public static JzR32ResultClass jzr32eresult;
         public static JzRXXResultClass jzrxxeresult;
@@ -258,6 +284,7 @@ namespace Allinone
         public static JzMainSDM2ResultClass jzMainSDM2result;
         public static JzMainServiceResultClass jzMainServiceResult;
         public static JzMainSDM3ResultClass jzMainSDM3result;
+        public static JzMainSDM5ResultClass jzMainSDM5result;
         public static bool ISRESERVEPASSIMAGE = false;  //PASS的圖是否要存起來
         public static bool ISCHECKSN = false;
         /// <summary>
@@ -478,7 +505,7 @@ namespace Allinone
 
             ////JzFindObjectClass jzFindObjectClass = new JzFindObjectClass();
             //Bitmap bmpinput = new Bitmap("D:\\JETEAZY\\ALLINONE-MAIN_X6\\PIC\\00009\\000\\P00-000.png");
-            //Bitmap bmpsave = new Bitmap(bmpinput, bmpinput.Width / 4, bmpinput.Height / 4);
+            //Bitmap bmpsave = new Bitmap(bmpinput, bmpinput.Width / 2, bmpinput.Height / 2);
             //bmpsave.Save("D:\\JETEAZY\\ALLINONE-MAIN_X6\\PIC\\00009\\000\\P00-000_0.png", ImageFormat.Png);
             //bmpinput.Dispose();
             //bmpsave.Dispose();
@@ -541,6 +568,14 @@ namespace Allinone
             if (!ret)
             {
                 InitialErrorString = myLanguage.Messages("msg1", LanguageIndex);
+                return false;
+            }
+
+            ret &= InitialExtend();
+
+            if (!ret)
+            {
+                InitialErrorString = "连接欧姆龙plc失败，Cip通讯失败。";
                 return false;
             }
 
@@ -1028,6 +1063,12 @@ namespace Allinone
 
                             jzMainSDM3result = new JzMainSDM3ResultClass(Result_EA.MAIN_SDM3, VERSION, OPTION, MACHINECollection);
                             RESULT = new ResultClass(jzMainSDM3result);
+
+                            break;
+                        case OptionEnum.MAIN_SDM5:
+
+                            jzMainSDM5result = new JzMainSDM5ResultClass(Result_EA.MAIN_SDM5, VERSION, OPTION, MACHINECollection);
+                            RESULT = new ResultClass(jzMainSDM5result);
 
                             break;
                     }
@@ -1836,7 +1877,30 @@ namespace Allinone
             //KHCCollection = new KHCClass();
             //KHCCollection.Initial();
         }
+        static bool InitialExtend()
+        {
+            bool ret = true;
+            switch (VERSION)
+            {
+                case VersionEnum.ALLINONE:
 
+                    switch (OPTION)
+                    {
+                        case OptionEnum.MAIN_X6:
+                            CipExtend = new CipExtendClass(WORKPATH);
+                            if (INI.IsOpenCip)
+                            {
+                                ret = CipExtend.Init();
+                            }
+
+                            break;
+                    }
+
+                    break;
+            }
+
+            return ret;
+        }
         static bool InitialMachineCollection()
         {
             bool ret = true;
@@ -2001,7 +2065,7 @@ namespace Allinone
                             //JZMAINSDPOSITIONPARA.MySqlTableInsert("TT000ZQ01");
                             //JZMAINSDPOSITIONPARA.MySqlTableInsert("TT000ZQ02");
                             //JZMAINSDPOSITIONPARA.MySqlTableInsert("TT000ZQ01");
-
+                            
                             break;
 
                         case OptionEnum.MAIN_SDM1:
@@ -2071,6 +2135,22 @@ namespace Allinone
 
                             MACHINECollection = new MachineCollectionClass();
                             MACHINECollection.Intial(VERSION, OPTION, jzMainSDM3machine);
+
+                            //JZMAINSDPOSITIONPARA = new JzMainSDPositionParaClass(Universal.WORKPATH + "\\pos");
+                            //JZMAINSDPOSITIONPARA.Initial();
+
+                            break;
+                        case OptionEnum.MAIN_SDM5:
+
+                            opstr += "1,";  //一個 PLC
+                            opstr += "4,";  //零個 軸
+
+                            JzMainSDM5MachineClass jzMainSDM5machine = new JzMainSDM5MachineClass(Machine_EA.MAIN_SDM5, opstr, WORKPATH, IsNoUseIO);
+
+                            jzMainSDM5machine.Initial(IsNoUseIO, IsNoUseMotor);
+
+                            MACHINECollection = new MachineCollectionClass();
+                            MACHINECollection.Intial(VERSION, OPTION, jzMainSDM5machine);
 
                             //JZMAINSDPOSITIONPARA = new JzMainSDPositionParaClass(Universal.WORKPATH + "\\pos");
                             //JZMAINSDPOSITIONPARA.Initial();
@@ -2216,6 +2296,7 @@ namespace Allinone
             CCDCollection.Close();
             switch(OPTION)
             {
+                case OptionEnum.MAIN_SDM5:
                 case OptionEnum.MAIN_X6:
                     //if (IsUseThreadReviceTcp)
                     //    jzMainX6Result.stop_scan_thread();
@@ -2355,6 +2436,11 @@ namespace Allinone
                 }
                 string version = model.GetVersion();
                 string modelName = model.GetCurrentModelName();
+                var err = model.SwitchModel(ModelCategory.Baseline);
+                if (!err.Is(Errcode.OK))
+                {
+                    MessageBox.Show($"异常:({err.errCode},{err.errMsg})", "AI Init", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
                 _TRACE($"版本號 = {version}");
                 _TRACE($"訓練模型名稱 = {modelName}");
                 ret = true;

@@ -1058,6 +1058,25 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
 
+        [Category("12.PADCHECK"), DefaultValue(35)]
+        [Description("")]
+        [DisplayName("D7.字体大小 (單位 pix)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(-1000f, 1000000f, 1, 2)]
+        public virtual int FontSize
+        {
+            get; set;
+        }
+        [Category("12.PADCHECK"), DefaultValue(5)]
+        [Description("")]
+        [DisplayName("D8.线宽 (單位 pix)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(-1000f, 1000000f, 1, 2)]
+        public virtual int LineWidth
+        {
+            get; set;
+        }
+
 
         [Category("11.PADCHECK"), DefaultValue(5)]
         [Description("")]
@@ -1079,10 +1098,28 @@ namespace Allinone.OPSpace.AnalyzeSpace
         }
         [Category("11.PADCHECK"), DefaultValue(false)]
         [Description("")]
-        [DisplayName("A1.是否检查胶水宽度")]
+        [DisplayName("A1a.是否检查胶水宽度")]
         //[TypeConverter(typeof(NumericUpDownTypeConverter))]
         //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
         public virtual bool GlueCheck
+        {
+            get; set;
+        }
+        [Category("11.PADCHECK"), DefaultValue(true)]
+        [Description("")]
+        [DisplayName("A1b.芯片水平方向")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public virtual bool ChipDirLevel
+        {
+            get; set;
+        }
+        [Category("11.PADCHECK"), DefaultValue(true)]
+        [Description("")]
+        [DisplayName("A1c.芯片接触锡球检测")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public virtual bool ChipGleCheck
         {
             get; set;
         }
@@ -1117,6 +1154,14 @@ namespace Allinone.OPSpace.AnalyzeSpace
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1f, 0.1f, 2)]
         public virtual double BloodFillValueRatio
+        {
+            get; set;
+        }
+        [Category("10.PADCHECK"), DefaultValue(AICategory.Baseline)]
+        [Description("在AI模式下选择不同模型以适应芯片的大小")]
+        [DisplayName("C1.AI模型")]
+        [TypeConverter(typeof(JzEnumConverter))]
+        public virtual AICategory PADAICategory
         {
             get; set;
         }
@@ -1194,6 +1239,64 @@ namespace Allinone.OPSpace.AnalyzeSpace
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
         public virtual double GlueMinRight
+        {
+            get; set;
+        }
+
+
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶长度上限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public virtual double GleWidthUpper
+        {
+            get; set;
+        }
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶长度下限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public virtual double GleWidthLower
+        {
+            get; set;
+        }
+
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶宽度上限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public virtual double GleHeightUpper
+        {
+            get; set;
+        }
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶宽度下限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public virtual double GleHeightLower
+        {
+            get; set;
+        }
+
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶面积上限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public virtual double GleAreaUpper
+        {
+            get; set;
+        }
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶面积下限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public virtual double GleAreaLower
         {
             get; set;
         }
@@ -1320,6 +1423,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         case OptionEnum.MAIN_SDM1:
                         case OptionEnum.MAIN_SD:
 
+                            //publicproperties.Add(new myProperty("MeasureMethod", "04.Measure"));
+                            //publicproperties.Add(new myProperty("MMOPString", "04.Measure"));
+
                             #region OCR
 
                             //publicproperties.Add(new myProperty("InspectionMethod", "03.Inspection"));
@@ -1405,11 +1511,14 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             publicproperties.Add(new myProperty("GlueMax", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("GlueMin", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("GlueCheck", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("ChipDirlevel", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("ChipGleCheck", "10.PADCHECK"));
 
                             publicproperties.Add(new myProperty("PADThresholdMode", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("NoGlueThresholdValue", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("PADCalMode", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("PADChipSizeMode", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("PADAICategory", "10.PADCHECK"));
 
                             publicproperties.Add(new myProperty("CalExtendX", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("CalExtendY", "10.PADCHECK"));
@@ -1429,6 +1538,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             publicproperties.Add(new myProperty("BlackCalExtendY", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("BlackOffsetX", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("BlackOffsetY", "10.PADCHECK"));
+
+                            publicproperties.Add(new myProperty("FontSize", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("LineWidth", "10.PADCHECK"));
+
+                            publicproperties.Add(new myProperty("GleWidthUpper", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("GleWidthLower", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("GleHeightUpper", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("GleHeightLower", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("GleAreaUpper", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("GleAreaLower", "10.PADCHECK"));
 
                             break;
 
@@ -1860,6 +1979,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             CalExtendX = PAD.CalExtendX;
             CalExtendY = PAD.CalExtendY;
             BloodFillValueRatio = PAD.BloodFillValueRatio;
+            PADAICategory = PAD.PADAICategory;
 
             GlueMaxTop = PAD.GlueMaxTop;
             GlueMinTop = PAD.GlueMinTop;
@@ -1874,6 +1994,18 @@ namespace Allinone.OPSpace.AnalyzeSpace
             BlackCalExtendY = PAD.BlackCalExtendY;
             BlackOffsetX = PAD.BlackOffsetX;
             BlackOffsetY = PAD.BlackOffsetY;
+            ChipDirLevel = PAD.ChipDirlevel;
+            ChipGleCheck = PAD.ChipGleCheck;
+
+            FontSize = PAD.FontSize;
+            LineWidth = PAD.LineWidth;
+
+            GleWidthUpper = PAD.GleWidthUpper;
+            GleWidthLower = PAD.GleWidthLower;
+            GleHeightUpper = PAD.GleHeightUpper;
+            GleHeightLower = PAD.GleHeightLower;
+            GleAreaUpper = PAD.GleAreaUpper;
+            GleAreaLower = PAD.GleAreaLower;
         }
         public void SetPADCHECK(PADINSPECTClass PAD)
         {
@@ -1898,6 +2030,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             PAD.CalExtendX = CalExtendX;
             PAD.CalExtendY = CalExtendY;
             PAD.BloodFillValueRatio = BloodFillValueRatio;
+            PAD.PADAICategory = PADAICategory;
 
             PAD.GlueMaxTop = GlueMaxTop;
             PAD.GlueMinTop = GlueMinTop;
@@ -1912,6 +2045,20 @@ namespace Allinone.OPSpace.AnalyzeSpace
             PAD.BlackCalExtendY = BlackCalExtendY;
             PAD.BlackOffsetX = BlackOffsetX;
             PAD.BlackOffsetY = BlackOffsetY;
+            PAD.ChipDirlevel = ChipDirLevel;
+            PAD.ChipGleCheck = ChipGleCheck;
+
+            PAD.FontSize = FontSize;
+            PAD.LineWidth = LineWidth;
+
+            PAD.GleWidthUpper = GleWidthUpper;
+            PAD.GleWidthLower = GleWidthLower;
+            PAD.GleHeightUpper = GleHeightUpper;
+            PAD.GleHeightLower = GleHeightLower;
+            PAD.GleAreaUpper = GleAreaUpper;
+            PAD.GleAreaLower = GleAreaLower;
+
+
         }
 
     }
@@ -2841,10 +2988,28 @@ namespace Allinone.OPSpace.AnalyzeSpace
         }
         [Category("11.PADCHECK"), DefaultValue(false)]
         [Description("")]
-        [DisplayName("A1.是否检查胶水宽度")]
+        [DisplayName("A1a.是否检查胶水宽度")]
         //[TypeConverter(typeof(NumericUpDownTypeConverter))]
         //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
         public override bool GlueCheck
+        {
+            get; set;
+        }
+        [Category("11.PADCHECK"), DefaultValue(true)]
+        [Description("")]
+        [DisplayName("A1b.芯片水平方向")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public override bool ChipDirLevel
+        {
+            get; set;
+        }
+        [Category("11.PADCHECK"), DefaultValue(true)]
+        [Description("")]
+        [DisplayName("A1c.芯片接触锡球检测")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public override bool ChipGleCheck
         {
             get; set;
         }
@@ -2870,6 +3035,14 @@ namespace Allinone.OPSpace.AnalyzeSpace
         [DisplayName("C.计算宽度图像模式")]
         [TypeConverter(typeof(JzEnumConverter))]
         public override PADChipSize PADChipSizeMode
+        {
+            get; set;
+        }
+        [Category("10.PADCHECK"), DefaultValue(AICategory.Baseline)]
+        [Description("在AI模式下选择不同模型以适应芯片的大小")]
+        [DisplayName("C1.AI模型")]
+        [TypeConverter(typeof(JzEnumConverter))]
+        public override AICategory PADAICategory
         {
             get; set;
         }
@@ -2925,6 +3098,24 @@ namespace Allinone.OPSpace.AnalyzeSpace
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(-1000f, 1000000f, 1, 2)]
         public override double BlackOffsetY
+        {
+            get; set;
+        }
+        [Category("12.PADCHECK"), DefaultValue(35)]
+        [Description("")]
+        [DisplayName("D7.字体大小 (單位 pix)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(-1000f, 1000000f, 1, 2)]
+        public override int FontSize
+        {
+            get; set;
+        }
+        [Category("12.PADCHECK"), DefaultValue(5)]
+        [Description("")]
+        [DisplayName("D8.线宽 (單位 pix)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(-1000f, 1000000f, 1, 2)]
+        public override int LineWidth
         {
             get; set;
         }
@@ -3014,6 +3205,65 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             get; set;
         }
+
+
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶长度上限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public override double GleWidthUpper
+        {
+            get; set;
+        }
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶长度下限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public override double GleWidthLower
+        {
+            get; set;
+        }
+
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶宽度上限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public override double GleHeightUpper
+        {
+            get; set;
+        }
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶宽度下限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public override double GleHeightLower
+        {
+            get; set;
+        }
+
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶面积上限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public override double GleAreaUpper
+        {
+            get; set;
+        }
+        [Category("11.PADCHECK"), DefaultValue(0.1)]
+        [Description("")]
+        [DisplayName("specA.银胶面积下限 (單位 mm)")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public override double GleAreaLower
+        {
+            get; set;
+        }
+
         #endregion
     }
 }

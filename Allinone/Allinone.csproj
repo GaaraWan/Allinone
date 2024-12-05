@@ -245,6 +245,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BasicSpace\CipExtendClass.cs" />
     <Compile Include="BasicSpace\EzImageUtils.cs" />
     <Compile Include="BasicSpace\EzSegDMTX.cs" />
     <Compile Include="BasicSpace\JzCameraForMatchClass.cs" />
@@ -255,10 +256,12 @@
     <Compile Include="BasicSpace\ServiceClass.cs" />
     <Compile Include="BasicSpace\WinAPI.cs" />
     <Compile Include="ControlSpace\IOSpace\GeoIOClass.cs" />
+    <Compile Include="ControlSpace\IOSpace\JzCipMainX6IO1Class.cs" />
     <Compile Include="ControlSpace\IOSpace\JzMainSDIOClass.cs" />
     <Compile Include="ControlSpace\IOSpace\JzMainSDM1IOClass.cs" />
     <Compile Include="ControlSpace\IOSpace\JzMainSDM2IOClass.cs" />
     <Compile Include="ControlSpace\IOSpace\JzMainSDM3IOClass.cs" />
+    <Compile Include="ControlSpace\IOSpace\JzMainSDM5IOClass.cs" />
     <Compile Include="ControlSpace\IOSpace\JzMainServiceIOClass.cs" />
     <Compile Include="ControlSpace\IOSpace\JzMainX6IOClass.cs" />
     <Compile Include="ControlSpace\IOSpace\JzR15IOClass.cs" />
@@ -278,6 +281,7 @@
     <Compile Include="ControlSpace\MachineSpace\JzMainSDM1MachineClass.cs" />
     <Compile Include="ControlSpace\MachineSpace\JzMainSDM2MachineClass.cs" />
     <Compile Include="ControlSpace\MachineSpace\JzMainSDM3MachineClass.cs" />
+    <Compile Include="ControlSpace\MachineSpace\JzMainSDM5MachineClass.cs" />
     <Compile Include="ControlSpace\MachineSpace\JzMainSDMachineClass.cs" />
     <Compile Include="ControlSpace\MachineSpace\JzMainServiceMachineClass.cs" />
     <Compile Include="ControlSpace\MachineSpace\JzMainX6MachineClass.cs" />
@@ -352,6 +356,12 @@
     <Compile Include="FormSpace\frmMainSDMotorSetup.Designer.cs">
       <DependentUpon>frmMainSDMotorSetup.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSpace\frmMark.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\frmMark.Designer.cs">
+      <DependentUpon>frmMark.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSpace\frmSetMutilPosition.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -400,12 +410,25 @@
     <Compile Include="FormSpace\ModifySelectForm.designer.cs">
       <DependentUpon>ModifySelectForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSpace\Motor\frmIO.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\Motor\frmIO.Designer.cs">
+      <DependentUpon>frmIO.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSpace\Motor\frmTouchMotor.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FormSpace\Motor\frmTouchMotor.Designer.cs">
       <DependentUpon>frmTouchMotor.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSpace\Motor\LSIOUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FormSpace\Motor\LSIOUI.Designer.cs">
+      <DependentUpon>LSIOUI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\Motor\LSItemClass.cs" />
     <Compile Include="FormSpace\OtherSetExposureForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -511,6 +534,7 @@
     <Compile Include="OPSpace\ResultSpace\JzMainSDM1ResultClass.cs" />
     <Compile Include="OPSpace\ResultSpace\JzMainSDM2ResultClass.cs" />
     <Compile Include="OPSpace\ResultSpace\JzMainSDM3ResultClass.cs" />
+    <Compile Include="OPSpace\ResultSpace\JzMainSDM5ResultClass.cs" />
     <Compile Include="OPSpace\ResultSpace\JzMainSDResultClass.cs" />
     <Compile Include="OPSpace\ResultSpace\JzMainServiceResultClass.cs" />
     <Compile Include="OPSpace\ResultSpace\JzMainX6ResultClass.cs" />
@@ -598,6 +622,12 @@
     </Compile>
     <Compile Include="UISpace\CTRLUISpace\AllinoneSDM3CtrlUI.Designer.cs">
       <DependentUpon>AllinoneSDM3CtrlUI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UISpace\CTRLUISpace\AllinoneSDM5CtrlUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UISpace\CTRLUISpace\AllinoneSDM5CtrlUI.Designer.cs">
+      <DependentUpon>AllinoneSDM5CtrlUI.cs</DependentUpon>
     </Compile>
     <Compile Include="UISpace\CTRLUISpace\AllinoneSTATEUI.cs">
       <SubType>UserControl</SubType>
@@ -846,6 +876,9 @@
     <EmbeddedResource Include="FormSpace\frmMainSDMotorSetup.resx">
       <DependentUpon>frmMainSDMotorSetup.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\frmMark.resx">
+      <DependentUpon>frmMark.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\frmSetMutilPosition.resx">
       <DependentUpon>frmSetMutilPosition.cs</DependentUpon>
     </EmbeddedResource>
@@ -870,8 +903,14 @@
     <EmbeddedResource Include="FormSpace\ModifySelectForm.resx">
       <DependentUpon>ModifySelectForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\Motor\frmIO.resx">
+      <DependentUpon>frmIO.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\Motor\frmTouchMotor.resx">
       <DependentUpon>frmTouchMotor.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\Motor\LSIOUI.resx">
+      <DependentUpon>LSIOUI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\OtherSetExposureForm.resx">
       <DependentUpon>OtherSetExposureForm.cs</DependentUpon>
@@ -954,6 +993,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UISpace\CTRLUISpace\AllinoneSDM3CtrlUI.resx">
       <DependentUpon>AllinoneSDM3CtrlUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UISpace\CTRLUISpace\AllinoneSDM5CtrlUI.resx">
+      <DependentUpon>AllinoneSDM5CtrlUI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UISpace\CTRLUISpace\AllinoneSTATEUI.resx">
       <DependentUpon>AllinoneSTATEUI.cs</DependentUpon>

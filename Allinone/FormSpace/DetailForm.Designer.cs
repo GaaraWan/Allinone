@@ -69,6 +69,9 @@
             this.button19 = new System.Windows.Forms.Button();
             this.button21 = new System.Windows.Forms.Button();
             this.pageUI1 = new Allinone.UISpace.PageUI();
+            this.button22 = new System.Windows.Forms.Button();
+            this.button23 = new System.Windows.Forms.Button();
+            this.button24 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             this.groupBox2.SuspendLayout();
@@ -464,7 +467,7 @@
             this.button19.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
             this.button19.Location = new System.Drawing.Point(404, 837);
             this.button19.Name = "button19";
-            this.button19.Size = new System.Drawing.Size(189, 23);
+            this.button19.Size = new System.Drawing.Size(123, 23);
             this.button19.TabIndex = 58;
             this.button19.Text = "定位值当前页面位置";
             this.button19.UseVisualStyleBackColor = false;
@@ -473,7 +476,7 @@
             // button21
             // 
             this.button21.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
-            this.button21.Location = new System.Drawing.Point(599, 836);
+            this.button21.Location = new System.Drawing.Point(528, 837);
             this.button21.Name = "button21";
             this.button21.Size = new System.Drawing.Size(65, 23);
             this.button21.TabIndex = 59;
@@ -488,12 +491,45 @@
             this.pageUI1.Size = new System.Drawing.Size(1420, 766);
             this.pageUI1.TabIndex = 41;
             // 
+            // button22
+            // 
+            this.button22.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.button22.Location = new System.Drawing.Point(599, 837);
+            this.button22.Name = "button22";
+            this.button22.Size = new System.Drawing.Size(65, 23);
+            this.button22.TabIndex = 60;
+            this.button22.Text = "Mark1";
+            this.button22.UseVisualStyleBackColor = false;
+            // 
+            // button23
+            // 
+            this.button23.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.button23.Location = new System.Drawing.Point(669, 837);
+            this.button23.Name = "button23";
+            this.button23.Size = new System.Drawing.Size(65, 23);
+            this.button23.TabIndex = 61;
+            this.button23.Text = "Mark2";
+            this.button23.UseVisualStyleBackColor = false;
+            // 
+            // button24
+            // 
+            this.button24.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
+            this.button24.Location = new System.Drawing.Point(738, 836);
+            this.button24.Name = "button24";
+            this.button24.Size = new System.Drawing.Size(65, 23);
+            this.button24.TabIndex = 62;
+            this.button24.Text = "参数页面";
+            this.button24.UseVisualStyleBackColor = false;
+            // 
             // DetailForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1424, 861);
             this.ControlBox = false;
+            this.Controls.Add(this.button24);
+            this.Controls.Add(this.button23);
+            this.Controls.Add(this.button22);
             this.Controls.Add(this.button21);
             this.Controls.Add(this.button19);
             this.Controls.Add(this.button18);
@@ -567,5 +603,8 @@
         private System.Windows.Forms.Button button19;
         private System.Windows.Forms.Button button20;
         private System.Windows.Forms.Button button21;
+        private System.Windows.Forms.Button button22;
+        private System.Windows.Forms.Button button23;
+        private System.Windows.Forms.Button button24;
     }
 }

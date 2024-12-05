@@ -1,4 +1,5 @@
 ﻿using DVPCameraType;
+using FreeImageAPI;
 using JetEazy.ControlSpace;
 using JetEazy.Interface;
 using System;
@@ -41,6 +42,11 @@ namespace JetEazy.CCDSpace.CamLinkDriver
         //string m_TrigCtl = "ISO";
 
         CameraPara _camCfg = new CameraPara();
+
+        IntPtr m_Buffer = IntPtr.Zero;
+        int m_Width = 0;
+        int m_Height = 0;
+        int m_Rotate = 0;
 
         #endregion
 
@@ -117,6 +123,13 @@ namespace JetEazy.CCDSpace.CamLinkDriver
                 //    EncoderReset();
             }
         }
+
+        public IntPtr ImagePbuffer { 
+            get => m_Buffer; set => m_Buffer = value; }
+        public int ImageWidth { get =>m_Width; set => m_Width = value; }
+        public int ImageHeight { get => m_Height; set => m_Height = value; }
+        public int ImageRotate { get => m_Rotate; set => m_Rotate = value; }
+
         public void EncoderReset()
         {
             //if (m_IsDebug)
@@ -183,10 +196,27 @@ namespace JetEazy.CCDSpace.CamLinkDriver
             m_TriggerOK = false;
             return null;
         }
+        public FreeImageBitmap GetFreeImageBitmap(int size = 0)
+        {
+            if (m_IsDebug)
+                return new FreeImageBitmap(1, 1);
+            if (bmp == null)
+            {
+                m_TriggerOK = false;
+                return null;
+            }
+            if (m_TriggerOK)
+            {
+                return bmp;
+            }
+            m_TriggerOK = false;
+            return null;
+        }
         public void Dispose()
         {
             Close();
         }
+       
 
         private int _Init(string eSerialNumberStr, string eDvp2ConfigPath = "")
         {
@@ -340,7 +370,49 @@ namespace JetEazy.CCDSpace.CamLinkDriver
         //Bitmap bmp = new Bitmap(1, 1);
         //byte[] bmpDatas = null;
         //回调函数接收相机图像数据
+
+        FreeImageAPI.FreeImageBitmap bmp = null;// new FreeImageBitmap(1, 1);
         private int _dvpStreamCallback(/*dvpHandle*/uint handle, dvpStreamEvent _event, /*void **/IntPtr pContext, ref dvpFrame refFrame, /*void **/IntPtr pBuffer)
+        {
+
+            m_TriggerComplete = false;
+
+
+            m_dfDisplayCount++;
+
+            try
+            {
+                if (bmp != null)
+                    bmp.Dispose();
+
+                imageMutex.WaitOne();
+                //FreeImageAPI.FreeImageBitmap bmp = null;
+
+                if (refFrame.format == dvpImageFormat.FORMAT_BGR24 || refFrame.format == dvpImageFormat.FORMAT_RGB24)
+                {
+                    bmp = new FreeImageAPI.FreeImageBitmap(refFrame.iWidth, refFrame.iHeight, refFrame.iWidth * 3, PixelFormat.Format24bppRgb, pBuffer);
+
+                }
+                else if (refFrame.format == dvpImageFormat.FORMAT_MONO)
+                {
+                    bmp = new FreeImageAPI.FreeImageBitmap(refFrame.iWidth, refFrame.iHeight, refFrame.iWidth, PixelFormat.Format8bppIndexed, pBuffer);
+                    //m_Buffer = pBuffer;
+                    //m_Width = refFrame.iWidth;
+                    //m_Height = refFrame.iHeight;
+                }
+                bmp.Rotate(_camCfg.Rotate);
+                //m_bmpCurrent = bmp.ToBitmap();
+                m_TriggerOK = true;
+            }
+            finally
+            {
+                imageMutex.ReleaseMutex();
+            }
+
+            m_TriggerComplete = true;
+            return 0;
+        }
+        private int _dvpStreamCallbackBak(/*dvpHandle*/uint handle, dvpStreamEvent _event, /*void **/IntPtr pContext, ref dvpFrame refFrame, /*void **/IntPtr pBuffer)
         {
             bool bDisplay = true;
             m_TriggerComplete = false;
@@ -385,14 +457,14 @@ namespace JetEazy.CCDSpace.CamLinkDriver
                     {
                         //bmp = new Bitmap(refFrame.iWidth, refFrame.iHeight, refFrame.iWidth * 3, PixelFormat.Format24bppRgb, pBuffer);
                         bmp = new FreeImageAPI.FreeImageBitmap(refFrame.iWidth, refFrame.iHeight, refFrame.iWidth * 3, PixelFormat.Format24bppRgb, pBuffer);
-                    
+
                     }
                     else if (refFrame.format == dvpImageFormat.FORMAT_MONO)
                     {
                         //ColorPalette tempPalette;
                         //bmp = new Bitmap(refFrame.iWidth, refFrame.iHeight, refFrame.iWidth, PixelFormat.Format8bppIndexed, pBuffer);
                         bmp = new FreeImageAPI.FreeImageBitmap(refFrame.iWidth, refFrame.iHeight, refFrame.iWidth, PixelFormat.Format8bppIndexed, pBuffer);
-                        
+
                         //tempPalette = bmp.Palette;
                         //for (int i = 0; i < 256; i++)
                         //{
@@ -428,7 +500,7 @@ namespace JetEazy.CCDSpace.CamLinkDriver
                 {
                     imageMutex.ReleaseMutex();
                 }
-                
+
                 //保存图像
 
                 //bool triggerstatus = false;
@@ -585,6 +657,8 @@ namespace JetEazy.CCDSpace.CamLinkDriver
             Bitmap bitmap = (Bitmap)formatter.Deserialize(stream);
             return bitmap;
         }
+
+       
 
         #endregion
 

@@ -154,6 +154,13 @@ namespace Allinone.UISpace
             //this.MouseDown += PageUI_MouseDown;
             //this.MouseUp += PageUI_MouseUp;
 
+
+            DISPUI.CaptureAction += DISPUI_CaptureAction;
+        }
+
+        private void DISPUI_CaptureAction(RectangleF rectf)
+        {
+            OnCaptureTrigger(rectf);
         }
 
         //string _collectOperateStr = string.Empty;
@@ -1060,15 +1067,15 @@ namespace Allinone.UISpace
 
             Stiltsui.Show();
             Stiltsui.stiltsUI.SetStilts(AnalyzeSelectNow);
-           
+
             Stiltsui.TopMost = true;
-            
+
         }
         public void StiltsDispose()
         {
-            if(Stiltsui!=null)
-            Stiltsui.Dispose();
-           
+            if (Stiltsui != null)
+                Stiltsui.Dispose();
+
         }
 
 
@@ -1209,7 +1216,7 @@ namespace Allinone.UISpace
                         AnalyzeClass analyze = AnalyzeList[i];
                         if (analyze.No == AnalyzeSelectNow.No)
                         {
-                            foreach(AnalyzeClass analyze1 in analyze.BranchList)
+                            foreach (AnalyzeClass analyze1 in analyze.BranchList)
                             {
                                 delnolist.Add(analyze1.No);
                             }
@@ -1232,7 +1239,7 @@ namespace Allinone.UISpace
 
                     break;
             }
-         
+
 
             //Bitmap bmpDraw = new Bitmap(bmpPageOrg);
             ////找blob 中心
@@ -1289,7 +1296,7 @@ namespace Allinone.UISpace
                 ////tmp.OffsetF.X -= pt.X;
                 ////tmp.OffsetF.Y -= pt.Y;
 
-       
+
 
                 ////JzTool.DrawRectEx(bmpAnalyzeSelectNow, MaxRect, new Pen(Color.Lime, 2));
                 //bmpAnalyzeSelectNow.Save("D:\\LOA\\TrainModel\\bmpAnalyzeSelectNow" + i.ToString() + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
@@ -1361,7 +1368,7 @@ namespace Allinone.UISpace
                     {
                         case VersionEnum.ALLINONE:
 
-                            switch(OPTION)
+                            switch (OPTION)
                             {
                                 case OptionEnum.MAIN_SDM3:
                                 case OptionEnum.MAIN_X6:
@@ -1369,7 +1376,7 @@ namespace Allinone.UISpace
 
                                     foreach (AnalyzeClass analyze1 in analyze.BranchList)
                                     {
-                                        delnolist.Add(analyze1.No); 
+                                        delnolist.Add(analyze1.No);
                                     }
                                     ATREEUI.Delete(delnolist);
 
@@ -1398,7 +1405,7 @@ namespace Allinone.UISpace
         }
         public void FindInside(List<Rectangle> foundrectlist, AnalyzeClass analyze = null)
         {
-           
+
             List<int> delnolist = new List<int>();
 
             switch (VERSION)
@@ -1502,11 +1509,11 @@ namespace Allinone.UISpace
                         ATREEUI.CollapseTree();
                         ATREEUI.Delete(delnolist, false);
                     }
-                        
+
 
                     break;
             }
-            
+
             //取得所有定義過的區域
             foreach (AnalyzeClass analyze in AnalyzeList)
             {
@@ -1606,7 +1613,7 @@ namespace Allinone.UISpace
             //AnalyzeSelectNow.IsTempSave = false;
             bitmap.Dispose();
             //bmppattern.Dispose();
-            
+
 
             //取得自身的區域
             int selectno = AnalyzeSelectNow.No;
@@ -1652,12 +1659,12 @@ namespace Allinone.UISpace
                         ATREEUI.CollapseTree();
                         ATREEUI.Delete(delnolist, false);
                     }
-                        
+
 
 
                     break;
             }
-    
+
 
             //Bitmap bmpDraw = new Bitmap(bmpPageOrg);
             ////找blob 中心
@@ -1798,7 +1805,7 @@ namespace Allinone.UISpace
 
         bool IsSaveSub = false;
 
-        public RectangleF FindRectSub(Bitmap ebmpInput, RectangleF eRectF,RectangleF analyzeOrgLocation, int eSubPixel = 20)
+        public RectangleF FindRectSub(Bitmap ebmpInput, RectangleF eRectF, RectangleF analyzeOrgLocation, int eSubPixel = 20)
         {
             #region 這裏原圖先blob一次 找到一堆框
 
@@ -2307,7 +2314,7 @@ namespace Allinone.UISpace
 
                 if (i == 0)
                     icheck = 1;
-                else if (i == iCount-1)
+                else if (i == iCount - 1)
                     icheck = 2;
                 else
                     icheck = 0;
@@ -2321,7 +2328,7 @@ namespace Allinone.UISpace
                     MaxRect = m_Find.GetRectExpectAround(JzTool.SimpleRect(bmpSub.Size), _filterArea, _filterPixel, icheck);
                 }
 
-               
+
                 JzTool.DrawRectEx(bmpSub, MaxRect, new Pen(Color.Lime, 2));
                 if (IsSaveSub)
                     bmpSub.Save(_path + "\\" + DateTime.Now.ToString("yyyyMMddHHmmssfff_") + i.ToString() + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
@@ -2569,12 +2576,12 @@ namespace Allinone.UISpace
                 ATREEUI.CollapseTree();
                 ATREEUI.Delete(delnolist);
             }
-                
+
 
             //Bitmap bmpDraw = new Bitmap(bmpPageOrg);
             ////找blob 中心
             Bitmap bmpAnalyzeSelectNow = new Bitmap(1, 1);
-         
+
             //PointF ptfORG = new PointF(myRectF.X, myRectF.Y);
             //原始的顶端中心位置PointF
             foreach (AnalyzeClass analyze1 in m_MarkTheSameList)
@@ -2600,7 +2607,7 @@ namespace Allinone.UISpace
                     i++;
                     continue;
                 }
-                
+
 
                 RectangleF torectf = analyze.GetMyMoverRectF();
                 List<RectangleF> foundrectlist = new List<RectangleF>();
@@ -2749,7 +2756,7 @@ namespace Allinone.UISpace
             }
 
             //return;
-       
+
 
             i = 0;
             count = AnalyzeList.Count;
@@ -2999,6 +3006,16 @@ namespace Allinone.UISpace
 
         #endregion
 
+
+        public delegate void CaptureTriggerHandler(RectangleF captureRectF);
+        public event CaptureTriggerHandler CaptureTriggerAction;
+        public void OnCaptureTrigger(RectangleF captureRectF)
+        {
+            if (CaptureTriggerAction != null)
+            {
+                CaptureTriggerAction(captureRectF);
+            }
+        }
 
     }
 }

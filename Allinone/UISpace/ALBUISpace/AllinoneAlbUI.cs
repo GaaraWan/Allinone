@@ -127,6 +127,12 @@ namespace Allinone.UISpace.ALBUISpace
             private int _w = 255;
             private int _highestValue = 138;
 
+            private int _thresholdvalue = 128;
+            private PointF _ptfCenter = new PointF(0, 0);
+            private RectangleF _rectF = new RectangleF(0, 0, 100, 100);
+            private bool _iswhite = false;
+
+
             public override string ToString()
             {
                 string retstr = "";
@@ -138,7 +144,12 @@ namespace Allinone.UISpace.ALBUISpace
                 retstr += _g.ToString() + ",";
                 retstr += _b.ToString() + ",";
                 retstr += _w.ToString() + ",";
-                retstr += _highestValue.ToString();
+                retstr += _highestValue.ToString() + ",";
+
+                retstr += _thresholdvalue.ToString() + ",";
+                retstr += PointF000ToString(_ptfCenter) + ",";
+                retstr += RectFToString(_rectF) + ",";
+                retstr += (_iswhite ? "1" : "0");
 
                 return retstr;
             }
@@ -176,6 +187,18 @@ namespace Allinone.UISpace.ALBUISpace
                             break;
                         case 7:
                             _highestValue = int.Parse(strx);
+                            break;
+                        case 8:
+                            _thresholdvalue = int.Parse(strx);
+                            break;
+                        case 9:
+                            _ptfCenter = StringToPointF(strx);
+                            break;
+                        case 10:
+                            _rectF = StringToRectF(strx);
+                            break;
+                        case 11:
+                            _iswhite = strx == "1";
                             break;
                     }
                     i++;
@@ -242,6 +265,71 @@ namespace Allinone.UISpace.ALBUISpace
                 set { _highestValue = value; }
             }
 
+            [CategoryAttribute("Light Settings"),
+         DefaultValueAttribute(true), DisplayName("阈值"), Browsable(false)]
+            public int ThresholdValue
+            {
+                get { return _thresholdvalue; }
+                set { _thresholdvalue = value; }
+            }
+            [CategoryAttribute("Light Settings"),
+        DefaultValueAttribute(true), DisplayName("中心"), Browsable(false)]
+            public PointF PtfCenter
+            {
+                get { return _ptfCenter; }
+                set { _ptfCenter = value; }
+            }
+            [CategoryAttribute("Light Settings"),
+        DefaultValueAttribute(true), DisplayName("寻找区域"), Browsable(false)]
+            public RectangleF RectF
+            {
+                get { return _rectF; }
+                set { _rectF = value; }
+            }
+
+            [CategoryAttribute("Light Settings"),
+       DefaultValueAttribute(true), DisplayName("找白色"),Browsable(false)]
+            public bool IsWhite
+            {
+                get { return _iswhite; }
+                set { _iswhite = value; }
+            }
+
+
+            public string PointF000ToString(PointF PTF)
+            {
+                return PTF.X.ToString("0.000") + ";" + PTF.Y.ToString("0.000");
+            }
+            public PointF StringToPointF(string Str)
+            {
+                string[] strs = Str.Split(';');
+                return new PointF(float.Parse(strs[0]), float.Parse(strs[1]));
+            }
+            public string RectFToString(RectangleF RectF)
+            {
+                string Str = "";
+
+                Str += RectF.X.ToString("0.00") + ";";
+                Str += RectF.Y.ToString("0.00") + ";";
+                Str += RectF.Width.ToString("0.00") + ";";
+                Str += RectF.Height.ToString("0.00");
+
+                return Str;
+            }
+            public RectangleF StringToRectF(string Str)
+            {
+                string[] strs = Str.Split(';');
+                RectangleF rectF = new RectangleF();
+
+                rectF.X = float.Parse(strs[0]);
+                rectF.Y = float.Parse(strs[1]);
+                rectF.Width = float.Parse(strs[2]);
+                rectF.Height = float.Parse(strs[3]);
+
+                return rectF;
+
+
+            }
         }
 
         [DefaultPropertyAttribute("Environment Light")]
@@ -359,7 +447,7 @@ namespace Allinone.UISpace.ALBUISpace
                 string retstr = "";
 
                 retstr += (pannel ? "1" : "0");
-               
+
                 return retstr;
             }
             public void GetString(string str)
@@ -379,8 +467,8 @@ namespace Allinone.UISpace.ALBUISpace
                     i++;
                 }
             }
-            
-            
+
+
             [CategoryAttribute("Light Settings"),
                     DefaultValueAttribute(true)]
             [DisplayName("平板燈")]
@@ -474,7 +562,7 @@ namespace Allinone.UISpace.ALBUISpace
 
                 int i = 0;
 
-                while(i < position.Length)
+                while (i < position.Length)
                 {
                     retstr += position[i] + ";";
                     i++;
@@ -484,7 +572,7 @@ namespace Allinone.UISpace.ALBUISpace
                 return retstr;
             }
 
-            public void SetPosition(int index,string str)
+            public void SetPosition(int index, string str)
             {
                 position[index] = str;
 
@@ -505,7 +593,7 @@ namespace Allinone.UISpace.ALBUISpace
             /// </summary>
             [CategoryAttribute("POS Settings"),
             DefaultValueAttribute("0"), ReadOnly(false)]
-            [DisplayName("01.拍照开始位置"),Description("即开始拍照位置")]
+            [DisplayName("01.拍照开始位置"), Description("即开始拍照位置")]
             public string SDM1_POS0
             {
                 get { return position[0]; }
@@ -763,7 +851,7 @@ namespace Allinone.UISpace.ALBUISpace
         Button btnSetPosition;
         Button btnSetEnd;
         Button btnGoPosition;
-        
+
         PropertyGrid ppgLight;
         PropertyGrid ppgPosition;
 
@@ -844,13 +932,13 @@ namespace Allinone.UISpace.ALBUISpace
             cboEnv.SelectedIndexChanged += cboEnv_SelectedIndexChanged;
         }
 
-        public void Initial(OptionEnum option,AlbumClass album)
+        public void Initial(OptionEnum option, AlbumClass album)
         {
             IsNeedToChange = false;
 
             OPTION = option;
             ALBUM = album;
-            
+
             switch (OPTION)
             {
                 case JetEazy.OptionEnum.MAIN_SERVICE:
@@ -874,12 +962,12 @@ namespace Allinone.UISpace.ALBUISpace
                 case OptionEnum.R3:
                 case OptionEnum.C3:
                 case OptionEnum.R1:
-                //case OptionEnum.MAIN_SD:
+                    //case OptionEnum.MAIN_SD:
                     R32LightSetting = new R32LightSettings();
                     break;
             }
 
-            switch(OPTION)
+            switch (OPTION)
             {
                 case OptionEnum.MAIN_SDM3:
                 case OptionEnum.MAIN_SDM2:
@@ -890,7 +978,7 @@ namespace Allinone.UISpace.ALBUISpace
                     PositionSetting = new PositionSettings();
                     break;
             }
-          
+
 
             cboEnv.Items.Clear();
 
@@ -904,7 +992,7 @@ namespace Allinone.UISpace.ALBUISpace
 
             cboEnv.SelectedIndex = (album.ENVCount > 0 ? 0 : -1);
 
-            switch(OPTION)
+            switch (OPTION)
             {
                 case OptionEnum.MAIN_SDM3:
                 case OptionEnum.MAIN_SDM2:
@@ -1054,23 +1142,23 @@ namespace Allinone.UISpace.ALBUISpace
         {
             JzToolsClass.PassingInteger = ENVNow.No;
 
-            OnTrigger(RCPStatusEnum.SHOWDETAIL,"");
+            OnTrigger(RCPStatusEnum.SHOWDETAIL, "");
         }
         void Compound()
         {
-            OnTrigger(RCPStatusEnum.SHOWCOMPOUND,"");
+            OnTrigger(RCPStatusEnum.SHOWCOMPOUND, "");
         }
         void SetPosition()
         {
-            OnTrigger(RCPStatusEnum.SETPOSITION,"");
+            OnTrigger(RCPStatusEnum.SETPOSITION, "");
         }
         void SetEnd()
         {
-            OnTrigger(RCPStatusEnum.SETEND,"");
+            OnTrigger(RCPStatusEnum.SETEND, "");
         }
         void GoPosition()
         {
-            OnTrigger(RCPStatusEnum.GOPOSITION,GetPosition());
+            OnTrigger(RCPStatusEnum.GOPOSITION, GetPosition());
         }
         public void SetPosition(string posstr)
         {
@@ -1099,7 +1187,7 @@ namespace Allinone.UISpace.ALBUISpace
                 #endregion
                 case "POS0":
                     PositionSetting.POS0 = posstr;
-                break;
+                    break;
                 case "POS1":
                     PositionSetting.POS1 = posstr;
                     break;
@@ -1194,7 +1282,7 @@ namespace Allinone.UISpace.ALBUISpace
         }
         void WriteBackLight()
         {
-            switch(OPTION)
+            switch (OPTION)
             {
                 case JetEazy.OptionEnum.MAIN_SERVICE:
                 case OptionEnum.MAIN_X6:
@@ -1225,7 +1313,7 @@ namespace Allinone.UISpace.ALBUISpace
         }
         void WriteBackPosition()
         {
-            switch(OPTION)
+            switch (OPTION)
             {
                 case OptionEnum.MAIN_SDM3:
                 case OptionEnum.MAIN_SDM2:
@@ -1260,10 +1348,10 @@ namespace Allinone.UISpace.ALBUISpace
             }
             else
             {
-                
+
                 string LightString = ENVNow.GeneralLight;
-                
-                switch(OPTION)
+
+                switch (OPTION)
                 {
                     case JetEazy.OptionEnum.MAIN_SERVICE:
                     case OptionEnum.MAIN_X6:
@@ -1291,7 +1379,7 @@ namespace Allinone.UISpace.ALBUISpace
                     case OptionEnum.R3:
                     case OptionEnum.C3:
                     case OptionEnum.R1:
-                    //case OptionEnum.MAIN_SD:
+                        //case OptionEnum.MAIN_SD:
                         R32LightSetting.GetString(LightString);
                         ppgLight.SelectedObject = R32LightSetting;
                         break;
@@ -1317,7 +1405,7 @@ namespace Allinone.UISpace.ALBUISpace
                 string PositionString = ENVNow.GeneralPosition;
                 string[] positionstrs = PositionString.Split(';');
 
-                switch(OPTION)
+                switch (OPTION)
                 {
                     case OptionEnum.MAIN_SDM3:
                     case OptionEnum.MAIN_SDM2:
@@ -1358,7 +1446,7 @@ namespace Allinone.UISpace.ALBUISpace
         {
             if (TriggerAction != null)
             {
-                TriggerAction(status,opstr);
+                TriggerAction(status, opstr);
             }
         }
     }

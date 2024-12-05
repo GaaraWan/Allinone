@@ -29,6 +29,7 @@ using System.Diagnostics;
 using JetEazy.Interface;
 using FreeImageAPI;
 using System.Windows.Documents;
+using static MFApi.Script;
 
 namespace Allinone.OPSpace.ResultSpace
 {
@@ -354,9 +355,10 @@ namespace Allinone.OPSpace.ResultSpace
                 return;
 
             PageClass page = env.PageList[index];
-            bmpLargeTemp.Dispose();
-            bmpLargeTemp = new FreeImageBitmap(bmpinut);
-            page.SetbmpRUN(PageOPTypeEnum.P00, bmpLargeTemp.ToBitmap());
+            //bmpLargeTemp.Dispose();
+            //bmpLargeTemp = new FreeImageBitmap(bmpinut);
+            //page.SetbmpRUN(PageOPTypeEnum.P00, bmpLargeTemp.ToBitmap());
+            page.SetbmpRUN(PageOPTypeEnum.P00, bmpinut);
         }
         public void FillProcessImageMotorPageIndexDebug(int index)
         {
@@ -1114,6 +1116,19 @@ namespace Allinone.OPSpace.ResultSpace
                             MACHINE.PLCIO.Fail = false;
                         }
 
+                        //这里如果开关打开则强制进行全检
+                        if (INI.IsOpenForceAllCheck)
+                        {
+                            EnvClass env = AlbumWork.ENVList[0];
+                            foreach (PageClass page in env.PageList)
+                            {
+                                foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                                {
+                                    analyze.SetAnalyzeByPass(false);
+                                }
+                            }
+                        }
+
 
                         MACHINE.PLCIO.Busy = true;
                         MACHINE.SetLight(AlbumWork.ENVList[0].GeneralLight);
@@ -1181,8 +1196,18 @@ namespace Allinone.OPSpace.ResultSpace
                             {
                                 if (m_IxLinescanCamera.IsGrapImageOK)
                                 {
-                                    using (Bitmap bitmap = m_IxLinescanCamera.GetPageBitmap())
+                                    //using (FreeImageAPI.FreeImageBitmap bmp =
+                                    //   new FreeImageAPI.FreeImageBitmap(m_IxLinescanCamera.ImageWidth,
+                                    //   m_IxLinescanCamera.ImageHeight,
+                                    //   m_IxLinescanCamera.ImageWidth,
+                                    //   PixelFormat.Format8bppIndexed,
+                                    //   m_IxLinescanCamera.ImagePbuffer)
+                                    //)
+
+                                    using (Bitmap bitmap = m_IxLinescanCamera.GetFreeImageBitmap().ToBitmap())
                                     {
+                                        //bmp.Rotate(m_IxLinescanCamera.ImageRotate);
+
                                         CamActClass.Instance.ResetStepCurrent();
                                         if (CamActClass.Instance.StepCurrent >= CamActClass.Instance.StepCount)
                                             CamActClass.Instance.ResetStepCurrent();
@@ -1251,7 +1276,7 @@ namespace Allinone.OPSpace.ResultSpace
                             }
 
                             Process.NextDuriation = 0;
-                            Process.ID = 10110;
+                            Process.ID = 10120;
                             LogProcessIDTimer(Process.ID, "测试位置=" + _currentStep.ToString());
 
                             LogProcessIDTimer(Process.ID, "线程创建" + _currentStep.ToString());
@@ -1268,7 +1293,7 @@ namespace Allinone.OPSpace.ResultSpace
                             task.Start();
 
                             LogProcessIDTimer(Process.ID, "线程测试" + _currentStep.ToString());
-                            
+
 
                             //if (CamActClass.Instance.StepCurrent < CamActClass.Instance.StepCount - 1)
                             //{
@@ -1312,8 +1337,17 @@ namespace Allinone.OPSpace.ResultSpace
                             //if (AlbumWork.GetPageTestState(CamActClass.Instance.StepCurrent - 1))
                             if (AlbumWork.GetAllPageTestComplete())
                             {
-                                Process.NextDuriation = 0;
-                                Process.ID = 1030;
+                                switch (Universal.CAMACT)
+                                {
+                                    case CameraActionMode.CAM_MOTOR_LINESCAN:
+                                        Process.NextDuriation = 0;
+                                        Process.ID = 30;
+                                        break;
+                                    default:
+                                        Process.NextDuriation = 0;
+                                        Process.ID = 1030;
+                                        break;
+                                }
 
                                 LogProcessIDTimer(Process.ID, "所有页面测试完成");
                             }
@@ -1475,6 +1509,39 @@ namespace Allinone.OPSpace.ResultSpace
                         }
                         break;
                     case 40:
+
+
+                        Process.NextDuriation = 0;
+                        Process.ID = 50;
+
+                        #region 提前发信号 再显示画面
+                        if (INI.IsOpenBehindOKSign)
+                        {
+                            Task task = new Task(() =>
+                            {
+                                try
+                                {
+                                    m_DLResultOK.Start();
+                                    LogProcessIDTimer(8887, $"发送结果信号PC==>PLC {(IsPass ? "PASS" : "NG")}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                                }
+                            });
+                            task.Start();
+                        }
+                        else
+                        {
+                            m_DLResultOK.Start();
+                            LogProcessIDTimer(8888, $"发送结果信号PC==>PLC {(IsPass ? "PASS" : "NG")}");
+                        }
+
+
+                        #endregion
+
+                        break;
+                    case 50:
 
                         Process.Stop();
                         RXXLastProcess();
@@ -1658,9 +1725,9 @@ void MainX6Tick()
             m_IsTaskRun = false;
             int pageindex = (int)obj;
             DateTime dtstart = DateTime.Now;
-           
+
             m_IsTaskRun = true;
-            
+
             JetEazy.LoggerClass.Instance.WriteLog("线程开始页面=" + pageindex.ToString());
             //LogProcessIDTimer(68888, "页面=" + pageindex.ToString() + "_线程开始时间=" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
             try
@@ -1738,8 +1805,17 @@ void MainX6Tick()
                                 if (m_IxLinescanCamera.IsGrapImageOK)
                                 {
                                     Process.Stop();
-                                    using (Bitmap bitmap = m_IxLinescanCamera.GetPageBitmap())
+                                    //using (FreeImageAPI.FreeImageBitmap bmp =
+                                    //    new FreeImageAPI.FreeImageBitmap(m_IxLinescanCamera.ImageWidth,
+                                    //    m_IxLinescanCamera.ImageHeight,
+                                    //    m_IxLinescanCamera.ImageWidth,
+                                    //    PixelFormat.Format8bppIndexed,
+                                    //    m_IxLinescanCamera.ImagePbuffer)
+                                    //)
+                                    using (Bitmap bitmap = m_IxLinescanCamera.GetFreeImageBitmap().ToBitmap())
                                     {
+                                        //bmp.Rotate(m_IxLinescanCamera.ImageRotate);
+
                                         if (CamActClass.Instance.StepCurrent >= CamActClass.Instance.StepCount)
                                             CamActClass.Instance.ResetStepCurrent();
                                         //bitmap.Save("D:\\LOA\\TEST.PNG", ImageFormat.Png);
@@ -2426,6 +2502,27 @@ void MainX6Tick()
             //m_DLResultOK.Start();
             //LogProcessIDTimer(8888, "发送结果信号PC==>PLC");
 
+            //#region 提前发信号 再显示画面
+            //if(INI.IsOpenBehindOKSign)
+            //{
+            //    Task task = new Task(() =>
+            //    {
+            //        try
+            //        {
+            //            m_DLResultOK.Start();
+            //            LogProcessIDTimer(8887, $"发送结果信号PC==>PLC {(IsPass ? "PASS" : "NG")}");
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            JetEazy.LoggerClass.Instance.WriteException(ex);
+            //        }
+            //    });
+            //    task.Start();
+            //}
+
+
+            //#endregion
+
             switch (Universal.CAMACT)
             {
                 case CameraActionMode.CAM_MOTOR_MODE2:
@@ -2439,12 +2536,12 @@ void MainX6Tick()
 
             if (IsPass)
             {
-                PlayerPass.Play();
+                //PlayerPass.Play();
                 OnTrigger(ResultStatusEnum.CALPASS);
             }
             else
             {
-                PlayerFail.Play();
+                //PlayerFail.Play();
                 OnTrigger(ResultStatusEnum.CALNG);
 
                 JzMainSDPositionParas.INSPECT_NGINDEX++;
@@ -2467,8 +2564,13 @@ void MainX6Tick()
             }
             JzMainSDPositionParas.ReportGradeSave(JzMainSDPositionParas.INSPECT_NGINDEX, false);
 
-            m_DLResultOK.Start();
-            LogProcessIDTimer(8888, $"发送结果信号PC==>PLC {(IsPass ? "PASS" : "NG")}");
+            //if(!INI.IsOpenBehindOKSign)
+            //{
+            //    m_DLResultOK.Start();
+            //    LogProcessIDTimer(8888, $"发送结果信号PC==>PLC {(IsPass ? "PASS" : "NG")}");
+            //}
+
+            LogProcessIDTimer(8889, $"测试结束");
             Universal.IsRunningTest = false;
 
         }

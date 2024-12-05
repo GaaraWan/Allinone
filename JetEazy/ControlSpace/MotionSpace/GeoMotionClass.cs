@@ -64,7 +64,7 @@ namespace JetEazy.ControlSpace.MotionSpace
         /// <summary>
         /// 马达数据转换模式 0：int模式 1：float模式读取设定位置使用
         /// </summary>
-        public int MotionMMMode = 1;
+        public int MotionMMMode = 0;
         /// <summary>
         /// 模擬位置
         /// </summary>
