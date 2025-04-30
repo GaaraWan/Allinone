@@ -17,6 +17,9 @@ using Allinone.OPSpace;
 using JetEazy.FormSpace;
 using Allinone.FormSpace;
 using iTextSharp.text.pdf;
+using static System.Net.Mime.MediaTypeNames;
+using JetEazy.PlugSpace;
+using Allinone.BasicSpace;
 
 namespace Allinone.UISpace.RUNUISpace
 {
@@ -165,6 +168,298 @@ namespace Allinone.UISpace.RUNUISpace
         int m_Mapping_Col = 0;
         int m_Mapping_Row = 0;
 
+        public void QcRandomMappingInit(int eRow, int eCol)
+        {
+            m_Mapping_Row = eRow;
+            m_Mapping_Col = eCol;
+
+            lblBigPass.Visible = true;
+            if (!Universal.IsUseMappingUI)
+            {
+                lblBigPass.Text = "PASS";
+                lblPass.Text = "PASS";
+
+                lblBigPass.ForeColor = (true ? Color.Lime : Color.Red);
+                lblPass.ForeColor = (true ? Color.Lime : Color.Red);
+
+                return;
+            }
+            lblBigPass.Visible = false;
+
+            #region 生成随机抽检的Mapping页面
+
+            int iMappingCount = m_Mapping_Row * m_Mapping_Col;
+
+            int iMappingItemWidth = ((pnlResult.Width - 10) - m_Mapping_Col * 3) / m_Mapping_Col;
+            int iMappingItemHeight = iMappingItemWidth;
+            iMappingItemHeight = ((pnlResult.Height - 10) - m_Mapping_Row * 3) / m_Mapping_Row;
+
+            m_MappingItem = new Label[iMappingCount];
+
+            this.pnlResult.Controls.Clear();
+            int ix = 0;
+            int iy = 0;
+
+            //string colname = "A";
+            int colindex = 0;
+
+            int colnameindex = 0;
+            int i = 0;
+            i = 0;
+            while (i < iMappingCount)
+            {
+                m_MappingItem[i] = new Label();
+
+                m_MappingItem[i].Name = "lbl" + colindex.ToString() + "-" + colnameindex.ToString();
+                m_MappingItem[i].Text = colindex.ToString() + "-" + colnameindex.ToString();
+
+                m_MappingItem[i].AccessibleName = colindex.ToString() + "-" + colnameindex.ToString();
+
+                m_MappingItem[i].BackColor = Color.Silver;
+                m_MappingItem[i].Font = new System.Drawing.Font("黑体", 9F);
+                m_MappingItem[i].TextAlign = ContentAlignment.MiddleCenter;
+                m_MappingItem[i].Width = iMappingItemWidth;
+                m_MappingItem[i].Height = iMappingItemHeight;
+                m_MappingItem[i].Location = new Point(5 + ix, pnlResult.Height - 10 - 5 - iy - m_MappingItem[i].Height);
+                m_MappingItem[i].DoubleClick += RunUI_DoubleClick;
+                m_MappingItem[i].MouseEnter += RunUI_MouseEnter;
+                ix += m_MappingItem[i].Width + 3;
+                colnameindex++;
+                if ((i + 1) % m_Mapping_Col == 0)
+                {
+                    iy += m_MappingItem[i].Height + 3;
+                    ix = 0;
+
+                    colindex++;
+
+                    colnameindex = 0;
+
+                    //m_MappingItem[i].Text = (i + 1).ToString();
+                }
+                this.pnlResult.Controls.Add(m_MappingItem[i]);
+
+                i++;
+            }
+
+            //foreach (Label lbl in m_MappingItem)
+            //{
+            //    lbl.BackColor = Color.Gray;
+            //    lbl.Refresh();
+            //}
+
+            #endregion
+
+        }
+        //public void QcRandomMappingInitBAK(int eRow, int eCol)
+        //{
+        //    m_Mapping_Row = eRow;
+        //    m_Mapping_Col = eCol;
+
+        //    lblBigPass.Visible = true;
+        //    if (!Universal.IsUseMappingUI)
+        //    {
+        //        lblBigPass.Text = "PASS";
+        //        lblPass.Text = "PASS";
+
+        //        lblBigPass.ForeColor = (true ? Color.Lime : Color.Red);
+        //        lblPass.ForeColor = (true ? Color.Lime : Color.Red);
+
+        //        return;
+        //    }
+        //    lblBigPass.Visible = false;
+
+        //    #region 生成随机抽检的Mapping页面
+
+        //    int iMappingCount = m_Mapping_Row * m_Mapping_Col;
+
+        //    int iMappingItemWidth = ((pnlResult.Width - 10) - m_Mapping_Col * 3) / m_Mapping_Col;
+        //    int iMappingItemHeight = iMappingItemWidth;
+        //    iMappingItemHeight = ((pnlResult.Height - 10) - m_Mapping_Row * 3) / m_Mapping_Row;
+
+        //    m_MappingItem = new Label[iMappingCount];
+
+        //    this.pnlResult.Controls.Clear();
+        //    int ix = 0;
+        //    int iy = 0;
+
+        //    //string colname = "A";
+        //    int colindex = 1;
+
+        //    int colnameindex = 1;
+        //    int i = 0;
+        //    i = 0;
+        //    while (i < iMappingCount)
+        //    {
+        //        m_MappingItem[i] = new Label();
+
+        //        m_MappingItem[i].Name = "lbl" + colindex.ToString() + "-" + colnameindex.ToString();
+        //        m_MappingItem[i].Text = colindex.ToString() + "-" + colnameindex.ToString();
+
+        //        m_MappingItem[i].AccessibleName = colindex.ToString() + "-" + colnameindex.ToString();
+
+        //        m_MappingItem[i].BackColor = Color.Green;
+        //        m_MappingItem[i].Font = new System.Drawing.Font("黑体", 9F);
+        //        m_MappingItem[i].TextAlign = ContentAlignment.MiddleCenter;
+        //        m_MappingItem[i].Width = iMappingItemWidth;
+        //        m_MappingItem[i].Height = iMappingItemHeight;
+        //        m_MappingItem[i].Location = new Point(5 + ix, 5 + iy);
+        //        m_MappingItem[i].DoubleClick += RunUI_DoubleClick;
+        //        m_MappingItem[i].MouseEnter += RunUI_MouseEnter;
+        //        ix += m_MappingItem[i].Width + 3;
+        //        colnameindex++;
+        //        if ((i + 1) % m_Mapping_Col == 0)
+        //        {
+        //            iy += m_MappingItem[i].Height + 3;
+        //            ix = 0;
+
+        //            colindex++;
+
+        //            colnameindex = 1;
+
+        //            //m_MappingItem[i].Text = (i + 1).ToString();
+        //        }
+        //        this.pnlResult.Controls.Add(m_MappingItem[i]);
+
+        //        i++;
+        //    }
+
+        //    #endregion
+
+        //}
+        public void QcRandomSetResult(string eCurrentPos, Color c, string txt = "")
+        {
+            foreach (Label lbl in m_MappingItem)
+            {
+                if (lbl.Text == eCurrentPos)
+                {
+                    lbl.BackColor = c;// (ePass ? Color.Green : Color.Red);
+                    lbl.Tag = txt;
+                    break;
+                }
+            }
+        }
+
+        public void QcMappingAInit(int eRow, int eCol, int eStepCount)
+        {
+            m_Mapping_Row = eRow;
+            m_Mapping_Col = eCol;
+
+            lblBigPass.Visible = true;
+            if (!Universal.IsUseMappingUI)
+            {
+                lblBigPass.Text = "PASS";
+                lblPass.Text = "PASS";
+
+                lblBigPass.ForeColor = (true ? Color.Lime : Color.Red);
+                lblPass.ForeColor = (true ? Color.Lime : Color.Red);
+
+                return;
+            }
+            lblBigPass.Visible = false;
+
+            #region 生成随机抽检的Mapping页面
+
+            int iMappingCount = m_Mapping_Row * m_Mapping_Col;
+
+            int iMappingItemWidth = ((pnlResult.Width - 10) - m_Mapping_Col * 3) / m_Mapping_Col;
+            int iMappingItemHeight = iMappingItemWidth;
+            iMappingItemHeight = ((pnlResult.Height - 10) - m_Mapping_Row * 3) / m_Mapping_Row;
+
+            m_MappingItem = new Label[iMappingCount];
+
+            this.pnlResult.Controls.Clear();
+            int ix = 0;
+            int iy = 0;
+
+            //string colname = "A";
+            int colindex = 1;
+
+            int colnameindex = 1;
+            int i = 0;
+            i = 0;
+            while (i < iMappingCount)
+            {
+                m_MappingItem[i] = new Label();
+
+                m_MappingItem[i].Name = "lbl" + colindex.ToString() + "-" + colnameindex.ToString();
+                m_MappingItem[i].Text = colindex.ToString() + "-" + colnameindex.ToString();
+
+                m_MappingItem[i].AccessibleName = colindex.ToString() + "-" + colnameindex.ToString();
+
+                m_MappingItem[i].BackColor = Color.Silver;
+                m_MappingItem[i].Font = new System.Drawing.Font("黑体", 9F);
+                m_MappingItem[i].TextAlign = ContentAlignment.MiddleCenter;
+                m_MappingItem[i].Width = iMappingItemWidth;
+                m_MappingItem[i].Height = iMappingItemHeight;
+                //m_MappingItem[i].Location = new Point(5 + ix, pnlResult.Height - 10 - 5 - iy - m_MappingItem[i].Height);
+                m_MappingItem[i].Location = new Point(5 + ix, 5 + iy);
+                m_MappingItem[i].DoubleClick += RunUI_DoubleClick;
+                m_MappingItem[i].MouseEnter += RunUI_MouseEnter;
+                ix += m_MappingItem[i].Width + 3;
+                colnameindex++;
+                if ((i + 1) % m_Mapping_Col == 0)
+                {
+                    iy += m_MappingItem[i].Height + 3;
+                    ix = 0;
+
+                    colindex++;
+
+                    colnameindex = 1;
+
+                    //m_MappingItem[i].Text = (i + 1).ToString();
+                }
+                this.pnlResult.Controls.Add(m_MappingItem[i]);
+
+                i++;
+            }
+
+            //foreach (Label lbl in m_MappingItem)
+            //{
+            //    lbl.BackColor = Color.Gray;
+            //    lbl.Refresh();
+            //}
+
+            #endregion
+
+            CamActClass.Instance.StepCurrent = 0;
+            CamActClass.Instance.SetStepCount(eStepCount);
+
+        }
+        public void QcMappingAReset()
+        {
+            int i = 0;
+            while (i < m_MappingItem.Length)
+            {
+                m_MappingItem[i].BackColor = Color.Silver;
+                m_MappingItem[i].Tag = "";
+
+                i++;
+            }
+        }
+        public void QcMappingAUpdate(int[] eIntResult, string[] eTxt = null)
+        {
+            int i = 0;
+            while (i < eIntResult.Length)
+            {
+                m_MappingItem[i].BackColor = _getIndexColor(eIntResult[i]);
+                if (eTxt != null)
+                    m_MappingItem[i].Tag = eTxt[i];
+
+                i++;
+            }
+        }
+        public void QcMappingAUpdate(List<JzSliderItemClass> mapList)
+        {
+            int i = 0;
+            while (i < mapList.Count)
+            {
+                m_MappingItem[i].BackColor = _getIndexColor(mapList[i].IntResult);
+                m_MappingItem[i].Tag = mapList[i].StrMessage;
+                m_MappingItem[i].AccessibleName = $"{mapList[i].IntStepIndex},{mapList[i].AnalyzeOpeateStr}";
+                i++;
+            }
+        }
+
         public void MappingInit()
         {
             lblBigPass.Visible = true;
@@ -179,6 +474,21 @@ namespace Allinone.UISpace.RUNUISpace
                 return;
             }
 
+            switch(Universal.jetMappingType)
+            {
+                case JetMappingType.MAPPING_A:
+
+                    AlbumClass album = AlbumNow;
+                    if (album.ENVList.Count == 0)
+                        return;
+                    EnvClass env = album.ENVList[0];
+                    ALBUISpace.AllinoneAlbUI.Light2Settings _light = new ALBUISpace.AllinoneAlbUI.Light2Settings();
+                    _light.GetString(env.GeneralLight);
+                    QcMappingAInit(_light.ChipRow, _light.ChipCol, env.StepCount);
+
+                    return;
+                    break;
+            }
 
             switch (OPTION)
             {
@@ -191,6 +501,10 @@ namespace Allinone.UISpace.RUNUISpace
                     if (album.ENVList.Count == 0)
                         return;
                     EnvClass env = album.ENVList[0];
+
+                    int _count = env.PageList.Count;
+                    CamActClass.Instance.SetStepCount(_count);
+
                     int bmpwidth = env.PageList[0].GetbmpORG().Width;
                     List<AnalyzeClass> BranchList = new List<AnalyzeClass>();
                     BranchList.Clear();
@@ -212,6 +526,9 @@ namespace Allinone.UISpace.RUNUISpace
                         foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                         {
                             //analyze.myOPRectF.X += page.GetbmpORG().Width * page.No;
+
+                            if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                                continue;
 
                             AnalyzeClass analyze1 = new AnalyzeClass();
                             analyze1.FromString(analyze.ToString());
@@ -346,7 +663,7 @@ namespace Allinone.UISpace.RUNUISpace
                         }
 
 
-                        m_MappingItem[i].BackColor = Color.Green;
+                        m_MappingItem[i].BackColor = Color.Silver;
                         m_MappingItem[i].Font = new System.Drawing.Font("黑体", 9F);
                         m_MappingItem[i].TextAlign = ContentAlignment.MiddleCenter;
                         m_MappingItem[i].Width = iMappingItemWidth;
@@ -371,8 +688,6 @@ namespace Allinone.UISpace.RUNUISpace
 
                         i++;
                     }
-
-
 
                     break;
             }
@@ -520,6 +835,16 @@ namespace Allinone.UISpace.RUNUISpace
 
                     btnReady.Visible = true;
                     label20.DoubleClick += Label20_DoubleClick;
+
+                    switch(Universal.FACTORYNAME)
+                    {
+                        case FactoryName.DONGGUAN:
+
+                            label11.Visible = false;
+                            label24.Visible = false;
+
+                            break;
+                    }
 
                     break;
 
@@ -767,10 +1092,21 @@ namespace Allinone.UISpace.RUNUISpace
 
                         foreach (Label lbl in m_MappingItem)
                         {
-                            lbl.BackColor = Color.Green;
-                            lbl.Text = lbl.AccessibleName;
-                            lbl.Tag = string.Empty;
+                            //if (INI.IsOpenQcRandom)
+                            //    lbl.BackColor = Color.Purple;
+                            //else
+                            //    lbl.BackColor = Color.Green;
 
+                            switch(Universal.jetMappingType)
+                            {
+                                case JetMappingType.MAPPING_A:
+                                    break;
+                                default:
+                                    lbl.Text = lbl.AccessibleName;
+                                    break;
+                            }
+                            lbl.Tag = string.Empty;
+                            lbl.BackColor = Color.Silver;
                             //if(lbl.DoubleClick != null)
                             //{
                             //    lbl.DoubleClick-=   
@@ -916,6 +1252,9 @@ namespace Allinone.UISpace.RUNUISpace
 
             switch (ananlyzeProcedure)
             {
+                case AnanlyzeProcedureEnum.LASER:
+                case AnanlyzeProcedureEnum.MONTH:
+                case AnanlyzeProcedureEnum.YEAR:
                 case AnanlyzeProcedureEnum.ALIGNRUN:
                     c = Color.Cyan;
                     break;
@@ -984,9 +1323,52 @@ namespace Allinone.UISpace.RUNUISpace
             }
             return iret;
         }
+        Color _getIndexColor(int eIndex)
+        {
+            Color _clr = Color.Green;
+
+
+            switch (eIndex)
+            {
+                case -1:
+                    _clr = Color.Silver;
+                    break;
+                case 1:
+                    _clr = Color.Cyan;
+                    break;
+                case 2:
+                    _clr = Color.Violet;
+                    break;
+                case 3:
+                    _clr = Color.Yellow;
+                    break;
+                case 4:
+                    _clr = Color.Red;
+                    break;
+                case 5:
+                    _clr = Color.Purple;
+                    break;
+                case 6:
+                    _clr = Color.Blue;
+                    break;
+                case 7:
+                    _clr = Color.Orange;
+                    break;
+                case 8:
+                    _clr = Color.Fuchsia;
+                    break;
+                case 9:
+                    _clr = Color.LightPink;
+                    break;
+            }
+
+
+            return _clr;
+
+        }
         string _getAnalyzeBarcodeStr(AnalyzeClass eAnalyze)
         {
-            if (eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX)
+            if (eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX || eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.QRCODE)
             {
                 string tempstr = $"No Compare;{eAnalyze.ReadBarcode2DRealStr}";
                 if (INI.IsCheckBarcodeOpen)
@@ -1004,10 +1386,23 @@ namespace Allinone.UISpace.RUNUISpace
                 string tempstr = $"No Compare;{eAnalyze.ReadBarcode2DRealStr};{eAnalyze.ReadBarcode2DGrade}";
                 if (INI.IsCheckBarcodeOpen)
                 {
-                    if (string.IsNullOrEmpty(eAnalyze.ReadBarcode2DRealStr))
-                        tempstr = $"Compare [FAIL];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}];Grade[{eAnalyze.ReadBarcode2DGrade}]";
+                    if (INI.IsOpenShowGrade)
+                    {
+                        if (string.IsNullOrEmpty(eAnalyze.ReadBarcode2DRealStr))
+                            tempstr = $"Compare [FAIL];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}];Grade[{eAnalyze.ReadBarcode2DGrade}]";
+                        else
+                            tempstr = $"Compare [{(eAnalyze.ReadBarcode2DRealStr == eAnalyze.Barcode_2D ? "PASS" : "FAIL")}];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}];Grade[{eAnalyze.ReadBarcode2DGrade}]";
+
+                    }
                     else
-                        tempstr = $"Compare [{(eAnalyze.ReadBarcode2DRealStr == eAnalyze.Barcode_2D ? "PASS" : "FAIL")}];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}];Grade[{eAnalyze.ReadBarcode2DGrade}]";
+                    {
+                        if (string.IsNullOrEmpty(eAnalyze.ReadBarcode2DRealStr))
+                            tempstr = $"Compare [FAIL];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}]";
+                        else
+                            tempstr = $"Compare [{(eAnalyze.ReadBarcode2DRealStr == eAnalyze.Barcode_2D ? "PASS" : "FAIL")}];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}]";
+
+                    }
+
                 }
                 return tempstr;
                 //return eAnalyze.ReadBarcode2DStr + ";" + eAnalyze.ReadBarcode2DGrade;
@@ -1022,7 +1417,7 @@ namespace Allinone.UISpace.RUNUISpace
         }
         int _getAnalyzeBarcodeStr(AnalyzeClass eAnalyze, out string outReadBarcode)
         {
-            if (eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX)
+            if (eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX || eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.QRCODE)
             {
                 int tempstr = -1;
                 if (INI.IsCheckBarcodeOpen)
@@ -1076,6 +1471,48 @@ namespace Allinone.UISpace.RUNUISpace
                     case OptionEnum.MAIN_X6:
                     case OptionEnum.MAIN_SD:
                     case OptionEnum.MAIN_SERVICE:
+
+
+                        switch (Universal.jetMappingType)
+                        {
+                            case JetMappingType.MAPPING_A:
+
+                                #region MAPPING_A 的数据存储
+
+                                JzMainSDPositionParas.ReportReset();
+
+                                EnvClass env2 = AlbumNow.ENVList[0];
+                                if (m_MappingItem == null)
+                                    return;
+                                string messageStr2 = string.Empty;
+                                int reportIndex2 = 0;
+                                while (reportIndex2 < m_MappingItem.Length)
+                                {
+                                    messageStr2 = string.Empty;
+                                    Label lbl = m_MappingItem[reportIndex2];
+                                    string STR = lbl.Name + ",";
+                                    STR += lbl.Location.X + ",";
+                                    STR += lbl.Location.Y + ",";
+                                    STR += lbl.Size.Width + ",";
+                                    STR += lbl.Size.Height + ",";
+                                    STR += _getColorIndex(lbl.BackColor).ToString() + ",";
+                                    STR += lbl.Text + ",";
+                                    STR += lbl.AccessibleName + ",";
+                                    messageStr2 = (string)lbl.Tag;
+                                    JzMainSDPositionParas.ReportGradeAdd(_getLabelText(lbl.Text) + ";" + messageStr2 + ";");
+                                    STR += _getLabelText(lbl.Text) + ";" + messageStr2 + ";" + ",";
+                                    JzMainSDPositionParas.ReportAdd(STR);
+
+                                    reportIndex2++;
+                                }
+
+                                #endregion
+
+                                return;
+                                break;
+                        }
+
+
                         JzMainSDPositionParas.ReportReset();
 
                         AlbumClass album = AlbumNow;
@@ -1087,6 +1524,8 @@ namespace Allinone.UISpace.RUNUISpace
                         {
                             foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                             {
+                                if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                                    continue;
                                 BranchList.Add(analyze);
                             }
                         }
@@ -1409,6 +1848,14 @@ namespace Allinone.UISpace.RUNUISpace
                 //if (i == 8)
                 //    i = i;
 
+                switch (Universal.OPTION)
+                {
+                    case OptionEnum.MAIN_SDM5:
+                        if (i >= 30)
+                            return;
+                        break;
+                }
+
                 Label lblIndex = new Label();
                 lblIndex.BackColor = Color.Yellow;
                 lblIndex.Location = new Point(InitialPosition.X + (i % Columns) * ColumeGap + IndexLabelPostion.X, InitialPosition.Y + (i / (Columns)) * RowGap + IndexLabelPostion.Y);
@@ -1538,6 +1985,15 @@ namespace Allinone.UISpace.RUNUISpace
                         }
 
                         break;
+                    case OptionEnum.MAIN_SDM5:
+
+                        if (runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure == AnanlyzeProcedureEnum.MEASURE)
+                        {
+                            //lblDescipt.Text += "偏移=" + runstatuscollection.GetNGRunStatus(i).ErrorString;
+                            lblDescipt.Text = runstatuscollection.GetNGRunStatus(i).Desc + "(" + runstatuscollection.GetNGRunStatus(i).PassInfo.ToAnalyzeString() + ")";
+                        }
+
+                        break;
                 }
 
                 pnlResult.Controls.Add(lblIndex);
@@ -1569,6 +2025,8 @@ namespace Allinone.UISpace.RUNUISpace
             {
                 foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                 {
+                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                        continue;
                     BranchList.Add(analyze);
                 }
             }
@@ -1652,6 +2110,8 @@ namespace Allinone.UISpace.RUNUISpace
             {
                 foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                 {
+                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                        continue;
                     BranchList.Add(analyze);
                 }
             }

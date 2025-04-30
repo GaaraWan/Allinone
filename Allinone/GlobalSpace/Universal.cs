@@ -37,6 +37,7 @@ using JetEazy.Interface;
 using JetEazy.CCDSpace.CamLinkDriver;
 using FreeImageAPI;
 using Allinone.BasicSpace;
+using System.Globalization;
 
 namespace Allinone
 {
@@ -46,7 +47,7 @@ namespace Allinone
         public static bool IsNoUseIO = true;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2024/12/05";
+        public static string VersionDate = "2025/04/29";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
         public static OptionEnum OPTION = OptionEnum.MAIN_SDM2;
@@ -54,6 +55,8 @@ namespace Allinone
         public static CameraActionMode CAMACT = CameraActionMode.CAM_MOTOR_MODE2;
         public static RobotType myRobotType = RobotType.HCFA;
         public static DiskType myDiskType = DiskType.DISK_D;
+        public static JetMappingType jetMappingType = JetMappingType.NONE;
+        public static FactoryName FACTORYNAME = FactoryName.NONE;
 
         #region 德龙激光
 
@@ -76,6 +79,10 @@ namespace Allinone
         public static bool IsTimeKeepCheck = false;
         public static JzTimes TimeCheckStop = new JzTimes();
         public static string StripVersionName = "";
+        /// <summary>
+        /// 开启星科获取mapping功能
+        /// </summary>
+        public static bool IsOpenJectCipMapping = false;
 
         ///// <summary>
         ///// 用于德龙读取cip通讯 获取mapping数据
@@ -89,7 +96,10 @@ namespace Allinone
             ((OPTION == OptionEnum.MAIN_X6 || OPTION == OptionEnum.MAIN_SERVICE) && CAMACT != CameraActionMode.CAM_STATIC);
         public static bool IsRunningTest = false;//是否在流程中
 
-        public static bool IsUseThreadReviceTcp = false;
+        /// <summary>
+        /// 德龙和矽品研磨使用
+        /// </summary>
+        public static bool IsUseThreadReviceTcp = true;
         public static float SetupDefaultOffsetValue
         {
             get
@@ -100,8 +110,33 @@ namespace Allinone
                 {
                     case OptionEnum.MAIN_X6:
 
-                        ret = 0.3f;
+                        //ret = 0.3f;
 
+                        break;
+                }
+
+                return ret;
+            }
+        }
+        public static float SetupDefaultResolutionValue
+        {
+            get
+            {
+                float ret = 0f;
+
+                switch (OPTION)
+                {
+                    case OptionEnum.MAIN_X6:
+
+                        switch(CAMACT)
+                        {
+                            case CameraActionMode.CAM_MOTOR_LINESCAN:
+                                ret = 0.014f;
+                                break;
+                            default:
+                                ret = 0.038f;
+                                break;
+                        }
                         break;
                 }
 
@@ -112,6 +147,7 @@ namespace Allinone
         #endregion
 
         public static Bitmap bmpProvideAI = new Bitmap(1, 1);
+        //public static List<JzSliderItemClass> MapListTemp = new List<JzSliderItemClass>();
 
         /// <summary>
         /// 用485控制电机的画面
@@ -172,7 +208,8 @@ namespace Allinone
         public static string LOGDBPATH = @"D:\JETEAZY\" + VEROPT + @"\LOGDB";
         public static string BACKUPDBPATH = @"D:\JETEAZY\" + VEROPT + @"\BACKUPDB";
         public static string LOGTXTPATH = @"D:\JETEAZY\" + VEROPT + @"\LOGTXT";
-        
+        public static string PATTERNPATH = @"D:\JETEAZY\" + VEROPT + @"\PATTERNS";
+
         public static string DEBUGRAWPATH = @"D:\JETEAZY\" + VEROPT + @"\ORG";              //偵錯儲存的原圖位置
         public static string DEBUGRESULTPATH = @"D:\JETEAZY\" + VEROPT + @"\DEBUG";         //偵錯結果圖位置
         public static string TESTRESULTPATH = @"D:\COPYDATA";                               //偵錯結果圖位置
@@ -211,6 +248,7 @@ namespace Allinone
         public static MachineCollectionClass MACHINECollection;
         public static CCDCollectionClass CCDCollection;
         public static IxLineScanCam IxLineScan = null;
+        public static IxLineScanCam IxAreaCam = null;
 
         //public static UseIOClass USEIO;
         public static int ALBIndicator = -1;
@@ -244,6 +282,7 @@ namespace Allinone
         public static JzHiveClass JZHIVECLIENT;
         public static JzQFactoryClass JZQFACTORY;
         public static JzMainSDPositionParaClass JZMAINSDPOSITIONPARA;
+        public static OCRByPaddle.OCRByPaddle mOCRByPaddle;
 
         public static ClientSocket X6_HANDLE_CLIENT = null;
         public static ClientSocket X6_LASER_CLIENT = null;
@@ -268,6 +307,11 @@ namespace Allinone
         public static AllinoneCrystalEvent CRYSTALSERVEREVENT;
 
         public static CipExtendClass CipExtend;
+        public static JzMVDJudgeRecipeClass JzMVDJudgeRecipe;
+        /// <summary>
+        /// 研磨自动切换参数成功的标志
+        /// </summary>
+        public static bool IsChangeRecipeing = false;
 
         public static ResultClass RESULT;
         public static JzR32ResultClass jzr32eresult;
@@ -430,8 +474,23 @@ namespace Allinone
         {
             //TestProgram();
 
+            //int iWeek = GetWeekNumber();
+
             bool ret = true;
             WORKPATH = MAINPATH + @"\WORK";
+
+            //try
+            //{
+            //    FACTORYNAME = (FactoryName)INI.FactoryNameIndex;
+            //}
+            //catch
+            //{
+            //    FACTORYNAME = FactoryName.NONE;
+            //}
+
+            JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
+            JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
+            //JetEazy.BasicSpace.LanguageExClass.Instance.FirstCsv = true;
 
             string ccd_type_filepath = "";
 
@@ -439,7 +498,25 @@ namespace Allinone
             {
                 case OptionEnum.MAIN_X6:
 
-                    switch(INI.CHANGE_FILE_PATH)
+                    try
+                    {
+                        FACTORYNAME = (FactoryName)INI.FactoryNameIndex;
+                    }
+                    catch
+                    {
+                        FACTORYNAME = FactoryName.NONE;
+                    }
+
+                    try
+                    {
+                        jetMappingType = (JetMappingType)INI.MappingTypeIndex;
+                    }
+                    catch
+                    {
+                        jetMappingType = JetMappingType.NONE;
+                    }
+
+                    switch (INI.CHANGE_FILE_PATH)
                     {
                         //TYPE18 1800W
                         case 1:
@@ -456,6 +533,7 @@ namespace Allinone
                     break;
             }
 
+            mOCRByPaddle = new OCRByPaddle.OCRByPaddle();
 
             string spath = System.AppDomain.CurrentDomain.BaseDirectory;
             if (File.Exists(spath + @"\license.dat"))
@@ -502,6 +580,13 @@ namespace Allinone
 
 
             #region 测试代码
+
+            //Bitmap bmpinput = new Bitmap("D:\\JETEAZY\\ALLINONE-MAIN_SDM2\\SRCDEBUG\\20250423112544-20250423112544-F\\000\\P00-000.jpg");
+            //HistogramClass histogram = new HistogramClass(2);
+            //Bitmap bmp1 = (Bitmap)bmpinput.Clone(new Rectangle(1116, 576, 275, 2315), PixelFormat.Format24bppRgb);
+            //histogram.GetHistogram(bmp1, 100);
+
+            //int mode = histogram.ModeGrade;
 
             ////JzFindObjectClass jzFindObjectClass = new JzFindObjectClass();
             //Bitmap bmpinput = new Bitmap("D:\\JETEAZY\\ALLINONE-MAIN_X6\\PIC\\00009\\000\\P00-000.png");
@@ -564,10 +649,11 @@ namespace Allinone
             }
 
             ret &= InitialMachineCollection();
+            ret &= MyLogInitial();
 
             if (!ret)
             {
-                InitialErrorString = myLanguage.Messages("msg1", LanguageIndex);
+                InitialErrorString = ToChangeLanguageCode("Universal.msg1");// myLanguage.Messages("msg1", LanguageIndex);
                 return false;
             }
 
@@ -579,18 +665,26 @@ namespace Allinone
                 return false;
             }
 
+            ret &= InitialChangeRecipe() == 0;
+
+            if (!ret)
+            {
+                InitialErrorString = "加载Pattern资料失败。";
+                return false;
+            }
+
             ret &= InitialCCD();
 
             LoadProgressBarValueADD();
 
             if (!ret)
             {
-                InitialErrorString = myLanguage.Messages("msg2", LanguageIndex);
+                InitialErrorString = ToChangeLanguageCode("Universal.msg2");// myLanguage.Messages("msg2", LanguageIndex);
                 return false;
             }
 
             ret &= MyServerInitial();
-            ret &= MyLogInitial();
+            //ret &= MyLogInitial();
 
             if (m_UseCommToDLHandle)
                 ret &= MyTcpSocketInitial();
@@ -1204,8 +1298,8 @@ namespace Allinone
                         case OptionEnum.MAIN_SD:
 
                             JetEazy.BasicSpace.CommonLogClass.Instance.LogPath = @"D:\LOG\ACT_MAIN_SD";
-                            JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
-                            JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
 
 
                             break;
@@ -1214,23 +1308,24 @@ namespace Allinone
                             JetEazy.BasicSpace.CommonLogClass.Instance.LogPath = @"D:\LOG\ACT_MAIN_X6";
                             JetEazy.BasicSpace.CommonLogClass.Instance.LogFilename = "tcp";
 
-                            JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
-                            JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = 0;
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.FirstCsv = true;
 
                             break;
 
                         case OptionEnum.MAIN_SDM1:
 
                             JetEazy.BasicSpace.CommonLogClass.Instance.LogPath = @"D:\LOG\ACT_MAIN_SDM1";
-                            JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
-                            JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
 
                             break;
                         case OptionEnum.MAIN_SDM2:
 
                             JetEazy.BasicSpace.CommonLogClass.Instance.LogPath = @"D:\LOG\ACT_MAIN_SDM2";
-                            JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
-                            JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
 
                             break;
                         case OptionEnum.MAIN_SERVICE:
@@ -1238,15 +1333,15 @@ namespace Allinone
                             JetEazy.BasicSpace.CommonLogClass.Instance.LogPath = @"D:\LOG\ACT_MAIN_SERVICE";
                             JetEazy.BasicSpace.CommonLogClass.Instance.LogFilename = "tcp";
 
-                            JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
-                            JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = 0;
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = 0;
 
                             break;
                         case OptionEnum.MAIN_SDM3:
 
                             JetEazy.BasicSpace.CommonLogClass.Instance.LogPath = @"D:\LOG\ACT_MAIN_SDM3";
-                            JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
-                            JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
+                            //JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
 
                             break;
                     }
@@ -1283,7 +1378,7 @@ namespace Allinone
                             //ret = iret == 0;
                             if (iret != 0)
                             {
-                                MessageBox.Show("连接打标服务器错误，请检查。" + "ip=" + INI.tcp_ip + ",port=" + INI.tcp_port.ToString(), "初始化", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show(ToChangeLanguage("连接打标服务器错误请检查") + "ip=" + INI.tcp_ip + ",port=" + INI.tcp_port.ToString(), "init", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                             if(Universal.IsNoUseCCD)
                             {
@@ -1303,7 +1398,7 @@ namespace Allinone
                             iret = X6_HANDLE_CLIENT.ConnectServer(!INI.tcp_handle_open);
                             if (iret != 0)
                             {
-                                MessageBox.Show("连接handle服务器错误，请检查。" + "ip=" + INI.tcp_handle_ip + ",port=" + INI.tcp_handle_port.ToString(), "初始化", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show(ToChangeLanguage("连接handle服务器错误请检查") + "ip=" + INI.tcp_handle_ip + ",port=" + INI.tcp_handle_port.ToString(), "Init", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                             X6_LASER_CLIENT.Log.LogPath = @"D:\LOG\ACT_MAIN_X6";
                             X6_LASER_CLIENT.Log.LogFilename = "laserServer_tcp";
@@ -1384,7 +1479,7 @@ namespace Allinone
 
                             if (!ret)
                             {
-                                InitialErrorString = myLanguage.Messages("msg3", LanguageIndex);
+                                InitialErrorString = ToChangeLanguageCode("Universal.msg3");//myLanguage.Messages("msg3", LanguageIndex);
                                 return false;
                             }
 
@@ -1393,7 +1488,7 @@ namespace Allinone
 
                             if (!ret)
                             {
-                                InitialErrorString = myLanguage.Messages("msg4", LanguageIndex);
+                                InitialErrorString = ToChangeLanguageCode("Universal.msg4");// myLanguage.Messages("msg4", LanguageIndex);
                                 return false;
                             }
 
@@ -1561,7 +1656,7 @@ namespace Allinone
 
                             if (!ret)
                             {
-                                InitialErrorString = myLanguage.Messages("msg3", LanguageIndex);
+                                InitialErrorString = ToChangeLanguageCode("Universal.msg3");// myLanguage.Messages("msg3", LanguageIndex);
                                 return false;
                             }
 
@@ -1570,7 +1665,7 @@ namespace Allinone
 
                             if (!ret)
                             {
-                                InitialErrorString = myLanguage.Messages("msg4", LanguageIndex);
+                                InitialErrorString = ToChangeLanguageCode("Universal.msg4");// myLanguage.Messages("msg4", LanguageIndex);
                                 return false;
                             }
 
@@ -1901,6 +1996,40 @@ namespace Allinone
 
             return ret;
         }
+        public static int InitialChangeRecipe()
+        {
+            int ret = 0;
+            switch (VERSION)
+            {
+                case VersionEnum.ALLINONE:
+
+                    switch (OPTION)
+                    {
+                        case OptionEnum.MAIN_SDM5:
+                            JzMVDJudgeRecipe = new JzMVDJudgeRecipeClass(PATTERNPATH, INI.pMatchType);
+                            if (INI.IsOpenAutoChangeRecipe)
+                            {
+                                JzMVDJudgeRecipe.MTTolerance = INI.fTolerance;
+                                ret = JzMVDJudgeRecipe.Init();
+
+
+                                //string testpath = "C:\\Users\\SuperGaara\\Desktop\\testtmp\\P00-000-x3.bmp";
+                                //Bitmap bb = new Bitmap(testpath);
+                                //Bitmap aa = new Bitmap(bb);
+                                //bb.Dispose();
+                                //string _nameStr = JzMVDJudgeRecipe.GetRecipeName(aa);
+                            }
+
+
+
+                            break;
+                    }
+
+                    break;
+            }
+
+            return ret;
+        }
         static bool InitialMachineCollection()
         {
             bool ret = true;
@@ -2058,14 +2187,16 @@ namespace Allinone
 
                             JZMAINSDPOSITIONPARA = new JzMainSDPositionParaClass(Universal.WORKPATH + "\\pos");
                             JZMAINSDPOSITIONPARA.Initial();
+                          
                             //JZMAINSDPOSITIONPARA.SaveMySqlControl();
                             JZMAINSDPOSITIONPARA.SetLogPath("D:\\log\\log.db.collect");
+                            JZMAINSDPOSITIONPARA.OpenDB();
 
                             //JZMAINSDPOSITIONPARA.MySqlCreateTable();
                             //JZMAINSDPOSITIONPARA.MySqlTableInsert("TT000ZQ01");
                             //JZMAINSDPOSITIONPARA.MySqlTableInsert("TT000ZQ02");
                             //JZMAINSDPOSITIONPARA.MySqlTableInsert("TT000ZQ01");
-                            
+
                             break;
 
                         case OptionEnum.MAIN_SDM1:
@@ -2152,8 +2283,8 @@ namespace Allinone
                             MACHINECollection = new MachineCollectionClass();
                             MACHINECollection.Intial(VERSION, OPTION, jzMainSDM5machine);
 
-                            //JZMAINSDPOSITIONPARA = new JzMainSDPositionParaClass(Universal.WORKPATH + "\\pos");
-                            //JZMAINSDPOSITIONPARA.Initial();
+                            JZMAINSDPOSITIONPARA = new JzMainSDPositionParaClass(Universal.WORKPATH + "\\pos");
+                            JZMAINSDPOSITIONPARA.Initial();
 
                             break;
                         case OptionEnum.MAIN_SERVICE:
@@ -2224,13 +2355,6 @@ namespace Allinone
         {
             bool ret = true;
 
-            CCDCollection = new CCDCollectionClass(WORKPATH, IsNoUseCCD, VERSION, OPTION);
-
-            ret = CCDCollection.Initial(WORKPATH);
-
-            if (ret)
-                CCDCollection.GetBmpAll(-2);
-
             //这里加入线扫
             switch (CAMACT)
             {
@@ -2247,11 +2371,33 @@ namespace Allinone
                     //        break;
                     //}
                     IxLineScan = new Linescan_Dvp2();
-                    IxLineScan.Init(Universal.IsNoUseCCD, JetEazy.CCDSpace.CameraConfig.Instance.cameras[0].ToCameraString());
+                    IxLineScan.Init(Universal.IsNoUseIO, JetEazy.CCDSpace.CameraConfig.Instance.cameras[0].ToCameraString());
                     ret = IxLineScan.Open();
+
+
+                    if (ret)
+                    {
+                        if (INI.IsOpenAutoChangeRecipe)
+                        {
+                            IxAreaCam =new Linescan_Dvp2();
+                            IxAreaCam.Init(Universal.IsNoUseCCD, JetEazy.CCDSpace.CameraConfig.Instance.cameras[1].ToCameraString());
+                            ret = IxAreaCam.Open();
+
+
+                            //IxAreaCam.SoftTrigger();
+                        }
+                    }
+
 
                     break;
             }
+
+            CCDCollection = new CCDCollectionClass(WORKPATH, IsNoUseCCD, VERSION, OPTION);
+
+            ret = CCDCollection.Initial(WORKPATH);
+
+            if (ret)
+                CCDCollection.GetBmpAll(-2);
 
             return ret;
         }
@@ -2290,6 +2436,9 @@ namespace Allinone
 
             if (!Directory.Exists(INI.SHOPFLOORPATH))
                 Directory.CreateDirectory(INI.SHOPFLOORPATH);
+
+            if (!Directory.Exists("D:\\report\\DataRecord"))
+                Directory.CreateDirectory("D:\\report\\DataRecord");
         }
         public static void Close()
         {
@@ -2310,6 +2459,11 @@ namespace Allinone
                             IxLineScan.Close();
 
                             break;
+                    }
+
+                    if (INI.IsOpenCip)
+                    {
+                        CipExtend.Close();
                     }
 
                     break;
@@ -2507,9 +2661,27 @@ namespace Allinone
 
         }
 
+        static int GetWeekNumber()
+        {
+            CultureInfo ciCurr = CultureInfo.CurrentCulture;
+            int weekNum = ciCurr.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+            return weekNum;
+        }
+
         #endregion
 
-
+        static string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
+        }
+        static string ToChangeLanguageCode(string eName)
+        {
+            string retStr = eName;
+            retStr = LanguageExClass.Instance.GetLanguageIDName(eName);
+            return retStr;
+        }
 
         #region TestProgram
 

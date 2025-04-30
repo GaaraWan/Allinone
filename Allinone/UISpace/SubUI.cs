@@ -100,7 +100,16 @@ namespace Allinone.UISpace
                     SetImage(analyze.bmpPATTERN,isreplace);
                     break;
                 case SubOperEnum.OUTPUT:
-                    SetImage(analyze.bmpOUTPUT, isreplace);
+                    switch(analyze.PADPara.PADMethod)
+                    {
+                        case PADMethodEnum.QLE_CHECK:
+                            SetImage(analyze.bmpWIP, isreplace);
+                            break;
+                        default:
+                            SetImage(analyze.bmpOUTPUT, isreplace);
+                            break;
+                    }
+                    
                     break;
             }
 

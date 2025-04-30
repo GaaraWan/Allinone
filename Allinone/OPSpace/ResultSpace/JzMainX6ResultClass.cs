@@ -30,6 +30,7 @@ using JetEazy.Interface;
 using FreeImageAPI;
 using System.Windows.Documents;
 using static MFApi.Script;
+using static Allinone.UISpace.ALBUISpace.AllinoneAlbUI;
 
 namespace Allinone.OPSpace.ResultSpace
 {
@@ -186,6 +187,7 @@ namespace Allinone.OPSpace.ResultSpace
             //}
             //FOXCONNTick();
             MainProcessTick();
+            DLGetImageTick();
             if (!Universal.IsUseThreadReviceTcp)
                 _TcpAndIoTick();
 
@@ -219,7 +221,7 @@ namespace Allinone.OPSpace.ResultSpace
                 case CameraActionMode.CAM_MOTOR_MODE2:
                 case CameraActionMode.CAM_MOTOR:
 
-                    DLGetImageTick();
+                    //DLGetImageTick();
                     DLGetImageOKTick();
                     //DLResultOKTick();
 
@@ -242,12 +244,16 @@ namespace Allinone.OPSpace.ResultSpace
                         //if (!MainProcess.IsOn)
                         MainProcess.Stop();
                         MACHINE.PLCIO.Busy = false;
+                        MACHINE.PLCIO.GetImageOK = false;//完成信号关闭
                         if (m_DLGetImageOK.IsOn)
                             m_DLGetImageOK.Stop();
                         if (m_DLResultOK.IsOn)
                             m_DLResultOK.Stop();
 
                         Universal.IsRunningTest = false;
+
+                        MACHINE.PLCIO.Pass = false;
+                        MACHINE.PLCIO.Fail = false;
 
                     }
                     IsGetImageResetOld = isGetImageReset;
@@ -260,7 +266,7 @@ namespace Allinone.OPSpace.ResultSpace
             while (true)
             {
                 _TcpAndIoTick();
-                Thread.Sleep(2);
+                Thread.Sleep(50);
             }
         }
         //public override void thread_func(object arg)
@@ -289,6 +295,11 @@ namespace Allinone.OPSpace.ResultSpace
         /// 判断线程是否启动完成
         /// </summary>
         bool m_IsTaskRun = false;
+        bool m_IsStepPass = false;
+        /// <summary>
+        /// 测试线程中 出现错误时 置为false 否则 true
+        /// </summary>
+        bool m_ExceptionPass = true;
 
         protected override void MainProcessTick()
         {
@@ -346,6 +357,8 @@ namespace Allinone.OPSpace.ResultSpace
 
             PageClass page = env.PageList[index];
             page.SetbmpRUN(PageOPTypeEnum.P00, CCDCollection.GetBMP(0, false));
+
+            //CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), index);
         }
         public void FillProcessImageMotorPageIndex(int index, Bitmap bmpinut)
         {
@@ -369,6 +382,19 @@ namespace Allinone.OPSpace.ResultSpace
 
             PageClass page = env.PageList[index];
             page.SetbmpRUN(PageOPTypeEnum.P00, CCDCollection.GetBMP(index, false));
+
+            //CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), index);
+        }
+        /// <summary>
+        /// MappingA 永远都是页面0
+        /// </summary>
+        public void FillProcessImageMappingA(int index)
+        {
+            EnvClass env = AlbumWork.ENVList[EnvIndex];
+            PageClass page = env.PageList[0];
+            page.SetbmpRUN(PageOPTypeEnum.P00, CCDCollection.GetBMP(0, false));
+
+            CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), index);
         }
         public void FillProcessImage(string opstr)
         {
@@ -1107,6 +1133,9 @@ namespace Allinone.OPSpace.ResultSpace
 
                         Universal.IsRunningTest = true;
 
+                        ResetData(-1);
+                        m_ExceptionPass = true;
+
                         LogProcessSwitch = true;
                         LogProcessIDTimer(Process.ID, "流程开始");
 
@@ -1135,7 +1164,7 @@ namespace Allinone.OPSpace.ResultSpace
                         //MACHINE.SetLight("0,0,0,0,0,0,0");
                         //MACHINE.SetLight("1,1,1");
                         //string light = AlbumWork.ENVList[0].GeneralLight;
-                        if (INI.IsCollectPictures)
+                        if (INI.IsCollectPictures || INI.IsCollectErrorSmall)
                             Universal.MainX6_Path = "D:\\CollectPictures\\Inspection\\" + JzTimes.DateTimeSerialString;
 
 
@@ -1145,6 +1174,14 @@ namespace Allinone.OPSpace.ResultSpace
                         //OnTrigger(ResultStatusEnum.COUNTSTART);
                         //把要檢測的東西放進去
                         FillOperaterString(RELATECOLORSTR);
+
+                        switch (Universal.jetMappingType)
+                        {
+                            case JetMappingType.MAPPING_A:
+                                //AlbumWork.ENVList[EnvIndex].MappingA_GridClear();
+                                OnTrigger(ResultStatusEnum.COUNTSTART);
+                                break;
+                        }
 
                         Process.NextDuriation = 0;
 
@@ -1170,9 +1207,27 @@ namespace Allinone.OPSpace.ResultSpace
                                     break;
                                 case CameraActionMode.CAM_MOTOR_MODE2:
                                     Process.NextDuriation = INI.MAINSD_GETIMAGE_DELAYTIME;
-                                    Process.ID = 10100;
+
 
                                     LogProcessIDTimer(Process.ID, "取像延时=" + INI.MAINSD_GETIMAGE_DELAYTIME.ToString());
+
+                                    if (INI.IsOpenQcRandom)
+                                    {
+                                        Process.ID = 10300;
+                                    }
+                                    else
+                                    {
+                                        switch(Universal.jetMappingType)
+                                        {
+                                            case JetMappingType.MAPPING_A:
+                                                Process.ID = 10400;
+                                                break;
+                                            default:
+                                                Process.ID = 10100;
+                                                break;
+                                        }
+                                    }
+
                                     break;
                                 case CameraActionMode.CAM_MOTOR:
                                     Process.NextDuriation = 500;
@@ -1192,9 +1247,9 @@ namespace Allinone.OPSpace.ResultSpace
                     case 10200:                        //變換CCD亮度設定及光源設定，並且合起鍵盤的壓框
                         if (Process.IsTimeup)
                         {
-                            if (m_IxLinescanCamera.IsGrapImageComplete)
+                            if (m_IxLinescanCamera.IsGrapImageComplete || Universal.IsNoUseIO)
                             {
-                                if (m_IxLinescanCamera.IsGrapImageOK)
+                                if (m_IxLinescanCamera.IsGrapImageOK || Universal.IsNoUseIO)
                                 {
                                     //using (FreeImageAPI.FreeImageBitmap bmp =
                                     //   new FreeImageAPI.FreeImageBitmap(m_IxLinescanCamera.ImageWidth,
@@ -1204,21 +1259,35 @@ namespace Allinone.OPSpace.ResultSpace
                                     //   m_IxLinescanCamera.ImagePbuffer)
                                     //)
 
-                                    using (Bitmap bitmap = m_IxLinescanCamera.GetFreeImageBitmap().ToBitmap())
-                                    {
-                                        //bmp.Rotate(m_IxLinescanCamera.ImageRotate);
+                                    //int _currentStep = CamActClass.Instance.GetCurrentStep();
 
+                                    CamActClass.Instance.ResetStepCurrent();
+                                    if (CamActClass.Instance.StepCurrent >= CamActClass.Instance.StepCount)
                                         CamActClass.Instance.ResetStepCurrent();
-                                        if (CamActClass.Instance.StepCurrent >= CamActClass.Instance.StepCount)
-                                            CamActClass.Instance.ResetStepCurrent();
 
-                                        FillProcessImageMotorPageIndex(CamActClass.Instance.StepCurrent, bitmap);
-                                        //CamActClass.Instance.SetImage(bitmap, CamActClass.Instance.StepCurrent);
-                                        //OnTriggerOP(ResultStatusEnum.SET_CURRENT_IMAGE, "ONLINE#" + CamActClass.Instance.StepCurrent.ToString());
-
-                                        LogProcessIDTimer(Process.ID, "线扫取像完成Step=" + CamActClass.Instance.StepCurrent.ToString());
-
+                                    if (Universal.IsNoUseIO)
+                                    {
+                                        OnEnvTrigger(ResultStatusEnum.CHANGEENVDIRECTORY, EnvIndex, PageOPTypeEnum.P00.ToString());
+                                        CCDCollection.GetImage();
+                                        FillProcessImageMotorPageIndex(CamActClass.Instance.StepCurrent, CCDCollection.GetBMP(0, false));
                                     }
+                                    else
+                                    {
+                                        using (Bitmap bitmap = m_IxLinescanCamera.GetFreeImageBitmap().ToBitmap())
+                                        {
+                                            //bmp.Rotate(m_IxLinescanCamera.ImageRotate);
+
+
+
+                                            FillProcessImageMotorPageIndex(CamActClass.Instance.StepCurrent, bitmap);
+                                            //CamActClass.Instance.SetImage(bitmap, CamActClass.Instance.StepCurrent);
+                                            //OnTriggerOP(ResultStatusEnum.SET_CURRENT_IMAGE, "ONLINE#" + CamActClass.Instance.StepCurrent.ToString());
+
+                                            //LogProcessIDTimer(Process.ID, "线扫取像完成Step=" + CamActClass.Instance.StepCurrent.ToString());
+
+                                        }
+                                    }
+                                    LogProcessIDTimer(Process.ID, "线扫取像完成Step=" + CamActClass.Instance.StepCurrent.ToString());
                                     Process.NextDuriation = 0;
                                     Process.ID = 10100;
                                 }
@@ -1259,6 +1328,8 @@ namespace Allinone.OPSpace.ResultSpace
                             switch (Universal.CAMACT)
                             {
                                 case CameraActionMode.CAM_MOTOR_LINESCAN:
+                                    //Process.ID = 10110;
+                                    Process.ID = 10120;
                                     break;
                                 default:
 
@@ -1271,12 +1342,12 @@ namespace Allinone.OPSpace.ResultSpace
                                     else
                                         FillProcessImageMotorPageIndex(_currentStep);
                                     //CamActClass.Instance.StepCurrent++;
-
+                                    Process.ID = 10110;
                                     break;
                             }
 
                             Process.NextDuriation = 0;
-                            Process.ID = 10120;
+
                             LogProcessIDTimer(Process.ID, "测试位置=" + _currentStep.ToString());
 
                             LogProcessIDTimer(Process.ID, "线程创建" + _currentStep.ToString());
@@ -1285,12 +1356,13 @@ namespace Allinone.OPSpace.ResultSpace
                             //thread_DL_Test.IsBackground = true;
                             //thread_DL_Test.Start(_currentStep);
 
+                            //m_ExceptionPass = true;
                             OnTrigger(ResultStatusEnum.COUNTSTART);
-                            Task task = new Task(() =>
-                            {
-                                DLCalPageIndex(_currentStep);
-                            });
-                            task.Start();
+                            //Task task = new Task(() =>
+                            //{
+                            DLCalPageIndex(_currentStep);
+                            //});
+                            //task.Start();
 
                             LogProcessIDTimer(Process.ID, "线程测试" + _currentStep.ToString());
 
@@ -1388,6 +1460,281 @@ namespace Allinone.OPSpace.ResultSpace
 
                     #endregion
 
+                    #region 马达模式2  MappingA 移动位置 对应mapping 需要顺序和S型走位 
+
+                    case 10400:                        //變換CCD亮度設定及光源設定，並且合起鍵盤的壓框
+                        if (Process.IsTimeup)
+                        {
+
+                            int _currentStep = CamActClass.Instance.GetCurrentStep();
+
+                            if (Universal.IsNoUseIO)
+                                OnEnvTrigger(ResultStatusEnum.CHANGEENVDIRECTORY, EnvIndex, PageOPTypeEnum.P00.ToString());
+
+                            //取像
+                            //CCDCollection.GetImage();
+                            //CCDCollection.GetImage();
+                            if (_currentStep >= CamActClass.Instance.StepCount)
+                                CamActClass.Instance.ResetStepCurrent();
+                            if (Universal.IsNoUseIO)
+                                CCDCollection.GetImageSDM1(0, _currentStep);
+                            else
+                                CCDCollection.GetImage();
+
+                            FillProcessImageMappingA(_currentStep);
+                            Process.ID = 10410;
+                            Process.NextDuriation = 0;
+
+                            LogProcessIDTimer(Process.ID, "测试位置=" + _currentStep.ToString());
+
+                            //OnTrigger(ResultStatusEnum.COUNTSTART);
+
+                            #region 检测
+
+                            int _pageindex = 0;
+
+                            m_IsTaskRun = false;
+                            //WorkStatusCollectionClass RunStatusCollectionTemp = new WorkStatusCollectionClass();
+                            //RunStatusCollectionTemp.Clear();
+
+                            AlbumWork.ENVList[EnvIndex].MappingA_CopyAnalyze();
+
+                            AlbumWork.SetPageTestState(_pageindex, false);
+                            AlbumWork.A08_RunProcess(PageOPTypeEnum.P00, _pageindex);
+
+                            if (!INI.IsOpenForceNoCheckRepeat)
+                            {
+                                Light2Settings light2Settings = new Light2Settings();
+                                light2Settings.GetString(AlbumWork.ENVList[EnvIndex].GeneralLight);
+                                if (light2Settings.IsOpenCheckRepeatCode)
+                                {
+                                    //AlbumWork.A09_RunRepeatCodeProcess(PageOPTypeEnum.P00, light2Settings.IsOpenCheckCurLotRepeatCode);
+
+                                    //判断表是否存在
+                                    bool bExist = Universal.JZMAINSDPOSITIONPARA.MySqlCheckTableExist();
+                                    if (!bExist)
+                                    {
+                                        int iret = Universal.JZMAINSDPOSITIONPARA.MySqlCreateTable();
+                                        if (iret >= 0)
+                                            AlbumWork.A09_RunRepeatCodeProcess(PageOPTypeEnum.P00, light2Settings.IsOpenCheckCurLotRepeatCode);
+                                    }
+                                    else
+                                    {
+                                        AlbumWork.A09_RunRepeatCodeProcess(PageOPTypeEnum.P00, light2Settings.IsOpenCheckCurLotRepeatCode);
+                                    }
+                                }
+                            }
+
+                            AlbumWork.SetPageTestState(_pageindex, true);
+                            
+                            AlbumWork.ENVList[EnvIndex].MappingA_SetCurrentStep(_currentStep);
+                            //取得Compound 在這個 ENV 裏的資料
+                            AlbumWork.CPD.CollectRUNVIEWData(AlbumWork, AlbumWork.ENVList[EnvIndex].No);
+
+                            //Universal.MapListTemp.Clear();
+                            //AlbumWork.ENVList[EnvIndex].MappingA_GridList(ref Universal.MapListTemp);
+                            OnEnvTrigger(ResultStatusEnum.SHOW_QCRANDOM_RESULT, EnvIndex, "");
+
+                            //AlbumWork.FillRunStatus(RunStatusCollectionTemp);
+                            //AlbumWork.FillRunStatus(RunStatusCollection);
+
+                            //m_IsStepPass = RunStatusCollectionTemp.NGCOUNT == 0;
+
+                            
+                            //Color c = CheckLblResult(RunStatusCollectionTemp, out string msg);
+                            //string StrColorC = $"{c.A};{c.R};{c.G};{c.B}";
+                            //string resultStr = $"{Universal.CipExtend.QcCurrentPos},{(m_IsStepPass ? "0" : "1")},{StrColorC},{msg}";
+                            //OnEnvTrigger(ResultStatusEnum.SHOW_QCRANDOM_RESULT, EnvIndex, "");
+                            //LogProcessIDTimer(Process.ID, $"测试结果:{resultStr}");
+
+                            m_IsTaskRun = true;
+
+                            #endregion
+
+                            IsGetTestStartOld = false;
+                        }
+                        break;
+                    case 10410:                        //變換CCD亮度設定及光源設定，並且合起鍵盤的壓框
+                        if (Process.IsTimeup)
+                        {
+                            if (m_IsTaskRun)
+                            {
+                                CamActClass.Instance.StepCurrent++;
+
+                                //AlbumWork.ENVList[EnvIndex].ResetRunStatus();
+                                //AlbumWork.ENVList[EnvIndex].MappingA_SliderClear();
+
+                                if (CamActClass.Instance.StepCurrent < CamActClass.Instance.StepCount)
+                                {
+                                    m_DLGetImageOK.Start("C," + (CamActClass.Instance.StepCurrent - 1).ToString());
+                                    LogProcessIDTimer(Process.ID, "Step=" +
+                                        (CamActClass.Instance.StepCurrent - 1).ToString() + "==>取像完成 Send==>Sign ImageOK");
+
+                                    Process.NextDuriation = 300;
+                                    Process.ID = 10430;
+
+                                }
+                                else
+                                {
+
+                                    Process.NextDuriation = 300;
+                                    Process.ID = 10420;
+                                }
+                            }
+                        }
+                        break;
+                    case 10420:
+                        if (Process.IsTimeup)
+                        {
+                            if (AlbumWork.GetAllPageTestComplete())
+                            {
+                                Process.NextDuriation = 0;
+                                Process.ID = 1030;
+                                LogProcessIDTimer(Process.ID, "所有页面测试完成");
+                            }
+                        }
+                        break;
+                    case 10430:
+                        if (Process.IsTimeup)
+                        {
+                            if (!MACHINE.PLCIO.GetImageOK && !m_DLGetImageOK.IsOn)
+                            {
+                                //Trigger Start
+                                bool isGetImageStart = MACHINE.PLCIO.IsGetImage;
+
+                                if (isGetImageStart && IsGetTestStartOld != isGetImageStart)
+                                {
+                                    Process.NextDuriation = 300;
+                                    Process.ID = 10;
+
+                                    LogProcessIDTimer(Process.ID, "获取取像信号 Rev==>Sign GetImage");
+                                }
+                                IsGetTestStartOld = isGetImageStart;
+                            }
+                        }
+                        break;
+
+                    #endregion
+
+
+                    #region 马达模式2  抽检流程
+
+                    case 10300:                        //變換CCD亮度設定及光源設定，並且合起鍵盤的壓框
+                        if (Process.IsTimeup)
+                        {
+
+                            int _currentStep = CamActClass.Instance.GetCurrentStep();
+                            int _pageindex = 0;
+
+                            if (Universal.IsNoUseIO)
+                                OnEnvTrigger(ResultStatusEnum.CHANGEENVDIRECTORY, EnvIndex, PageOPTypeEnum.P00.ToString());
+
+                            switch (Universal.CAMACT)
+                            {
+                                default:
+
+                                    CCDCollection.GetImage();
+                                    //CCDCollection.GetImage();
+                                    if (_currentStep >= CamActClass.Instance.StepCount)
+                                        CamActClass.Instance.ResetStepCurrent();
+
+                                    CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), _currentStep);
+                                    if (Universal.IsNoUseIO)
+                                    {
+                                        //CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), _currentStep);
+                                        FillProcessImageMotorPageIndexDebug(_currentStep);
+                                    }
+                                    else
+                                    {
+                                        //CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), _pageindex);
+                                        FillProcessImageMotorPageIndex(_pageindex);
+                                    }
+                                     
+                                    //CamActClass.Instance.StepCurrent++;
+                                    Process.ID = 10310;
+                                    break;
+                            }
+
+                            Process.NextDuriation = 0;
+
+                            LogProcessIDTimer(Process.ID, "测试位置=" + _currentStep.ToString());
+
+                            //LogProcessIDTimer(Process.ID, "线程创建" + _currentStep.ToString());
+                            ////计算线程
+                            //System.Threading.Thread thread_DL_Test = new System.Threading.Thread(DLCalPageIndex);
+                            //thread_DL_Test.IsBackground = true;
+                            //thread_DL_Test.Start(_currentStep);
+
+                            OnTrigger(ResultStatusEnum.COUNTSTART);
+                            //Task task = new Task(() =>
+                            //{
+                            //    DLCalPageIndex(_currentStep);
+                            //});
+                            //task.Start();
+
+                            SetAnalyzeMapping(Universal.CipExtend.QcMapStr);
+
+                            m_IsTaskRun = false;
+                            WorkStatusCollectionClass RunStatusCollectionTemp = new WorkStatusCollectionClass();
+                            RunStatusCollectionTemp.Clear();
+
+                            AlbumWork.SetPageTestState(_pageindex, false);
+                            AlbumWork.A08_RunProcess(PageOPTypeEnum.P00, _pageindex);
+                            AlbumWork.SetPageTestState(_pageindex, true);
+
+                            AlbumWork.FillRunStatus(RunStatusCollectionTemp);
+                            AlbumWork.FillRunStatus(RunStatusCollection);
+
+                            m_IsStepPass = RunStatusCollectionTemp.NGCOUNT == 0;
+
+
+                            Color c = CheckLblResult(RunStatusCollectionTemp, out string msg);
+                            string StrColorC = $"{c.A};{c.R};{c.G};{c.B}";
+                            string resultStr = $"{Universal.CipExtend.QcCurrentPos},{(m_IsStepPass ? "0" : "1")},{StrColorC},{msg}";
+                            OnEnvTrigger(ResultStatusEnum.SHOW_QCRANDOM_RESULT, EnvIndex, resultStr);
+                            LogProcessIDTimer(Process.ID, $"测试结果:{resultStr}");
+
+                            m_IsTaskRun = true;
+                            //LogProcessIDTimer(Process.ID, "线程测试" + _currentStep.ToString());
+
+
+                            //if (CamActClass.Instance.StepCurrent < CamActClass.Instance.StepCount - 1)
+                            //{
+                            //    //MACHINE.PLCIO.GetImageOK = true;
+                            //    m_DLGetImageOK.Start("C," + CamActClass.Instance.StepCurrent.ToString());
+                            //    LogProcessIDTimer(Process.ID, "取像完成 Send==>Sign ImageOK");
+                            //}
+                            IsGetTestStartOld = false;
+                        }
+                        break;
+                    case 10310:                        //變換CCD亮度設定及光源設定，並且合起鍵盤的壓框
+                        if (Process.IsTimeup)
+                        {
+                            if (m_IsTaskRun)
+                            {
+                                CamActClass.Instance.StepCurrent++;
+
+                                if (CamActClass.Instance.StepCurrent < CamActClass.Instance.StepCount)
+                                {
+                                    m_DLGetImageOK.Start("C," + (CamActClass.Instance.StepCurrent - 1).ToString());
+                                    LogProcessIDTimer(Process.ID, "Step=" +
+                                        (CamActClass.Instance.StepCurrent - 1).ToString() + "==>取像完成 Send==>Sign ImageOK");
+
+                                    Process.NextDuriation = 300;
+                                    Process.ID = 10130;
+
+                                }
+                                else
+                                {
+
+                                    Process.NextDuriation = 300;
+                                    Process.ID = 10120;
+                                }
+                            }
+                        }
+                        break;
+
+                    #endregion
 
                     case 1030:                        //拍片完後關燈
                         if (Process.IsTimeup)
@@ -1466,22 +1813,90 @@ namespace Allinone.OPSpace.ResultSpace
 
                             #region 检查重复的码 和 检查是否在此批号中
 
-                            if (INI.IsOpenCheckRepeatCode)
+                            switch (Universal.jetMappingType)
                             {
-                                bool bOK = AlbumWork.A09_RunRepeatCodeProcess(PageOPTypeEnum.P00);
+                                case JetMappingType.MAPPING_A:
+                                    break;
+                                default:
+                                    if (!INI.IsOpenForceNoCheckRepeat)
+                                    {
+                                        Light2Settings light2Settings = new Light2Settings();
+                                        light2Settings.GetString(AlbumWork.ENVList[EnvIndex].GeneralLight);
+                                        if (light2Settings.IsOpenCheckRepeatCode)
+                                        {
+                                            //AlbumWork.A09_RunRepeatCodeProcess(PageOPTypeEnum.P00, light2Settings.IsOpenCheckCurLotRepeatCode);
+
+                                            //判断表是否存在
+                                            bool bExist = Universal.JZMAINSDPOSITIONPARA.MySqlCheckTableExist();
+                                            if (!bExist)
+                                            {
+                                                int iret = Universal.JZMAINSDPOSITIONPARA.MySqlCreateTable();
+                                                if (iret >= 0)
+                                                    AlbumWork.A09_RunRepeatCodeProcess(PageOPTypeEnum.P00, light2Settings.IsOpenCheckCurLotRepeatCode);
+                                            }
+                                            else
+                                            {
+                                                AlbumWork.A09_RunRepeatCodeProcess(PageOPTypeEnum.P00, light2Settings.IsOpenCheckCurLotRepeatCode);
+                                            }
+                                        }
+                                    }
+                                    break;
                             }
+
+                            //if (INI.IsOpenCheckRepeatCode)
+                            //{
+                            //    bool bOK = AlbumWork.A09_RunRepeatCodeProcess(PageOPTypeEnum.P00);
+                            //}
 
                             #endregion
 
+                            if (!INI.IsOpenQcRandom)
+                                AlbumWork.FillRunStatus(RunStatusCollection);
 
-                            AlbumWork.FillRunStatus(RunStatusCollection);
-
-                            //取得Compound 在這個 ENV 裏的資料
-                            AlbumWork.CPD.CollectRUNVIEWData(AlbumWork, AlbumWork.ENVList[EnvIndex].No);
+                            switch (Universal.CAMACT)
+                            {
+                                case CameraActionMode.CAM_MOTOR_LINESCAN:
+                                    //取得Compound 在這個 ENV 裏的資料
+                                    //AlbumWork.CPD.CollectRUNVIEWData(AlbumWork, AlbumWork.ENVList[EnvIndex].No);
+                                    //if (Universal.IsNoUseIO)
+                                    //{
+                                    //    //取得Compound 在這個 ENV 裏的資料
+                                    //    AlbumWork.CPD.CollectRUNVIEWData(AlbumWork, AlbumWork.ENVList[EnvIndex].No);
+                                    //}
+                                    //else
+                                    //{
+                                    //    using (Bitmap bitmap = m_IxLinescanCamera.GetFreeImageBitmap().ToBitmap())
+                                    //    {
+                                    //        AlbumWork.CPD.CollectRUNVIEWData(AlbumWork, AlbumWork.ENVList[EnvIndex].No, bitmap);
+                                    //    }
+                                    //}
+                                    break;
+                                default:
+                                    switch(Universal.jetMappingType)
+                                    {
+                                        case JetMappingType.MAPPING_A:
+                                            break;
+                                        default:
+                                            //取得Compound 在這個 ENV 裏的資料
+                                            AlbumWork.CPD.CollectRUNVIEWData(AlbumWork, AlbumWork.ENVList[EnvIndex].No);
+                                            break;
+                                    }
+                                    break;
+                            }
 
                             Testms[0] = TestTimer.msDuriation;
 
-                            IsPass = RunStatusCollection.NGCOUNT == 0;
+                            switch (Universal.jetMappingType)
+                            {
+                                case JetMappingType.MAPPING_A:
+
+                                    IsPass = AlbumWork.ENVList[EnvIndex].IsPass();
+
+                                    break;
+                                default:
+                                    IsPass = (RunStatusCollection.NGCOUNT == 0 && m_ExceptionPass);
+                                    break;
+                            }
 
                             if (IsPass)
                             {
@@ -1522,7 +1937,7 @@ namespace Allinone.OPSpace.ResultSpace
                                 try
                                 {
                                     m_DLResultOK.Start();
-                                    LogProcessIDTimer(8887, $"发送结果信号PC==>PLC {(IsPass ? "PASS" : "NG")}");
+                                    LogProcessIDTimer(8887, $"提前TASK发送结果信号PC==>PLC {(IsPass ? "PASS" : "NG")}");
                                 }
                                 catch (Exception ex)
                                 {
@@ -1534,7 +1949,7 @@ namespace Allinone.OPSpace.ResultSpace
                         else
                         {
                             m_DLResultOK.Start();
-                            LogProcessIDTimer(8888, $"发送结果信号PC==>PLC {(IsPass ? "PASS" : "NG")}");
+                            LogProcessIDTimer(8888, $"提前发送结果信号PC==>PLC {(IsPass ? "PASS" : "NG")}");
                         }
 
 
@@ -1558,7 +1973,175 @@ namespace Allinone.OPSpace.ResultSpace
 
         }
 
+        #region 单次测试显示的颜色
+        void SetAnalyzeMapping(string eVariStr)
+        {
+            AlbumClass album = AlbumWork;
+            EnvClass env = album.ENVList[EnvIndex];
+            List<AnalyzeClass> BranchList = new List<AnalyzeClass>();
 
+            foreach (PageClass page in env.PageList)
+            {
+                foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                {
+                    analyze.SetAnalyzeCheckBarcodeStr(eVariStr);
+                }
+            }
+        }
+
+        Color CheckLblResult(WorkStatusCollectionClass runstatuscollection, out string message)
+        {
+            Color ret = Color.Green;
+            message = string.Empty;
+
+            AlbumClass album = AlbumWork;
+            EnvClass env = album.ENVList[EnvIndex];
+            List<AnalyzeClass> BranchList = new List<AnalyzeClass>();
+            BranchList.Clear();
+
+            foreach (PageClass page in env.PageList)
+            {
+                foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                {
+                    BranchList.Add(analyze);
+                }
+            }
+
+            if (BranchList.Count == 0)
+                return ret;
+
+            foreach (AnalyzeClass analyze in BranchList)
+            {
+                //if (!analyze.IsVeryGood)
+                {
+                    PassInfoClass passInfo = new PassInfoClass();
+                    ret = myCheckAnalyzeResult(analyze, runstatuscollection, out passInfo);
+                    if (ret == Color.Violet)
+                    {
+                        message = passInfo.OperateString;
+                    }
+                    if (ret != Color.Green)
+                    {
+                        break;
+                    }
+                }
+
+            }
+            return ret;
+        }
+
+        Color myCheckAnalyzeResult(AnalyzeClass eanalyze, WorkStatusCollectionClass runstatuscollection, out PassInfoClass passInfo)
+        {
+            Color c = Color.Green;
+            int i = 0;
+
+            passInfo = new PassInfoClass();
+
+            if (runstatuscollection.NGCOUNT == 0)
+                return c;
+
+            bool bfind = false;
+
+            i = 0;
+            while (i < runstatuscollection.NGCOUNT)
+            {
+                if (eanalyze.PassInfo.ToString() == runstatuscollection.GetNGRunStatus(i).PassInfo.ToString())
+                {
+                    bfind = true;
+                    break;
+                }
+                i++;
+            }
+
+            if (bfind)
+            {
+                c = myAnalyzeProcedure(runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure);
+                //passInfo.FromPassInfo(runstatuscollection.GetNGRunStatus(i).PassInfo, OPLevelEnum.COPY);
+                passInfo = new PassInfoClass(runstatuscollection.GetNGRunStatus(i).PassInfo, OPLevelEnum.COPY);
+
+                if (runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure == AnanlyzeProcedureEnum.BIAS)
+                {
+                    passInfo.OperateString = runstatuscollection.GetNGRunStatus(i).ProcessString;
+                }
+
+                return c;
+            }
+
+            i = 0;
+
+            foreach (AnalyzeClass analyze in eanalyze.BranchList)
+            {
+                i = 0;
+                while (i < runstatuscollection.NGCOUNT)
+                {
+                    if (analyze.PassInfo.ToString() == runstatuscollection.GetNGRunStatus(i).PassInfo.ToString())
+                    {
+                        bfind = true;
+                        break;
+                    }
+                    i++;
+                }
+
+                if (bfind)
+                {
+                    c = myAnalyzeProcedure(runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure);
+
+                    //passInfo.FromPassInfo(runstatuscollection.GetNGRunStatus(i).PassInfo, OPLevelEnum.COPY);
+                    passInfo = new PassInfoClass(runstatuscollection.GetNGRunStatus(i).PassInfo, OPLevelEnum.COPY);
+
+                    if (runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure == AnanlyzeProcedureEnum.BIAS)
+                    {
+                        passInfo.OperateString = runstatuscollection.GetNGRunStatus(i).ProcessString;
+                    }
+
+                    break;
+                }
+
+                c = myCheckAnalyzeResult(analyze, runstatuscollection, out passInfo);
+
+            }
+
+            return c;
+        }
+
+        Color myAnalyzeProcedure(AnanlyzeProcedureEnum ananlyzeProcedure)
+        {
+            Color c = Color.Red;
+
+            switch (ananlyzeProcedure)
+            {
+                case AnanlyzeProcedureEnum.LASER:
+                case AnanlyzeProcedureEnum.MONTH:
+                case AnanlyzeProcedureEnum.YEAR:
+                case AnanlyzeProcedureEnum.ALIGNRUN:
+                    c = Color.Cyan;
+                    break;
+                case AnanlyzeProcedureEnum.INSPECTION:
+                    c = Color.Red;
+                    break;
+                case AnanlyzeProcedureEnum.BIAS:
+                    c = Color.Violet;
+                    break;
+                case AnanlyzeProcedureEnum.CHECKDIRT:
+                    c = Color.Yellow;
+                    break;
+                case AnanlyzeProcedureEnum.CHECKBARCODE:
+                    c = Color.Fuchsia;
+                    break;
+                case AnanlyzeProcedureEnum.CHECKMISBARCODE:
+                    c = Color.Orange;
+                    break;
+                case AnanlyzeProcedureEnum.CHECKREPEATBARCODE:
+                    c = Color.LightPink;
+                    break;
+                default:
+                    break;
+            }
+
+            return c;
+        }
+
+        #endregion
 
 #if OPT_X6_BAK
 void MainX6Tick()
@@ -1722,42 +2305,57 @@ void MainX6Tick()
 
         private void DLCalPageIndex(object obj)
         {
+            //m_IsStepPass = false;
             m_IsTaskRun = false;
             int pageindex = (int)obj;
             DateTime dtstart = DateTime.Now;
 
-            m_IsTaskRun = true;
+            switch (Universal.CAMACT)
+            {
+                case CameraActionMode.CAM_MOTOR_LINESCAN:
+                    pageindex = 0;
+                    break;
+                default:
+                    break;
+            }
 
+            //m_IsTaskRun = true;
             JetEazy.LoggerClass.Instance.WriteLog("线程开始页面=" + pageindex.ToString());
-            //LogProcessIDTimer(68888, "页面=" + pageindex.ToString() + "_线程开始时间=" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-            try
+            EnvClass env = AlbumWork.ENVList[EnvIndex];
+            //pageindex = 2;
+            // new Exception("test error");
+            if (pageindex >= env.PageList.Count || pageindex < 0)
             {
-                EnvClass env = AlbumWork.ENVList[EnvIndex];
+                JetEazy.LoggerClass.Instance.WriteLog("(强制置0)页面超出，值=" + pageindex.ToString());
+                pageindex = 0;
+                //m_ExceptionPass = false;
+                //LogProcessIDTimer(68899, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "页面超出，值=" + pageindex.ToString());
 
-                if (pageindex >= env.PageList.Count || pageindex < 0)
-                {
-                    //LogProcessIDTimer(68899, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "页面超出，值=" + pageindex.ToString());
-                    JetEazy.LoggerClass.Instance.WriteLog("页面超出，值=" + pageindex.ToString());
-                    return;
-                }
-
-                AlbumWork.SetPageTestState(pageindex, false);
-                AlbumWork.A08_RunProcess(PageOPTypeEnum.P00, pageindex);
-                AlbumWork.SetPageTestState(pageindex, true);
+                //return;
             }
-            catch (Exception ex)
-            {
-                //AlbumWork.SetPageTestState(pageindex, false);
-                JetEazy.LoggerClass.Instance.WriteException(ex);
-                JetEazy.LoggerClass.Instance.WriteLog("异常退出，页面=" + pageindex.ToString());
-                //LogProcessIDTimer(68888, "页面=" + pageindex.ToString() + "异常退出=" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
-            }
+            AlbumWork.SetPageTestState(pageindex, false);
+            AlbumWork.A08_RunProcess(PageOPTypeEnum.P00, pageindex);
+            ////LogProcessIDTimer(68888, "页面=" + pageindex.ToString() + "_线程开始时间=" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+            //try
+            //{
+            //    AlbumWork.A08_RunProcess(PageOPTypeEnum.P00, pageindex);
+            //}
+            //catch (Exception ex)
+            //{
+            //    m_ExceptionPass = false;
+            //    //AlbumWork.SetPageTestState(pageindex, false);
+            //    JetEazy.LoggerClass.Instance.WriteException(ex);
+            //    JetEazy.LoggerClass.Instance.WriteLog("异常退出，" + ex.Message);
+            //    JetEazy.LoggerClass.Instance.WriteLog("异常退出，页面=" + pageindex.ToString());
+            //    //LogProcessIDTimer(68888, "页面=" + pageindex.ToString() + "异常退出=" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+            //}
+            AlbumWork.SetPageTestState(pageindex, true);
             JetEazy.LoggerClass.Instance.WriteLog("线程结束页面=" + pageindex.ToString());
 
             TimeSpan span = DateTime.Now - dtstart;
             JetEazy.LoggerClass.Instance.WriteLog("页面=" + pageindex.ToString() + " 耗时:" + span.TotalMilliseconds.ToString() + " ms");
 
-
+            m_IsTaskRun = true;
             //LogProcessIDTimer(68888, "页面=" + pageindex.ToString() + "_线程结束时间=" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
         }
 
@@ -2273,7 +2871,7 @@ void MainX6Tick()
                     case 40:
 
                         Process.Stop();
-                        RXXLastProcess();
+                        //RXXLastProcess();
 
                         //foreach (EnvClass env in AlbumWork.ENVList)
                         //{
@@ -2486,7 +3084,7 @@ void MainX6Tick()
                     case 40:
 
                         Process.Stop();
-                        RXXLastProcess();
+                        //RXXLastProcess();
                         OnEnvTrigger(ResultStatusEnum.SETCAMLIGHT, EnvIndex, "ALL");
                         break;
                 }
@@ -2498,81 +3096,45 @@ void MainX6Tick()
         /// </summary>
         void RXXLastProcess()
         {
-            //m_DLResultOK.Start((IsPass ? "PASS" : "FAIL"));
-            //m_DLResultOK.Start();
-            //LogProcessIDTimer(8888, "发送结果信号PC==>PLC");
-
-            //#region 提前发信号 再显示画面
-            //if(INI.IsOpenBehindOKSign)
-            //{
-            //    Task task = new Task(() =>
-            //    {
-            //        try
-            //        {
-            //            m_DLResultOK.Start();
-            //            LogProcessIDTimer(8887, $"发送结果信号PC==>PLC {(IsPass ? "PASS" : "NG")}");
-            //        }
-            //        catch (Exception ex)
-            //        {
-            //            JetEazy.LoggerClass.Instance.WriteException(ex);
-            //        }
-            //    });
-            //    task.Start();
-            //}
-
-
-            //#endregion
-
-            switch (Universal.CAMACT)
-            {
-                case CameraActionMode.CAM_MOTOR_MODE2:
-                    //System.Threading.Thread threadGetImageOK = new System.Threading.Thread(SendSignToPLCImageOK);
-                    //threadGetImageOK.Start();
-
-                    //m_DLGetImageOK.Start();
-                    //LogProcessIDTimer(8889, "发送最后取像完成信号PC==>PLC");
-                    break;
-            }
-
+            //LogProcessIDTimer(8889, $"显示开始");
             if (IsPass)
             {
-                //PlayerPass.Play();
                 OnTrigger(ResultStatusEnum.CALPASS);
+                //LogProcessIDTimer(8889, $"CALPASS");
             }
             else
             {
-                //PlayerFail.Play();
                 OnTrigger(ResultStatusEnum.CALNG);
 
                 JzMainSDPositionParas.INSPECT_NGINDEX++;
                 JzMainSDPositionParas.SaveRecord();
+                //LogProcessIDTimer(8889, $"CALNG");
             }
-            //if (INI.ISQSMCALLSAVE)
-            //    _saveAllResultPictures();
 
             if (INI.IsCollectPictures)
+            {
                 MainX6Save();
+                LogProcessIDTimer(8889, $"收集图片");
+            }
 
             OnTrigger(ResultStatusEnum.COUNTEND);
+            LogProcessIDTimer(8889, $"COUNTEND");
+
             OnTrigger(ResultStatusEnum.CALEND);
+            LogProcessIDTimer(8889, $"CALEND");
 
             if (!IsPass)
             {
                 JzMainSDPositionParas.ReportAUTOSave(JzMainSDPositionParas.INSPECT_NGINDEX, false, true);
                 if (INI.IsCollectStripPictures)
+                {
                     MainX6StripImageDataSave();//保存strip图片
+                    LogProcessIDTimer(8889, $"收集Strip图片");
+                }
             }
             JzMainSDPositionParas.ReportGradeSave(JzMainSDPositionParas.INSPECT_NGINDEX, false);
-
-            //if(!INI.IsOpenBehindOKSign)
-            //{
-            //    m_DLResultOK.Start();
-            //    LogProcessIDTimer(8888, $"发送结果信号PC==>PLC {(IsPass ? "PASS" : "NG")}");
-            //}
-
-            LogProcessIDTimer(8889, $"测试结束");
+            //LogProcessIDTimer(8889, $"测试结束");
             Universal.IsRunningTest = false;
-
         }
 
         //int tickCmd = Environment.TickCount;
@@ -2598,11 +3160,11 @@ void MainX6Tick()
         //int tickCmdImageOK = Environment.TickCount;
         void SendSignToPLCImageOK()
         {
-            MACHINE.PLCIO.GetImageOK = true;
-            //延时一定时间关闭点位
-            int tickCmdImageOK = Environment.TickCount;
-            while (Environment.TickCount - tickCmdImageOK < INI.handle_delaytime) { Application.DoEvents(); }
-            MACHINE.PLCIO.GetImageOK = false;
+            //MACHINE.PLCIO.GetImageOK = true;
+            ////延时一定时间关闭点位
+            //int tickCmdImageOK = Environment.TickCount;
+            //while (Environment.TickCount - tickCmdImageOK < INI.handle_delaytime) { Application.DoEvents(); }
+            //MACHINE.PLCIO.GetImageOK = false;
         }
 
         void FillOperaterString(string opstr)
@@ -2963,13 +3525,45 @@ void MainX6Tick()
                     EnvClass env = AlbumWork.ENVList[0];
 
                     int qi = 0;
-                    foreach (PageClass page in env.PageList)
+
+                    switch (Universal.jetMappingType)
                     {
-                        FreeImageAPI.FreeImageBitmap freeImage = new FreeImageBitmap(page.GetbmpRUN());
-                        freeImage.Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", FREE_IMAGE_FORMAT.FIF_JPEG);
-                        freeImage.Dispose();
-                        //page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
-                        qi++;
+                        case JetMappingType.MAPPING_A:
+
+                            while (qi < CamActClass.Instance.StepCount)
+                            {
+                                //FreeImageAPI.FreeImageBitmap freeImage = new FreeImageBitmap(CamActClass.Instance.GetImage(qi));
+                                //freeImage.Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", FREE_IMAGE_FORMAT.FIF_JPEG);
+                                //freeImage.Dispose();
+
+                                CamActClass.Instance.GetImage(qi).Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                                qi++;
+                            }
+
+                            break;
+                        default:
+
+                            if (INI.IsOpenQcRandom)
+                            {
+                                while (qi < CamActClass.Instance.StepCount)
+                                {
+                                    CamActClass.Instance.GetImage(qi).Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                                    qi++;
+                                }
+                            }
+                            else
+                            {
+                                foreach (PageClass page in env.PageList)
+                                {
+                                    FreeImageAPI.FreeImageBitmap freeImage = new FreeImageBitmap(page.GetbmpRUN());
+                                    freeImage.Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", FREE_IMAGE_FORMAT.FIF_JPEG);
+                                    freeImage.Dispose();
+                                    //page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                                    qi++;
+                                }
+                            }
+
+                            break;
                     }
                 }
                 catch (Exception ex)
@@ -3009,13 +3603,61 @@ void MainX6Tick()
                     EnvClass env = AlbumWork.ENVList[0];
 
                     int qi = 0;
-                    foreach (PageClass page in env.PageList)
+                    switch (Universal.jetMappingType)
                     {
-                        FreeImageAPI.FreeImageBitmap freeImage = new FreeImageBitmap(page.GetbmpRUN());
-                        freeImage.Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".jpg", FREE_IMAGE_FORMAT.FIF_JPEG);
-                        freeImage.Dispose();
-                        //page.GetbmpRUN().Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
-                        qi++;
+                        case JetMappingType.MAPPING_A:
+                            qi = 0;
+                            while (qi < CamActClass.Instance.StepCount)
+                            {
+
+                                CamActClass.Instance.GetResultImage(qi).Save(_imagePath + "\\000\\R_P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                                qi++;
+
+                                //FreeImageAPI.FreeImageBitmap freeImage = new FreeImageBitmap(CamActClass.Instance.GetImage(qi));
+                                //freeImage.Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".jpg", FREE_IMAGE_FORMAT.FIF_JPEG);
+                                //freeImage.Dispose();
+
+                                ////CamActClass.Instance.GetImage(qi).Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                                //qi++;
+                            }
+                            qi = 0;
+                            while (qi < CamActClass.Instance.StepCount)
+                            {
+
+                                CamActClass.Instance.GetImage(qi).Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                                qi++;
+
+                                //FreeImageAPI.FreeImageBitmap freeImage = new FreeImageBitmap(CamActClass.Instance.GetImage(qi));
+                                //freeImage.Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".jpg", FREE_IMAGE_FORMAT.FIF_JPEG);
+                                //freeImage.Dispose();
+
+                                ////CamActClass.Instance.GetImage(qi).Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                                //qi++;
+                            }
+
+                            break;
+                        default:
+
+                            if (INI.IsOpenQcRandom)
+                            {
+                                while (qi < CamActClass.Instance.StepCount)
+                                {
+                                    CamActClass.Instance.GetImage(qi).Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
+                                    qi++;
+                                }
+                            }
+                            else
+                            {
+                                foreach (PageClass page in env.PageList)
+                                {
+                                    FreeImageAPI.FreeImageBitmap freeImage = new FreeImageBitmap(page.GetbmpRUN());
+                                    freeImage.Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".jpg", FREE_IMAGE_FORMAT.FIF_JPEG);
+                                    freeImage.Dispose();
+                                    qi++;
+                                }
+                            }
+
+                            break;
                     }
                 }
                 catch (Exception ex)

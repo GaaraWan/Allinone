@@ -853,10 +853,31 @@ namespace JetEazy.ControlSpace
         {
 
         }
+        public virtual void SetData(float data, int MWIndex, int word = 2)
+        {
 
+        }
+        public virtual void SetData(int data, int MWIndex, int word = 2)
+        {
+
+        }
+        public virtual void SetData(float data, FATEKAddressClass address)
+        {
+
+        }
+        public virtual void SetData(int data, FATEKAddressClass address)
+        {
+
+        }
+        public virtual void GetData(string ioname)
+        {
+            if (string.IsNullOrEmpty(ioname))
+                return;
+        }
         public virtual void RetryConn()
         {
             RetryIndex = 0;
+            IsConnectionFail = false;
         }
 
         public virtual void Tick()

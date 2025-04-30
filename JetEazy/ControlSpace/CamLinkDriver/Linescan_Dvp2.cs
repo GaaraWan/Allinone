@@ -108,6 +108,15 @@ namespace JetEazy.CCDSpace.CamLinkDriver
             if (m_IsDebug)
                 return;
             m_TriggerOK = false;
+
+            if (IsValidHandle(m_handle))
+            {
+                //一旦执行这个函数就相当于生成一个外部触发器
+                //注意:如果曝光时间过长，点击“发送软触发信号”太快可能会导致触发失败
+                //因为前一帧可能处于连续曝光或输出不完全的状态
+                dvpStatus status = DVPCamera.dvpTriggerFire(m_handle);
+
+            }
         }
         public bool IsGrapImageOK
         {

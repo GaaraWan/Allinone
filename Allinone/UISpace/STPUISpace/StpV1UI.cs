@@ -267,7 +267,7 @@ namespace Allinone.UISpace.STPUISpace
         void SetupOCR()
         {
             OnTrigger(INIStatusEnum.SETUP_PARA);
-            OCRFrm = new OCRForm(OCRCollection, CCDCollection,Universal.OPTION);
+            OCRFrm = new OCRForm(OCRCollection, Universal.mOCRByPaddle, CCDCollection, Universal.IsNoUseIO, Universal.OPTION);
             OCRFrm.ShowDialog();
         }
 

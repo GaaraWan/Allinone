@@ -59,9 +59,13 @@ namespace WorldOfMoveableObjects
         public int RelateNo = -1;
         public int RelatePosition = -1;
         public int RelateLevel = -1;        //若這個值不為 1，則不會實行 RelateNo = 1 就不選的動作
-
+        public string Desc = string.Empty;
         public int LearnCount = 0;
         public Point OffsetPoint = new Point(); //One Time Offset, After use will reset
+
+        public float PenWidth = 2;
+        public float FontSize = 5;
+        public bool NoShowCorner = false;
 
         public Color BorderColor
         {

@@ -222,10 +222,25 @@ namespace Allinone.OPSpace
 
                         if (page == null)
                             break;
+                        //cpditem.bmpITEMRUN = new Bitmap(page.GetbmpRUN((PageOPTypeEnum)pageopindex));
+                        cpditem.bmpITEMRUN = (Bitmap)page.GetbmpRUN((PageOPTypeEnum)pageopindex).Clone();
+                        //try
+                        //{
+                        //    cpditem.bmpITEMRUN = new Bitmap(page.GetbmpRUN((PageOPTypeEnum)pageopindex));
+                        //}
+                        //catch
+                        //{
+                        //    try
+                        //    {
+                        //        cpditem.bmpITEMRUN = new Bitmap(page.GetbmpORG((PageOPTypeEnum)pageopindex));
+                        //    }
+                        //    catch
+                        //    {
 
-                        cpditem.bmpITEMRUN = new Bitmap(page.GetbmpRUN((PageOPTypeEnum)pageopindex));
+                        //    }
+                        //}
 
-                        switch(VERSION)
+                        switch (VERSION)
                         {
                             case VersionEnum.ALLINONE:
 
@@ -235,7 +250,78 @@ namespace Allinone.OPSpace
                                     case JetEazy.OptionEnum.MAIN_SERVICE:
 
                                         //jzTools.SetBrightContrast(cpditem.bmpITEMRUN, jzTools.SimpleRect(cpditem.bmpITEMRUN.Size), 50, 100);
-                                        jzTools.SetBrightContrast(cpditem.bmpITEMRUN, jzTools.SimpleRect(cpditem.bmpITEMRUN.Size), cpditem.NORMALPara.Brightness, cpditem.NORMALPara.Contrast);
+                                        //jzTools.SetBrightContrast(cpditem.bmpITEMRUN, jzTools.SimpleRect(cpditem.bmpITEMRUN.Size), cpditem.NORMALPara.Brightness, cpditem.NORMALPara.Contrast);
+
+
+                                        break;
+                                }
+
+                                break;
+                        }
+
+                        //PointF biaslocationF = cpditem.RatioRectEAG.GetRectF.Location;
+
+                        //biaslocationF.X = RangeRectEAG.GetRectF.X - biaslocationF.X;
+                        //biaslocationF.Y = RangeRectEAG.GetRectF.Y - biaslocationF.Y;
+
+                        PointF biaslocationF = cpditem.RatioRectEAG.GetRectF.Location;
+
+                        biaslocationF.X = biaslocationF.X - RangeRectEAG.GetRectF.X;
+                        biaslocationF.Y = biaslocationF.Y - RangeRectEAG.GetRectF.Y;
+
+                        cpditem.BiasLocation = biaslocationF;
+                    }
+                }
+            }
+        }
+        public void CollectRUNVIEWData(AlbumClass albumwork, int runenvno,Bitmap bmpInput)
+        {
+            JzToolsClass jzTools = new JzToolsClass();
+            foreach (CPDItemClass cpditem in CPDItemList)
+            {
+                if (cpditem.NORMALPara.RelatePA.IndexOf("ENV") > -1)
+                {
+                    string[] strs = cpditem.NORMALPara.RelatePA.Split('-');
+
+                    int envno = int.Parse(strs[0].Replace("ENV", ""));
+                    int pageno = int.Parse(strs[1].Replace("PAGE", ""));
+                    int pageopindex = int.Parse(strs[2].Replace("P", ""));
+
+                    if (runenvno == envno)
+                    {
+                        EnvClass env = albumwork.GetEnv(envno);
+                        PageClass page = env.GetPageRun(pageno);    //由於有些 env 裏的 page 是經由80000組合起來的，因此需要由PageRunNo來指定Page 編號
+
+                        if (page == null)
+                            break;
+                        cpditem.bmpITEMRUN = new Bitmap(bmpInput);
+                        //try
+                        //{
+                        //    cpditem.bmpITEMRUN = new Bitmap(bmpInput);
+                        //}
+                        //catch
+                        //{
+                        //    try
+                        //    {
+                        //        cpditem.bmpITEMRUN = new Bitmap(page.GetbmpORG((PageOPTypeEnum)pageopindex));
+                        //    }
+                        //    catch
+                        //    {
+
+                        //    }
+                        //}
+
+                        switch (VERSION)
+                        {
+                            case VersionEnum.ALLINONE:
+
+                                switch (OPTION)
+                                {
+                                    case OptionEnum.MAIN_X6:
+                                    case JetEazy.OptionEnum.MAIN_SERVICE:
+
+                                        //jzTools.SetBrightContrast(cpditem.bmpITEMRUN, jzTools.SimpleRect(cpditem.bmpITEMRUN.Size), 50, 100);
+                                        //jzTools.SetBrightContrast(cpditem.bmpITEMRUN, jzTools.SimpleRect(cpditem.bmpITEMRUN.Size), cpditem.NORMALPara.Brightness, cpditem.NORMALPara.Contrast);
 
 
                                         break;

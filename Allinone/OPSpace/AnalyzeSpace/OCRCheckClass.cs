@@ -1,6 +1,6 @@
 ﻿
 #define OPT_USE_MVD_BARCODE
-//#define OPT_USE_JET_BARCODE
+#define OPT_USE_JET_BARCODE
 
 using System;
 using System.Collections.Generic;
@@ -13,6 +13,7 @@ using System.Collections.Concurrent;
 using System.Drawing.Imaging;
 using AUVision;
 using Allinone.BasicSpace;
+using System.Diagnostics;
 
 namespace Allinone.OPSpace.AnalyzeSpace
 {
@@ -148,36 +149,12 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     break;
             }
 
-#if OPT_USE_JET_BARCODE
-
-            var timerStart = DateTime.Now.Ticks;
-
-            if (!istrain)
-            {
-                //JetEazyBarcodeG.Interface.IBarcode IxBarcode = new JetEazyBarcodeG.Model.BarcodeGzx1Class();
-                EzSegDMTX IxBarcode = new EzSegDMTX();
-                IxBarcode.InputImage = bmpFind;
-                int iret = IxBarcode.Run();
-
-                var timerStop = DateTime.Now.Ticks;
-                TimeSpan span = new TimeSpan(timerStop - timerStart);
-
-                if (iret == 0)
-                {
-                    barcodeStrRead = IxBarcode.BarcodeStr;
-                    myBarcode = IxBarcode.BarcodeStr;// + " Jet用时:" + span.Milliseconds.ToString() + " ms";
-                    BarcodeGrade = "A";
-                }
-            }
-
-#endif
-
 #if OPT_USE_MVD_BARCODE
 
             switch (Universal.OPTION)
             {
                 case JetEazy.OptionEnum.MAIN_X6:
-                    if (string.IsNullOrEmpty(myBarcode) && !istrain)
+                    if (!istrain)
                     {
                         try
                         {
@@ -192,27 +169,29 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             AForge.Imaging.Filters.Grayscale grayscale = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
                             Bitmap bmpgray = grayscale.Apply(bmpFind);
 
-                            AForge.Imaging.Filters.Invert invert = new AForge.Imaging.Filters.Invert();
-                            Bitmap bmpinvert = invert.Apply(bmpgray);
+                            //string tmpStr = m_MvdCnnReader.DecodeStr(bmpgray);
 
-                            AForge.Imaging.Filters.ResizeBilinear resizeBilinear = new AForge.Imaging.Filters.ResizeBilinear(bmpinvert.Width * 1, bmpinvert.Height * 1);
-                            Bitmap bmpresizeBilinear = resizeBilinear.Apply(bmpinvert);
+                            //AForge.Imaging.Filters.Invert invert = new AForge.Imaging.Filters.Invert();
+                            //Bitmap bmpinvert = invert.Apply(bmpgray);
+
+                            AForge.Imaging.Filters.ResizeBilinear resizeBilinear = new AForge.Imaging.Filters.ResizeBilinear(bmpFind.Width * 1, bmpFind.Height * 1);
+                            Bitmap bmpresizeBilinear = resizeBilinear.Apply(bmpgray);
 
                             string tmpStr = m_MvdCnnReader.DecodeStr(bmpresizeBilinear);
 
                             if (string.IsNullOrEmpty(tmpStr))
                             {
-                                resizeBilinear = new AForge.Imaging.Filters.ResizeBilinear(bmpinvert.Width * 2, bmpinvert.Height * 2);
-                                bmpresizeBilinear = resizeBilinear.Apply(bmpinvert);
-                            }
+                                resizeBilinear = new AForge.Imaging.Filters.ResizeBilinear(bmpFind.Width * 2, bmpFind.Height * 2);
+                                bmpresizeBilinear = resizeBilinear.Apply(bmpgray);
 
-                            tmpStr = m_MvdCnnReader.DecodeStr(bmpresizeBilinear);
+                                tmpStr = m_MvdCnnReader.DecodeStr(bmpresizeBilinear);
+                            }
 
                             //if (string.IsNullOrEmpty(tmpStr))
                             //    bmpinvert.Save("d:\\testtest\\2d\\" + eName + "_" + ".png", ImageFormat.Png);
 
                             bmpgray.Dispose();
-                            bmpinvert.Dispose();
+                            //bmpinvert.Dispose();
                             bmpresizeBilinear.Dispose();
 
                             stopwatch.Stop();
@@ -225,6 +204,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             {
                                 barcodeStrRead = tmpStr;
                                 myBarcode = tmpStr;// + " HIK用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms" + m_MvdCnnReader.ErrMsg;
+
                             }
 
                         }
@@ -242,32 +222,67 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
 #endif
 
+#if OPT_USE_JET_BARCODE
+
+            var timerStart = DateTime.Now.Ticks;
+
             if (string.IsNullOrEmpty(myBarcode) && !istrain)
             {
-                if (INI.chipUseAI)
+                //JetEazyBarcodeG.Interface.IBarcode IxBarcode = new JetEazyBarcodeG.Model.BarcodeGzx1Class();
+                EzSegDMTX IxBarcode = new EzSegDMTX();
+                IxBarcode.InputImage = bmpFind;
+                switch (OCRMethod)
                 {
-                    try
-                    {
-                        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-                        stopwatch.Restart();
+                    case OCRMethodEnum.QRCODE:
+                        IxBarcode.BarcodeFormat = ZXing.BarcodeFormat.QR_CODE;
+                        break;
+                    default:
+                        IxBarcode.BarcodeFormat = ZXing.BarcodeFormat.DATA_MATRIX;
+                        break;
+                }
+                int iret = IxBarcode.Run();
+                
+                var timerStop = DateTime.Now.Ticks;
+                TimeSpan span = new TimeSpan(timerStop - timerStart);
 
-                        EzSegDMTX ezSegDMTX = new EzSegDMTX();
-                        ezSegDMTX.InputImage = bmpFind;
-                        int iret = ezSegDMTX.Run();
-
-                        stopwatch.Stop();
-                        if (iret == 0)
-                        {
-                            barcodeStrRead = ezSegDMTX.BarcodeStr;
-                            myBarcode = ezSegDMTX.BarcodeStr;// + " Model用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms";
-                        }
-                    }
-                    catch
-                    {
-
-                    }
+                if (iret == 0)
+                {
+                    barcodeStrRead = IxBarcode.BarcodeStr;
+                    myBarcode = IxBarcode.BarcodeStr;// + " Jet用时:" + span.Milliseconds.ToString() + " ms";
+                    BarcodeGrade = "A";
                 }
             }
+
+#endif
+
+
+
+            //if (string.IsNullOrEmpty(myBarcode) && !istrain)
+            //{
+            //    if (INI.chipUseAI)
+            //    {
+            //        try
+            //        {
+            //            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+            //            stopwatch.Restart();
+
+            //            EzSegDMTX ezSegDMTX = new EzSegDMTX();
+            //            ezSegDMTX.InputImage = bmpFind;
+            //            int iret = ezSegDMTX.Run();
+
+            //            stopwatch.Stop();
+            //            if (iret == 0)
+            //            {
+            //                barcodeStrRead = ezSegDMTX.BarcodeStr;
+            //                myBarcode = ezSegDMTX.BarcodeStr;// + " Model用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms";
+            //            }
+            //        }
+            //        catch
+            //        {
+
+            //        }
+            //    }
+            //}
 
             //span.Milliseconds
             if (istrain)
@@ -284,7 +299,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     errorstring += "2DBarcode ReadError." + Environment.NewLine; ;
                     processstring += "2DBarcode ReadError." + Environment.NewLine;
                     reason = JetEazy.ReasonEnum.NG;
-                 
+
                     isgood = false;
                 }
                 else
@@ -309,6 +324,18 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             workstatus.SetWorkStatus(bmppattern, bmpFind, bmpErr, reason, errorstring, processstring, passInfo);
 
+
+            if (!isgood)
+            {
+                if (INI.IsCollectErrorSmall)
+                {
+                    if (!System.IO.Directory.Exists(Universal.MainX6_Path))
+                        System.IO.Directory.CreateDirectory(Universal.MainX6_Path);
+
+                    bmpFind.Save(Universal.MainX6_Path + "\\Bar_" + eName + "_Input" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                }
+            }
+
             if (istrain)
                 TrainStatusCollection.Add(workstatus);
             else
@@ -328,67 +355,40 @@ namespace Allinone.OPSpace.AnalyzeSpace
             BarcodeGrade = string.Empty;
             m_BarcodeReadStr = string.Empty;
 
-#if OPT_USE_JET_BARCODE
-
-            var timerStart = DateTime.Now.Ticks;
-
-            JetEazyBarcodeG.Interface.IBarcode IxBarcode = new JetEazyBarcodeG.Model.BarcodeGzx1Class();
-            IxBarcode.InputImage = bmpFind;
-            int iret = IxBarcode.Run();
-
-            var timerStop = DateTime.Now.Ticks;
-            TimeSpan span = new TimeSpan(timerStop - timerStart);
-
-            if (iret == 0)
-            {
-                barcodeStrRead = IxBarcode.BarcodeStr;
-                myBarcode = IxBarcode.BarcodeStr;// + " Jet用时:" + span.Milliseconds.ToString() + " ms";
-                BarcodeGrade = "A";
-            }
-
-#endif
-
 #if OPT_USE_MVD_BARCODE
 
-            if (string.IsNullOrEmpty(myBarcode) && !istrain)
+            if (!istrain)
             {
                 try
                 {
                     System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
                     stopwatch.Restart();
 
-                    //JetEazy.BasicSpace.JzToolsClass jzTools = new JetEazy.BasicSpace.JzToolsClass();
-                    //Rectangle croprect = jzTools.SimpleRect(bmpFind.Size);
-                    //croprect.Inflate(-40, -40);
-                    //Bitmap myBmp001 = bmpFind.Clone(croprect, PixelFormat.Format24bppRgb);
-
                     AForge.Imaging.Filters.Grayscale grayscale = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
                     Bitmap bmpgray = grayscale.Apply(bmpFind);
 
-                    AForge.Imaging.Filters.Invert invert = new AForge.Imaging.Filters.Invert();
-                    Bitmap bmpinvert = invert.Apply(bmpgray);
+                    //string tmpStr = m_MvdCnnReader.DecodeStr(bmpgray);
 
-                    AForge.Imaging.Filters.ResizeBilinear resizeBilinear = new AForge.Imaging.Filters.ResizeBilinear(bmpinvert.Width * 1, bmpinvert.Height * 1);
-                    Bitmap bmpresizeBilinear = resizeBilinear.Apply(bmpinvert);
-                    
+                    //AForge.Imaging.Filters.Invert invert = new AForge.Imaging.Filters.Invert();
+                    //Bitmap bmpinvert = invert.Apply(bmpgray);
+
+                    AForge.Imaging.Filters.ResizeBilinear resizeBilinear = new AForge.Imaging.Filters.ResizeBilinear(bmpFind.Width * 1, bmpFind.Height * 1);
+                    Bitmap bmpresizeBilinear = resizeBilinear.Apply(bmpgray);
+
                     string tmpStr = m_MvdCnnReader.DecodeGrade(bmpresizeBilinear);
 
                     if (string.IsNullOrEmpty(tmpStr))
                     {
-                        resizeBilinear = new AForge.Imaging.Filters.ResizeBilinear(bmpinvert.Width * 2, bmpinvert.Height * 2);
-                        bmpresizeBilinear = resizeBilinear.Apply(bmpinvert);
+                        resizeBilinear = new AForge.Imaging.Filters.ResizeBilinear(bmpFind.Width * 2, bmpFind.Height * 2);
+                        bmpresizeBilinear = resizeBilinear.Apply(bmpgray);
+
+                        tmpStr = m_MvdCnnReader.DecodeGrade(bmpresizeBilinear);
                     }
 
-                    tmpStr = m_MvdCnnReader.DecodeGrade(bmpresizeBilinear);
-
                     //if (string.IsNullOrEmpty(tmpStr))
-                    //    bmpinvert.Save("d:\\testtest\\2d\\" + eName + "_" + ".png", ImageFormat.Png);
+                    //    bmpresizeBilinear.Save("d:\\testtest\\2d\\" + eName + "_" + ".png", ImageFormat.Png);
 
-                    bmpgray.Dispose();
-                    bmpinvert.Dispose();
-                    bmpresizeBilinear.Dispose();
 
-                    stopwatch.Stop();
                     if (!string.IsNullOrEmpty(tmpStr))
                     {
                         barcodeStrRead = tmpStr;
@@ -396,6 +396,27 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         m_BarcodeReadStr = barcodeStrRead;
                         BarcodeGrade = m_MvdCnnReader.GetBarcodeItem.DecodeGrade;
                     }
+
+                    if (string.IsNullOrEmpty(tmpStr))
+                    {
+                        JetEazyBarcodeG.Interface.IBarcode IxBarcode = new JetEazyBarcodeG.Model.BarcodeGzx1Class();
+                        IxBarcode.InputImage = bmpFind;
+                        int iret = IxBarcode.Run();
+                        if (iret == 0)
+                        {
+                            barcodeStrRead = IxBarcode.BarcodeStr;
+                            myBarcode = IxBarcode.BarcodeStr;
+                            m_BarcodeReadStr = barcodeStrRead;
+                            BarcodeGrade = "A";
+                        }
+                    }
+
+                    bmpgray.Dispose();
+                    //bmpinvert.Dispose();
+                    bmpresizeBilinear.Dispose();
+
+                    stopwatch.Stop();
+
 
                 }
                 catch
@@ -408,6 +429,57 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 m_MvdCnnReader.DecodeTrain();
             }
 #endif
+
+#if OPT_USE_JET_BARCODE
+
+            var timerStart = DateTime.Now.Ticks;
+
+            if (string.IsNullOrEmpty(myBarcode) && !istrain)
+            {
+                //JetEazyBarcodeG.Interface.IBarcode IxBarcode = new JetEazyBarcodeG.Model.BarcodeGzx1Class();
+                EzSegDMTX IxBarcode = new EzSegDMTX();
+                IxBarcode.InputImage = bmpFind;
+                switch (OCRMethod)
+                {
+                    case OCRMethodEnum.QRCODE:
+                        IxBarcode.BarcodeFormat = ZXing.BarcodeFormat.QR_CODE;
+                        break;
+                    default:
+                        IxBarcode.BarcodeFormat = ZXing.BarcodeFormat.DATA_MATRIX;
+                        break;
+                }
+                int iret = IxBarcode.Run();
+                
+                var timerStop = DateTime.Now.Ticks;
+                TimeSpan span = new TimeSpan(timerStop - timerStart);
+
+                if (iret == 0)
+                {
+                    barcodeStrRead = IxBarcode.BarcodeStr;
+                    myBarcode = IxBarcode.BarcodeStr;// + " Jet用时:" + span.Milliseconds.ToString() + " ms";
+                    BarcodeGrade = "A";
+                }
+            }
+
+            //var timerStart = DateTime.Now.Ticks;
+
+            //JetEazyBarcodeG.Interface.IBarcode IxBarcode = new JetEazyBarcodeG.Model.BarcodeGzx1Class();
+            //IxBarcode.InputImage = bmpFind;
+            //int iret = IxBarcode.Run();
+
+            //var timerStop = DateTime.Now.Ticks;
+            //TimeSpan span = new TimeSpan(timerStop - timerStart);
+
+            //if (iret == 0)
+            //{
+            //    barcodeStrRead = IxBarcode.BarcodeStr;
+            //    myBarcode = IxBarcode.BarcodeStr;// + " Jet用时:" + span.Milliseconds.ToString() + " ms";
+            //    BarcodeGrade = "A";
+            //}
+
+#endif
+
+
 
             //span.Milliseconds
             if (istrain)
@@ -449,6 +521,17 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             workstatus.SetWorkStatus(bmppattern, bmpFind, bmpErr, reason, errorstring, processstring, passInfo);
 
+            if (!isgood)
+            {
+                if (INI.IsCollectErrorSmall)
+                {
+                    if (!System.IO.Directory.Exists(Universal.MainX6_Path))
+                        System.IO.Directory.CreateDirectory(Universal.MainX6_Path);
+
+                    bmpFind.Save(Universal.MainX6_Path + "\\Bar2DGrade_" + eName + "_Input" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                }
+            }
+
             if (istrain)
                 TrainStatusCollection.Add(workstatus);
             else
@@ -459,170 +542,1097 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
         public string FindOCR(string barcode, bool istrain, Bitmap bmppattern, Bitmap bmpFind, PassInfoClass passInfo, out bool isgood)
         {
-            WorkStatusClass workstatus = new WorkStatusClass(JetEazy.AnanlyzeProcedureEnum.CHECKOCR);
-            string processstring = "Start  OCRCHRCK." + Environment.NewLine;
-            string errorstring = "";
-            JetEazy.ReasonEnum reason = JetEazy.ReasonEnum.PASS;
-
-            JzOCR.OPSpace.OCRClass MYOCR = null;
-            Bitmap bmpfindTemp = new Bitmap(bmpFind);
-            foreach (JzOCR.OPSpace.OCRClass ocr in Universal.OCRCollection.myDataList)
+            if (istrain || Universal.IsDebug)
             {
-                if (ocr.Name + "(" + ocr.No + ")" == OCRMappingMethod)
-                {
-                    MYOCR = ocr;
-                    break;
-                }
+                isgood = true;
+                return barcode;
             }
             string strSN = "";
-            JzOCR.OPSpace.OCRItemClass[] ocritemlist = new JzOCR.OPSpace.OCRItemClass[barcode.Length];
-            if (MYOCR != null)
+            try
             {
-                //   barcode = "C02HL2F7DJWV";
-                //  bool[] defectlist = new bool[barcode.Length];
+                bmpErr = new Bitmap(bmpFind);
+                WorkStatusClass workstatus = new WorkStatusClass(JetEazy.AnanlyzeProcedureEnum.CHECKOCR);
+                string processstring = "Start  OCRCHRCK." + Environment.NewLine;
+                string errorstring = "";
+                JetEazy.ReasonEnum reason = JetEazy.ReasonEnum.PASS;
 
-                lock (MYOCR)
+                Bitmap bmpfindTemp = new Bitmap(bmpFind);
+                JzOCR.OPSpace.OCRItemClass[] ocritemlist = null;
+
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                stopwatch.Start();
+                JetEazy.LoggerClass.Instance.WriteLog("SN padd 开始 SN=" + barcode);
+
+
+                string strSNAI = Universal.mOCRByPaddle.OCR(bmpfindTemp);
+                strSN = strSNAI.Replace(Environment.NewLine, "");
+                //Universal.OCRAISN = strSN;
+
+                //if (barcode != strSN)
+                //{
+                //    JetEazy.LoggerClass.Instance.WriteLog("SN AI 开始 SN=" + barcode);
+                //    strSNAI = Universal.OCRCollection.DecodePic(bmpfindTemp);
+                //    strSN = strSNAI;
+                //    //Universal.OCRAISN = strSNAI;
+
+                //}
+
+                if (barcode != strSN)
                 {
+                    string path = "D:\\LOA\\OcrAiSD\\";
+                    if (!System.IO.Directory.Exists(path)) //若此文件夹不存在
+                        System.IO.Directory.CreateDirectory(path); //创建此文件夹
+                    bmpfindTemp.Save(path + barcode + "_" + strSN + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png");
+                }
+                string[] strs = { "8", "B", "S", "U", "Z" };
+                foreach (string str in strs)
+                {
+                    if (barcode.IndexOf(str) > -1)
+                    {
+                        string path = "D:\\LOA\\OcrAiSave\\";
+                        if (!System.IO.Directory.Exists(path)) //若此文件夹不存在
+                            System.IO.Directory.CreateDirectory(path); //创建此文件夹
+                        bmpfindTemp.Save(path + barcode + "_" + strSNAI + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png");
+
+                        break;
+                    }
+                }
+
+                JetEazy.LoggerClass.Instance.WriteLog("SN AI 完成 字符：" +
+                    strSN + "结果：" +
+                    (strSN == barcode ? "True" : "Fail") +
+                    "用时:" + stopwatch.ElapsedMilliseconds + " ms");
+                stopwatch.Restart();
+
+                if (strSNAI != barcode)
+                {
+                    JzOCR.OPSpace.OCRClass MYOCR = null;
+                    ocritemlist = new JzOCR.OPSpace.OCRItemClass[barcode.Length];
+                    foreach (JzOCR.OPSpace.OCRClass ocr in Universal.OCRCollection.myDataList)
+                    {
+                        if (ocr.Name + "(" + ocr.No + ")" == OCRMappingMethod)
+                        {
+                            MYOCR = ocr;
+                            break;
+                        }
+                    }
+
                     if (MYOCR != null)
                     {
-                        strSN = MYOCR.OCRRUNLINE(barcode, bmpfindTemp, out bmpErr, out ocritemlist);
-                        //  strSN = barcode;
-                        if (barcode != strSN)
-                            strSN = MYOCR.OCRRUNLINE(bmpfindTemp, out bmpErr, out ocritemlist);
+                        //   barcode = "C02HL2F7DJWV";
+                        //  bool[] defectlist = new bool[barcode.Length];
+                        lock (MYOCR)
+                        {
+                            if (MYOCR != null)
+                            {
+                                MYOCR.strBarcode = barcode;
+                                //if (INI.ISOCRBIG)
+                                //{
 
+
+                                //    if (OCRMappingMethod.IndexOf("BASALT") > -1 || OCRMappingMethod.IndexOf("BLUE") > -1)
+                                //        strSN = MYOCR.OCRRUNLINE(bmpfindTemp, out bmpErr, out ocritemlist);
+                                //    else
+                                //        strSN = MYOCR.OCRRUNLINE(barcode, bmpfindTemp, out bmpErr, out ocritemlist);
+                                //}
+                                //else
+                                {
+                                    strSN = MYOCR.OCRRUNLINE(bmpfindTemp, out bmpErr, out ocritemlist);
+                                }
+
+                                JetEazy.LoggerClass.Instance.WriteLog("OCR SN 完成第一次 字符：" +
+                                                                       strSN + "结果：" +
+                                                                       (strSN == barcode ? "True" : "Fail") +
+                                                                        "用时:" + stopwatch.ElapsedMilliseconds + " ms");
+                                stopwatch.Restart();
+
+
+                                if (MYOCR.isML && barcode != strSN && ocritemlist != null)
+                                {
+                                    if (strSN.Length == ocritemlist.Length)
+                                    {
+                                        for (int i = 0; i < strSN.Length; i++)
+                                        {
+                                            if (i < barcode.Length)
+                                            {
+                                                if (barcode[i] != strSN[i])
+                                                {
+                                                    string s = barcode[i].ToString();
+                                                    MYOCR.AIRead(s, ocritemlist[i]);
+
+                                                    if (ocritemlist[i] != null)
+                                                    {
+                                                        if (ocritemlist[i].strRelateName == s)
+                                                        {
+                                                            string strFilst = "", strLast = "";
+                                                            if (i != 0)
+                                                                strFilst = strSN.Substring(0, i);
+                                                            if (i != strSN.Length - 1)
+                                                                strLast = strSN.Substring(i + 1, strSN.Length - i - 1);
+
+                                                            strSN = strFilst + s + strLast;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                //如果AI读出来的 与 OCR读出来的都不匹配,测看看他们
+                                if (barcode != strSN)
+                                {
+                                    bool isCheckOk = true;
+                                    for (int i = 0; i < barcode.Length; i++)
+                                    {
+                                        bool istestok = false;
+                                        if (strSN.Length > i)
+                                        {
+                                            if (barcode[i] == strSN[i])
+                                                istestok = true;
+                                        }
+                                        if (strSNAI.Length > i)
+                                        {
+                                            if (barcode[i] == strSNAI[i])
+                                                istestok = true;
+                                        }
+
+                                        if (!istestok)
+                                            isCheckOk = false;
+                                    }
+
+                                    if (isCheckOk)
+                                        strSN = barcode;
+                                }
+
+                                if (barcode != strSN && false)
+                                {
+                                    if (strSN.Length > barcode.Length)
+                                    {
+                                        string strTemp = strSN.Replace("?", "");
+                                        if (strTemp == barcode)
+                                            strSN = barcode;
+                                    }
+                                    if (barcode != strSN)
+                                    {
+                                        //if (INI.ISOCRBIG)
+                                        //    strSN = MYOCR.OCRRUNLINEAURO(barcode, bmpfindTemp, ref bmpErr, ref ocritemlist);
+                                        //else
+                                        {
+                                            if (OCRMappingMethod.IndexOf("BASALT") < 0 && OCRMappingMethod.IndexOf("BLUE") < 0)
+                                                strSN = MYOCR.OCRRUNLINEAURO(barcode, bmpfindTemp, ref bmpErr, ref ocritemlist);
+                                        }
+                                    }
+
+                                    JetEazy.LoggerClass.Instance.WriteLog("OCR SN 完成第二次 字符：" +
+                                                                           strSN + "结果：" +
+                                                                           (strSN == barcode ? "True" : "Fail") +
+                                                                            "用时:" + stopwatch.ElapsedMilliseconds + " ms");
+                                    stopwatch.Restart();
+
+                                    if (MYOCR.isML && barcode != strSN && ocritemlist != null)
+                                    {
+                                        if (strSN.Length == ocritemlist.Length)
+                                        {
+                                            for (int i = 0; i < strSN.Length; i++)
+                                            {
+                                                if (i < barcode.Length)
+                                                {
+                                                    if (barcode[i] != strSN[i])
+                                                    {
+                                                        string s = barcode[i].ToString();
+                                                        MYOCR.AIRead(s, ocritemlist[i]);
+
+                                                        if (ocritemlist[i] != null)
+                                                        {
+                                                            if (ocritemlist[i].strRelateName == s)
+                                                            {
+                                                                string strFilst = "", strLast = "";
+                                                                if (i != 0)
+                                                                    strFilst = strSN.Substring(0, i);
+                                                                if (i != strSN.Length - 1)
+                                                                    strLast = strSN.Substring(i + 1, strSN.Length - i - 1);
+
+                                                                strSN = strFilst + s + strLast;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    //如果AI读出来的 与 OCR读出来的都不匹配,测看看他们
+                                    if (barcode != strSN)
+                                    {
+                                        bool isCheckOk = true;
+                                        for (int i = 0; i < barcode.Length; i++)
+                                        {
+                                            bool istestok = false;
+                                            if (strSN.Length > i)
+                                            {
+                                                if (barcode[i] == strSN[i])
+                                                    istestok = true;
+                                            }
+                                            if (strSNAI.Length > i)
+                                            {
+                                                if (barcode[i] == strSNAI[i])
+                                                    istestok = true;
+                                            }
+
+                                            if (!istestok)
+                                                isCheckOk = false;
+                                        }
+
+                                        if (isCheckOk)
+                                            strSN = barcode;
+                                    }
+                                }
+                                if (barcode != strSN && false)
+                                {
+                                    if (strSN.Length > barcode.Length)
+                                    {
+                                        string strTemp = strSN.Replace("?", "");
+                                        if (strTemp == barcode)
+                                            strSN = barcode;
+
+                                    }
+                                    if (barcode != strSN)
+                                    {
+                                        //if (INI.ISOCRBIG)
+                                        //    strSN = MYOCR.OCRRUNLINEAURO(barcode, bmpfindTemp, ref bmpErr, ref ocritemlist);
+                                        //else
+                                        {
+                                            if (OCRMappingMethod.IndexOf("BASALT") < 0 && OCRMappingMethod.IndexOf("BLUE") < 0)
+                                                strSN = MYOCR.OCRRUNLINEAURO(barcode, bmpfindTemp, ref bmpErr, ref ocritemlist);
+                                        }
+
+                                        JetEazy.LoggerClass.Instance.WriteLog("OCR SN 完成第三次 字符：" +
+                                                                            strSN + "结果：" +
+                                                                            (strSN == barcode ? "True" : "Fail") +
+                                                                            "用时:" + stopwatch.ElapsedMilliseconds + " ms");
+                                        stopwatch.Restart();
+
+                                        if (MYOCR.isML && barcode != strSN && ocritemlist != null)
+                                        {
+                                            if (strSN.Length == ocritemlist.Length)
+                                            {
+                                                for (int i = 0; i < strSN.Length; i++)
+                                                {
+                                                    if (i < barcode.Length)
+                                                    {
+                                                        if (barcode[i] != strSN[i])
+                                                        {
+                                                            string s = barcode[i].ToString();
+                                                            MYOCR.AIRead(s, ocritemlist[i]);
+
+                                                            if (ocritemlist[i] != null)
+                                                            {
+                                                                if (ocritemlist[i].strRelateName == s)
+                                                                {
+                                                                    string strFilst = "", strLast = "";
+                                                                    if (i != 0)
+                                                                        strFilst = strSN.Substring(0, i);
+                                                                    if (i != strSN.Length - 1)
+                                                                        strLast = strSN.Substring(i + 1, strSN.Length - i - 1);
+
+                                                                    strSN = strFilst + s + strLast;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        if (barcode != strSN)
+                                        {
+                                            if (strSN.Length > barcode.Length)
+                                            {
+                                                string strTemp = strSN.Replace("?", "");
+                                                if (strTemp == barcode)
+                                                    strSN = barcode;
+
+                                            }
+                                        }
+                                        //如果AI读出来的 与 OCR读出来的都不匹配,测看看他们
+                                        if (barcode != strSN)
+                                        {
+                                            bool isCheckOk = true;
+                                            for (int i = 0; i < barcode.Length; i++)
+                                            {
+                                                bool istestok = false;
+                                                if (strSN.Length > i)
+                                                {
+                                                    if (barcode[i] == strSN[i])
+                                                        istestok = true;
+                                                }
+                                                if (strSNAI.Length > i)
+                                                {
+                                                    if (barcode[i] == strSNAI[i])
+                                                        istestok = true;
+                                                }
+
+                                                if (!istestok)
+                                                    isCheckOk = false;
+                                            }
+
+                                            if (isCheckOk)
+                                                strSN = barcode;
+                                        }
+                                    }
+                                }
+                                //         bmpErr.Save("d://BMPERR.PNG");
+                            }
+                            else
+                                strSN = "";
+
+                            //bmpfindTemp.Save("D:\\find.png");
+                            //bmpErr.Save("D:\\err.png");
+                        }
+                        bmpfindTemp.Dispose();
+                    }
+                }
+
+                if (barcode != strSN)
+                {
+                    errorstring += "SN Mismatch." + Environment.NewLine;
+                    processstring += "SN Mismatch." + Environment.NewLine;
+                    reason = JetEazy.ReasonEnum.NG;
+
+                    Universal.R3UI.isSNResult = false;
+                }
+                else
+                {
+                    processstring += "SN Check OK." + Environment.NewLine;
+                    errorstring += "";
+                    reason = JetEazy.ReasonEnum.PASS;
+                }
+
+                bool isok = false;
+                if (ocritemlist != null)
+                {
+                    foreach (JzOCR.OPSpace.OCRItemClass ocritem in ocritemlist)
+                    {
+                        if (ocritem != null && !ocritem.isDefect)
+                        {
+                            isok = true;
+                            break;
+                        }
+                    }
+                }
+                else if (strSNAI != barcode)
+                    isok = true;
+
+                if (isok && INI.ISCHECKSNDEFECT)
+                {
+                    errorstring += "SN Defect." + Environment.NewLine;
+                    processstring += "SN Defect." + Environment.NewLine;
+                    reason = JetEazy.ReasonEnum.NG;
+
+                    Universal.R3UI.isSNResult = false;
+                }
+
+                if (INI.ISSAVEOCRIMAGE)
+                    bmpFind.Save(Universal.OCRIMAGEPATH + barcode + "_" + OCRMappingMethod + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+
+                workstatus.SetWorkStatus(bmppattern, bmpFind, bmpErr, reason, errorstring, processstring, passInfo);
+                if (!istrain)
+                {
+                    if (ocritemlist != null && ocritemlist.Length == barcode.Length)
+                    {
+                        Bitmap bmpDefect = new Bitmap(bmpErr.Width, bmpErr.Height * 3);
+                        Graphics g = Graphics.FromImage(bmpDefect);
+                        g.DrawImage(bmpFind, new PointF(0, 0));
+                        Font font = new Font("宋体", 30f);
+
+                        for (int i = 0; i < ocritemlist.Length; i++)
+                        {
+
+                            JzOCR.OPSpace.OCRItemClass ocritem = ocritemlist[i];
+                            if (ocritem == null)
+                                continue;
+
+                            Rectangle rect = new Rectangle(ocritem.rect.X, bmpErr.Height + ocritem.rect.Y, ocritem.rect.Width, ocritem.rect.Height);
+                            if (ocritem.bmpDifference != null)
+                                g.DrawImage(ocritem.bmpDifference, rect);
+                            else
+                                g.DrawImage(ocritem.bmpItemTo, rect);
+
+                            SizeF size = g.MeasureString(ocritem.strRelateName, font);
+                            RectangleF rect2 = new RectangleF(new PointF(ocritem.rect.X, bmpErr.Height * 2 + ocritem.rect.Y), size);
+                            if (barcode[i].ToString() == ocritem.strRelateName)
+                            {
+                                g.FillRectangle(Brushes.White, rect2);
+                                g.DrawString(ocritem.strRelateName, font, Brushes.Lime, new PointF(rect2.X, rect2.Y));
+                            }
+                            else
+                            {
+                                g.FillRectangle(Brushes.Red, rect2);
+                                g.DrawString(barcode[i].ToString(), font, Brushes.Black, new PointF(rect2.X, rect2.Y));
+                            }
+                            //else if (!ocritem.isDefect && barcode[i].ToString() == ocritem.strRelateName)
+                            //{
+                            //    g.FillRectangle(Brushes.Blue, rect2);
+                            //    g.DrawString(ocritem.strRelateName, font, Brushes.Red, new PointF(rect2.X, rect2.Y));
+                            //}
+                            //else
+                            //{
+                            //    g.FillRectangle(Brushes.Red, rect2);
+                            //    g.DrawString(ocritem.strRelateName, font, Brushes.Black, new PointF(rect2.X, rect2.Y));
+                            //}
+
+
+                        }
+                        bmpDefect = new Bitmap(bmpDefect, new Size(bmpDefect.Size.Width * 2, bmpDefect.Height * 2));
+                        if (reason == JetEazy.ReasonEnum.NG)
+                            Universal.ALBCollection.AlbumWork.CPD.bmpOCRCheckErr = bmpDefect;
+                        else if (reason == JetEazy.ReasonEnum.PASS)
+                            Universal.ALBCollection.AlbumWork.CPD.bmpOCRCheckErr = null;
                     }
                     else
-                        strSN = "";
-
-                    //bmpfindTemp.Save("D:\\find.png");
-                    //bmpErr.Save("D:\\err.png");
-                }
-                bmpfindTemp.Dispose();
-            }
-            if (barcode != strSN)
-            {
-                errorstring += "SN Mismatch." + Environment.NewLine; ;
-                processstring += "SN Mismatch." + Environment.NewLine;
-                reason = JetEazy.ReasonEnum.NG;
-
-                Universal.R3UI.isSNResult = false;
-            }
-            else
-            {
-                processstring += "SN Check OK." + Environment.NewLine;
-                errorstring += "";
-                reason = JetEazy.ReasonEnum.PASS;
-            }
-
-            bool isok = false;
-            foreach (JzOCR.OPSpace.OCRItemClass ocritem in ocritemlist)
-            {
-                if (ocritem != null && !ocritem.isDefect)
-                {
-                    isok = true;
-                    break;
-                }
-            }
-            if (isok && INI.ISCHECKSNDEFECT)
-            {
-                errorstring += "SN Defect." + Environment.NewLine;
-                processstring += "SN Defect." + Environment.NewLine;
-                reason = JetEazy.ReasonEnum.NG;
-
-                Universal.R3UI.isSNResult = false;
-            }
-
-            if (INI.ISSAVEOCRIMAGE)
-                bmpFind.Save(Universal.OCRIMAGEPATH + barcode + "_" + OCRMappingMethod + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
-
-            workstatus.SetWorkStatus(bmppattern, bmpFind, bmpErr, reason, errorstring, processstring, passInfo);
-            if (!istrain)
-            {
-                if (ocritemlist.Length == barcode.Length)
-                {
-                    Bitmap bmpDefect = new Bitmap(bmpErr.Width, bmpErr.Height * 3);
-                    Graphics g = Graphics.FromImage(bmpDefect);
-                    g.DrawImage(bmpFind, new PointF(0, 0));
-                    Font font = new Font("宋体", 30f);
-
-                    for (int i = 0; i < ocritemlist.Length; i++)
                     {
-
-                        JzOCR.OPSpace.OCRItemClass ocritem = ocritemlist[i];
-                        if (ocritem == null)
-                            continue;
-
-                        Rectangle rect = new Rectangle(ocritem.rect.X, bmpErr.Height + ocritem.rect.Y, ocritem.rect.Width, ocritem.rect.Height);
-                        if (ocritem.bmpDifference != null)
-                            g.DrawImage(ocritem.bmpDifference, rect);
+                        if (bmpErr != null && bmpErr.Size.Width > 1 && bmpErr.Size.Height > 1)
+                            bmpErr = new Bitmap(bmpErr, new Size(bmpErr.Size.Width * 2, bmpErr.Height * 2));
                         else
-                            g.DrawImage(ocritem.bmpItemTo, rect);
+                            bmpErr = new Bitmap(bmpFind);
 
-                        SizeF size = g.MeasureString(ocritem.strRelateName, font);
-                        RectangleF rect2 = new RectangleF(new PointF(ocritem.rect.X, bmpErr.Height * 2 + ocritem.rect.Y), size);
-                        if (barcode[i].ToString() == ocritem.strRelateName)
-                        {
-                            g.FillRectangle(Brushes.White, rect2);
-                            g.DrawString(ocritem.strRelateName, font, Brushes.Lime, new PointF(rect2.X, rect2.Y));
-                        }
-                        else
-                        {
-                            g.FillRectangle(Brushes.Red, rect2);
-                            g.DrawString(barcode[i].ToString(), font, Brushes.Black, new PointF(rect2.X, rect2.Y));
-                        }
-                        //else if (!ocritem.isDefect && barcode[i].ToString() == ocritem.strRelateName)
-                        //{
-                        //    g.FillRectangle(Brushes.Blue, rect2);
-                        //    g.DrawString(ocritem.strRelateName, font, Brushes.Red, new PointF(rect2.X, rect2.Y));
-                        //}
-                        //else
-                        //{
-                        //    g.FillRectangle(Brushes.Red, rect2);
-                        //    g.DrawString(ocritem.strRelateName, font, Brushes.Black, new PointF(rect2.X, rect2.Y));
-                        //}
-
-
+                        if (reason == JetEazy.ReasonEnum.NG)
+                            Universal.ALBCollection.AlbumNow.CPD.bmpOCRCheckErr = bmpErr;
+                        else if (reason == JetEazy.ReasonEnum.PASS)
+                            Universal.ALBCollection.AlbumNow.CPD.bmpOCRCheckErr = null;
                     }
-                    bmpDefect = new Bitmap(bmpDefect, new Size(bmpDefect.Size.Width * 2, bmpDefect.Height * 2));
-                    if (reason == JetEazy.ReasonEnum.NG)
-                        Universal.ALBCollection.AlbumWork.CPD.bmpOCRCheckErr = bmpDefect;
-                    else if (reason == JetEazy.ReasonEnum.PASS)
-                        Universal.ALBCollection.AlbumWork.CPD.bmpOCRCheckErr = null;
+                    //Bitmap bmpresult = Universal.ALBCollection.AlbumWork.CPD.bmpRUNVIEW;
+                    //Point lo = new Point();
+                    //lo.X = 20;
+                    //lo.Y = bmpresult.Height - bmpErr.Height - 20;
+                    //Graphics g = Graphics.FromImage(bmpresult);
+                    //g.DrawImage(bmpErr, lo);
+                    //g.Dispose();
+
+                    //bmpresult.Save("D://test.png");
                 }
-                else
+
+                if (!istrain)
                 {
-                    bmpErr = new Bitmap(bmpErr, new Size(bmpErr.Size.Width * 2, bmpErr.Height * 2));
                     if (reason == JetEazy.ReasonEnum.NG)
-                        Universal.ALBCollection.AlbumNow.CPD.bmpOCRCheckErr = bmpErr;
-                    else if (reason == JetEazy.ReasonEnum.PASS)
-                        Universal.ALBCollection.AlbumNow.CPD.bmpOCRCheckErr = null;
+                        isgood = false;
+                    else
+                        isgood = true;
                 }
-                //Bitmap bmpresult = Universal.ALBCollection.AlbumWork.CPD.bmpRUNVIEW;
-                //Point lo = new Point();
-                //lo.X = 20;
-                //lo.Y = bmpresult.Height - bmpErr.Height - 20;
-                //Graphics g = Graphics.FromImage(bmpresult);
-                //g.DrawImage(bmpErr, lo);
-                //g.Dispose();
-
-                //bmpresult.Save("D://test.png");
-            }
-
-            if (!istrain)
-            {
-                if (reason == JetEazy.ReasonEnum.NG)
-                    isgood = false;
                 else
                     isgood = true;
+
+                if (istrain)
+                    TrainStatusCollection.Add(workstatus);
+                else
+                    RunStatusCollection.Add(workstatus);
+
+                JetEazy.LoggerClass.Instance.WriteLog("SN 完成 字符：" +
+                                                      strSN + "结果：" +
+                                                      (strSN == barcode ? "True" : "Fail") +
+                                                      "用时:" + stopwatch.ElapsedMilliseconds + " ms");
             }
-            else
-                isgood = true;
+            catch (Exception ex)
+            {
+                JetEazy.LoggerClass.Instance.WriteLog("OCR ERR 闪退 :" + ex.ToString());
+                isgood = false;
 
+                //WorkStatusClass workstatus = new WorkStatusClass(JetEazy.AnanlyzeProcedureEnum.CHECKOCR);
+                //string processstring = "Start  OCRCHRCK." + Environment.NewLine;
+                //string errorstring = "";
+                //errorstring += "SN Defect." + Environment.NewLine;
+                //processstring += "SN Defect." + Environment.NewLine;
+                //JetEazy.ReasonEnum reason = JetEazy.ReasonEnum.NG;
+
+                //workstatus.SetWorkStatus(bmppattern, bmpFind, bmpErr, reason, errorstring, processstring, passInfo);
+
+                //if (istrain)
+                //    TrainStatusCollection.Add(workstatus);
+                //else
+                //    RunStatusCollection.Add(workstatus);
+            }
+            return strSN;
+        }
+
+        /// <summary>
+        /// 检查月份
+        /// </summary>
+        /// <param name="istrain"></param>
+        /// <param name="bmppattern"></param>
+        /// <param name="bmpFind"></param>
+        /// <param name="passInfo"></param>
+        /// <param name="isMoth">是否是月份（否则是年份）</param>
+        /// <param name="isgood"></param>
+        /// <returns></returns>
+        public string FindOCR_YEARAndMONTH(bool istrain, Bitmap bmppattern, Bitmap bmpFind, PassInfoClass passInfo, bool isMonth, out bool isgood, string strData = "")
+        {
             if (istrain)
-                TrainStatusCollection.Add(workstatus);
-            else
-                RunStatusCollection.Add(workstatus);
+            {
+                isgood = true;
+                return DateTime.Now.Month.ToString("00");
+            }
+            string strSN = "";
+            try
+            {
+                bmpErr = new Bitmap(bmpFind);
+                WorkStatusClass workstatus = new WorkStatusClass(isMonth ? JetEazy.AnanlyzeProcedureEnum.MONTH : JetEazy.AnanlyzeProcedureEnum.YEAR);
+                string processstring = "Start  CHRCKDATE." + Environment.NewLine;
+                string errorstring = "";
+                JetEazy.ReasonEnum reason = JetEazy.ReasonEnum.PASS;
 
+                Bitmap bmpfindTemp = new Bitmap(bmpFind);
+                JzOCR.OPSpace.OCRClass MYOCR = null;
+                foreach (JzOCR.OPSpace.OCRClass ocr in Universal.OCRCollection.myDataList)
+                {
+                    if (ocr.Name + "(" + ocr.No + ")" == OCRMappingMethod)
+                    {
+                        MYOCR = ocr;
+                        break;
+                    }
+                }
+
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                stopwatch.Start();
+                JetEazy.LoggerClass.Instance.WriteLog("SN padd 开始 SN=" + strData);
+
+
+                string strSNAI = Universal.mOCRByPaddle.OCR(bmpfindTemp);
+                strSN = strSNAI.Replace(Environment.NewLine, "");
+
+                //if (strData != strSN)
+                //{
+                //    JetEazy.LoggerClass.Instance.WriteLog("SN AI 开始 SN=" + strData);
+                //    strSNAI = Universal.OCRCollection.DecodePic(bmpfindTemp);
+                //    strSN = strSNAI;
+                //}
+
+                if (strData != strSN)
+                {
+                    string path = "D:\\LOA\\OcrAiSD\\";
+                    if (!System.IO.Directory.Exists(path)) //若此文件夹不存在
+                        System.IO.Directory.CreateDirectory(path); //创建此文件夹
+                    bmpfindTemp.Save(path + strData + "_" + strSN + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png");
+                }
+                string[] strs = { "8", "B", "S", "U", "Z" };
+                foreach (string str in strs)
+                {
+                    if (strData.IndexOf(str) > -1)
+                    {
+                        string path = "D:\\LOA\\OcrAiSave\\";
+                        if (!System.IO.Directory.Exists(path)) //若此文件夹不存在
+                            System.IO.Directory.CreateDirectory(path); //创建此文件夹
+                        bmpfindTemp.Save(path + strData + "_" + strSNAI + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png");
+
+                        break;
+                    }
+                }
+
+                JetEazy.LoggerClass.Instance.WriteLog("OCR AI 完成 用时:" + stopwatch.ElapsedMilliseconds + " ms" + (isMonth ? " 找月份" : " 找年份"));
+                stopwatch.Restart();
+
+                bool isCheckOK = false;
+                //月份 
+                if (isMonth && strSN != "")
+                {
+                    strSN = strSN.Trim();
+                    if (strSN == "DFC")
+                        strSN = "DEC";
+                    if (strSN == "D5C")
+                        strSN = "DEC";
+                    if (strSN == "SFP")
+                        strSN = "SEP";
+                    if (strSN == "S5P")
+                        strSN = "SEP";
+                    string[] MMM = { "JAN", " FEB", " MAR", "APR", " MAY", " JUN", " JUL", "AUG", " SEP", "OCT", "NOV", "DEC" };
+                    foreach (string str in MMM)
+                    {
+                        int INDEX = strSN.IndexOf(str);
+                        if (INDEX > -1)
+                        {
+                            strSN = str;
+                            isCheckOK = true;
+                            break;
+                        }
+                    }
+                }
+                else if (!isCheckOK && strSN != "")
+                {
+                    if (strSN.IndexOf("2023") > -1)
+                    {
+                        strSN = "2023";
+                        isCheckOK = true;
+                    }
+                    if (strSN.IndexOf("2024") > -1)
+                    {
+                        strSN = "2024";
+                        isCheckOK = true;
+                    }
+                    if (strSN.IndexOf("2025") > -1)
+                    {
+                        strSN = "2025";
+                        isCheckOK = true;
+                    }
+                    if (strSN.IndexOf("2026") > -1)
+                    {
+                        strSN = "2026";
+                        isCheckOK = true;
+                    }
+                    if (strSN.IndexOf("2027") > -1)
+                    {
+                        strSN = "2027";
+                        isCheckOK = true;
+                    }
+                }
+                if (!isCheckOK && MYOCR != null)
+                {
+                    lock (MYOCR)
+                    {
+                        MYOCR.strBarcode = strData;
+                        if (MYOCR != null)
+                        {
+                            JetEazy.LoggerClass.Instance.WriteLog("OCR Find 开始" + (isMonth ? " 找月份" : " 找年份"));
+                            bool isDef = false;
+                            strSN = MYOCR.OCRRUNLINE(bmpfindTemp, ref bmpErr, ref isDef);
+
+                            //if(strSN != strData)
+                            //{
+                            //    JetEazy.LoggerClass.Instance.WriteLog("OCR Find 第一次完成 用时：" + stopwatch.ElapsedMilliseconds + " ms");
+                            //    stopwatch.Restart();
+                            //    JzOCR.OPSpace.OCRItemClass[] ocritemlist = null;
+                            //    strSN = MYOCR.OCRRUNLINEAURO(strData,bmpfindTemp, ref bmpErr, ref ocritemlist);
+                            //}
+
+                            JetEazy.LoggerClass.Instance.WriteLog("OCR Find 完成:" + stopwatch.ElapsedMilliseconds + " ms" + (isMonth ? " 找月份" : " 找年份"));
+                            stopwatch.Restart();
+                        }
+                        else
+                            strSN = "";
+                        //bmpfindTemp.Save("D:\\find.png");
+                        //bmpErr.Save("D:\\err.png");
+                    }
+                    bmpfindTemp.Dispose();
+
+                    if (isMonth && strSN != "")
+                    {
+                        strSN = strSN.Trim();
+                        if (strSN == "DFC")
+                            strSN = "DEC";
+                        if (strSN == "D5C")
+                            strSN = "DEC";
+                        if (strSN == "SFP")
+                            strSN = "SEP";
+                        if (strSN == "S5P")
+                            strSN = "SEP";
+                        string[] MMM = { "JAN", " FEB", " MAR", "APR", " MAY", " JUN", " JUL", "AUG", " SEP", "OCT", "NOV", "DEC" };
+                        foreach (string str in MMM)
+                        {
+                            int INDEX = strSN.IndexOf(str);
+                            if (INDEX > -1)
+                            {
+                                strSN = str;
+                                isCheckOK = true;
+                                break;
+                            }
+                        }
+                    }
+                    else if (!isCheckOK && strSN != "")
+                    {
+                        if (strSN.IndexOf("2023") > -1)
+                        {
+                            strSN = "2023";
+                            isCheckOK = true;
+                        }
+                        if (strSN.IndexOf("2024") > -1)
+                        {
+                            strSN = "2024";
+                            isCheckOK = true;
+                        }
+                        if (strSN.IndexOf("2025") > -1)
+                        {
+                            strSN = "2025";
+                            isCheckOK = true;
+                        }
+                        if (strSN.IndexOf("2026") > -1)
+                        {
+                            strSN = "2026";
+                            isCheckOK = true;
+                        }
+                        if (strSN.IndexOf("2027") > -1)
+                        {
+                            strSN = "2027";
+                            isCheckOK = true;
+                        }
+                    }
+                }
+                if (isMonth)
+                {
+                    string[] MMM = { "JAN", " FEB", " MAR", "APR", " MAY", " JUN", " JUL", "AUG", " SEP", "OCT", "NOV", "DEC" };
+
+                    int iMonth = DateTime.Now.Month;
+
+                    string M = MMM[iMonth - 1];
+
+                    string strFastMonth = "FAIL";
+
+                    bool isok = true;
+                    if (strData != "")
+                    {
+                        try
+                        {
+                            int imonth = int.Parse(strData);
+                            M = MMM[imonth - 1];
+                            isok = false;
+                        }
+                        catch { }
+                    }
+
+                    if (isok)
+                    {
+                        int iDay = DateTime.Now.Day;
+                        int iHour = DateTime.Now.Hour;
+                        int iMinute = DateTime.Now.Minute;
+                        if (iDay == 1 && iHour == 0 && iMinute < 30)
+                        {
+                            if (iMonth == 1)
+                                strFastMonth = MMM[11];
+                            else
+                                strFastMonth = MMM[iMonth - 2];
+                        }
+                    }
+
+
+                    if (M == strSN || strFastMonth == strSN)
+                    {
+                        processstring += "月份检查OK." + Environment.NewLine;
+                        errorstring += "";
+                        reason = JetEazy.ReasonEnum.PASS;
+                    }
+                    else
+                    {
+                        errorstring += "月份错误 ." + Environment.NewLine;
+                        processstring += "月份错误." + Environment.NewLine;
+                        reason = JetEazy.ReasonEnum.NG;
+
+                    }
+                }
+                else
+                {
+                    int iYear = DateTime.Now.Year;
+
+                    string strFastMonth = "FAIL";
+
+                    bool isok = true;
+                    if (strData != "")
+                    {
+                        try
+                        {
+                            iYear = int.Parse(strData);
+                            isok = false;
+                        }
+                        catch { }
+                    }
+
+                    if (isok)
+                    {
+                        int iMonth = DateTime.Now.Month;
+                        int iDay = DateTime.Now.Day;
+                        int iHour = DateTime.Now.Hour;
+                        int iMinute = DateTime.Now.Minute;
+                        if (iMonth == 1 && iDay == 1 && iHour == 0 && iMinute < 30)
+                            strFastMonth = (iYear - 1).ToString("0000");
+                    }
+
+                    if (iYear.ToString("0000") == strSN || strFastMonth == strSN)
+                    {
+                        processstring += "年份检查OK." + Environment.NewLine;
+                        errorstring += "";
+                        reason = JetEazy.ReasonEnum.PASS;
+                    }
+                    else
+                    {
+                        errorstring += "年份错误 ." + Environment.NewLine;
+                        processstring += "年份错误." + Environment.NewLine;
+                        reason = JetEazy.ReasonEnum.NG;
+
+                    }
+                }
+                workstatus.SetWorkStatus(bmppattern, bmpFind, bmpErr, reason, errorstring, processstring, passInfo);
+
+                if (!istrain)
+                {
+                    if (reason == JetEazy.ReasonEnum.NG)
+                        isgood = false;
+                    else
+                        isgood = true;
+                }
+                else
+                    isgood = true;
+
+                if (istrain)
+                    TrainStatusCollection.Add(workstatus);
+                else
+                    RunStatusCollection.Add(workstatus);
+                JetEazy.LoggerClass.Instance.WriteLog("完成 用时:" + stopwatch.ElapsedMilliseconds + " ms" + (isMonth ? " 找月份" : " 找年份"));
+
+            }
+            catch (Exception ex)
+            {
+                JetEazy.LoggerClass.Instance.WriteLog("OCR ERR 闪退 :" + ex.ToString());
+                isgood = false;
+
+            }
+            return strSN;
+        }
+        public string FindOCR_WEEK(bool istrain, Bitmap bmppattern, Bitmap bmpFind, PassInfoClass passInfo, bool isMonth, out bool isgood, string strData = "")
+        {
+            if (istrain)
+            {
+                isgood = true;
+                return DateTime.Now.Month.ToString("00");
+            }
+            string strSN = "";
+            try
+            {
+                bmpErr = new Bitmap(bmpFind);
+                WorkStatusClass workstatus = new WorkStatusClass(JetEazy.AnanlyzeProcedureEnum.WEEK);
+                string processstring = "Start  CHRCKDATE." + Environment.NewLine;
+                string errorstring = "";
+                JetEazy.ReasonEnum reason = JetEazy.ReasonEnum.PASS;
+
+                Bitmap bmpfindTemp = new Bitmap(bmpFind);
+                JzOCR.OPSpace.OCRClass MYOCR = null;
+                foreach (JzOCR.OPSpace.OCRClass ocr in Universal.OCRCollection.myDataList)
+                {
+                    if (ocr.Name + "(" + ocr.No + ")" == OCRMappingMethod)
+                    {
+                        MYOCR = ocr;
+                        break;
+                    }
+                }
+
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                stopwatch.Start();
+                JetEazy.LoggerClass.Instance.WriteLog("SN padd 开始 SN=" + strData);
+
+                string strSNAI = Universal.mOCRByPaddle.OCR(bmpfindTemp);
+                strSN = strSNAI.Replace(Environment.NewLine, "");
+
+                //if (strData != strSN)
+                //{
+                //    JetEazy.LoggerClass.Instance.WriteLog("SN AI 开始 SN=" + strData);
+                //    strSNAI = Universal.OCRCollection.DecodePic(bmpfindTemp);
+                //    strSN = strSNAI;
+                //}
+
+                if (strData != strSN)
+                {
+                    string path = "D:\\LOA\\OcrAiSD\\";
+                    if (!System.IO.Directory.Exists(path)) //若此文件夹不存在
+                        System.IO.Directory.CreateDirectory(path); //创建此文件夹
+                    bmpfindTemp.Save(path + strData + "_" + strSN + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png");
+                }
+
+                JetEazy.LoggerClass.Instance.WriteLog("OCR AI 完成 用时:" + stopwatch.ElapsedMilliseconds + " ms 找周");
+                //stopwatch.Restart();
+
+                int iweek = 1;
+                int.TryParse(strSN, out iweek);
+
+                if (strData == strSN || int.Parse(strData) == iweek)
+                {
+                    processstring += "周检查OK." + Environment.NewLine;
+                    errorstring += "";
+                    reason = JetEazy.ReasonEnum.PASS;
+                }
+                else
+                {
+                    errorstring += "周错误 ." + Environment.NewLine;
+                    processstring += "周错误." + Environment.NewLine;
+                    reason = JetEazy.ReasonEnum.NG;
+                }
+
+                workstatus.SetWorkStatus(bmppattern, bmpFind, bmpErr, reason, errorstring, processstring, passInfo);
+
+                if (!istrain)
+                {
+                    if (reason == JetEazy.ReasonEnum.NG)
+                        isgood = false;
+                    else
+                        isgood = true;
+                }
+                else
+                    isgood = true;
+
+                if (istrain)
+                    TrainStatusCollection.Add(workstatus);
+                else
+                    RunStatusCollection.Add(workstatus);
+                JetEazy.LoggerClass.Instance.WriteLog("完成 用时:" + stopwatch.ElapsedMilliseconds + " ms 找周");
+
+            }
+            catch (Exception ex)
+            {
+                JetEazy.LoggerClass.Instance.WriteLog("OCR ERR 闪退 :" + ex.ToString());
+                isgood = false;
+
+            }
+            return strSN;
+        }
+
+        /// <summary>
+        /// 检查镭雕变动字符
+        /// </summary>
+        /// <param name="istrain"></param>
+        /// <param name="bmppattern"></param>
+        /// <param name="bmpFind"></param>
+        /// <param name="passInfo"></param>
+        /// <param name="isgood"></param>
+        /// <returns></returns>
+        public string FindOCR_Biandong(string strBar, bool istrain, Bitmap bmppattern, Bitmap bmpFind, PassInfoClass passInfo, out bool isgood)
+        {
+            if (istrain)
+            {
+                isgood = true;
+                return DateTime.Now.Month.ToString("00");
+            }
+            string strSN = "";
+            try
+            {
+                bmpErr = new Bitmap(bmpFind);
+                WorkStatusClass workstatus = new WorkStatusClass(JetEazy.AnanlyzeProcedureEnum.LASER);
+                string processstring = "Start  CHRCKDATE." + Environment.NewLine;
+                string errorstring = "";
+                JetEazy.ReasonEnum reason = JetEazy.ReasonEnum.PASS;
+
+                Bitmap bmpfindTemp = new Bitmap(bmpFind);
+                JzOCR.OPSpace.OCRClass MYOCR = null;
+                foreach (JzOCR.OPSpace.OCRClass ocr in Universal.OCRCollection.myDataList)
+                {
+                    if (ocr.Name + "(" + ocr.No + ")" == OCRMappingMethod)
+                    {
+                        MYOCR = ocr;
+                        break;
+                    }
+                }
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                stopwatch.Start();
+                JetEazy.LoggerClass.Instance.WriteLog("镭雕变动字符 OCR padd 开始");
+
+
+                string strSNAI = Universal.mOCRByPaddle.OCR(bmpfindTemp);
+                strSN = strSNAI.Replace(Environment.NewLine, "");
+
+                //if (strBar != strSN)
+                //{
+                //    JetEazy.LoggerClass.Instance.WriteLog("镭雕变动字符 OCR AI 开始");
+                //    strSNAI = Universal.OCRCollection.DecodePic(bmpfindTemp);
+                //    strSN = strSNAI;
+                //}
+
+                if (strBar != strSN)
+                {
+                    string path = "D:\\LOA\\OcrAiSD\\";
+                    if (!System.IO.Directory.Exists(path)) //若此文件夹不存在
+                        System.IO.Directory.CreateDirectory(path); //创建此文件夹
+                    bmpfindTemp.Save(path + strBar + "_" + strSN + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png");
+                }
+
+                string[] strs = { "8", "B", "S", "U", "Z" };
+                foreach (string str in strs)
+                {
+                    if (strBar.IndexOf(str) > -1)
+                    {
+                        string path = "D:\\LOA\\OcrAiSave\\";
+                        if (!System.IO.Directory.Exists(path)) //若此文件夹不存在
+                            System.IO.Directory.CreateDirectory(path); //创建此文件夹
+                        bmpfindTemp.Save(path + strBar + "_" + strSNAI + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png");
+
+                        break;
+                    }
+                }
+
+
+                JetEazy.LoggerClass.Instance.WriteLog("镭雕变动字符 OCR AI 完成" + stopwatch.ElapsedMilliseconds + " ms");
+                stopwatch.Restart();
+                if (strBar != strSN && MYOCR != null)
+                {
+                    lock (MYOCR)
+                    {
+                        MYOCR.strBarcode = strBar;
+                        if (MYOCR != null)
+                        {
+                            JetEazy.LoggerClass.Instance.WriteLog("镭雕变动字符 OCR Find 开始");
+                            bool isDef = false;
+                            strSN = MYOCR.OCRRUNLINE(bmpfindTemp, ref bmpErr, ref isDef);
+
+                            //if (strSN != strBar)
+                            //{
+                            //    JetEazy.LoggerClass.Instance.WriteLog("镭雕变动字符 OCR Find 第一次完成 用时：" + stopwatch.ElapsedMilliseconds + " ms");
+                            //    stopwatch.Restart();
+                            //    JzOCR.OPSpace.OCRItemClass[] ocritemlist = null;
+                            //    strSN = MYOCR.OCRRUNLINEAURO(strBar, bmpfindTemp, ref bmpErr, ref ocritemlist);
+
+                            //}
+
+                            JetEazy.LoggerClass.Instance.WriteLog("镭雕变动字符 OCR Find 完成 用时：" + stopwatch.ElapsedMilliseconds + " ms");
+                            stopwatch.Restart();
+                        }
+                        else
+                            strSN = "";
+                        //bmpfindTemp.Save("D:\\find.png");
+                        //bmpErr.Save("D:\\err.png");
+                    }
+                    bmpfindTemp.Dispose();
+                }
+                if (strBar == strSN)
+                {
+                    processstring += "镭雕检查OK." + Environment.NewLine;
+                    errorstring += "";
+                    reason = JetEazy.ReasonEnum.PASS;
+                }
+                else
+                {
+                    errorstring += "镭雕错误 ." + Environment.NewLine;
+                    processstring += "镭雕错误." + Environment.NewLine;
+                    reason = JetEazy.ReasonEnum.NG;
+                }
+
+                Bitmap bmpPatternTemp = new Bitmap(bmppattern.Width, bmppattern.Height);
+                Graphics gg = Graphics.FromImage(bmpPatternTemp);
+                gg.FillRectangle(Brushes.Black, 0, 0, bmppattern.Width, bmppattern.Height);
+                gg.DrawString(strBar, new Font("宋体", 40), Brushes.White, new Point(0, 0));
+                gg.Dispose();
+
+                gg = Graphics.FromImage(bmpErr);
+                gg.FillRectangle(Brushes.Black, 0, 0, bmpErr.Width, bmpErr.Height);
+                gg.DrawString(strSN, new Font("宋体", 40), Brushes.White, new Point(0, 0));
+                gg.Dispose();
+
+                workstatus.SetWorkStatus(bmpPatternTemp, bmpFind, bmpErr, reason, errorstring, processstring, passInfo);
+                if (!istrain)
+                {
+                    if (reason == JetEazy.ReasonEnum.NG)
+                        isgood = false;
+                    else
+                        isgood = true;
+                }
+                else
+                    isgood = true;
+
+                if (istrain)
+                    TrainStatusCollection.Add(workstatus);
+                else
+                    RunStatusCollection.Add(workstatus);
+
+                JetEazy.LoggerClass.Instance.WriteLog("镭雕变动字符 完成 用时：" + stopwatch.ElapsedMilliseconds + " ms");
+
+            }
+            catch (Exception ex)
+            {
+                JetEazy.LoggerClass.Instance.WriteLog("OCR ERR 闪退 :" + ex.ToString());
+                isgood = false;
+            }
             return strSN;
         }
 
@@ -638,6 +1648,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public void ResetTrainStatus()
         {
             TrainStatusCollection.Clear();
+            BarcodeGrade = string.Empty;
+            m_BarcodeReadStr = string.Empty;
         }
         /// <summary>
         /// 在做大量運算前要清除的相關資料
@@ -645,6 +1657,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public void ResetRunStatus()
         {
             RunStatusCollection.Clear();
+            BarcodeGrade = string.Empty;
+            m_BarcodeReadStr = string.Empty;
         }
         /// <summary>
         /// 將產生出來的過程寫出去
@@ -689,7 +1703,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
         }
 
-        public bool CheckRepeatCode(List<string> eCodes, Bitmap bmppattern, Bitmap bmpFind, PassInfoClass passInfo)
+        public bool CheckRepeatCode(List<string> eCodes, Bitmap bmppattern, Bitmap bmpFind, PassInfoClass passInfo,int irepeatCount=1)
         {
             bool result = true;
             WorkStatusClass workstatus = new WorkStatusClass(JetEazy.AnanlyzeProcedureEnum.CHECKREPEATBARCODE);
@@ -706,13 +1720,14 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     {
                         foreach (string s in eCodes)
                         {
-                            if (s.Contains(m_BarcodeReadStr))
+                            //if (s.Contains(m_BarcodeReadStr))
+                            if (s.Trim() == m_BarcodeReadStr.Trim())
                             {
                                 recordPCS++;
                             }
                         }
 
-                        if (recordPCS > 1)
+                        if (recordPCS > irepeatCount)
                         {
                             errorstring += "2DBarcode Repeat." + Environment.NewLine; ;
                             processstring += "2DBarcode Repeat." + Environment.NewLine;

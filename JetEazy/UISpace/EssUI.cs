@@ -14,6 +14,7 @@ using JetEazy.DBSpace;
 using JetEazy.ControlSpace;
 using JetEazy.AccountMgr;
 using JetEazy.QUtilities;
+using System.Diagnostics;
 
 
 namespace JetEazy.UISpace
@@ -58,6 +59,8 @@ namespace JetEazy.UISpace
 
         PictureBox picExit;
 
+        Button btnLanguage;
+
         protected Button btnLogin;
         protected Button btnLogout;
 
@@ -87,6 +90,19 @@ namespace JetEazy.UISpace
         protected Button btnRcpSelect;
 
         bool IsNeedToChange = true;
+        /// <summary>
+        /// 判断是否在RUN的状态 如果在则开始计时 否则停止计时
+        /// </summary>
+        bool m_IsRunState = false;
+        bool m_IsRunTempState = false;
+        Stopwatch m_RunWatch = new Stopwatch();
+        int m_RunWatchTime = 30;
+
+        public int RunWatchTime
+        {
+            get { return m_RunWatchTime; }
+            set { m_RunWatchTime = value; }
+        }
 
         JzTimes myTimes = new JzTimes();
         
@@ -134,6 +150,9 @@ namespace JetEazy.UISpace
 
             lblAllCount.Text = "";
             lblBCNGCount.Text = "";
+
+            btnLanguage = button11;
+            btnLanguage.Click += BtnLanguage_Click;
 
             btnLogin = button2;
             btnLogin.Tag = TagEnum.LOGIN;
@@ -183,7 +202,14 @@ namespace JetEazy.UISpace
 
             picExit.DoubleClick += new EventHandler(picExit_DoubleClick);
         }
-        
+
+        private void BtnLanguage_Click(object sender, EventArgs e)
+        {
+            LanguageForm language = new LanguageForm();
+            language.ShowDialog();
+            OnTrigger(ESSStatusEnum.LANGUAGE);
+        }
+
         public void Initial(EsssDBClass essdb,
             AccDBClass accdb,
             string uipath,
@@ -201,8 +227,8 @@ namespace JetEazy.UISpace
             OPTION = opt;
 
             myLanguage.Initial(UIPath + "\\ESSUI.jdb", LanguageIndex, this);
-            
-            switch(VERSION)
+
+            switch (VERSION)
             {
                 case VersionEnum.KBAOI:
                     switch(OPTION)
@@ -308,6 +334,8 @@ namespace JetEazy.UISpace
             }
 
         }
+
+        Color m_lblAccountNameColor = Color.Yellow;
         public void Tick()
         {
             if (myTimes.msDuriation > SamplingTimems)
@@ -316,6 +344,75 @@ namespace JetEazy.UISpace
 
                 myTimes.Cut();
             }
+
+
+            switch(VERSION)
+            {
+                case VersionEnum.ALLINONE:
+
+                    switch (OPTION)
+                    {
+                        case OptionEnum.MAIN_SDM2:
+                        case OptionEnum.MAIN_X6:
+
+                            m_IsRunState = lblMainStatus.Text == "RUN";
+                            if (m_IsRunState && m_RunWatchTime > 0)
+                            {
+                                if (m_RunWatchTime < 10)
+                                    m_RunWatchTime = 10;
+
+                                if (!m_IsRunTempState)
+                                {
+                                    if (!string.IsNullOrEmpty(lblAccountName.Text) && lblAccountName.Text.ToUpper() != "OP")
+                                    {
+                                        m_IsRunTempState = true;
+                                        m_RunWatch.Restart();
+                                    }
+                                }
+                                else
+                                {
+                                    if (!string.IsNullOrEmpty(lblAccountName.Text) && lblAccountName.Text.ToUpper() != "OP")
+                                    {
+                                        if (lblAccountName.BackColor != Color.Yellow)
+                                            lblAccountName.BackColor = Color.Yellow;
+                                        else
+                                            lblAccountName.BackColor = Color.FromArgb(255, 255, 192);
+
+                                        if (m_RunWatch.ElapsedMilliseconds > m_RunWatchTime * 1000)
+                                        {
+                                            m_IsRunTempState = false;
+                                            m_RunWatch.Stop();
+
+                                            lblAccountName.BackColor = Color.FromArgb(255, 255, 192);
+
+                                            ACCDB.Index = -1;
+                                            LOGINStatus = ESSStatusEnum.LOGOUT;
+                                            MAINStatus = ESSStatusEnum.LOGOUT;
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        m_IsRunTempState = false;
+                                        m_RunWatch.Stop();
+
+                                        lblAccountName.BackColor = Color.FromArgb(255, 255, 192);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                m_RunWatch.Stop();
+                                m_IsRunTempState = false;
+                                lblAccountName.BackColor = Color.FromArgb(255, 255, 192);
+                            }
+
+                            break;
+                    }
+
+                    break;
+            }
+
         }
         public void SetLanguage(int langindex)
         {
@@ -327,7 +424,7 @@ namespace JetEazy.UISpace
             if (LOGINStatus != ESSStatusEnum.LOGOUT)
                 return;
 
-            if (MessageBox.Show(myLanguage.Messages("msg1", LanguageIndex), "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBox.Show(ToChangeLanguageCode("EssUI.msg1"), "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 OnTrigger(ESSStatusEnum.EXIT);
             }
@@ -397,7 +494,7 @@ namespace JetEazy.UISpace
         }
         void Logout()
         {
-            if (MessageBox.Show(myLanguage.Messages("msg2",LanguageIndex), "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBox.Show(ToChangeLanguageCode("EssUI.msg2"), "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 ACCDB.Index = -1;
                 LOGINStatus = ESSStatusEnum.LOGOUT;
@@ -637,6 +734,8 @@ namespace JetEazy.UISpace
 
                 lblMainStatus.Text = myMAINStatus.ToString();
 
+                //m_IsRunState = myMAINStatus == ESSStatusEnum.RUN;
+
                 switch (myMAINStatus)
                 {
                     case ESSStatusEnum.RUN:
@@ -736,6 +835,13 @@ namespace JetEazy.UISpace
             {
                 TriggerAction(status);
             }
+        }
+
+        string ToChangeLanguageCode(string eName)
+        {
+            string retStr = eName;
+            retStr = LanguageExClass.Instance.GetLanguageIDName(eName);
+            return retStr;
         }
 
     }

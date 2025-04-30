@@ -10,6 +10,7 @@ using Allinone;
 using JetEazy;
 using JetEazy.BasicSpace;
 using Allinone.BasicSpace;
+using Allinone.BasicSpace.MeasureD;
 
 namespace Allinone.OPSpace.AnalyzeSpace
 {
@@ -929,6 +930,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     isgood = BlindMeasure(bmpinput, bmpmask, ref bmpoutput, istrain, workstatus);
 
                     break;
+                case MeasureMethodEnum.BLOBS:
+
+                    isgood = BlobsMeasure(bmpinput, bmpmask, ref bmpoutput, istrain, workstatus, PassInfo);
+
+                    break;
                 case MeasureMethodEnum.MBCHECK:
 
                     //IsTempSave = true;
@@ -969,7 +975,25 @@ namespace Allinone.OPSpace.AnalyzeSpace
             reason = workstatus.Reason;
             errorstring = workstatus.ErrorString;
 
-            workstatus.SetWorkStatus(bmppattern, bmpinput, bmppattern, reason, errorstring, processstring, PassInfo);
+            switch (MeasureMethod)
+            {
+                //case MeasureMethodEnum.BLIND:
+                case MeasureMethodEnum.BLOBS:
+                    workstatus.SetWorkStatus(bmppattern, bmpinput, bmpoutput, reason, errorstring, processstring, PassInfo, workstatus.Desc);
+                    //if (!isgood)
+                    //{
+                    //    bmpoutput.Save("D:\\testblobs.bmp", ImageFormat.Bmp);
+                    //    bmpinput.Save("D:\\bmpinputblobs.bmp", ImageFormat.Bmp);
+                    //}
+                    break;
+                //case MeasureMethodEnum.MBCHECK:
+                //case MeasureMethodEnum.COLORCHECK:
+                //case MeasureMethodEnum.SOLDERBALLCHECK:
+                //    break;
+                default:
+                    workstatus.SetWorkStatus(bmppattern, bmpinput, bmppattern, reason, errorstring, processstring, PassInfo);
+                    break;
+            }
 
             if (istrain)
                 TrainStatusCollection.Add(workstatus);
@@ -1854,6 +1878,68 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 else
                 {
                     str = "SolderBall Check NG.";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.NG;
+
+                    isgood = false;
+
+                }
+
+            }
+            return isgood;
+
+        }
+
+        #endregion
+
+        #region Blobs Measurement Function
+
+        BlobMeasureClass MyBlobsMeasure = new BlobMeasureClass();
+        bool BlobsMeasure(Bitmap bmpinput, Bitmap bmpmask, ref Bitmap bmpoutput, bool istrain, WorkStatusClass workstatus, PassInfoClass passinfo)
+        {
+            bool isgood = false;
+            string str = "";
+
+            if (istrain)
+            {
+                MyBlobsMeasure = new BlobMeasureClass(MMOPString);
+                //str = "Bypass Solder Check " + " Origin.";
+                //workstatus.ProcessString += str + Environment.NewLine;
+                //workstatus.Reason = ReasonEnum.PASS;
+                //isgood = true;
+
+                if (MyBlobsMeasure.CheckBlobs(bmpinput, bmpmask, ref bmpoutput, true, workstatus, passinfo))
+                {
+                    str = "Blobs train OK.";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.PASS;
+
+                    isgood = true;
+                }
+                else
+                {
+                    str = "Blobs train NG.";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.NG;
+
+                    isgood = false;
+
+                }
+
+            }
+            else
+            {
+                if (MyBlobsMeasure.CheckBlobs(bmpinput, bmpmask, ref bmpoutput, false, workstatus, passinfo))
+                {
+                    str = "Blobs Check OK.";
+                    workstatus.ProcessString += str + Environment.NewLine;
+                    workstatus.Reason = ReasonEnum.PASS;
+
+                    isgood = true;
+                }
+                else
+                {
+                    str = "Blobs Check NG.";
                     workstatus.ProcessString += str + Environment.NewLine;
                     workstatus.Reason = ReasonEnum.NG;
 

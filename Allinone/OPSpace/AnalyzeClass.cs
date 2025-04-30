@@ -1,25 +1,26 @@
 ﻿//#define MULTI
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.IO;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Data;
-
-using JetEazy;
-using JetEazy.BasicSpace;
-using JzDisplay;
-using MoveGraphLibrary;
-using WorldOfMoveableObjects;
 using Allinone.OPSpace.AnalyzeSpace;
 using AUVision;
+using JetEazy;
+using JetEazy.BasicSpace;
 using JzASN.OPSpace;
-using PdfSharp.Drawing;
+using JzDisplay;
+using MoveGraphLibrary;
+using System;
+using System.Collections.Generic;
+//using AForge;
+
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Globalization;
+using System.IO;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using WorldOfMoveableObjects;
 
 namespace Allinone.OPSpace
 {
@@ -109,6 +110,14 @@ namespace Allinone.OPSpace
             get { return m_barcode_2D; }
             set { m_barcode_2D = value; }
         }
+
+        //private string m_barcode_all = string.Empty;
+        //public string BarcodeAll
+        //{
+        //    get { return m_barcode_all; }
+        //    set { m_barcode_all = value; }
+        //}
+
         /// <summary>
         /// 讀取返回的2D條碼
         /// </summary>
@@ -226,8 +235,127 @@ namespace Allinone.OPSpace
 
         public ASSEMBLEClass ASSEMBLE = new ASSEMBLEClass();
 
-        #endregion
+        public ASSEMBLEClass ToLanguage()
+        {
+            string _collectDataStr = string.Empty;
+            foreach (System.Reflection.PropertyInfo prop in ASSEMBLE.GetType().GetProperties())
+            {
+                string name = prop.Name;
+                if (prop.GetCustomAttribute<DisplayNameAttribute>() != null)
+                {
+                    string dispName = prop.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
+                    _collectDataStr += dispName + Environment.NewLine;
+                    if (name != "")
+                    {
+                        string strNewName = ToChangeLanguage(dispName);
+                        if (strNewName != dispName)
+                        {
+                            PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(ASSEMBLE);
+                            Type displayType = typeof(DisplayNameAttribute);
+                            FieldInfo fieldInfo = displayType.GetField("_displayName", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                            if (fieldInfo != null)
+                            {
+                                fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+                            }
+                        }
+                        else
+                        {
 
+                        }
+                    }
+                }
+
+                if (prop.GetCustomAttribute<DescriptionAttribute>() != null)
+                {
+                    string strDescription = prop.GetCustomAttribute<DescriptionAttribute>().Description;
+                    //_collectDataStr += strDescription + Environment.NewLine;
+                    string strNewName = "";
+                    if (strDescription.IndexOf(Environment.NewLine) != -1 || strDescription.IndexOf("\r") != -1)
+                    {
+                        string[] str = strDescription.Split(Environment.NewLine.ToCharArray());
+                        foreach (string str2 in str)
+                        {
+                            string str1 = ToChangeLanguage(str2.Replace(",", "."));
+                            strNewName += (str1.Replace(",", ".") + Environment.NewLine);
+
+                            _collectDataStr += str1.Replace(",", ".") + Environment.NewLine;
+                        }
+                    }
+                    else
+                    {
+                        _collectDataStr += strDescription + Environment.NewLine;
+                        strNewName = ToChangeLanguage(strDescription);
+                    }
+                        
+
+
+
+                    var v = (DescriptionAttribute[])prop.GetCustomAttributes(typeof(DescriptionAttribute), false);
+                    //var descriptionName = v[0].Description;
+
+
+
+                    if (strNewName != strDescription)
+                    {
+                        //PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(ASSEMBLE);
+                        //Type displayType = typeof(DescriptionAttribute);
+
+                        //System.Reflection.FieldInfo[] fields = displayType.GetFields();
+                        ////if (fields != null && fields.Length>0)
+                        ////    fields[0].SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+
+                        //FieldInfo fieldInfo = displayType.GetField("_descriptionValue", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                        //if (fieldInfo != null)
+                        //    fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+
+
+                        PropertyDescriptor descriptor = TypeDescriptor.GetProperties(ASSEMBLE)[name];
+                        DescriptionAttribute attribute = descriptor.Attributes[typeof(DescriptionAttribute)] as DescriptionAttribute;
+                        FieldInfo field = attribute.GetType().GetField("description", BindingFlags.NonPublic | BindingFlags.Instance);
+                        field.SetValue(attribute, strNewName);
+                    }
+                }
+
+                if (prop.GetCustomAttribute<CategoryAttribute>() != null)
+                {
+                    string strCategory = prop.GetCustomAttribute<CategoryAttribute>().Category;
+                    _collectDataStr += strCategory + Environment.NewLine;
+                    string strNewName = "";
+                    if (strCategory.IndexOf(Environment.NewLine) != -1 || strCategory.IndexOf("\r") != -1)
+                    {
+                        string[] str = strCategory.Split(Environment.NewLine.ToCharArray());
+                        foreach (string str2 in str)
+                        {
+                            string str1 = ToChangeLanguage(str2);
+                            strNewName += str1;
+
+                            _collectDataStr += str1 + Environment.NewLine;
+                        }
+                    }
+                    else
+                        strNewName = ToChangeLanguage(strCategory);
+                    if (strNewName != strCategory)
+                    {
+
+                        PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(ASSEMBLE);
+                        Type displayType = typeof(CategoryAttribute);
+                        FieldInfo fieldInfo = displayType.GetField("categoryValue", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                        if (fieldInfo != null)
+                            fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+                    }
+                }
+            }
+
+            //SaveData(_collectDataStr, "D:\\log.csv");
+            return ASSEMBLE;
+        }
+        string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
+        }
+        #endregion
 
         public StiltsClass StiltsPara = new StiltsClass();
 
@@ -866,7 +994,12 @@ namespace Allinone.OPSpace
 
         public void ResetAnalyzeBarcodeStr()
         {
-            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX)
+            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
+                || OCRPara.OCRMethod == OCRMethodEnum.YEAR
+                || OCRPara.OCRMethod == OCRMethodEnum.MONTH
+                || OCRPara.OCRMethod == OCRMethodEnum.WEEK
+                || OCRPara.OCRMethod == OCRMethodEnum.VARICHARACTER
+                 || OCRPara.OCRMethod == OCRMethodEnum.QRCODE)
             {
                 ReadBarcode2DRealStr = string.Empty;
                 return;
@@ -884,7 +1017,13 @@ namespace Allinone.OPSpace
         }
         public void SetAnalyzeCheckBarcodeStr(string eBarcodeStr)
         {
-            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX)
+            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
+                // || OCRPara.OCRMethod == OCRMethodEnum.YEAR
+                //|| OCRPara.OCRMethod == OCRMethodEnum.MONTH
+                //|| OCRPara.OCRMethod == OCRMethodEnum.WEEK
+                || OCRPara.OCRMethod == OCRMethodEnum.VARICHARACTER
+                 || OCRPara.OCRMethod == OCRMethodEnum.QRCODE
+                )
             {
                 m_barcode_2D = eBarcodeStr;
                 //return;
@@ -903,44 +1042,158 @@ namespace Allinone.OPSpace
         {
             //if (IsByPass)
             //    return "不检测";
-            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX)
+            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX || OCRPara.OCRMethod == OCRMethodEnum.QRCODE)
             {
-                return ReadBarcode2DRealStr;
+                return ReadBarcode2DRealStr.Trim();
             }
             if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
             {
                 string tempstr = $"No Compare;{Environment.NewLine}{ReadBarcode2DRealStr};{Environment.NewLine}{ReadBarcode2DGrade}";
                 if (INI.IsCheckBarcodeOpen)
                 {
-                    if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
-                        tempstr = $"Compare [FAIL];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}];{Environment.NewLine}Grade[{ReadBarcode2DGrade}]";
+                    if (INI.IsOpenShowGrade)
+                    {
+                        if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                            tempstr = $"Compare [FAIL];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}];{Environment.NewLine}Grade[{ReadBarcode2DGrade}]";
+                        else
+                            tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}];{Environment.NewLine}Grade[{ReadBarcode2DGrade}]";
+
+                    }
                     else
-                        tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}];{Environment.NewLine}Grade[{ReadBarcode2DGrade}]";
+                    {
+                        if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                            tempstr = $"Compare [FAIL];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}]";
+                        else
+                            tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}]";
+
+                    }
                 }
                 return tempstr;
                 //return ReadBarcode2DRealStr + ";" + ReadBarcode2DGrade;
             }
+            if (OCRPara.OCRMethod == OCRMethodEnum.YEAR
+                || OCRPara.OCRMethod == OCRMethodEnum.MONTH
+                || OCRPara.OCRMethod == OCRMethodEnum.WEEK
+                || OCRPara.OCRMethod == OCRMethodEnum.VARICHARACTER)
+            {
+                string tempstr = string.Empty;
+                if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                    tempstr = $"Compare [FAIL];{Environment.NewLine}Marking Char[{Barcode_2D}];{Environment.NewLine}Read Char[{ReadBarcode2DRealStr}]";
+                else
+                    tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking Char[{Barcode_2D}];{Environment.NewLine}Read Char[{ReadBarcode2DRealStr}]";
+
+                return tempstr;
+            }
             foreach (AnalyzeClass analyzeClass in BranchList)
             {
+                //string _barcodeAllStr = string.Empty;
                 string _barcodeStr = analyzeClass.GetAnalyzeBarcodeStr();
                 if (!string.IsNullOrEmpty(_barcodeStr))
+                {
                     return _barcodeStr;
+                }
             }
             return string.Empty;
         }
+
+        public void CollectAllBarcodeStr(ref string eBarcode)
+        {
+            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX || OCRPara.OCRMethod == OCRMethodEnum.QRCODE)
+            {
+                eBarcode += ReadBarcode2DRealStr + Environment.NewLine;
+                //return ReadBarcode2DRealStr;
+            }
+            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
+            {
+                string tempstr = $"No Compare;{Environment.NewLine}{ReadBarcode2DRealStr};{Environment.NewLine}{ReadBarcode2DGrade}";
+                if (INI.IsCheckBarcodeOpen)
+                {
+                    if (INI.IsOpenShowGrade)
+                    {
+                        if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                            tempstr = $"Compare [FAIL];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}];{Environment.NewLine}Grade[{ReadBarcode2DGrade}]";
+                        else
+                            tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}];{Environment.NewLine}Grade[{ReadBarcode2DGrade}]";
+
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                            tempstr = $"Compare [FAIL];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}]";
+                        else
+                            tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}]";
+
+                    }
+                }
+                eBarcode += tempstr + Environment.NewLine;
+                //return tempstr;
+                //return ReadBarcode2DRealStr + ";" + ReadBarcode2DGrade;
+            }
+            if (OCRPara.OCRMethod == OCRMethodEnum.YEAR
+                || OCRPara.OCRMethod == OCRMethodEnum.MONTH
+                || OCRPara.OCRMethod == OCRMethodEnum.WEEK
+                || OCRPara.OCRMethod == OCRMethodEnum.VARICHARACTER)
+            {
+                string tempstr = string.Empty;
+                if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                    tempstr = $"Compare [FAIL];{Environment.NewLine}Marking Char[{Barcode_2D}];{Environment.NewLine}Read Char[{ReadBarcode2DRealStr}]";
+                else
+                    tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking Char[{Barcode_2D}];{Environment.NewLine}Read Char[{ReadBarcode2DRealStr}]";
+                eBarcode += tempstr + Environment.NewLine;
+                //return tempstr;
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                //string _barcodeAllStr = string.Empty;
+                string _barcodeStr = analyzeClass.GetAnalyzeBarcodeStr();
+                if (!string.IsNullOrEmpty(_barcodeStr))
+                {
+                    eBarcode += _barcodeStr + Environment.NewLine;
+                    //return _barcodeStr;
+                }
+            }
+            //return string.Empty;
+        }
+        public OCRMethodEnum IsCollectAllBarcodeStrOpen()
+        {
+            OCRMethodEnum oCRMethodEnum = OCRMethodEnum.NONE;
+            if (OCRPara.OCRMethod != OCRMethodEnum.NONE)
+            {
+                oCRMethodEnum = OCRPara.OCRMethod;
+                return oCRMethodEnum;
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                //string _barcodeAllStr = string.Empty;
+                OCRMethodEnum oCRMethodEnum1 = analyzeClass.IsCollectAllBarcodeStrOpen();
+                if (oCRMethodEnum1 != OCRMethodEnum.NONE)
+                {
+                    oCRMethodEnum = oCRMethodEnum1;
+                    break;
+                }
+            }
+            //return string.Empty;
+            return oCRMethodEnum;
+        }
+
         /// <summary>
         /// 仅仅获取读到的条码
         /// </summary>
         /// <returns></returns>
         public string GetAnalyzeOnlyBarcodeStr()
         {
-            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX)
+            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
+                 || OCRPara.OCRMethod == OCRMethodEnum.YEAR
+                || OCRPara.OCRMethod == OCRMethodEnum.MONTH
+                || OCRPara.OCRMethod == OCRMethodEnum.WEEK
+                || OCRPara.OCRMethod == OCRMethodEnum.VARICHARACTER
+                 || OCRPara.OCRMethod == OCRMethodEnum.QRCODE)
             {
-                return ReadBarcode2DRealStr;
+                return ReadBarcode2DRealStr.Trim();
             }
             if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
             {
-                return ReadBarcode2DRealStr;
+                return ReadBarcode2DRealStr.Trim();
             }
             foreach (AnalyzeClass analyzeClass in BranchList)
             {
@@ -964,17 +1217,17 @@ namespace Allinone.OPSpace
             }
             return false;
         }
-        public bool CheckRepeatCode(List<string> eCodes)
+        public bool CheckRepeatCode(List<string> eCodes, int irepeatCount = 1)
         {
             if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
             {
                 if (IsByPass)
                     return true;
-                return OCRPara.CheckRepeatCode(eCodes, bmpPATTERN, bmpWIP, PassInfo);
+                return OCRPara.CheckRepeatCode(eCodes, bmpPATTERN, bmpWIP, PassInfo, irepeatCount);
             }
             foreach (AnalyzeClass analyzeClass in BranchList)
             {
-                bool ret = analyzeClass.CheckRepeatCode(eCodes);
+                bool ret = analyzeClass.CheckRepeatCode(eCodes, irepeatCount);
                 if (ret)
                     return true;
             }
@@ -1056,6 +1309,8 @@ namespace Allinone.OPSpace
         }
         public bool IsHaveBranchSeed()
         {
+            if (ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                return true;
             if (IsSeed)
                 return true;
             foreach (AnalyzeClass analyzeClass in BranchList)
@@ -1073,6 +1328,8 @@ namespace Allinone.OPSpace
         }
         public bool IsHaveBranchSeedGood()
         {
+            if (ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                return true;
             if (IsSeed)
             {
                 if (IsVeryGood)
@@ -1124,7 +1381,7 @@ namespace Allinone.OPSpace
                 }
                 else
                 {
-                    
+
                 }
             }
             foreach (AnalyzeClass analyzeClass in BranchList)
@@ -2368,6 +2625,50 @@ namespace Allinone.OPSpace
                     GAPPara.Reset();
                     StiltsPara.Reset();
                     PADPara.Reset();
+
+                    switch (VERSION)
+                    {
+                        case VersionEnum.ALLINONE:
+                            switch (OPTION)
+                            {
+                                case OptionEnum.MAIN_X6:
+
+                                    if (Level == 2)
+                                    {
+                                        NORMALPara.ExtendX = 120;
+                                        NORMALPara.ExtendY = 120;
+
+                                        ALIGNPara.AlignMethod = AlignMethodEnum.AUFIND;
+                                        ALIGNPara.AlignMode = AlignModeEnum.AREA;
+                                        ALIGNPara.AbsAlignMode = AbsoluteAlignEnum.RELATION;
+                                        ALIGNPara.ABSOffset = 0.35f;
+                                        ALIGNPara.MTOffset = 0;
+                                        ALIGNPara.MTResolution = Universal.SetupDefaultResolutionValue;
+                                    }
+                                    else if (Level == 3)
+                                    {
+                                        NORMALPara.ExtendX = 40;
+                                        NORMALPara.ExtendY = 40;
+
+                                        ALIGNPara.AlignMethod = AlignMethodEnum.AUFIND;
+                                        ALIGNPara.AlignMode = AlignModeEnum.AREA;
+                                        ALIGNPara.AbsAlignMode = AbsoluteAlignEnum.NONE;
+                                        ALIGNPara.ABSOffset = 0;
+                                        ALIGNPara.MTOffset = 0;
+                                        ALIGNPara.MTResolution = Universal.SetupDefaultResolutionValue;
+
+                                        INSPECTIONPara.InspectionMethod = InspectionMethodEnum.Equalize;
+                                        INSPECTIONPara.IBArea = 50;
+                                        INSPECTIONPara.IBCount = 1000;
+                                        INSPECTIONPara.IBTolerance = 128;
+                                        INSPECTIONPara.InspectionAB = Inspection_A_B_Enum.Histogram;
+                                    }
+
+
+                                    break;
+                            }
+                            break;
+                    }
                 }
                 else
                 {
@@ -2432,23 +2733,67 @@ namespace Allinone.OPSpace
             RelateASNItem = NORMALPara.RelateASNItem;
             IsSeed = NORMALPara.IsSeed;
 
-            switch(VERSION)
+            switch (VERSION)
             {
                 case VersionEnum.ALLINONE:
-                    switch(OPTION)
+                    switch (OPTION)
                     {
                         case OptionEnum.MAIN_X6:
 
-                            ExtendX = 40;
-                            ExtendY = 40;
+                            if (Level == 2)
+                            {
+                                NORMALPara.ExtendX = 120;
+                                NORMALPara.ExtendY = 120;
 
-                            ALIGNPara.AlignMethod = AlignMethodEnum.AUFIND;
-                            ALIGNPara.AlignMode = AlignModeEnum.BORDER;
+                                ALIGNPara.AlignMethod = AlignMethodEnum.AUFIND;
+                                ALIGNPara.AlignMode = AlignModeEnum.AREA;
+                                ALIGNPara.AbsAlignMode = AbsoluteAlignEnum.RELATION;
+                                ALIGNPara.ABSOffset = 0.35f;
+                                ALIGNPara.MTOffset = 0;
+                                ALIGNPara.MTResolution = Universal.SetupDefaultResolutionValue;
+                            }
+                            else if (Level == 3)
+                            {
+                                NORMALPara.ExtendX = 40;
+                                NORMALPara.ExtendY = 40;
+
+                                ALIGNPara.AlignMethod = AlignMethodEnum.AUFIND;
+                                ALIGNPara.AlignMode = AlignModeEnum.AREA;
+                                ALIGNPara.AbsAlignMode = AbsoluteAlignEnum.NONE;
+                                ALIGNPara.ABSOffset = 0;
+                                ALIGNPara.MTOffset = 0;
+                                ALIGNPara.MTResolution = Universal.SetupDefaultResolutionValue;
+
+                                INSPECTIONPara.InspectionMethod = InspectionMethodEnum.Equalize;
+                                INSPECTIONPara.IBArea = 50;
+                                INSPECTIONPara.IBCount = 1000;
+                                INSPECTIONPara.IBTolerance = 128;
+                                INSPECTIONPara.InspectionAB = Inspection_A_B_Enum.Histogram;
+                            }
+
 
                             break;
                     }
                     break;
             }
+
+            //switch (VERSION)
+            //{
+            //    case VersionEnum.ALLINONE:
+            //        switch (OPTION)
+            //        {
+            //            case OptionEnum.MAIN_X6:
+
+            //                ExtendX = 40;
+            //                ExtendY = 40;
+
+            //                ALIGNPara.AlignMethod = AlignMethodEnum.AUFIND;
+            //                ALIGNPara.AlignMode = AlignModeEnum.BORDER;
+
+            //                break;
+            //        }
+            //        break;
+            //}
 
 
         }
@@ -3332,7 +3677,7 @@ namespace Allinone.OPSpace
                     FromMoverString(showmover, ToMoverString(), showcolor, biaslocation, sizeratio, offset);
 
                     //ADD GAARA
-                    FromMoverString(showmover, ToMoverString(), HeightReasonsColors, biaslocation, sizeratio, offset);
+                    //FromMoverString(showmover, ToMoverString(), HeightReasonsColors, biaslocation, sizeratio, offset);
                 }
                 else
                 {
@@ -3341,6 +3686,7 @@ namespace Allinone.OPSpace
                         case OptionEnum.MAIN_X6:
                         case JetEazy.OptionEnum.MAIN_SERVICE:
                             if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
+                                 || OCRPara.OCRMethod == OCRMethodEnum.QRCODE
                                 || OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
                                 FromMoverString(showmover, ToMoverString(), showcolor, biaslocation, sizeratio, offset);
 
@@ -3353,7 +3699,7 @@ namespace Allinone.OPSpace
                 }
             }
 
-            switch(OPTION)
+            switch (OPTION)
             {
                 case OptionEnum.MAIN_X6:
                 case JetEazy.OptionEnum.MAIN_SERVICE:
@@ -3406,7 +3752,7 @@ namespace Allinone.OPSpace
                     break;
             }
 
-           
+
         }
         /// <summary>
         /// 取得 PassInfo 裏指定的 Analyze
@@ -4172,7 +4518,8 @@ namespace Allinone.OPSpace
                     myOringinOffsetPointF = new PointF(offsetpointf.X + myOPRectF.X, offsetpointf.Y + myOPRectF.Y);
 
                     bmpPATTERN.Dispose();
-                    bmpPATTERN = new Bitmap(bmpinput);
+                    //bmpPATTERN = new Bitmap(bmpinput);
+                    bmpPATTERN = (Bitmap)bmpinput.Clone(new Rectangle(0, 0, bmpinput.Width, bmpinput.Height), PixelFormat.Format24bppRgb);
                 }
                 else
                 {
@@ -4181,13 +4528,19 @@ namespace Allinone.OPSpace
                     myOPRectF = CreateOPRectF(bmpinput, offsetpointf);
                     myOringinOffsetPointF = new PointF(offsetpointf.X + myOPRectF.X, offsetpointf.Y + myOPRectF.Y);
 
+                    if (myOPRectF.Width == 0)
+                        myOPRectF.Width = 1;
+                    if (myOPRectF.Height == 0)
+                        myOPRectF.Height = 1;
+
                     bmpPATTERN.Dispose();
                     bmpPATTERN = (Bitmap)bmpinput.Clone(myOPRectF, PixelFormat.Format32bppArgb);
                 }
             }
 
             bmpWIP.Dispose();
-            bmpWIP = new Bitmap(bmpPATTERN);
+            //bmpWIP = new Bitmap(bmpPATTERN);
+            bmpWIP = (Bitmap)bmpPATTERN.Clone(new Rectangle(0, 0, bmpPATTERN.Width, bmpPATTERN.Height), PixelFormat.Format24bppRgb);
 
             //產生 Direct Mask
             if (isroot)
@@ -4254,8 +4607,8 @@ namespace Allinone.OPSpace
             if (!isgood)
                 reason = ReasonEnum.NG;
 
-            workstatus.SetWorkStatus(bmpPATTERN, bmpWIP, bmpMASK, reason, errorstring, processstring, PassInfo);
-            TrainStatusCollection.Add(workstatus);
+            //workstatus.SetWorkStatus(bmpPATTERN, bmpWIP, bmpMASK, reason, errorstring, processstring, PassInfo);
+            //TrainStatusCollection.Add(workstatus);
             //IsTempSave = true;
             if (IsTempSave && analyzestring == "A02-02-0005_00")
             {
@@ -4310,7 +4663,7 @@ namespace Allinone.OPSpace
 
             //string str = Universal.TESTPATH + "\\ANALYZETEST\\" + ToAnalyzeTestString();
 
-            //if (AliasName == "CAP1")
+            ////if (AliasName == "CAP1")
             //{
             //    bmpPATTERN.Save(str + " PATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
             //    bmpMASK.Save(str + " MASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
@@ -4371,7 +4724,7 @@ namespace Allinone.OPSpace
                             branchanalyze.bmpMASK.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + branchanalyze.NoSaveStr + "-B_MASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
                         }
 
-                        branchanalyze.FillTrainStatus(TrainStatusCollection, ToLogString());
+                        //branchanalyze.FillTrainStatus(TrainStatusCollection, ToLogString());
                         //TrainStatusCollection.SaveProcessAndError(Universal.TESTPATH + "\\M1", ToAnalyzeString());
                     }
                     if (!isgood)
@@ -4424,16 +4777,16 @@ namespace Allinone.OPSpace
                                  isgood &= branch.A03_RunMeAndSubTreeWithA02();
                          });
 #endif
-                    foreach (AnalyzeClass branchanalyze in BranchList)
-                    {
-                        if (branchanalyze.MaskMethod == MaskMethodEnum.NONE)
-                        {
-                            if (branchanalyze.TrainStatusCollection.COUNT > 0)
-                            {
-                                branchanalyze.FillTrainStatus(TrainStatusCollection, ToLogString());
-                            }
-                        }
-                    }
+                    //foreach (AnalyzeClass branchanalyze in BranchList)
+                    //{
+                    //    if (branchanalyze.MaskMethod == MaskMethodEnum.NONE)
+                    //    {
+                    //        if (branchanalyze.TrainStatusCollection.COUNT > 0)
+                    //        {
+                    //            //branchanalyze.FillTrainStatus(TrainStatusCollection, ToLogString());
+                    //        }
+                    //    }
+                    //}
 
                     strTmers += " E: " + watch.ElapsedMilliseconds;
                     watch.Reset();
@@ -4522,7 +4875,7 @@ namespace Allinone.OPSpace
 
 
             isgood = ALIGNPara.AlignTrainProcess(bmpWIP, ref bmpPATTERN, bmpMASK, this.Brightness, this.Contrast, ToLogAnalyzeString(), PassInfo, false);
-            ALIGNPara.FillTrainStatus(TrainStatusCollection, ToLogString());
+            //ALIGNPara.FillTrainStatus(TrainStatusCollection, ToLogString());
 
             //isgood = MEASUREPara.MeasureProcess(bmpWIP, bmpPATTERN, bmpMASK, this.Brightness, this.Contrast, ToAnalyzeString(), PassInfo, true);
             //MEASUREPara.FillTrainStatus(TrainStatusCollection, ToLogString());
@@ -4538,6 +4891,11 @@ namespace Allinone.OPSpace
             bool isroot = Level == 1;
             bool isgood = true;
             Bitmap bmpALIGNED = new Bitmap(1, 1);
+
+
+            PADPara.RunDataOK = false;//复位数据
+            PADPara.DescStr = string.Empty;
+            PADPara.QLERunDataStr = string.Empty;
 
             //Universal.isAutoDebug = true;
             //if (PageNo == 0)
@@ -4605,13 +4963,16 @@ namespace Allinone.OPSpace
 
                 //}
                 ALIGNPara.Score = -1;
-             
 
-                switch(ALIGNPara.AlignMethod)
+
+                switch (ALIGNPara.AlignMethod)
                 {
 #if USEHIKROT
-                    case AlignMethodEnum.HIK_FIND:
-                        isgood &= ALIGNPara.HikFindRun(bmpWIP, ref bmpOUTPUT, istrain, Brightness, Contrast);
+                    case AlignMethodEnum.HIK_HPFIND:
+                        isgood &= ALIGNPara.HikFindRun(bmpWIP, ref bmpOUTPUT, istrain, Brightness, Contrast, VisionDesigner.AlmightyPatMatch.PatMatchAlgorithmType.HPFeature);
+                        break;
+                    case AlignMethodEnum.HIK_FASTFIND:
+                        isgood &= ALIGNPara.HikFindRun(bmpWIP, ref bmpOUTPUT, istrain, Brightness, Contrast, VisionDesigner.AlmightyPatMatch.PatMatchAlgorithmType.FastFeature);
                         break;
 #endif
                     default:
@@ -4630,7 +4991,35 @@ namespace Allinone.OPSpace
                 //        Universal.GlobalImageFormat);
                 //}
 
+                switch (OPTION)
+                {
+                    case OptionEnum.MAIN_SDM3:
+                    case OptionEnum.MAIN_SDM2:
 
+                        //PADPara.bmpMeasureOutput.Dispose();
+                        ////PADPara.bmpMeasureOutput = new Bitmap(bmpWIP);
+                        //PADPara.bmpMeasureOutput = (Bitmap)bmpWIP.Clone();
+
+                        switch (PADPara.PADMethod)
+                        {
+                            case PADMethodEnum.QLE_CHECK:
+                            case PADMethodEnum.GLUECHECK:
+                            case PADMethodEnum.GLUECHECK_BlackEdge:
+                                PADPara.bmpMeasureOutput.Dispose();
+                                PADPara.bmpMeasureOutput = new Bitmap(bmpWIP);
+                                //PADPara.bmpMeasureOutput = (Bitmap)bmpALIGNED.Clone();
+
+                                if (!isgood)
+                                {
+                                    PADPara.DescStr = "无芯片";
+                                }
+
+
+                                break;
+                        }
+
+                        break;
+                }
 
                 //if (PageNo == 2)
                 //    bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\ALAIGN OUTPUT " + NoSaveStr + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
@@ -4672,6 +5061,8 @@ namespace Allinone.OPSpace
                 bmpALIGNED = (Bitmap)bmpOUTPUT.Clone();
 
             }
+
+
             // 3. 檢測是否正確
             if (isgood && !INI.ISONLYCHECKSN && INSPECTIONPara.InspectionMethod != InspectionMethodEnum.NONE)
             {
@@ -4710,7 +5101,20 @@ namespace Allinone.OPSpace
             if (isgood && !INI.ISONLYCHECKSN && MEASUREPara.MeasureMethod != MeasureMethodEnum.NONE)
             {
                 //bmpWIP.Dispose();
-                bmpWIP = new Bitmap(bmpALIGNED);
+                //bmpWIP = new Bitmap(bmpALIGNED);
+                bmpWIP = (Bitmap)bmpALIGNED.Clone(new RectangleF(0, 0, bmpALIGNED.Width, bmpALIGNED.Height), PixelFormat.Format24bppRgb);
+
+                //Bitmap MaskTemp = new Bitmap(bmpPATTERN.Width, bmpPATTERN.Height, PixelFormat.Format32bppArgb);
+                //DrawRect(MaskTemp, BlackMaskBrush);
+                //A0202_CreateAlignMask(myOringinOffsetPointF, MaskTemp);
+
+                ////    MaskTemp.Save("D:\\maskTemp.png");
+
+                //Bitmap bmpRunLine = new Bitmap(bmpALIGNED);
+                //JetEazy.BasicSpace.myImageProcessor.SetMaskToStilts(bmpRunLine, MaskTemp, Color.White);
+                //myImageProcessor.SetMaskToStilts(bmpRunLine, MaskTemp, 50, 50, Color.Black);
+
+                //bmpRunLine.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-bmpRunLine" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
 
                 //if(istrain)
                 //{
@@ -4727,7 +5131,7 @@ namespace Allinone.OPSpace
                 //     bmpOUTPUT.Save("d:\\testtest\\bmpOUTPUT.png");
 
                 isgood &= MEASUREPara.MeasureProcess(bmpWIP, bmpPATTERN, bmpMASK, ref bmpOUTPUT, Brightness, Contrast, ToAnalyzeString(), PassInfo, istrain);
-                MEASUREPara.IsTempSave = false;
+                MEASUREPara.IsTempSave = true;
                 if (istrain)
                     MEASUREPara.FillTrainStatus(TrainStatusCollection, ToLogString());
                 else
@@ -4781,6 +5185,157 @@ namespace Allinone.OPSpace
                     else
                         OCRPara.FillRunStatus(RunStatusCollection);
                 }
+                else if (OCRPara.OCRMethod == OCRMethodEnum.MONTH)
+                {
+                    //如果加上，就跑不起线来
+                    if (!istrain)
+                    {
+                        //bmpPATTERN.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_PATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_WIP" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpMASK.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_MASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //if(bmpORGLEARNININPUT!=null)
+                        //bmpORGLEARNININPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-bmpORGLEARNININPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+
+
+                        bmpWIP.Dispose();
+                        bmpWIP = new Bitmap(bmpALIGNED);
+
+                        if (istrain)
+                        {
+                            bmpPATTERN.Dispose();
+                            bmpPATTERN = new Bitmap(bmpALIGNED);
+                        }
+
+                        bool isgoodtemp = true;
+                        m_barcode_2D = DateTime.Now.Month.ToString("00");
+                        ReadBarcode2DRealStr = OCRPara.FindOCR_YEARAndMONTH(istrain, bmpPATTERN, bmpWIP, PassInfo, false, out isgoodtemp, m_barcode_2D);
+                        //string strSN = OCRPara.FindOCR_LianTie(istrain, bmpPATTERN, bmpWIP, PassInfo, true, out isgoodtemp, m_barcode_2D);
+
+                        if (istrain)
+                        {
+                            bmpPATTERN.Dispose();
+                            bmpPATTERN = new Bitmap(bmpALIGNED);
+                        }
+
+                        if (!isgoodtemp && !istrain)
+                            isgood = false;
+
+
+                        if (istrain)
+                            OCRPara.FillTrainStatus(TrainStatusCollection);
+                        else
+                            OCRPara.FillRunStatus(RunStatusCollection);
+                    }
+                }
+                else if (OCRPara.OCRMethod == OCRMethodEnum.WEEK)
+                {
+                    //如果加上，就跑不起线来
+                    if (!istrain)
+                    {
+                        //bmpPATTERN.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_PATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_WIP" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpMASK.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_MASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //if(bmpORGLEARNININPUT!=null)
+                        //bmpORGLEARNININPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-bmpORGLEARNININPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+
+
+                        bmpWIP.Dispose();
+                        bmpWIP = new Bitmap(bmpALIGNED);
+
+                        if (istrain)
+                        {
+                            bmpPATTERN.Dispose();
+                            bmpPATTERN = new Bitmap(bmpALIGNED);
+                        }
+
+                        bool isgoodtemp = true;
+                        m_barcode_2D = GetWeekNumber().ToString("00");
+                        ReadBarcode2DRealStr = OCRPara.FindOCR_WEEK(istrain, bmpPATTERN, bmpWIP, PassInfo, false, out isgoodtemp, m_barcode_2D);
+                        //string strSN = OCRPara.FindOCR_LianTie(istrain, bmpPATTERN, bmpWIP, PassInfo, true, out isgoodtemp, m_barcode_2D);
+
+                        if (istrain)
+                        {
+                            bmpPATTERN.Dispose();
+                            bmpPATTERN = new Bitmap(bmpALIGNED);
+                        }
+
+                        if (!isgoodtemp && !istrain)
+                            isgood = false;
+
+
+                        if (istrain)
+                            OCRPara.FillTrainStatus(TrainStatusCollection);
+                        else
+                            OCRPara.FillRunStatus(RunStatusCollection);
+                    }
+                }
+                else if (OCRPara.OCRMethod == OCRMethodEnum.YEAR)
+                {
+                    //bmpPATTERN.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_PATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    //bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_WIP" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    //bmpMASK.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_MASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    //if(bmpORGLEARNININPUT!=null)
+                    //bmpORGLEARNININPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-bmpORGLEARNININPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    //如果加上，就跑不起线来
+                    if (!istrain)
+                    {
+
+                        bmpWIP.Dispose();
+                        bmpWIP = new Bitmap(bmpALIGNED);
+
+                        if (istrain)
+                        {
+                            bmpPATTERN.Dispose();
+                            bmpPATTERN = new Bitmap(bmpALIGNED);
+                        }
+
+                        bool isgoodtemp = true;
+                        m_barcode_2D = DateTime.Now.Year.ToString("0000");
+                        ReadBarcode2DRealStr = OCRPara.FindOCR_YEARAndMONTH(istrain, bmpPATTERN, bmpWIP, PassInfo, false, out isgoodtemp, m_barcode_2D);
+                        //string strSN = OCRPara.FindOCR_LianTie(istrain, bmpPATTERN, bmpWIP, PassInfo, false, out isgoodtemp, m_barcode_2D);
+
+                        if (!isgoodtemp && !istrain)
+                            isgood = false;
+
+                        if (istrain)
+                            OCRPara.FillTrainStatus(TrainStatusCollection);
+                        else
+                            OCRPara.FillRunStatus(RunStatusCollection);
+                    }
+                }
+                else if (OCRPara.OCRMethod == OCRMethodEnum.VARICHARACTER)
+                {
+                    //bmpPATTERN.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_PATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    //bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_WIP" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    //bmpMASK.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_MASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    //if(bmpORGLEARNININPUT!=null)
+                    //bmpORGLEARNININPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-bmpORGLEARNININPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    //如果加上，就跑不起线来
+                    if (!istrain)
+                    {
+
+                        bmpWIP.Dispose();
+                        bmpWIP = new Bitmap(bmpALIGNED);
+
+                        if (istrain)
+                        {
+                            bmpPATTERN.Dispose();
+                            bmpPATTERN = new Bitmap(bmpALIGNED);
+                        }
+
+                        bool isgoodtemp = true;
+                        ReadBarcode2DRealStr = OCRPara.FindOCR_Biandong(m_barcode_2D, istrain, bmpPATTERN, bmpWIP, PassInfo, out isgoodtemp);
+
+
+                        if (!isgoodtemp && !istrain)
+                            isgood = false;
+
+                        if (istrain)
+                            OCRPara.FillTrainStatus(TrainStatusCollection);
+                        else
+                            OCRPara.FillRunStatus(RunStatusCollection);
+                    }
+                }
             }
             // 6 读取条码及检测 
             if (isgood)
@@ -4824,7 +5379,7 @@ namespace Allinone.OPSpace
                     else
                         OCRPara.FillRunStatus(RunStatusCollection);
                 }
-                else if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX)
+                else if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX || OCRPara.OCRMethod == OCRMethodEnum.QRCODE)
                 {
                     bmpWIP.Dispose();
                     bmpWIP = new Bitmap(bmpALIGNED);
@@ -4837,7 +5392,7 @@ namespace Allinone.OPSpace
 
                     //待添加测试代码
 
-                    ReadBarcode2DStr = OCRPara.DeCode2d(AliasName, INI.IsCheckBarcodeOpen, m_barcode_2D, istrain, bmpPATTERN, bmpWIP, PassInfo, out isgood, out ReadBarcode2DRealStr);
+                    ReadBarcode2DStr = OCRPara.DeCode2d(ToAnalyzeString(), INI.IsCheckBarcodeOpen, m_barcode_2D, istrain, bmpPATTERN, bmpWIP, PassInfo, out isgood, out ReadBarcode2DRealStr);
 
                     //bool isgoodtemp = true;
                     //string strSN = OCRPara.DeCode(JzToolsClass.PassingBarcode, istrain, bmpPATTERN, bmpWIP, PassInfo, out isgoodtemp);
@@ -4860,7 +5415,7 @@ namespace Allinone.OPSpace
 
                     //待添加测试代码
 
-                    ReadBarcode2DStr = OCRPara.DeCode2dGrade(AliasName, INI.IsCheckBarcodeOpen, m_barcode_2D, istrain, bmpPATTERN, bmpWIP, PassInfo, out isgood, out ReadBarcode2DRealStr);
+                    ReadBarcode2DStr = OCRPara.DeCode2dGrade(ToAnalyzeString(), INI.IsCheckBarcodeOpen, m_barcode_2D, istrain, bmpPATTERN, bmpWIP, PassInfo, out isgood, out ReadBarcode2DRealStr);
                     ReadBarcode2DGrade = OCRPara.BarcodeGrade;
 
                     //bool isgoodtemp = true;
@@ -4899,26 +5454,40 @@ namespace Allinone.OPSpace
             }
 
 
-            switch (OPTION)
-            {
-                case OptionEnum.MAIN_SDM3:
-                case OptionEnum.MAIN_SDM2:
+            //PADPara.RunDataOK = false;//复位数据
+            //PADPara.DescStr = string.Empty;
+            //PADPara.QLERunDataStr = string.Empty;
 
-                    switch (PADPara.PADMethod)
-                    {
-                        case PADMethodEnum.GLUECHECK:
-                        case PADMethodEnum.GLUECHECK_BlackEdge:
-                            PADPara.bmpMeasureOutput.Dispose();
-                            //PADPara.bmpMeasureOutput = new Bitmap(bmpWIP);
-                            PADPara.bmpMeasureOutput = (Bitmap)bmpWIP.Clone();
-                            break;
-                    }
+            //switch (OPTION)
+            //{
+            //    case OptionEnum.MAIN_SDM3:
+            //    case OptionEnum.MAIN_SDM2:
 
-                    break;
-            }
+            //        //PADPara.bmpMeasureOutput.Dispose();
+            //        ////PADPara.bmpMeasureOutput = new Bitmap(bmpWIP);
+            //        //PADPara.bmpMeasureOutput = (Bitmap)bmpWIP.Clone();
 
-            PADPara.RunDataOK = false;//复位数据
-            PADPara.DescStr = string.Empty;
+            //        switch (PADPara.PADMethod)
+            //        {
+            //            case PADMethodEnum.QLE_CHECK:
+            //            case PADMethodEnum.GLUECHECK:
+            //            case PADMethodEnum.GLUECHECK_BlackEdge:
+            //                PADPara.bmpMeasureOutput.Dispose();
+            //                PADPara.bmpMeasureOutput = new Bitmap(bmpALIGNED);
+            //                //PADPara.bmpMeasureOutput = (Bitmap)bmpALIGNED.Clone();
+
+            //                if (!isgood)
+            //                {
+            //                    PADPara.DescStr = "无芯片";
+            //                }
+
+
+            //                break;
+            //        }
+
+            //        break;
+            //}
+
             //8检查PAD溢胶
             if (isgood)
             {
@@ -5049,7 +5618,7 @@ namespace Allinone.OPSpace
                         //SaveData(ALIGNPara.ToAlignParaString(), Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + " Info.txt");
                     }
                 }
-                else if(PADPara.PADMethod == PADMethodEnum.PLACODE_CHECK)
+                else if (PADPara.PADMethod == PADMethodEnum.PLACODE_CHECK)
                 {
                     bmpWIP.Dispose();
                     bmpWIP = new Bitmap(bmpALIGNED);
@@ -5184,8 +5753,8 @@ namespace Allinone.OPSpace
                 processstring += analyzestring + " is Root." + Environment.NewLine;
 
                 bmpWIP.Dispose();
-                bmpWIP = new Bitmap(bmpinput);
-                //bmpWIP = (Bitmap)bmpinput.Clone();
+                //bmpWIP = new Bitmap(bmpinput);
+                bmpWIP = (Bitmap)bmpinput.Clone(new RectangleF(0, 0, bmpinput.Width, bmpinput.Height), PixelFormat.Format24bppRgb);
             }
             else
             {
@@ -5214,17 +5783,18 @@ namespace Allinone.OPSpace
                         rectfExtend.Width = 1;
                     if (rectfExtend.Height == 0)
                         rectfExtend.Height = 1;
-                    lock (bmpinput)
+                    //lock (bmpinput)
                     {
                         if (rectfExtend.X + rectfExtend.Width > bmpinput.Width || rectfExtend.Y + rectfExtend.Height > bmpinput.Height)
                         {
                             bmpWIP.Dispose();
-                            bmpWIP = new Bitmap(bmpinput);
+                            //bmpWIP = new Bitmap(bmpinput);
+                            bmpWIP = (Bitmap)bmpinput.Clone(new RectangleF(0, 0, bmpinput.Width, bmpinput.Height), PixelFormat.Format24bppRgb);
                         }
                         else
                         {
                             bmpWIP.Dispose();
-                            bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format32bppArgb);
+                            bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format24bppRgb);
                         }
                     }
 
@@ -5267,10 +5837,11 @@ namespace Allinone.OPSpace
                     if (rectfExtend.X + rectfExtend.Width > bmpinput.Width || rectfExtend.Y + rectfExtend.Height > bmpinput.Height)
                     {
                         //bmpWIP = new Bitmap(bmpinput);
-                        bmpWIP = (Bitmap)bmpinput.Clone();
+                        //bmpWIP = (Bitmap)bmpinput.Clone();
+                        bmpWIP = (Bitmap)bmpinput.Clone(new RectangleF(0, 0, bmpinput.Width, bmpinput.Height), PixelFormat.Format24bppRgb);
                     }
                     else
-                        bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format32bppArgb);
+                        bmpWIP = (Bitmap)bmpinput.Clone(rectfExtend, PixelFormat.Format24bppRgb);
 
 
 
@@ -5306,8 +5877,8 @@ namespace Allinone.OPSpace
                 A0201_GenDirectMask(bmpWIP, new PointF(0, 0));
             }
 
-            workstatus.SetWorkStatus(bmpPATTERN, bmpWIP, bmpMASK, reason, errorstring, processstring, PassInfo);
-            RunStatusCollection.Add(workstatus);
+            //workstatus.SetWorkStatus(bmpPATTERN, bmpWIP, bmpMASK, reason, errorstring, processstring, PassInfo);
+            //RunStatusCollection.Add(workstatus);
 
             //bmpPATTERN.Save(Universal.TESTPATH + "\\ANALYZETEST\\bmpPATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
 
@@ -5363,11 +5934,11 @@ namespace Allinone.OPSpace
             bool isaligngood = false;   //若原有的Analyze 在定位時正確，才可以檢測髒污
 
             //加入一个判断 跳过检测
-           switch(VERSION)
+            switch (VERSION)
             {
                 case VersionEnum.ALLINONE:
 
-                    switch(OPTION)
+                    switch (OPTION)
                     {
                         case OptionEnum.MAIN_X6:
                         case JetEazy.OptionEnum.MAIN_SERVICE:
@@ -5415,6 +5986,7 @@ namespace Allinone.OPSpace
                             case OptionEnum.MAIN_X6:
                             case OptionEnum.MAIN_SDM2:
                             case OptionEnum.MAIN_SDM3:
+                            case OptionEnum.MAIN_SDM5:
                                 break;
                             default:
                                 branchanalyze.FillRunStatus(RunStatusCollection, ToLogString());
@@ -5424,85 +5996,6 @@ namespace Allinone.OPSpace
 
                     if (!isgood)
                         break;
-                }
-
-
-                if (Universal.IsUseSeedFuntion && false)
-                {
-                    foreach (AnalyzeClass branchanalyze in BranchList)
-                    {
-                        if (AnalyzeSeed == null)
-                            break;
-
-                        if (!branchanalyze.IsSeed)
-                        {
-                            branchanalyze.KillInsideList(true);
-                            branchanalyze.LearnList.Clear();
-                            if (AnalyzeSeed.LearnList.Count > 0)
-                            {
-
-                            }
-                            else
-                            {
-                                int itmpindex = 0;
-                                foreach (AnalyzeClass analyze in AnalyzeSeed.BranchList)
-                                {
-                                    AnalyzeClass analyze1tmp = analyze.DeepClone();
-                                    analyze1tmp.PageNo = branchanalyze.PageNo;
-                                    analyze1tmp.Level = branchanalyze.Level;
-                                    analyze1tmp.No = branchanalyze.No;
-
-                                    if (analyze1tmp.ALIGNPara.bmpPattern == null)
-                                        analyze1tmp.ALIGNPara.bmpPattern = new Bitmap(analyze.ALIGNPara.bmpPattern);
-                                    else
-                                    {
-                                        analyze1tmp.ALIGNPara.bmpPattern.Dispose();
-                                        analyze1tmp.ALIGNPara.bmpPattern = new Bitmap(analyze.ALIGNPara.bmpPattern);
-                                    }
-                                    if (analyze1tmp.ALIGNPara.bmpMask == null)
-                                        analyze1tmp.ALIGNPara.bmpMask = new Bitmap(analyze.ALIGNPara.bmpMask);
-                                    else
-                                    {
-                                        analyze1tmp.ALIGNPara.bmpMask.Dispose();
-                                        analyze1tmp.ALIGNPara.bmpMask = new Bitmap(analyze.ALIGNPara.bmpMask);
-                                    }
-
-                                    //if (analyze1tmp.INSPECTIONPara.bmpPattern == null)
-                                    //    analyze1tmp.INSPECTIONPara.bmpPattern = new Bitmap(analyze.INSPECTIONPara.bmpPattern);
-                                    //else
-                                    //{
-                                    //    analyze1tmp.INSPECTIONPara.bmpPattern.Dispose();
-                                    //    analyze1tmp.INSPECTIONPara.bmpPattern = new Bitmap(analyze.INSPECTIONPara.bmpPattern);
-                                    //}
-
-                                    //if (analyze1tmp.INSPECTIONPara.bmpMask == null)
-                                    //    analyze1tmp.INSPECTIONPara.bmpMask = new Bitmap(analyze.INSPECTIONPara.bmpMask);
-                                    //else
-                                    //{
-                                    //    analyze1tmp.INSPECTIONPara.bmpMask.Dispose();
-                                    //    analyze1tmp.INSPECTIONPara.bmpMask = new Bitmap(analyze.INSPECTIONPara.bmpMask);
-                                    //}
-
-                                    bool bOK = analyze1tmp.ALIGNPara.IsSeedTrain(this.Brightness, this.Contrast);
-                                    analyze1tmp.INSPECTIONPara.IsSeed_GetInspectionRequirement(analyze.INSPECTIONPara.bmpPattern, analyze.INSPECTIONPara.bmpMask);
-                                    branchanalyze.BranchList.Add(analyze1tmp);
-
-                                    itmpindex++;
-                                }
-
-                                //branchanalyze.BranchList = AnalyzeSeed.BranchList;
-
-                                branchanalyze.mySeedRectF = new RectangleF(AnalyzeSeed.myOPRectF.X, AnalyzeSeed.myOPRectF.Y, AnalyzeSeed.myOPRectF.Width, AnalyzeSeed.myOPRectF.Height);
-                                branchanalyze.mySeedOffset = new PointF(branchanalyze.myOPRectF.X - AnalyzeSeed.myOPRectF.X, branchanalyze.myOPRectF.Y - AnalyzeSeed.myOPRectF.Y);
-
-                                branchanalyze.mySeedRectF.X += branchanalyze.mySeedOffset.X;
-                                branchanalyze.mySeedRectF.Y += branchanalyze.mySeedOffset.Y;
-
-
-                            }
-
-                        }
-                    }
                 }
 
 
@@ -5523,16 +6016,30 @@ namespace Allinone.OPSpace
                     }
 #endif
 #if !MULTI
+                    //Parallel.ForEach(winningPatternsList, new ParallelOptions { MaxDegreeOfParallelism = 4 }, (winningPattern) =>
+
                     //MultiProcess
                     if (Universal.IsMultiThread && Universal.IsMultiThreadUseToRun)
                     {
+                        //Parallel.ForEach(BranchList, new ParallelOptions { MaxDegreeOfParallelism = 64 }, branch =>
+                        // {
+                        //     if (branch.MaskMethod == MaskMethodEnum.NONE)
+                        //         branch.A08_RunMeAndSubTreeWithA07();
+                        // });
+
                         Parallel.ForEach(BranchList, branch =>
-                         {
-                             // System.Threading.Thread.Sleep(100);
-                             if (branch.MaskMethod == MaskMethodEnum.NONE)
-                                 //isgood &= branch.A08_RunMeAndSubTreeWithA07();
-                                 branch.A08_RunMeAndSubTreeWithA07();
-                         });
+                        {
+                            if (branch.MaskMethod == MaskMethodEnum.NONE)
+                                branch.A08_RunMeAndSubTreeWithA07();
+                        });
+
+                        //Parallel.ForEach(BranchList, branch =>
+                        //{
+                        //    // System.Threading.Thread.Sleep(100);
+                        //    if (branch.MaskMethod == MaskMethodEnum.NONE)
+                        //        //isgood &= branch.A08_RunMeAndSubTreeWithA07();
+                        //        branch.A08_RunMeAndSubTreeWithA07();
+                        //});
                     }
                     else
                     {
@@ -5561,6 +6068,7 @@ namespace Allinone.OPSpace
                                     case OptionEnum.MAIN_X6:
                                     case OptionEnum.MAIN_SDM2:
                                     case OptionEnum.MAIN_SDM3:
+                                    case OptionEnum.MAIN_SDM5:
                                         break;
                                     default:
                                         branchanalyze.FillRunStatus(RunStatusCollection, ToLogString());
@@ -5569,41 +6077,9 @@ namespace Allinone.OPSpace
                                 //branchanalyze.FillRunStatus(RunStatusCollection, ToLogString());
                             }
 
-                            //if (Universal.IsUseSeedFuntion)
-                            //{
-                            //    foreach (AnalyzeClass branchanalyze1 in branchanalyze.BranchList)
-                            //    {
-                            //        if (branchanalyze1.MaskMethod == MaskMethodEnum.NONE)
-                            //        {
-                            //            if (branchanalyze1.RunStatusCollection.NGCOUNT > 0)
-                            //            {
-                            //                branchanalyze.FillRunStatus(branchanalyze1.RunStatusCollection, ToLogString());
-                            //                //isgood = false;
-                            //                //IsVeryGood = isgood;
-                            //                branchanalyze.IsVeryGood = false;
-                            //            }
-                            //        }
-                            //    }
-                            //}
-
-
                         }
                     }
                 }
-
-                //if (Universal.IsUseSeedFuntion)
-                //{
-                //    foreach (AnalyzeClass branchanalyze in BranchList)
-                //    {
-                //        if (AnalyzeSeed == null)
-                //            break;
-
-                //        branchanalyze.BackupInsideList(AnalyzeSeed);
-                //        if (!branchanalyze.IsSeed)
-                //            branchanalyze.LearnList.Clear();
-
-                //    }
-                //}
 
                 //若本身的Align正確，最後需要檢測剩下的地方有沒有東西
                 if (isaligngood)
@@ -5639,40 +6115,8 @@ namespace Allinone.OPSpace
 
                     uselearnindex++;
                 }
-
                 IsVeryGood = isgood;
             }
-
-            //if (Universal.IsUseSeedFuntion)
-            //{
-            //    foreach (AnalyzeClass branchanalyze in BranchList)
-            //    {
-            //        if (AnalyzeSeed == null)
-            //            break;
-
-            //        //if (Universal.IsUseSeedFuntion)
-            //        //{
-            //        //    foreach (AnalyzeClass branchanalyze1 in branchanalyze.BranchList)
-            //        //    {
-            //        //        if (branchanalyze1.MaskMethod == MaskMethodEnum.NONE)
-            //        //        {
-            //        //            if (branchanalyze1.RunStatusCollection.NGCOUNT > 0)
-            //        //            {
-            //        //                branchanalyze.FillRunStatus(branchanalyze1.RunStatusCollection, ToLogString());
-            //        //                //isgood = false;
-            //        //                //IsVeryGood = isgood;
-            //        //                branchanalyze.IsVeryGood = false;
-            //        //            }
-            //        //        }
-            //        //    }
-            //        //}
-
-            //        branchanalyze.RestoreInsideList(branchanalyze.IsSeed);
-            //    }
-            //}
-
-            //  bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\RELATEMASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
-
             return isgood;
         }
         int itemp = 0;
@@ -5947,6 +6391,11 @@ namespace Allinone.OPSpace
             myOPRectF = CreateOPRectF(bmpinput, offsetpointf);
             myOringinOffsetPointF = new PointF(offsetpointf.X + myOPRectF.X, offsetpointf.Y + myOPRectF.Y);
 
+            if (myOPRectF.Width == 0)
+                myOPRectF.Width = 1;
+            if (myOPRectF.Height == 0)
+                myOPRectF.Height = 1;
+
             bmpPATTERN.Dispose();
             bmpPATTERN = (Bitmap)bmpinput.Clone(myOPRectF, PixelFormat.Format32bppArgb);
 
@@ -6040,10 +6489,10 @@ namespace Allinone.OPSpace
             int j = 0;
 
 
-            switch(VERSION)
+            switch (VERSION)
             {
                 case VersionEnum.ALLINONE:
-                    switch(OPTION)
+                    switch (OPTION)
                     {
                         case OptionEnum.MAIN_X6:
                         case JetEazy.OptionEnum.MAIN_SERVICE:
@@ -6155,7 +6604,7 @@ namespace Allinone.OPSpace
         /// <param name="bmpinput"></param>
         /// <param name="offsetpoint"></param>
         /// <returns></returns>
-#endregion
+        #endregion
         #region Inspection Operation
 
         bool I01_InspectionProcess(bool istrain)
@@ -6182,13 +6631,19 @@ namespace Allinone.OPSpace
         {
             bool isgood = true;
 
+            //if (m_IsSaveTemp)
+            {
+                if (!System.IO.Directory.Exists("D:\\testtest"))
+                    System.IO.Directory.CreateDirectory("D:\\testtest");
+            }
+
             if (istrain)
             {
-                JzToolsClass toolsClass=new JzToolsClass();
+                JzToolsClass toolsClass = new JzToolsClass();
                 Rectangle rect = toolsClass.SimpleRect(bmpPATTERN.Size);
                 rect.Inflate(-ExtendX, -ExtendY);
 
-                Bitmap mybmptemp = bmpPATTERN.Clone(rect,PixelFormat.Format32bppArgb);
+                Bitmap mybmptemp = bmpPATTERN.Clone(rect, PixelFormat.Format32bppArgb);
                 PADPara.P10_GetPADInspectionRequirement(mybmptemp, bmpMASK, ToAnalyzeString(), PassInfo);
                 mybmptemp.Dispose();
                 //PADPara.P10_GetPADInspectionRequirement(bmpPATTERN, bmpMASK, ToAnalyzeString(), PassInfo);
@@ -6252,6 +6707,11 @@ namespace Allinone.OPSpace
 
             myOPRectF = CreateOPRectF(bmpinput, offsetpointf);
             myOringinOffsetPointF = new PointF(offsetpointf.X + myOPRectF.X, offsetpointf.Y + myOPRectF.Y);
+
+            if (myOPRectF.Width == 0)
+                myOPRectF.Width = 1;
+            if (myOPRectF.Height == 0)
+                myOPRectF.Height = 1;
 
             bmpPATTERN.Dispose();
             bmpPATTERN = (Bitmap)bmpinput.Clone(myOPRectF, PixelFormat.Format32bppArgb);
@@ -6325,7 +6785,7 @@ namespace Allinone.OPSpace
         }
 
         public bool IsZ05Good = false;
-        public void Z05_AlignTrainProcess()
+        public void Z05_AlignTrainProcess(bool istrain = true)
         {
             bool isgood = false;
             bool istraingood = false;
@@ -6337,7 +6797,7 @@ namespace Allinone.OPSpace
             isgood = istraingood;
 
             //  ALIGNPara.IsTempSave = true;
-            isgood = A06_RunProcess(true, ref isalligngood);
+            isgood = A06_RunProcess(istrain, ref isalligngood);
             //  ALIGNPara.IsTempSave = false;
             if (isgood)
             {
@@ -6356,9 +6816,9 @@ namespace Allinone.OPSpace
 
             if (isgood)
             {
-                bmpPATTERN.Save(Universal.TESTPATH + "\\ANALYZETEST\\PATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
-                bmpWIP.Save(Universal.TESTPATH + "\\ANALYZETEST\\WIP" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
-                bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\OUTPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                //bmpPATTERN.Save(Universal.TESTPATH + "\\ANALYZETEST\\PATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                //bmpWIP.Save(Universal.TESTPATH + "\\ANALYZETEST\\WIP" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                //bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\OUTPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
 
                 //ALIGNPara.IsTempSave = true;
                 //isgood = A06_RunProcess(false, ref isalligngood, true);
@@ -6425,7 +6885,10 @@ namespace Allinone.OPSpace
             else if (PADPara.PADMethod == PADMethodEnum.QLE_CHECK)
             {
                 bmpWIP.Dispose();
-                bmpWIP = new Bitmap(PADPara.bmpPadFindOutput);
+                if (istrain)
+                    bmpWIP = new Bitmap(PADPara.bmpPadFindOutput);
+                else
+                    bmpWIP = new Bitmap(PADPara.bmpMeasureOutput);
 
                 PADPara.FillRunStatus(TrainStatusCollection, ToLogString());
             }
@@ -6480,6 +6943,7 @@ namespace Allinone.OPSpace
         public void ResetTrainStatus()
         {
             TrainStatusCollection.Clear();
+            ResetAnalyzeBarcodeStr();
 
             ALIGNPara.ResetTrainStatus();
             INSPECTIONPara.ResetTrainStatus();
@@ -6505,6 +6969,7 @@ namespace Allinone.OPSpace
             LastLearnIndex = 0;
 
             RunStatusCollection.Clear();
+            ResetAnalyzeBarcodeStr();
 
             ALIGNPara.ResetRunStatus();
             INSPECTIONPara.ResetRunStatus();
@@ -6592,6 +7057,11 @@ namespace Allinone.OPSpace
         public void GetDirectbmpPattern(Bitmap bmpinput, PointF offsetpointf)
         {
             myOPRectF = CreateOPRectF(bmpinput, offsetpointf);
+
+            if (myOPRectF.Width == 0)
+                myOPRectF.Width = 1;
+            if (myOPRectF.Height == 0)
+                myOPRectF.Height = 1;
 
             bmpPATTERN.Dispose();
             bmpPATTERN = (Bitmap)bmpinput.Clone(myOPRectF, PixelFormat.Format32bppArgb);
@@ -6867,6 +7337,13 @@ namespace Allinone.OPSpace
             }
         }
 
+        int GetWeekNumber()
+        {
+            CultureInfo ciCurr = CultureInfo.CurrentCulture;
+            int weekNum = ciCurr.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+            return weekNum;
+        }
+
         #endregion
 
         #region SMOOTH
@@ -6876,63 +7353,86 @@ namespace Allinone.OPSpace
         }
         public void CalculateChipWidth()
         {
-            CheckItemsList.Clear();
-            //switch(PADPara.PADMethod)
-            //{
-            //    case PADMethodEnum.PADCHECK:
-            //        return;
-            //        break;
-            //}
-
-            if (PADPara.PADMethod == PADMethodEnum.GLUECHECK
-                || PADPara.PADMethod == PADMethodEnum.GLUECHECK_BlackEdge)
-            {
-            }
-            else
-            {
-                return;
-            }
-            if (PADPara.glues == null)
-                return;
-
-            double aa = double.Parse(DateTime.Now.ToString("ss.fff"));
-            long xx = DateTime.Now.Ticks;
-            string aStr = xx.ToString();
-            if (aStr.Length > 6)
-            {
-                aa = double.Parse(aStr.Substring(0, 6)) * 0.0001;
-            }
-            else
-            {
-                aa = double.Parse(aStr) * 0.0001;
-            }
-
             int i = 0;
-
-            while (i < (int)BorderTypeEnum.COUNT)
+            CheckItemsList.Clear();
+            switch (PADPara.PADMethod)
             {
-                xx = DateTime.Now.Ticks;
-                aStr = xx.ToString();
-                if (aStr.Length > 6)
-                {
-                    aa = double.Parse(aStr.Substring(0, 6)) * 0.0001;
-                }
-                else
-                {
-                    aa = double.Parse(aStr) * 0.0001;
-                }
+                case PADMethodEnum.QLE_CHECK:
 
-                CheckItemClass checkitem = new CheckItemClass();
-                //double aa = double.Parse(DateTime.Now.ToString("ss.fff"));
-                checkitem.BorderType = (BorderTypeEnum)i;
-                //checkitem.ChipMin = PADPara.glues[i].GetMinMM() + (float)GetRandom(-50000, 50000) * 0.000000013 * aa;// + GetRandom(-0.1, 0.1);
-                //checkitem.ChipMax = PADPara.glues[i].GetMaxMM() + (float)GetRandom(-30000, 30000) * 0.000000012 * aa;// + GetRandom(-0.1, 0.1);
-                checkitem.ChipMin = PADPara.glues[i].GetMinMM() + (float)GetRandom(-aa * 0.000013, aa * 0.000015);// + GetRandom(-0.1, 0.1);
-                checkitem.ChipMax = PADPara.glues[i].GetMaxMM() + (float)GetRandom(-aa * 0.000012, aa * 0.000017);// + GetRandom(-0.1, 0.1);
+                    if (PADPara.glues == null)
+                        return;
 
-                CheckItemsList.Add(checkitem);
-                //System.Threading.Thread.Sleep(1);
-                i++;
+                    i = 0;
+
+                    while (i < (int)BorderTypeEnum.COUNT)
+                    {
+
+                        CheckItemClass checkitem = new CheckItemClass();
+                        checkitem.BorderType = (BorderTypeEnum)i;
+                        checkitem.ChipMin = PADPara.glues[i].LengthMin;
+                        checkitem.ChipMax = PADPara.glues[i].LengthMax;
+
+                        CheckItemsList.Add(checkitem);
+                        i++;
+                    }
+
+                    break;
+                default:
+
+
+                    if (PADPara.PADMethod == PADMethodEnum.GLUECHECK
+                || PADPara.PADMethod == PADMethodEnum.GLUECHECK_BlackEdge)
+                    {
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    if (PADPara.glues == null)
+                        return;
+
+                    double aa = double.Parse(DateTime.Now.ToString("ss.fff"));
+                    long xx = DateTime.Now.Ticks;
+                    string aStr = xx.ToString();
+                    if (aStr.Length > 6)
+                    {
+                        aa = double.Parse(aStr.Substring(0, 6)) * 0.0001;
+                    }
+                    else
+                    {
+                        aa = double.Parse(aStr) * 0.0001;
+                    }
+
+                    i = 0;
+
+                    while (i < (int)BorderTypeEnum.COUNT)
+                    {
+                        xx = DateTime.Now.Ticks;
+                        aStr = xx.ToString();
+                        if (aStr.Length > 6)
+                        {
+                            aa = double.Parse(aStr.Substring(0, 6)) * 0.0001;
+                        }
+                        else
+                        {
+                            aa = double.Parse(aStr) * 0.0001;
+                        }
+
+                        CheckItemClass checkitem = new CheckItemClass();
+                        //double aa = double.Parse(DateTime.Now.ToString("ss.fff"));
+                        checkitem.BorderType = (BorderTypeEnum)i;
+                        //checkitem.ChipMin = PADPara.glues[i].GetMinMM() + (float)GetRandom(-50000, 50000) * 0.000000013 * aa;// + GetRandom(-0.1, 0.1);
+                        //checkitem.ChipMax = PADPara.glues[i].GetMaxMM() + (float)GetRandom(-30000, 30000) * 0.000000012 * aa;// + GetRandom(-0.1, 0.1);
+                        checkitem.ChipMin = PADPara.glues[i].GetMinMM() + (float)GetRandom(-aa * 0.000013, aa * 0.000015);// + GetRandom(-0.1, 0.1);
+                        checkitem.ChipMax = PADPara.glues[i].GetMaxMM() + (float)GetRandom(-aa * 0.000012, aa * 0.000017);// + GetRandom(-0.1, 0.1);
+
+                        CheckItemsList.Add(checkitem);
+                        //System.Threading.Thread.Sleep(1);
+                        i++;
+                    }
+
+                    break;
+
             }
         }
         public string ToReportString1()
@@ -6942,22 +7442,23 @@ namespace Allinone.OPSpace
 
             if (!PADPara.RunDataOK)
                 return str;
-
-            foreach (CheckItemClass checkitem in CheckItemsList)
+            switch (PADPara.PADMethod)
             {
-                str += checkitem.ToReportString() + ",";
-                //switch (checkitem.BorderType)
-                //{
-                //    case BorderTypeEnum.LEFT:
-                //        break;
-                //    case BorderTypeEnum.TOP:
-                //        break;
-                //    case BorderTypeEnum.RIGHT:
-                //        break;
-                //    case BorderTypeEnum.BOTTOM:
-                //        break;
-                //}
+                case PADMethodEnum.QLE_CHECK:
+                    str += PADPara.QLERunDataStr + ",";
+                    foreach (CheckItemClass checkitem in CheckItemsList)
+                    {
+                        str += checkitem.ToReportString2() + ",";
+                    }
+                    break;
+                default:
+                    foreach (CheckItemClass checkitem in CheckItemsList)
+                    {
+                        str += checkitem.ToReportString() + ",";
+                    }
+                    break;
             }
+
             return str;
         }
 
@@ -7033,7 +7534,7 @@ namespace Allinone.OPSpace
             double diffval = maxval - minval;
 
             diffval = diffval * (double)rnd.Next(1, 999999) / 1000000d;
-            
+
             return minval + diffval;
         }
         #endregion
@@ -7092,6 +7593,16 @@ namespace Allinone.OPSpace
 
             return Str;
         }
+        public string ToReportString2()
+        {
+            string Str = "";
+
+            //Str += BorderType.ToString() + ",";
+            //Str += ChipMin.ToString("0.000000") + ",";
+            Str += ChipMax.ToString("0.000000");
+
+            return Str;
+        }
         public List<string> BackupList = new List<string>();
 
         public bool Check(double val)
@@ -7110,9 +7621,9 @@ namespace Allinone.OPSpace
             bool ret = false;
 
             string[] strs = BackupList[index].Split('@');
-            ret = IsInRange(float.Parse(strs[0]), checkitem.ChipMin, CompDiff) 
+            ret = IsInRange(float.Parse(strs[0]), checkitem.ChipMin, CompDiff)
                     && IsInRange(float.Parse(strs[1]), checkitem.ChipMax, CompDiff);
-            
+
             return ret;
         }
         public void Restore(int index, CheckItemClass checkitem)

@@ -59,15 +59,16 @@
             this.label7 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
-            this.tabPage4 = new System.Windows.Forms.TabPage();
-            this.tabPage5 = new System.Windows.Forms.TabPage();
-            this.tabPage6 = new System.Windows.Forms.TabPage();
             this.jzTransparentPanel1 = new JetEazy.BasicSpace.JzTransparentPanel();
+            this.tabPage3 = new System.Windows.Forms.TabPage();
             this.axisMotionUI1 = new JetEazy.UISpace.AxisMotionUI();
+            this.tabPage4 = new System.Windows.Forms.TabPage();
             this.axisMotionUI2 = new JetEazy.UISpace.AxisMotionUI();
+            this.tabPage5 = new System.Windows.Forms.TabPage();
             this.axisMotionUI3 = new JetEazy.UISpace.AxisMotionUI();
+            this.tabPage6 = new System.Windows.Forms.TabPage();
             this.axisMotionUI4 = new JetEazy.UISpace.AxisMotionUI();
+            this.label16 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -326,6 +327,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label16);
             this.groupBox2.Controls.Add(this.label13);
             this.groupBox2.Controls.Add(this.label12);
             this.groupBox2.Controls.Add(this.label1);
@@ -448,7 +450,7 @@
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(67, 18);
             this.label14.TabIndex = 221;
-            this.label14.Text = "頂光";
+            this.label14.Text = "外同轴";
             this.label14.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label15
@@ -463,6 +465,13 @@
             this.label15.Text = "启动";
             this.label15.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // jzTransparentPanel1
+            // 
+            this.jzTransparentPanel1.Location = new System.Drawing.Point(192, 188);
+            this.jzTransparentPanel1.Name = "jzTransparentPanel1";
+            this.jzTransparentPanel1.Size = new System.Drawing.Size(173, 173);
+            this.jzTransparentPanel1.TabIndex = 199;
+            // 
             // tabPage3
             // 
             this.tabPage3.Controls.Add(this.axisMotionUI1);
@@ -472,6 +481,14 @@
             this.tabPage3.TabIndex = 4;
             this.tabPage3.Text = "M0";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // axisMotionUI1
+            // 
+            this.axisMotionUI1.Location = new System.Drawing.Point(9, 53);
+            this.axisMotionUI1.Margin = new System.Windows.Forms.Padding(4);
+            this.axisMotionUI1.Name = "axisMotionUI1";
+            this.axisMotionUI1.Size = new System.Drawing.Size(305, 137);
+            this.axisMotionUI1.TabIndex = 200;
             // 
             // tabPage4
             // 
@@ -483,6 +500,14 @@
             this.tabPage4.Text = "M1";
             this.tabPage4.UseVisualStyleBackColor = true;
             // 
+            // axisMotionUI2
+            // 
+            this.axisMotionUI2.Location = new System.Drawing.Point(9, 53);
+            this.axisMotionUI2.Margin = new System.Windows.Forms.Padding(4);
+            this.axisMotionUI2.Name = "axisMotionUI2";
+            this.axisMotionUI2.Size = new System.Drawing.Size(305, 137);
+            this.axisMotionUI2.TabIndex = 201;
+            // 
             // tabPage5
             // 
             this.tabPage5.Controls.Add(this.axisMotionUI3);
@@ -492,6 +517,14 @@
             this.tabPage5.TabIndex = 6;
             this.tabPage5.Text = "M2";
             this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // axisMotionUI3
+            // 
+            this.axisMotionUI3.Location = new System.Drawing.Point(9, 53);
+            this.axisMotionUI3.Margin = new System.Windows.Forms.Padding(4);
+            this.axisMotionUI3.Name = "axisMotionUI3";
+            this.axisMotionUI3.Size = new System.Drawing.Size(305, 137);
+            this.axisMotionUI3.TabIndex = 201;
             // 
             // tabPage6
             // 
@@ -503,37 +536,6 @@
             this.tabPage6.Text = "M3";
             this.tabPage6.UseVisualStyleBackColor = true;
             // 
-            // jzTransparentPanel1
-            // 
-            this.jzTransparentPanel1.Location = new System.Drawing.Point(192, 188);
-            this.jzTransparentPanel1.Name = "jzTransparentPanel1";
-            this.jzTransparentPanel1.Size = new System.Drawing.Size(173, 173);
-            this.jzTransparentPanel1.TabIndex = 199;
-            // 
-            // axisMotionUI1
-            // 
-            this.axisMotionUI1.Location = new System.Drawing.Point(9, 53);
-            this.axisMotionUI1.Margin = new System.Windows.Forms.Padding(4);
-            this.axisMotionUI1.Name = "axisMotionUI1";
-            this.axisMotionUI1.Size = new System.Drawing.Size(305, 137);
-            this.axisMotionUI1.TabIndex = 200;
-            // 
-            // axisMotionUI2
-            // 
-            this.axisMotionUI2.Location = new System.Drawing.Point(9, 53);
-            this.axisMotionUI2.Margin = new System.Windows.Forms.Padding(4);
-            this.axisMotionUI2.Name = "axisMotionUI2";
-            this.axisMotionUI2.Size = new System.Drawing.Size(305, 137);
-            this.axisMotionUI2.TabIndex = 201;
-            // 
-            // axisMotionUI3
-            // 
-            this.axisMotionUI3.Location = new System.Drawing.Point(9, 53);
-            this.axisMotionUI3.Margin = new System.Windows.Forms.Padding(4);
-            this.axisMotionUI3.Name = "axisMotionUI3";
-            this.axisMotionUI3.Size = new System.Drawing.Size(305, 137);
-            this.axisMotionUI3.TabIndex = 201;
-            // 
             // axisMotionUI4
             // 
             this.axisMotionUI4.Location = new System.Drawing.Point(9, 53);
@@ -541,6 +543,18 @@
             this.axisMotionUI4.Name = "axisMotionUI4";
             this.axisMotionUI4.Size = new System.Drawing.Size(305, 137);
             this.axisMotionUI4.TabIndex = 202;
+            // 
+            // label16
+            // 
+            this.label16.BackColor = System.Drawing.Color.Green;
+            this.label16.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label16.ForeColor = System.Drawing.Color.Yellow;
+            this.label16.Location = new System.Drawing.Point(89, 39);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(67, 18);
+            this.label16.TabIndex = 232;
+            this.label16.Text = "内同轴";
+            this.label16.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // AllinoneSDM2CtrlUI
             // 
@@ -607,5 +621,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.NumericUpDown numericUpDown1;
+        private System.Windows.Forms.Label label16;
     }
 }

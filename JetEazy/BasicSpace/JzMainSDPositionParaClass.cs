@@ -169,6 +169,30 @@ namespace JetEazy.BasicSpace
             str = m_reportmappingpath + "\\auto\\auto_" + Report_LOT;
             ReportMappingSave(str, strfilename);
         }
+        public void ReportAUTOSaveSDM5(int eIndex, bool eIspass, bool eUseDataSave = false)
+        {
+            if (string.IsNullOrEmpty(Report_LOT))
+                Report_LOT = "none";
+
+            Report_LOT = Report_LOT.Replace('-', '_');
+
+            //路径 + auto + 批号 
+            string str = m_reportpath + "\\auto\\auto_" + Report_LOT;
+            string strfilename = (eIspass ? "P-" : "F-") + "auto-" + eIndex.ToString("00000") + "-" + DateTime.Now.ToString("yyyyMMddHHmmss");
+
+            if (eUseDataSave)
+            {
+                str = m_reportpath + "\\auto\\" + JzTimes.DateSerialString + "\\auto_" + Report_LOT;
+            }
+
+            //mySqlTableCreate("AUTO_" + Report_LOT);
+            //mySqlTableInsert("AUTO_" + Report_LOT, strfilename);
+            //mySqlTableInsert("auto_" + Report_LOT);
+            ReportSaveSDM5(str, strfilename);
+
+            //str = m_reportmappingpath + "\\auto\\auto_" + Report_LOT;
+            //ReportMappingSave(str, strfilename);
+        }
         public void ReportMANUALSave(bool eIspass)
         {
             if (string.IsNullOrEmpty(Report_LOT))
@@ -210,6 +234,22 @@ namespace JetEazy.BasicSpace
         {
             if (ReportList.Count == 0)
                 return;
+
+            string Str = "";
+            foreach (string str in ReportList)
+            {
+                Str += str + Environment.NewLine;
+            }
+
+            if (!System.IO.Directory.Exists(ePath))
+                System.IO.Directory.CreateDirectory(ePath);
+
+            _save(Str, ePath + "\\" + eFilename + ".csv");
+        }
+        private void ReportSaveSDM5(string ePath, string eFilename)
+        {
+            //if (ReportList.Count == 0)
+            //    return;
 
             string Str = "";
             foreach (string str in ReportList)
@@ -266,6 +306,18 @@ namespace JetEazy.BasicSpace
             }
 
             Str += Environment.NewLine;
+
+            Str += $"0-正确-Pass{Environment.NewLine}";
+            Str += $"1-印字错误-Printing error{Environment.NewLine}";
+            Str += $"2-印字偏移-Printing offset{Environment.NewLine}";
+            Str += $"3-油墨错误-Ink error{Environment.NewLine}";
+            Str += $"4-印字缺失-Missing printed characters{Environment.NewLine}";
+            Str += $"5-不检测-Not to detect{Environment.NewLine}";
+            Str += $"6-其他-Other{Environment.NewLine}";
+            Str += $"7-2D比对错误-2D comparison error{Environment.NewLine}";
+            Str += $"8-2D读取错误-2D reading error{Environment.NewLine}";
+            Str += $"9-2D重复-2D repetition{Environment.NewLine}";
+
             if (!System.IO.Directory.Exists(ePath))
                 System.IO.Directory.CreateDirectory(ePath);
 
@@ -303,6 +355,7 @@ namespace JetEazy.BasicSpace
 
         CommonLogClass m_log = new CommonLogClass();
 
+        /*mask no used
         private void mySqlTableCreate(string tablename)
         {
             //return;
@@ -408,7 +461,6 @@ namespace JetEazy.BasicSpace
             }
 
         }
-
         private void mySqlTableInsert(string epath)
         {
             //return;
@@ -462,10 +514,21 @@ namespace JetEazy.BasicSpace
             }
 
         }
+        */
 
         #endregion
 
         #region 重复码检查
+
+        MySqlConnection sqlCnt = null;
+        MySqlCommand cmd = null;
+
+        private string getReportLot()
+        {
+            if (string.IsNullOrEmpty(Report_LOT))
+                return "NONE";
+            return Report_LOT;
+        }
         /// <summary>
         /// 设定log档路径
         /// </summary>
@@ -473,6 +536,61 @@ namespace JetEazy.BasicSpace
         public void SetLogPath(string ePath = "D:\\log\\log_filename")
         {
             m_log.LogPath = ePath;
+        }
+
+        /*单个插入数据停止使用 可能影响性能
+        public bool MySqlCheckTableExist()
+        {
+            bool iret = true;
+
+            MySqlConnection sqlCnt = null;
+            MySqlCommand cmd = null;
+
+            try
+            {
+                sqlCnt = new MySqlConnection();
+                string ConnectionString = "server=127.0.0.1;port=3306;user=root;password=12892414; database=mainsd;";
+                ConnectionString = "server=" + mysql_server_ip +
+                                                   ";port=" + mysql_server_port.ToString() +
+                                                   ";user=" + mysql_server_user +
+                                                   ";password=" + mysql_server_pwd +
+                                                   ";database=" + mysql_server_db + ";";
+
+                sqlCnt.ConnectionString = ConnectionString;
+                sqlCnt.Open();
+
+                string table_name = $"jztb_{getReportLot()}";
+                string sql = $@" SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{table_name}'";
+                m_log.Log2("sql=" + sql);
+                cmd = new MySqlCommand(sql, sqlCnt);
+                //iret = cmd.ExecuteNonQuery();
+                object result = cmd.ExecuteScalar(); // 执行查询并返回第一行的第一列
+                iret = result != null;
+
+                m_log.Log2("result=" + iret.ToString());
+
+            }
+            catch (Exception ex)
+            {
+                m_log.Log2(ex.Message);
+                //m_log.Log2(ex.StackTrace);
+                //m_log.Log2(ex.Source);
+
+                iret = false;
+            }
+
+            if (sqlCnt != null)
+            {
+                sqlCnt.Close();
+                sqlCnt.Dispose();
+                sqlCnt = null;
+            }
+            if (cmd != null)
+            {
+                cmd.Dispose();
+                cmd = null;
+            }
+            return iret;
         }
         /// <summary>
         /// 建立批号的数据表
@@ -498,12 +616,12 @@ namespace JetEazy.BasicSpace
                 sqlCnt.ConnectionString = ConnectionString;
                 sqlCnt.Open();
 
-                string table_name = $"jztb_{Report_LOT}";
+                string table_name = $"jztb_{getReportLot()}";
                 string sql = $"CREATE TABLE IF NOT EXISTS {table_name} (id INT AUTO_INCREMENT COMMENT '序号'," +
                     $"b01 VARCHAR(30) NOT NULL COMMENT '条码'," +
                      $"b02 DATETIME COMMENT '时间'," +
   $"b03 TEXT COMMENT '备注'," +
-  $"PRIMARY KEY(b01) ," +
+  $"PRIMARY KEY(id) ," +
   $"UNIQUE INDEX(id)" +
   $");";
                 m_log.Log2("sql=" + sql);
@@ -535,10 +653,10 @@ namespace JetEazy.BasicSpace
             return iret;
         }
         /// <summary>
-        /// 检查是否在数据表中有重复码
+        /// 插入数据库
         /// </summary>
-        /// <param name="eBarcodeStr">检查的条码</param>
-        /// <returns>>=0则是插入完成 无重复码  <0则是插入失败 重复码</returns>
+        /// <param name="eBarcodeStr">插入的条码</param>
+        /// <returns>>=0则是插入完成 <0则是插入失败 </returns>
         public int MySqlTableInsert(string eBarcodeStr)
         {
             int iret = 0;
@@ -558,7 +676,7 @@ namespace JetEazy.BasicSpace
                 sqlCnt.ConnectionString = ConnectionString;
                 sqlCnt.Open();
 
-                string table_name = $"jztb_{Report_LOT}";
+                string table_name = $"jztb_{getReportLot()}";
                 string sql = "INSERT INTO " + table_name +
                                   "(" + "b01,b02) VALUES ('" + eBarcodeStr + "','" + DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + "')";
 
@@ -589,6 +707,267 @@ namespace JetEazy.BasicSpace
             }
             return iret;
         }
+        /// <summary>
+        /// 检查是否在数据表中有重复码
+        /// </summary>
+        /// <param name="eBarcodeStr">检查的条码</param>
+        /// <returns>大于0则重复</returns>
+        public int MySqlTableQuery(string eBarcodeStr)
+        {
+            int iret = 0;
+            MySqlConnection sqlCnt = null;
+            MySqlCommand cmd = null;
+
+            try
+            {
+                sqlCnt = new MySqlConnection();
+                string ConnectionString = "server=127.0.0.1;port=3306;user=root;password=12892414; database=mainsd;";
+                ConnectionString = "server=" + mysql_server_ip +
+                                                   ";port=" + mysql_server_port.ToString() +
+                                                   ";user=" + mysql_server_user +
+                                                   ";password=" + mysql_server_pwd +
+                                                   ";database=" + mysql_server_db + ";";
+
+                sqlCnt.ConnectionString = ConnectionString;
+                sqlCnt.Open();
+
+                string table_name = $"jztb_{getReportLot()}";
+                string sql = $"SELECT count(*) FROM {table_name} WHERE b01='{eBarcodeStr}'";
+
+
+                m_log.Log2("sql=" + sql);
+                cmd = new MySqlCommand(sql, sqlCnt);
+                object result = cmd.ExecuteScalar(); // 执行查询并返回第一行的第一列
+                //iret = result != null;
+                if (result != null)
+                {
+                    //iret = (int)result;
+                    //m_log.Log2("result=" + result.ToString());
+                    int.TryParse(result.ToString(), out iret);
+                }
+                //iret = cmd.ExecuteNonQuery();
+                m_log.Log2("result=" + iret.ToString());
+            }
+            catch (Exception ex)
+            {
+                m_log.Log2(ex.Message);
+                //m_log.Log2(ex.StackTrace);
+                //m_log.Log2(ex.Source);
+
+                iret = -1;
+            }
+
+            if (sqlCnt != null)
+            {
+                sqlCnt.Close();
+                sqlCnt.Dispose();
+                sqlCnt = null;
+            }
+            if (cmd != null)
+            {
+                cmd.Dispose();
+                cmd = null;
+            }
+            return iret;
+        }
+        */
+
+        #region 一次性插入检查重复码
+
+        public bool OpenDB()
+        {
+            bool iret = true;
+            if (sqlCnt == null)
+                sqlCnt = new MySqlConnection();
+            string ConnectionString = "server=127.0.0.1;port=3306;user=root;password=12892414; database=mainsd;";
+            ConnectionString = "server=" + mysql_server_ip +
+                                               ";port=" + mysql_server_port.ToString() +
+                                               ";user=" + mysql_server_user +
+                                               ";password=" + mysql_server_pwd +
+                                               ";database=" + mysql_server_db + ";";
+
+            sqlCnt.ConnectionString = ConnectionString;
+            m_log.Log2($"open_db {ConnectionString}");
+            try
+            {
+                sqlCnt.Open();
+            }
+            catch (Exception ex)
+            {
+                m_log.Log2(ex.Message);
+                //m_log.Log2(ex.StackTrace);
+                //m_log.Log2(ex.Source);
+
+                iret = false;
+            }
+            return iret;
+        }
+        public void CloseDB()
+        {
+            if (sqlCnt != null)
+            {
+                sqlCnt.Close();
+                sqlCnt.Dispose();
+                sqlCnt = null;
+            }
+            if (cmd != null)
+            {
+                cmd.Dispose();
+                cmd = null;
+            }
+        }
+        public bool MySqlCheckTableExist()
+        {
+            bool iret = true;
+            try
+            {
+                string table_name = $"jztb_{getReportLot()}";
+                string sql = $@" SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '{table_name}'";
+                m_log.Log2("sql=" + sql);
+                cmd = new MySqlCommand(sql, sqlCnt);
+                object result = cmd.ExecuteScalar(); // 执行查询并返回第一行的第一列
+                iret = result != null;
+                m_log.Log2("result=" + iret.ToString());
+            }
+            catch (Exception ex)
+            {
+                m_log.Log2(ex.Message);
+                //m_log.Log2(ex.StackTrace);
+                //m_log.Log2(ex.Source);
+
+                iret = false;
+            }
+            return iret;
+        }
+        /// <summary>
+        /// 建立批号的数据表
+        /// </summary>
+        /// <returns>>=0则是建立成功  <0则是建立失败</returns>
+        public int MySqlCreateTable()
+        {
+            int iret = 0;
+            try
+            {
+                string table_name = $"jztb_{getReportLot()}";
+                string sql = $"CREATE TABLE IF NOT EXISTS {table_name} (" +
+                    $"b01 VARCHAR(30) NOT NULL COMMENT '条码'," +
+                     $"b02 TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '时间'," +
+  $"PRIMARY KEY(b01) " +
+  $");";
+                m_log.Log2("sql=" + sql);
+                cmd = new MySqlCommand(sql, sqlCnt);
+                iret = cmd.ExecuteNonQuery();
+                m_log.Log2("result=" + iret.ToString());
+
+            }
+            catch (Exception ex)
+            {
+                m_log.Log2(ex.Message);
+                //m_log.Log2(ex.StackTrace);
+                //m_log.Log2(ex.Source);
+
+                iret = -1;
+            }
+            return iret;
+        }
+        /// <summary>
+        /// 插入数据库
+        /// </summary>
+        /// <param name="eBarcodeStr">插入的条码</param>
+        /// <returns>>=0则是插入完成 <0则是插入失败 </returns>
+        public int MySqlTableInsert(List<string> eBarcodeList)
+        {
+            int iret = 0;
+
+            try
+            {
+                if (eBarcodeList.Count == 0)
+                    return iret;
+
+                string _barcodeStr = string.Empty;
+                foreach (string eBarcode in eBarcodeList)
+                {
+                    _barcodeStr += $"('{eBarcode}'),";
+                }
+                _barcodeStr = _barcodeStr.Remove(_barcodeStr.Length - 1, 1);
+
+                string table_name = $"jztb_{getReportLot()}";
+                string sql = "INSERT INTO " + table_name +
+                                  "(b01) VALUES " + _barcodeStr;
+
+                m_log.Log2("sql=" + sql);
+                cmd = new MySqlCommand(sql, sqlCnt);
+                iret = cmd.ExecuteNonQuery();
+                m_log.Log2("result=" + iret.ToString());
+            }
+            catch (Exception ex)
+            {
+                m_log.Log2(ex.Message);
+                //m_log.Log2(ex.StackTrace);
+                //m_log.Log2(ex.Source);
+
+                iret = -1;
+            }
+            return iret;
+        }
+        /// <summary>
+        /// 检查是否在数据表中有重复码
+        /// </summary>
+        /// <param name="eBarcodeStr">检查的条码</param>
+        /// <returns>大于0则重复</returns>
+        public int MySqlTableQuery(List<string> eBarcodeList, ref List<string> refrepeatbarcode)
+        {
+            int iret = 0;
+
+            try
+            {
+                refrepeatbarcode.Clear();
+                string repeatStr = string.Empty;
+                if (eBarcodeList.Count == 0)
+                    return iret;
+
+                string _barcodeStr = string.Empty;
+                foreach (string eBarcode in eBarcodeList)
+                {
+                    _barcodeStr += $"'{eBarcode}',";
+                }
+                _barcodeStr = _barcodeStr.Remove(_barcodeStr.Length - 1, 1);
+
+                string table_name = $"jztb_{getReportLot()}";
+                string sql = $"SELECT b01 FROM {table_name} WHERE b01 IN ({_barcodeStr})";
+
+                m_log.Log2("sql=" + sql);
+                cmd = new MySqlCommand(sql, sqlCnt);
+                //MySqlDataReader _dataReader = cmd.ExecuteReader(); // 执行查询并返回第一行的第一列
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read()) // 循环读取每一行数据
+                    {
+                        string name = reader["b01"].ToString();
+                        //Console.WriteLine("Name: " + name); // 打印值或做其他处理
+                        refrepeatbarcode.Add(name);
+                        repeatStr += name + ",";
+                    }
+                }
+                iret = refrepeatbarcode.Count;
+                //iret = cmd.ExecuteNonQuery();
+                m_log.Log2("result=" + iret.ToString());
+                if (iret > 0)
+                    m_log.Log2("repeat=" + repeatStr);
+            }
+            catch (Exception ex)
+            {
+                m_log.Log2(ex.Message);
+                //m_log.Log2(ex.StackTrace);
+                //m_log.Log2(ex.Source);
+
+                iret = -1;
+            }
+            return iret;
+        }
+
+        #endregion
+
         #endregion
 
         public JzMainSDPositionParaClass(string ePath)
@@ -609,6 +988,10 @@ namespace JetEazy.BasicSpace
             INIFILE = MAINPATH + "\\" + eFileName + ".ini";
 
             Load();
+        }
+        public void Dispose()
+        {
+
         }
 
         public void Load()

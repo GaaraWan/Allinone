@@ -6,6 +6,7 @@ using JetEazy.BasicSpace;
 using JetEazy.ControlSpace;
 using JetEazy.FormSpace;
 using JetEazy.PlugSpace;
+using MoveGraphLibrary;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -18,6 +19,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static Allinone.UISpace.ALBUISpace.AllinoneAlbUI;
 
 namespace Allinone.OPSpace.ResultSpace
 {
@@ -66,6 +68,8 @@ namespace Allinone.OPSpace.ResultSpace
         JzToolsClass JzTools = new JzToolsClass();
         SoundPlayer PlayerPass = new SoundPlayer();
         SoundPlayer PlayerFail = new SoundPlayer();
+
+        Bitmap bmpBarcode = new Bitmap(1, 1);
 
         //EnvClass m_EnvNow = null;
         EnvClass m_EnvNow
@@ -158,6 +162,31 @@ namespace Allinone.OPSpace.ResultSpace
             {
                 _LOG_MSG_ERR("急停中 无法测试");
                 return;
+            }
+            if (!Universal.IsNoUseIO)
+            {
+                if (INI.IsOpenCheckSensor)
+                {
+                    MainsdLightSettings mainsdLight = new MainsdLightSettings();
+                    mainsdLight.GetString(albumwork.ENVList[0].GeneralLight);
+
+                    if (mainsdLight.PANNEL)
+                    {
+                        if (MACHINE.PLCIO.IsSensor1 && MACHINE.PLCIO.IsSensor2)
+                        {
+                            _LOG_MSG_ERR("外同轴未安装 无法测试");
+                            return;
+                        }
+                    }
+                    else if (mainsdLight.BOTTOMLED)
+                    {
+                        if (!MACHINE.PLCIO.IsSensor1 || !MACHINE.PLCIO.IsSensor2)
+                        {
+                            _LOG_MSG_ERR("外同轴未放置正确位置 无法测试");
+                            return;
+                        }
+                    }
+                }
             }
 
             OnTrigger(ResultStatusEnum.CALSTART);
@@ -254,6 +283,7 @@ namespace Allinone.OPSpace.ResultSpace
         int[] Testms = new int[100];
         DateTime m_input_time = DateTime.Now;
         int m_ProcessTmpID = 0;
+        JzBarcodeParaGridClass m_JzBarcodeParaGridClass = new JzBarcodeParaGridClass();
 
         protected override void MainProcessTick()
         {
@@ -443,12 +473,31 @@ namespace Allinone.OPSpace.ResultSpace
                         LogProcessIDTimer(Process.ID, "流程开始");
                         _LOG_MSG(Process.ID.ToString() + " MainSDM2Tick " + "流程开始");
 
+                        switch (MACHINE.mRobotType)
+                        {
+                            case RobotType.HCFA:
+
+                                MACHINE.PLCIO.RobotSpeedValue = INI.RobotSpeedValue;
+                                _LOG_MSG(Process.ID.ToString() + " MainSDM2Tick " + $"写入速度{INI.RobotSpeedValue}%");
+
+                                break;
+                            case RobotType.NONE:
+
+                                break;
+                        }
+
                         MACHINE.PLCIO.Busy = true;
-                        MACHINE.SetLight("1,1,1");
+                        //MACHINE.SetLight("1,1,1"); AlbumWork.ENVList[EnvIndex]
+                        MACHINE.SetLight(AlbumWork.ENVList[0].GeneralLight);
+                        //MainsdLightSettings mainsdLight = new MainsdLightSettings();
+                        //mainsdLight.GetString(albumwork.ENVList[0].GeneralLight);
+                        //if (INI.IsCollectPictures)
+                        //    Universal.MainX6_Path = "D:\\CollectPictures_" + Universal.OPTION.ToString() + "\\pictures\\" + JzTimes.DateSerialString;
+                        //Universal.MainX6_Picture_Path = "D:\\CollectPictures_" + Universal.OPTION.ToString() + "\\pictures_Single\\" + JzTimes.DateSerialString;
 
                         if (INI.IsCollectPictures)
-                            Universal.MainX6_Path = "D:\\CollectPictures_" + Universal.OPTION.ToString() + "\\pictures\\" + JzTimes.DateSerialString;
-                        Universal.MainX6_Picture_Path = "D:\\CollectPictures_" + Universal.OPTION.ToString() + "\\pictures_Single\\" + JzTimes.DateSerialString;
+                            Universal.MainX6_Path = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\pictures";
+                        Universal.MainX6_Picture_Path = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\pictures_Single";
 
                         TestTimer.Cut();
                         m_input_time = DateTime.Now;
@@ -457,17 +506,7 @@ namespace Allinone.OPSpace.ResultSpace
                         //把要檢測的東西放進去
                         FillOperaterString(RELATECOLORSTR);
                         Universal.CalTestBarcode = string.Empty;
-                        if (Universal.IsNoUseIO)
-                        {
-                            string[] _dirStrs = LastDirPath.Split('\\');
-                            Universal.CalTestBarcode = _dirStrs[_dirStrs.Length - 1];
-                            Universal.CalTestPath = @"D:\TESTCOLLECT\" + Universal.CalTestBarcode;
-                        }
-                        else
-                            Universal.CalTestPath = @"D:\TESTCOLLECT\" + JzTimes.DateTimeSerialString;
-
-                        if (!Directory.Exists(Universal.CalTestPath))
-                            Directory.CreateDirectory(Universal.CalTestPath);
+                        
 
                         Process.NextDuriation = 0;
 
@@ -480,6 +519,56 @@ namespace Allinone.OPSpace.ResultSpace
                         switch (Universal.CAMACT)
                         {
                             case CameraActionMode.CAM_MOTOR_MODE2:
+
+                                m_JzBarcodeParaGridClass.FromingStr(AlbumWork.ENVList[0].GeneralBarcodeSetup);
+                                if (m_JzBarcodeParaGridClass.IsOpenBarcode)
+                                {
+                                    Process.ID = 510;
+
+                                    if (Universal.IsNoUseIO)
+                                    {
+                                        string[] _dirStrs = LastDirPath.Split('\\');
+                                        Universal.CalTestBarcode = _dirStrs[_dirStrs.Length - 1];
+                                        Universal.CalTestPath = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\TESTCOLLECT\\{Universal.CalTestBarcode}";
+                                    }
+                                    else
+                                        Universal.CalTestPath = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\TESTCOLLECT\\{JzTimes.DateTimeSerialString}";
+
+                                    //if (Universal.IsNoUseIO)
+                                    //{
+                                    //    string[] _dirStrs = LastDirPath.Split('\\');
+                                    //    Universal.CalTestBarcode = _dirStrs[_dirStrs.Length - 1];
+                                    //    Universal.CalTestPath = @"D:\TESTCOLLECT\" + Universal.CalTestBarcode;
+                                    //}
+                                    //else
+                                    //    Universal.CalTestPath = @"D:\TESTCOLLECT\" + JzTimes.DateTimeSerialString;
+
+                                    //if (!Directory.Exists(Universal.CalTestPath))
+                                    //    Directory.CreateDirectory(Universal.CalTestPath);
+                                }
+                                else
+                                {
+                                    if (Universal.IsNoUseIO)
+                                    {
+                                        string[] _dirStrs = LastDirPath.Split('\\');
+                                        Universal.CalTestBarcode = _dirStrs[_dirStrs.Length - 1];
+                                        Universal.CalTestPath = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\TESTCOLLECT\\{Universal.CalTestBarcode}";
+                                    }
+                                    else
+                                        Universal.CalTestPath = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\TESTCOLLECT\\{JzTimes.DateTimeSerialString}";
+
+                                    //if (Universal.IsNoUseIO)
+                                    //{
+                                    //    string[] _dirStrs = LastDirPath.Split('\\');
+                                    //    Universal.CalTestBarcode = _dirStrs[_dirStrs.Length - 1];
+                                    //    Universal.CalTestPath = @"D:\TESTCOLLECT\" + Universal.CalTestBarcode;
+                                    //}
+                                    //else
+                                    //    Universal.CalTestPath = @"D:\TESTCOLLECT\" + JzTimes.DateTimeSerialString;
+
+                                    if (!Directory.Exists(Universal.CalTestPath))
+                                        Directory.CreateDirectory(Universal.CalTestPath);
+                                }
 
                                 #region no use mutil pages
                                 //int ipageindex = 0;
@@ -535,6 +624,118 @@ namespace Allinone.OPSpace.ResultSpace
                         RunNextCCDDelayTime = INI.MAINSD_GETIMAGE_DELAYTIME;
 
                         break;
+                    #region 读码插入流程
+
+                    case 510:
+                        if (Process.IsTimeup)
+                        {
+                            switch (Universal.CAMACT)
+                            {
+                                case CameraActionMode.CAM_MOTOR_MODE2:
+                                    //if (m_EnvTrainOK)
+                                    {
+                                        m_CurrentPosition = m_JzBarcodeParaGridClass.MotorPositionStr.Replace(";", ",");
+                                        _LOG_MSG(Process.ID.ToString() + " MainSDM2Tick POS=" + m_CurrentPosition);
+
+                                        MACHINE.GoPosition(m_CurrentPosition);
+
+                                        RunStepComplete = true;//第一次强制给完成信号
+                                        m_IsAlignComplete = false;//第一次复位标志
+
+                                        Universal.CCDCollection.SetExposure(m_JzBarcodeParaGridClass.CamExpo, 0);//设定读码的相机曝光
+
+                                        Process.NextDuriation = 0;
+                                        Process.ID = 520;
+                                    }
+
+                                    break;
+                            }
+                        }
+                        break;
+                    case 520:
+                        if (Process.IsTimeup)
+                        {
+                            if (MACHINE.IsOnSite()
+                                && MACHINE.IsOnSitePosition(m_CurrentPosition)
+                                && RunStepComplete || (Universal.IsNoUseMotor && RunStepComplete))
+                            //if (MACHINE.IsOnSite() && MACHINE.IsOnSitePosition(m_CurrentPosition) || (Universal.IsNoUseMotor && RunStepComplete))
+                            {
+                                MACHINE.PLCIO.RobotAbs = false;
+                                RunStepComplete = false;
+                                Process.NextDuriation = RunNextCCDDelayTime;// INI.MAINSD_GETIMAGE_DELAYTIME;
+                                Process.ID = 530;
+                                if (!INI.IsLightAlwaysOn)
+                                    MACHINE.PLCIO.TopLight = true;
+                                LogProcessIDTimer(Process.ID, "取像延时=" + RunNextCCDDelayTime.ToString());
+                                //LogProcessIDTimer(Process.ID, "取像延时=" + INI.MAINSD_GETIMAGE_DELAYTIME.ToString());
+
+                                if (Universal.IsNoUseIO || Universal.IsLocalPicture)
+                                {
+                                    OnEnvTrigger(ResultStatusEnum.CHANGEENVDIRECTORY, EnvIndex, PageOPTypeEnum.P00.ToString());
+                                }
+                            }
+                        }
+                        break;
+                    case 530:
+                        if (Process.IsTimeup)
+                        {
+                            if (MACHINE.IsOnSite()
+                                 && MACHINE.IsOnSitePosition(m_CurrentPosition)
+                                 || Universal.IsNoUseMotor)
+                            {
+                                //抓图
+                                if (Universal.IsNoUseIO || Universal.IsLocalPicture)
+                                    CCDCollection.GetImageSDM1(-1, CamActClass.Instance.StepCurrent);
+                                else
+                                {
+                                    CCDCollection.GetImage();
+                                }
+
+                                #region 读码
+                                bmpBarcode.Dispose();
+                                bmpBarcode = new Bitmap(CCDCollection.GetBMP(0, false));
+                                Bitmap bmp2 = (Bitmap)bmpBarcode.Clone(m_JzBarcodeParaGridClass.RectF, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                                //bmpBarcode.Save("D:\\xOffline_Barcode.bmp", ImageFormat.Bmp);
+                                AForge.Imaging.Filters.ContrastCorrection contrast = new AForge.Imaging.Filters.ContrastCorrection(m_JzBarcodeParaGridClass.nContrast);
+                                bmp2 = contrast.Apply(bmp2);
+                                AForge.Imaging.Filters.BrightnessCorrection brightness = new AForge.Imaging.Filters.BrightnessCorrection(m_JzBarcodeParaGridClass.nBrightness);
+                                bmp2 = brightness.Apply(bmp2);
+
+                                EzSegDMTX IxBarcode = new EzSegDMTX();
+                                IxBarcode.InputImage = bmp2;
+                                //if (m_UseAIFromPy)
+                                //    IxBarcode.SetEzSeg(model);
+                                int iret = IxBarcode.Run();
+                                string barcodeStrResult = string.Empty;
+                                if (iret == 0)
+                                {
+                                    barcodeStrResult = "读取成功：" + IxBarcode.BarcodeStr + Environment.NewLine;
+                                    barcodeStrResult += "耗时：" + IxBarcode.ElapsedTime.ToString() + " ms";
+
+                                    Universal.CalTestPath = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\TESTCOLLECT\\{JzTimes.DateTimeSerialString}-{IxBarcode.BarcodeStr}";
+                                }
+                                else
+                                    barcodeStrResult = "读取失败：错误码=" + iret.ToString();
+
+                                Universal.CalTestBarcode = IxBarcode.BarcodeStr;
+                                OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, Universal.CalTestBarcode);
+
+                                if (!Directory.Exists(Universal.CalTestPath))
+                                    Directory.CreateDirectory(Universal.CalTestPath);
+
+                                bmp2.Dispose();
+
+                                #endregion
+
+                                Process.NextDuriation = 0;
+                                Process.ID = 10;
+
+                                LogProcessIDTimer(Process.ID, $"读码={barcodeStrResult}");
+                            }
+                        }
+                        break;
+
+                    #endregion
                     case 10:                        //變換CCD亮度設定及光源設定，並且合起鍵盤的壓框
                         if (Process.IsTimeup)
                         {
@@ -570,8 +771,6 @@ namespace Allinone.OPSpace.ResultSpace
                             }
                         }
                         break;
-
-
                     #region 马达模式2  
                     case 10090:                        //變換CCD亮度設定及光源設定，並且合起鍵盤的壓框
                         if (Process.IsTimeup)
@@ -2339,6 +2538,12 @@ namespace Allinone.OPSpace.ResultSpace
                             dataMapping.bmpResult.Dispose();
                             dataMapping.bmpResult = new Bitmap(bmpAll);
 
+                            dataMapping.TypeIndex = 0;
+                            if (analyze.PADPara.PADMethod == PADMethodEnum.QLE_CHECK)
+                            {
+                                dataMapping.TypeIndex = 1;
+                            }
+
                             if (analyze.BranchList.Count > 0)
                             {
                                 string myDescTemp = analyze.GetAnalyzeGlueErrorTypeDesc();
@@ -2380,7 +2585,8 @@ namespace Allinone.OPSpace.ResultSpace
                                 {
                                     dataMapping.ReportBinValue = 0;
                                     if (analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK
-                                        || analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK_BlackEdge)
+                                        || analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK_BlackEdge
+                                        || analyze.PADPara.PADMethod == PADMethodEnum.QLE_CHECK)
                                     {
                                         if (string.IsNullOrEmpty(analyze.PADPara.DescStr))
                                         {
@@ -2460,61 +2666,61 @@ namespace Allinone.OPSpace.ResultSpace
                 }
                 else
                 {
-                    foreach (AnalyzeClass analyze in page1.AnalyzeRoot.BranchList)
-                    {
-                        if (analyze.CheckAnalyzeReadBarcode())
-                        {
-                            Universal.CalTestBarcode = analyze.GetAnalyzeBarcodeStr();
-                            OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, Universal.CalTestBarcode);
-                            if (INI.chipUseAI)
-                            {
-                                if (string.IsNullOrEmpty(Universal.CalTestBarcode) || Universal.IsNoUseIO)
-                                {
-                                    //如果没有条码则开启新的线程读码 利用AI的服务器
+                    //foreach (AnalyzeClass analyze in page1.AnalyzeRoot.BranchList)
+                    //{
+                    //    if (analyze.CheckAnalyzeReadBarcode())
+                    //    {
+                    //        Universal.CalTestBarcode = analyze.GetAnalyzeBarcodeStr();
+                    //        OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, Universal.CalTestBarcode);
+                    //        if (INI.chipUseAI)
+                    //        {
+                    //            if (string.IsNullOrEmpty(Universal.CalTestBarcode) || Universal.IsNoUseIO)
+                    //            {
+                    //                //如果没有条码则开启新的线程读码 利用AI的服务器
 
-                                    //Task task = new Task(() =>
-                                    //{
-                                    //    try
-                                    //    {
-                                    //        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
-                                    //        stopwatch.Restart();
-                                    //        OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, "解码中...");
-                                    //        EzSegDMTX ezSegDMTX = new EzSegDMTX();
-                                    //        //Rectangle rectangleAI = JzTools.SimpleRect(Universal.bmpProvideAI.Size);
-                                    //        //rectangleAI.Inflate(-15, -15);
-                                    //        //Bitmap bmp222ai = (Bitmap)Universal.bmpProvideAI.Clone(rectangleAI, PixelFormat.Format24bppRgb);
-                                    //        Bitmap bmp222ai = new Bitmap(Universal.bmpProvideAI);
+                    //                //Task task = new Task(() =>
+                    //                //{
+                    //                //    try
+                    //                //    {
+                    //                //        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+                    //                //        stopwatch.Restart();
+                    //                //        OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, "解码中...");
+                    //                //        EzSegDMTX ezSegDMTX = new EzSegDMTX();
+                    //                //        //Rectangle rectangleAI = JzTools.SimpleRect(Universal.bmpProvideAI.Size);
+                    //                //        //rectangleAI.Inflate(-15, -15);
+                    //                //        //Bitmap bmp222ai = (Bitmap)Universal.bmpProvideAI.Clone(rectangleAI, PixelFormat.Format24bppRgb);
+                    //                //        Bitmap bmp222ai = new Bitmap(Universal.bmpProvideAI);
 
-                                    //        //bmp222ai.Save("D:\\AI_ORG.png", ImageFormat.Png);
-                                    //        ezSegDMTX.InputImage = bmp222ai;
-                                    //        int iret = ezSegDMTX.Run();
+                    //                //        //bmp222ai.Save("D:\\AI_ORG.png", ImageFormat.Png);
+                    //                //        ezSegDMTX.InputImage = bmp222ai;
+                    //                //        int iret = ezSegDMTX.Run();
 
 
-                                    //        stopwatch.Stop();
-                                    //        if (iret == 0)
-                                    //        {
-                                    //            Universal.CalTestBarcode = ezSegDMTX.BarcodeStr;
-                                    //            OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, Universal.CalTestBarcode);
+                    //                //        stopwatch.Stop();
+                    //                //        if (iret == 0)
+                    //                //        {
+                    //                //            Universal.CalTestBarcode = ezSegDMTX.BarcodeStr;
+                    //                //            OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, Universal.CalTestBarcode);
 
-                                    //            //barcodeStrRead = IxBarcode.BarcodeStr;
-                                    //            //myBarcode = IxBarcode.BarcodeStr + " Model用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms";
-                                    //        }
-                                    //        else
-                                    //        {
-                                    //            OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, "解码失败");
-                                    //        }
-                                    //    }
-                                    //    catch
-                                    //    {
+                    //                //            //barcodeStrRead = IxBarcode.BarcodeStr;
+                    //                //            //myBarcode = IxBarcode.BarcodeStr + " Model用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms";
+                    //                //        }
+                    //                //        else
+                    //                //        {
+                    //                //            OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, "解码失败");
+                    //                //        }
+                    //                //    }
+                    //                //    catch
+                    //                //    {
 
-                                    //    }
-                                    //});
-                                    //task.Start();
+                    //                //    }
+                    //                //});
+                    //                //task.Start();
 
-                                }
-                            }
-                        }
-                    }
+                    //            }
+                    //        }
+                    //    }
+                    //}
                 }
             }
 
@@ -2589,7 +2795,8 @@ namespace Allinone.OPSpace.ResultSpace
                 {
                     case 5:
 
-                        MACHINE.SetLight("1,1,1");
+                        //MACHINE.SetLight("1,1,1");
+                        MACHINE.SetLight(AlbumWork.ENVList[0].GeneralLight);
 
                         GeneralPosition = AlbumWork.ENVList[0].GeneralPosition;
                         GeneralPositions = GeneralPosition.Split(';');
@@ -3066,6 +3273,15 @@ namespace Allinone.OPSpace.ResultSpace
                     ////mySDM1.Dispose();
                     #endregion
 
+                    if (RunDataMappingCollection.Count > 0)
+                    {
+                        if (RunDataMappingCollection[0].TypeIndex == 1)
+                        {
+                            myReportStr = "Name(mm),Width,Height,Area,LeftMargin,TopMargin,RightMargin,BottomMargin," + Environment.NewLine;
+                        }
+                    }
+
+
                     //排序数据
                     #region 排序数据
 
@@ -3198,9 +3414,9 @@ namespace Allinone.OPSpace.ResultSpace
                         resultindex++;
                     }
 
-                    string mainx6_picture_path = Universal.MainX6_Picture_Path + "\\" + (IsPass ? "P-" : "F-") + Universal.CalTestBarcode;
-
-                    if(INI.IsCollectPicturesSingle)
+                    string mainx6_picture_path = Universal.MainX6_Picture_Path + "\\" + (IsPass ? "P-" : "F-") + Universal.CalTestBarcode + $"-{JzTimes.DateTimeSerialString}";
+                    mainx6_picture_path = Universal.MainX6_Picture_Path + "\\" + $"{JzTimes.DateTimeSerialString}-{Universal.CalTestBarcode}-{(IsPass ? "P" : "F")}";
+                    if (INI.IsCollectPicturesSingle)
                     {
                         if (!Directory.Exists(mainx6_picture_path))
                             Directory.CreateDirectory(mainx6_picture_path);
@@ -3238,7 +3454,7 @@ namespace Allinone.OPSpace.ResultSpace
                         //保存小图
                         if (INI.IsCollectPicturesSingle)
                             keyassign.bmpResult.Save(mainx6_picture_path + "\\" +
-                                                                         imappingindexx.ToString("000") + $"({keyassign.GetDescStr()})" + ".jpg",
+                                                                         m_EnvNow.DrawMappingName[imappingindexx] + $"({keyassign.GetDescStr()})" + ".jpg",
                                                                          ImageFormat.Jpeg);
 
                         keyassign.bmpResult.Dispose();
@@ -3249,9 +3465,13 @@ namespace Allinone.OPSpace.ResultSpace
                         imappingindexx++;
                     }
 
-                    string myChipReportPath = "D:\\REPORT\\(CHIP)FORMAT01\\" + JzTimes.DateSerialString;
+                    string myChipReportPath = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\REPORT\\(CHIP)FORMAT01";
                     if (!System.IO.Directory.Exists(myChipReportPath))
                         System.IO.Directory.CreateDirectory(myChipReportPath);
+
+                    //string myChipReportPath = "D:\\REPORT\\(CHIP)FORMAT01\\" + JzTimes.DateSerialString;
+                    //if (!System.IO.Directory.Exists(myChipReportPath))
+                    //    System.IO.Directory.CreateDirectory(myChipReportPath);
 
                     list.Sort();
                     foreach (string strss in list)
@@ -3261,7 +3481,8 @@ namespace Allinone.OPSpace.ResultSpace
 
 
 
-                    System.IO.StreamWriter streamWriter = new System.IO.StreamWriter(myChipReportPath + "\\" + Universal.CalTestBarcode + ".csv");
+                    System.IO.StreamWriter streamWriter = new System.IO.StreamWriter(
+                        myChipReportPath + "\\" + $"{JzTimes.DateTimeSerialString}-" + Universal.CalTestBarcode + $"{(IsPass ? "-P" : "-F")}" + ".csv");
                     streamWriter.WriteLine(myReportStr);
                     streamWriter.Close();
                     streamWriter.Dispose();
@@ -3423,7 +3644,7 @@ namespace Allinone.OPSpace.ResultSpace
         }
         public void SavePrintScreenForMainX6()
         {
-            string screen_SavePath = "D:\\CollectPictures_" + Universal.OPTION.ToString() + "\\Screen\\" + JzTimes.DateSerialString;
+            string screen_SavePath = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\screens";
 
             if (!Directory.Exists(screen_SavePath))
                 Directory.CreateDirectory(screen_SavePath);
@@ -3438,30 +3659,30 @@ namespace Allinone.OPSpace.ResultSpace
                 g.Dispose();
             }
 
-            m.Save(screen_SavePath + "\\" + (IsPass ? "P-" : "F-") + "Screen_" + Universal.CalTestBarcode + ".jpg", ImageFormat.Jpeg);
+            m.Save(screen_SavePath + "\\" + $"{JzTimes.DateTimeSerialString}-{Universal.CalTestBarcode}-{(IsPass ? "P" : "F")}", ImageFormat.Jpeg);
             m.Dispose();
         }
         private void MainX6Save()
         {
-            if (INI.CHIP_NG_collect)
-            {
-                if (IsPass)
-                    return;
-            }
+            //if (INI.CHIP_NG_collect)
+            //{
+            //    if (IsPass)
+            //        return;
+            //}
 
-            string mainx6_path = Universal.MainX6_Path + "\\" + (IsPass ? "P-" : "F-") + JzTimes.DateTimeSerialString;
+            //string mainx6_path = Universal.MainX6_Path + "\\" + (IsPass ? "P-" : "F-") + JzTimes.DateTimeSerialString;
 
-            if (!Directory.Exists(mainx6_path + "\\000"))
-                Directory.CreateDirectory(mainx6_path + "\\000");
+            //if (!Directory.Exists(mainx6_path + "\\000"))
+            //    Directory.CreateDirectory(mainx6_path + "\\000");
 
-            EnvClass env = AlbumWork.ENVList[0];
+            //EnvClass env = AlbumWork.ENVList[0];
 
-            int qi = 0;
-            foreach (PageClass page in env.PageList)
-            {
-                page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
-                qi++;
-            }
+            //int qi = 0;
+            //foreach (PageClass page in env.PageList)
+            //{
+            //    page.GetbmpRUN().Save(mainx6_path + "\\000\\P00-" + qi.ToString("000") + ".png", ImageFormat.Png);
+            //    qi++;
+            //}
         }
         private void SMD2Save()
         {
@@ -3471,12 +3692,29 @@ namespace Allinone.OPSpace.ResultSpace
                     return;
             }
 
-            string mainx6_path = Universal.MainX6_Path + "\\" + (IsPass ? "P-" : "F-") + Universal.CalTestBarcode;
+            string mainx6_path = Universal.MainX6_Path + "\\" + (IsPass ? "P-" : "F-") + Universal.CalTestBarcode + $"-{JzTimes.DateTimeSerialString}";
+            mainx6_path = Universal.MainX6_Path + "\\" + $"{JzTimes.DateTimeSerialString}-{Universal.CalTestBarcode}-{(IsPass ? "P" : "F")}";
 
             if (!Directory.Exists(mainx6_path + "\\000"))
                 Directory.CreateDirectory(mainx6_path + "\\000");
 
             EnvClass env = m_EnvNow;
+
+            if (m_JzBarcodeParaGridClass.IsOpenBarcode)
+            {
+                switch (INI.chipSaveImageFormat)
+                {
+                    case SaveImageFormat.IMAGE_BMP:
+                        bmpBarcode.Save(mainx6_path + "\\000\\Barcode.bmp", ImageFormat.Bmp);
+                        break;
+                    case SaveImageFormat.IMAGE_PNG:
+                        bmpBarcode.Save(mainx6_path + "\\000\\Barcode.png", ImageFormat.Png);
+                        break;
+                    default:
+                        bmpBarcode.Save(mainx6_path + "\\000\\Barcode.jpg", ImageFormat.Jpeg);
+                        break;
+                }
+            }
 
             int qi = 0;
             foreach (PageClass page in env.PageList)

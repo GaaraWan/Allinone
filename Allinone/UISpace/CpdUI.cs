@@ -70,7 +70,7 @@ namespace Allinone.UISpace
         myPropertyGrid ppgCPD;
         DataTreeListView dtlvCPD;
         DataGridView dgvCPD;
-        
+
         DataTable CPDTable = new DataTable();
 
         NumericUpDown numStep;
@@ -135,7 +135,7 @@ namespace Allinone.UISpace
             btnDn.Click += BtnDn_Click;
 
             DISPUI = dispUI1;
-            DISPUI.Initial(5f,0.05f);
+            DISPUI.Initial(5f, 0.05f);
             DISPUI.SetDisplayType(DisplayTypeEnum.NORMAL);
             DISPUI.DebugAction += DISPUI_DebugAction;
 
@@ -159,11 +159,11 @@ namespace Allinone.UISpace
         }
         private void BtnDn_Click(object sender, EventArgs e)
         {
-            if (FirstSelectIndex > -1 && FirstSelectIndex < CPDItemList.Count -1)
+            if (FirstSelectIndex > -1 && FirstSelectIndex < CPDItemList.Count - 1)
             {
                 int i = 0;
                 string CPDItemName = CPDItemNow.Name;
-                
+
                 while (i < CPDItemList.Count)
                 {
                     if ((string)CPDTable.Rows[i]["Name"] == CPDItemName)
@@ -177,7 +177,7 @@ namespace Allinone.UISpace
                         {
                             CPDTable.Rows.RemoveAt(i + 1);
                             CPDTable.Rows.InsertAt(orgdatarow, i);
-                            
+
                             CPDItemList.RemoveAt(i + 1);
                             CPDItemList.Insert(i, cpditem);
                         }
@@ -185,24 +185,24 @@ namespace Allinone.UISpace
                     }
                     i++;
                 }
-                
+
 
                 RefreshCompound();
             }
         }
         private void BtnUp_Click(object sender, EventArgs e)
         {
-            if(FirstSelectIndex > -1 && FirstSelectIndex > 0)
+            if (FirstSelectIndex > -1 && FirstSelectIndex > 0)
             {
                 int i = 0;
                 string CPDItemName = CPDItemNow.Name;
 
-                while(i < CPDItemList.Count)
+                while (i < CPDItemList.Count)
                 {
-                    if((string)CPDTable.Rows[i]["Name"] == CPDItemName)
+                    if ((string)CPDTable.Rows[i]["Name"] == CPDItemName)
                     {
                         DataRow orgdatarow = CPDTable.NewRow();
-                        orgdatarow.ItemArray = CPDTable.Rows[i].ItemArray.Clone() as object [];
+                        orgdatarow.ItemArray = CPDTable.Rows[i].ItemArray.Clone() as object[];
 
                         CPDItemClass cpditem = CPDItemList[i];
 
@@ -230,7 +230,7 @@ namespace Allinone.UISpace
         }
         private void DISPUI_DebugAction(string opstring)
         {
-            switch(opstring)
+            switch (opstring)
             {
                 case "RELEASMOVE":
                     RefreshCompound();
@@ -248,14 +248,14 @@ namespace Allinone.UISpace
 
             SIZEFRM = new SizeForm();
 
-            if(SIZEFRM.ShowDialog() == DialogResult.OK)
+            if (SIZEFRM.ShowDialog() == DialogResult.OK)
             {
                 string[] strs = JzToolsClass.PassingString.Split(',');
 
                 bmpBASE.Dispose();
                 bmpBASE = new Bitmap(int.Parse(strs[0]), int.Parse(strs[1]));
                 DrawRect(bmpBASE, new Rectangle(0, 0, bmpBASE.Width, bmpBASE.Height), new SolidBrush(Color.White));
-                
+
                 DISPUI.SetDisplayImage(bmpBASE);
 
                 CPD.BaseSize = new Size(int.Parse(strs[0]), int.Parse(strs[1]));
@@ -285,7 +285,7 @@ namespace Allinone.UISpace
         }
         private void BtnRefresh_Click(object sender, EventArgs e)
         {
-            foreach(CPDItemClass cpditem in CPD.CPDItemList)
+            foreach (CPDItemClass cpditem in CPD.CPDItemList)
             {
                 //cpditem.bmpITEM.Dispose();
                 GetDataFromCompoundData(cpditem.NORMALPara.RelatePA, ref cpditem.bmpITEM);
@@ -352,18 +352,18 @@ namespace Allinone.UISpace
         {
             CPDLISTFRM = new CPDListForm(ALBNow, ASNCollection);
 
-            if(CPDLISTFRM.ShowDialog() == DialogResult.Cancel)
+            if (CPDLISTFRM.ShowDialog() == DialogResult.Cancel)
             {
                 return;
             }
 
             string[] strs = JzToolsClass.PassingString.Split(Universal.NewlineChar);
-            
+
 
             List<CPDItemClass> addedcpdlist = new List<CPDItemClass>();
             List<int> selectasnnolist = new List<int>();
-            
-            foreach(string str in strs)
+
+            foreach (string str in strs)
             {
                 Bitmap bmp = new Bitmap(1, 1);
                 SizeF sizef = GetDataFromCompoundData(str, ref bmp);
@@ -406,23 +406,23 @@ namespace Allinone.UISpace
             FillDisplay();
         }
 
-        SizeF GetDataFromCompoundData(string str,ref Bitmap bmp)
+        SizeF GetDataFromCompoundData(string str, ref Bitmap bmp)
         {
             string[] strs;
             SizeF sizef = new SizeF();
 
-            switch(str[0])
+            switch (str[0])
             {
                 case 'E':
                     strs = str.Split('-');
 
-                    foreach(EnvClass env in ALBNow.ENVList)
+                    foreach (EnvClass env in ALBNow.ENVList)
                     {
-                        if(env.ToEnvString() == strs[0])
+                        if (env.ToEnvString() == strs[0])
                         {
-                            foreach(PageClass page in env.PageList)
+                            foreach (PageClass page in env.PageList)
                             {
-                                if(page.ToPageIndexString() == strs[1])
+                                if (page.ToPageIndexString() == strs[1])
                                 {
                                     bmp.Dispose();
                                     bmp = new Bitmap(page.GetbmpORG((PageOPTypeEnum)int.Parse(strs[2])));
@@ -438,7 +438,7 @@ namespace Allinone.UISpace
 
                     foreach (ASNClass asn in ASNCollection.myDataList)
                     {
-                        if(asn.ToNoString() == strs[0])
+                        if (asn.ToNoString() == strs[0])
                         {
                             bmp.Dispose();
                             bmp = new Bitmap(asn.bmpASN);
@@ -449,7 +449,7 @@ namespace Allinone.UISpace
 
                     break;
             }
-            
+
             return sizef;
         }
 
@@ -511,7 +511,7 @@ namespace Allinone.UISpace
         /// </summary>
         public void Delete()
         {
-            if (MessageBox.Show("是否要刪除所選項目", "SYSTEM", MessageBoxButtons.YesNo) == DialogResult.No)
+            if (MessageBox.Show(ToChangeLanguage("是否要刪除所選項目"), "SYSTEM", MessageBoxButtons.YesNo) == DialogResult.No)
                 return;
 
             int i = 0;
@@ -558,7 +558,7 @@ namespace Allinone.UISpace
                     {
                         cpditem.Suicide();
                         CPDItemList.RemoveAt(i);
-                    } 
+                    }
                     i--;
                 }
 
@@ -568,7 +568,7 @@ namespace Allinone.UISpace
                 RefreshCompound();
             }
             else
-                MessageBox.Show("請選擇需要刪除的項目", "SYSTEM", MessageBoxButtons.OK);
+                MessageBox.Show(ToChangeLanguage("請選擇需要刪除的項目"), "SYSTEM", MessageBoxButtons.OK);
 
         }
         CPDItemClass GetCPDItemFromTree(int no)
@@ -752,7 +752,7 @@ namespace Allinone.UISpace
             //    FirstSelectNo = no;
             //    SetASN(null);
             //}
-            
+
             DISPUI.MappingSelect();
 
         }
@@ -875,11 +875,11 @@ namespace Allinone.UISpace
                     //string[] strxs = str.Split(':');
                     //int analyzeno = int.Parse(strxs[0]);
 
-                    if(str.IndexOf("-1") > -1)
+                    if (str.IndexOf("-1") > -1)
                     {
                         continue;
                     }
-                    
+
                     if (selectasnstringlist.IndexOf(str) < 0)
                         selectasnstringlist.Add(str);
                 }
@@ -1186,7 +1186,7 @@ namespace Allinone.UISpace
             {
                 int i = 0;
 
-               //Mover mover = cpd.myMover;
+                //Mover mover = cpd.myMover;
 
                 //while (i < mover.Count)
                 {
@@ -1289,6 +1289,13 @@ namespace Allinone.UISpace
             rectf.Intersect(new RectangleF(0, 0, bmpBASE.Width, bmpBASE.Height));
 
             CPD.bmpVIEW = bmpBASE.Clone(rectf, PixelFormat.Format32bppArgb);
+        }
+
+        string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
         }
 
     }

@@ -228,7 +228,37 @@ namespace JetEazy.ControlSpace
 
             //Command("Set Data N", iocount + ioname + data);
         }
+        public override void SetData(float data, int MWIndex, int word = 2)
+        {
+            SetData((int)(data), MWIndex, word);//换算是1mm
 
+            ////发送给plc数据
+            //byte[] hex = BitConverter.GetBytes(data);
+            //byte[] h = new byte[2];
+            //byte[] l = new byte[2];
+
+            //h[0] = hex[0];
+            //h[1] = hex[1];
+            //l[0] = hex[2];
+            //l[1] = hex[3];
+
+            //ushort setH = BitConverter.ToUInt16(h, 0);
+            //ushort setL = BitConverter.ToUInt16(l, 0);
+
+            //SetData(ValueToHEX(setL, 4), "D" + MWIndex.ToString("0000"));
+            //if (word == 2)
+            //    SetData(ValueToHEX(setH, 4), "D" + (MWIndex + 1).ToString("0000"));
+
+        }
+        public override void SetData(int data, int MWIndex, int word = 2)
+        {
+            long setH = data >> 16;
+            long setL = data % 65536;
+
+            SetData(ValueToHEX(setL, 4), "D" + MWIndex.ToString("00000"));
+            if (word == 2)
+                SetData(ValueToHEX(setH, 4), "D" + (MWIndex + 1).ToString("00000"));
+        }
 
         /// <summary>
         /// 写数据到PLC

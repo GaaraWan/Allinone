@@ -262,9 +262,13 @@ namespace Allinone.OPSpace
 
             if (myreason == ReasonEnum.NG || ISRESERVEPASSIMAGE)
             {
-                bmpORG = new Bitmap(bmporg);
-                bmpRUN = new Bitmap(bmprun);
-                bmpDIFF = new Bitmap(bmpdiff);
+                //bmpORG = new Bitmap(bmporg);
+                //bmpRUN = new Bitmap(bmprun);
+                //bmpDIFF = new Bitmap(bmpdiff);
+
+                bmpORG = (Bitmap)bmporg.Clone(new RectangleF(0, 0, bmporg.Width, bmporg.Height), System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                bmpRUN = (Bitmap)bmprun.Clone(new RectangleF(0, 0, bmprun.Width, bmprun.Height), System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                bmpDIFF = (Bitmap)bmpdiff.Clone(new RectangleF(0, 0, bmpdiff.Width, bmpdiff.Height), System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             }
             else
             {

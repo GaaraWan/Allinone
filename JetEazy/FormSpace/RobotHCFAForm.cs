@@ -82,6 +82,7 @@ namespace MFApiDemo
             timer1.Start();
 
             btnStopMotion.Click += BtnStopMotion_Click;
+            inputVel.ValueChanged += inputVel_ValueChanged;
 
             if (handle != IntPtr.Zero)
             {

@@ -31,6 +31,8 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.button11 = new System.Windows.Forms.Button();
+            this.listBox2 = new System.Windows.Forms.ListBox();
             this.label11 = new System.Windows.Forms.Label();
             this.button5 = new System.Windows.Forms.Button();
             this.listBox1 = new System.Windows.Forms.ListBox();
@@ -48,9 +50,11 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.button13 = new System.Windows.Forms.Button();
+            this.button12 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
-            this.listBox2 = new System.Windows.Forms.ListBox();
+            this.button14 = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabPage4.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -83,6 +87,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.button11);
             this.groupBox1.Controls.Add(this.listBox2);
             this.groupBox1.Controls.Add(this.label11);
             this.groupBox1.Controls.Add(this.button5);
@@ -102,6 +107,27 @@
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "狀態顯示";
+            // 
+            // button11
+            // 
+            this.button11.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button11.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button11.Location = new System.Drawing.Point(217, 105);
+            this.button11.Name = "button11";
+            this.button11.Size = new System.Drawing.Size(105, 29);
+            this.button11.TabIndex = 22;
+            this.button11.Text = "手动切换参数";
+            this.button11.UseVisualStyleBackColor = false;
+            // 
+            // listBox2
+            // 
+            this.listBox2.FormattingEnabled = true;
+            this.listBox2.ItemHeight = 15;
+            this.listBox2.Location = new System.Drawing.Point(220, 175);
+            this.listBox2.Name = "listBox2";
+            this.listBox2.Size = new System.Drawing.Size(120, 94);
+            this.listBox2.TabIndex = 21;
+            this.listBox2.Visible = false;
             // 
             // label11
             // 
@@ -291,6 +317,9 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.button14);
+            this.tabPage1.Controls.Add(this.button13);
+            this.tabPage1.Controls.Add(this.button12);
             this.tabPage1.Controls.Add(this.button6);
             this.tabPage1.Controls.Add(this.button3);
             this.tabPage1.Location = new System.Drawing.Point(4, 54);
@@ -300,6 +329,28 @@
             this.tabPage1.Text = "图像";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // button13
+            // 
+            this.button13.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button13.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button13.Location = new System.Drawing.Point(58, 143);
+            this.button13.Name = "button13";
+            this.button13.Size = new System.Drawing.Size(205, 37);
+            this.button13.TabIndex = 234;
+            this.button13.Text = "存储图像(相机)";
+            this.button13.UseVisualStyleBackColor = false;
+            // 
+            // button12
+            // 
+            this.button12.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button12.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button12.Location = new System.Drawing.Point(58, 100);
+            this.button12.Name = "button12";
+            this.button12.Size = new System.Drawing.Size(205, 37);
+            this.button12.TabIndex = 233;
+            this.button12.Text = "一键取像(相机)";
+            this.button12.UseVisualStyleBackColor = false;
+            // 
             // button6
             // 
             this.button6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
@@ -308,7 +359,7 @@
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(205, 37);
             this.button6.TabIndex = 232;
-            this.button6.Text = "存储图像";
+            this.button6.Text = "存储图像(线扫)";
             this.button6.UseVisualStyleBackColor = false;
             // 
             // button3
@@ -319,18 +370,19 @@
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(205, 37);
             this.button3.TabIndex = 231;
-            this.button3.Text = "一键取像";
+            this.button3.Text = "一键取像(线扫)";
             this.button3.UseVisualStyleBackColor = false;
             // 
-            // listBox2
+            // button14
             // 
-            this.listBox2.FormattingEnabled = true;
-            this.listBox2.ItemHeight = 15;
-            this.listBox2.Location = new System.Drawing.Point(220, 175);
-            this.listBox2.Name = "listBox2";
-            this.listBox2.Size = new System.Drawing.Size(120, 94);
-            this.listBox2.TabIndex = 21;
-            this.listBox2.Visible = false;
+            this.button14.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button14.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button14.Location = new System.Drawing.Point(58, 186);
+            this.button14.Name = "button14";
+            this.button14.Size = new System.Drawing.Size(205, 37);
+            this.button14.TabIndex = 235;
+            this.button14.Text = "重新加载训练参数";
+            this.button14.UseVisualStyleBackColor = false;
             // 
             // AllinoneSDM5CtrlUI
             // 
@@ -374,5 +426,9 @@
         private System.Windows.Forms.Button button6;
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.ListBox listBox2;
+        private System.Windows.Forms.Button button11;
+        private System.Windows.Forms.Button button13;
+        private System.Windows.Forms.Button button12;
+        private System.Windows.Forms.Button button14;
     }
 }

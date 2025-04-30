@@ -371,7 +371,7 @@ namespace JzOCR.OPSpace
             xInfo.fRotationTolerance = 5; //设定旋转角度 : -180 ~ 180
             xInfo.fScalingTolerance = 0f; //设定缩放比例: 90% ~ 110%  
                                           //设定图片是否要缩小,如果不缩小则让它为最小边的值.
-            xInfo.nDownSamplingSize = 500;// xTemplate.GetWidth() > xTemplate.GetHeight() ? xTemplate.GetWidth() : xTemplate.GetHeight();
+            xInfo.nDownSamplingSize = 50;// xTemplate.GetWidth() > xTemplate.GetHeight() ? xTemplate.GetWidth() : xTemplate.GetHeight();
             xInfo.nCannyThresholdHigh = 200;
             xInfo.nCannyThresholdLow = 128;
 

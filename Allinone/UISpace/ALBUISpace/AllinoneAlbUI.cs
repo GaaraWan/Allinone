@@ -12,6 +12,8 @@ using Allinone.OPSpace;
 using Allinone.FormSpace;
 using JetEazy;
 using JetEazy.BasicSpace;
+using System.Reflection;
+using System.IO;
 
 namespace Allinone.UISpace.ALBUISpace
 {
@@ -132,6 +134,69 @@ namespace Allinone.UISpace.ALBUISpace
             private RectangleF _rectF = new RectangleF(0, 0, 100, 100);
             private bool _iswhite = false;
 
+            private bool _IsCheckBarcodeOpen = false;
+            private bool _IsOpenCheckRepeatCode = false;
+            private bool _IsOpenCheckCurLotRepeatCode = false;
+
+
+            private int _row = 1;
+            private int _col = 1;
+            private PathPlan _pathplan = PathPlan.p1;
+
+
+            [CategoryAttribute("Light Settings"),
+            DefaultValueAttribute(true), DescriptionAttribute("true: 比对 false:不比对")]
+            [Browsable(true)]
+            [DisplayName("A00.是否比对条码")]
+            public bool IsCheckBarcodeOpen
+            {
+                get { return _IsCheckBarcodeOpen; }
+                set { _IsCheckBarcodeOpen = value; }
+            }
+            [CategoryAttribute("Light Settings"),
+            DefaultValueAttribute(true), DescriptionAttribute("true: 比对 false:不比对")]
+            [DisplayName("A01.是否比对重复码")]
+            [Browsable(true)]
+            public bool IsOpenCheckRepeatCode
+            {
+                get { return _IsOpenCheckRepeatCode; }
+                set { _IsOpenCheckRepeatCode = value; }
+            }
+            [CategoryAttribute("Light Settings"),
+            DefaultValueAttribute(true), DescriptionAttribute("true: 比对 false:不比对 注:需要先开启 是否比对重复码")]
+            [DisplayName("A02.是否比对当前批号重复码")]
+            [Browsable(true)]
+            public bool IsOpenCheckCurLotRepeatCode
+            {
+                get { return _IsOpenCheckCurLotRepeatCode; }
+                set { _IsOpenCheckCurLotRepeatCode = value; }
+            }
+
+            [CategoryAttribute("Light Settings"),
+            DefaultValueAttribute(true), DescriptionAttribute("Chip的行数")]
+            [DisplayName("A03.行数")]
+            public int ChipRow
+            {
+                get { return _row; }
+                set { _row = value; }
+            }
+            [CategoryAttribute("Light Settings"),
+            DefaultValueAttribute(true), DescriptionAttribute("Chip的列数")]
+            [DisplayName("A04.列数")]
+            public int ChipCol
+            {
+                get { return _col; }
+                set { _col = value; }
+            }
+            [CategoryAttribute("Light Settings"),
+           DefaultValueAttribute(true), DescriptionAttribute("Chip的列数")]
+            [DisplayName("A05.路径")]
+            [TypeConverter(typeof(JzEnumConverter))]
+            public PathPlan ChipPathPlan
+            {
+                get { return _pathplan; }
+                set { _pathplan = value; }
+            }
 
             public override string ToString()
             {
@@ -149,7 +214,14 @@ namespace Allinone.UISpace.ALBUISpace
                 retstr += _thresholdvalue.ToString() + ",";
                 retstr += PointF000ToString(_ptfCenter) + ",";
                 retstr += RectFToString(_rectF) + ",";
-                retstr += (_iswhite ? "1" : "0");
+                retstr += (_iswhite ? "1" : "0") + ",";
+                retstr += (_IsCheckBarcodeOpen ? "1" : "0") + ",";
+                retstr += (_IsOpenCheckRepeatCode ? "1" : "0") + ",";
+                retstr += (_IsOpenCheckCurLotRepeatCode ? "1" : "0") + ",";
+
+                retstr += _row.ToString() + ",";
+                retstr += _col.ToString() + ",";
+                retstr += ((int)_pathplan).ToString() + ",";
 
                 return retstr;
             }
@@ -199,6 +271,27 @@ namespace Allinone.UISpace.ALBUISpace
                             break;
                         case 11:
                             _iswhite = strx == "1";
+                            break;
+                        case 12:
+                            _IsCheckBarcodeOpen = strx == "1";
+                            break;
+                        case 13:
+                            _IsOpenCheckRepeatCode = strx == "1";
+                            break;
+                        case 14:
+                            _IsOpenCheckCurLotRepeatCode = strx == "1";
+                            break;
+                        case 15:
+                            _row = int.Parse(strx);
+                            break;
+                        case 16:
+                            _col = int.Parse(strx);
+                            break;
+                        case 17:
+                            if (!string.IsNullOrEmpty(strx))
+                            {
+                                _pathplan = (PathPlan)int.Parse(strx);
+                            }
                             break;
                     }
                     i++;
@@ -288,7 +381,7 @@ namespace Allinone.UISpace.ALBUISpace
             }
 
             [CategoryAttribute("Light Settings"),
-       DefaultValueAttribute(true), DisplayName("找白色"),Browsable(false)]
+       DefaultValueAttribute(true), DisplayName("找白色"), Browsable(false)]
             public bool IsWhite
             {
                 get { return _iswhite; }
@@ -441,12 +534,14 @@ namespace Allinone.UISpace.ALBUISpace
         public class MainsdLightSettings
         {
             private bool pannel = true;
+            private bool bottom = false;
 
             public override string ToString()
             {
                 string retstr = "";
 
-                retstr += (pannel ? "1" : "0");
+                retstr += (pannel ? "1" : "0") + ",";
+                retstr += (bottom ? "1" : "0");
 
                 return retstr;
             }
@@ -463,6 +558,9 @@ namespace Allinone.UISpace.ALBUISpace
                         case 0:
                             PANNEL = strx == "1";
                             break;
+                        case 1:
+                            bottom = strx == "1";
+                            break;
                     }
                     i++;
                 }
@@ -471,11 +569,20 @@ namespace Allinone.UISpace.ALBUISpace
 
             [CategoryAttribute("Light Settings"),
                     DefaultValueAttribute(true)]
-            [DisplayName("平板燈")]
+            [DisplayName("外同轴")]
             public bool PANNEL
             {
                 get { return pannel; }
                 set { pannel = value; }
+            }
+
+            [CategoryAttribute("Light Settings"),
+                    DefaultValueAttribute(true)]
+            [DisplayName("内同轴")]
+            public bool BOTTOMLED
+            {
+                get { return bottom; }
+                set { bottom = value; }
             }
         }
 
@@ -852,6 +959,8 @@ namespace Allinone.UISpace.ALBUISpace
         Button btnSetEnd;
         Button btnGoPosition;
 
+        Button btnReadBarcodeSetup;
+
         PropertyGrid ppgLight;
         PropertyGrid ppgPosition;
 
@@ -901,6 +1010,7 @@ namespace Allinone.UISpace.ALBUISpace
             btnSetEnd = button3;
             btnGoPosition = button4;
             lblPostion = label3;
+            btnReadBarcodeSetup = button5;
 
             cboEnv = comboBox1;
 
@@ -929,7 +1039,22 @@ namespace Allinone.UISpace.ALBUISpace
             btnSetEnd.Click += btn_Click;
             btnGoPosition.Click += btn_Click;
 
+            btnReadBarcodeSetup.Click += BtnReadBarcodeSetup_Click;
+
             cboEnv.SelectedIndexChanged += cboEnv_SelectedIndexChanged;
+        }
+
+        frmTestCommon mfrmTestCommon = null;
+        private void BtnReadBarcodeSetup_Click(object sender, EventArgs e)
+        {
+            mfrmTestCommon = new frmTestCommon(ENVNow.GeneralBarcodeSetup);
+            if (mfrmTestCommon.ShowDialog() == DialogResult.OK)
+            {
+                ENVNow.GeneralBarcodeSetup = mfrmTestCommon.ResultParaStr;
+            }
+            mfrmTestCommon.Close();
+            mfrmTestCommon.Dispose();
+            mfrmTestCommon = null;
         }
 
         public void Initial(OptionEnum option, AlbumClass album)
@@ -938,6 +1063,8 @@ namespace Allinone.UISpace.ALBUISpace
 
             OPTION = option;
             ALBUM = album;
+
+ 
 
             switch (OPTION)
             {
@@ -949,6 +1076,7 @@ namespace Allinone.UISpace.ALBUISpace
                 case OptionEnum.MAIN_SDM2:
                 case OptionEnum.MAIN_SDM1:
                 case OptionEnum.MAIN_SD:
+                    btnReadBarcodeSetup.Visible = true;
                     MAINSDLightSetting = new MainsdLightSettings();
                     break;
                 case OptionEnum.MAIN:
@@ -1017,6 +1145,7 @@ namespace Allinone.UISpace.ALBUISpace
                 case OptionEnum.MAIN_X6:
                 case JetEazy.OptionEnum.MAIN_SERVICE:
 
+                    ppgLight.Width = 320;
                     btnSetEnd.Visible = false;
                     btnGoPosition.Visible = false;
                     btnSetPosition.Visible = false;
@@ -1029,6 +1158,8 @@ namespace Allinone.UISpace.ALBUISpace
 
 
             FillDisplay();
+
+            _changeLanguageLightSettings();
         }
         private void PpgPosition_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
@@ -1116,7 +1247,7 @@ namespace Allinone.UISpace.ALBUISpace
         void Del()
         {
             //FOR LASER TRANSLATION
-            if (MessageBox.Show("是否要刪除此環境?", "SYSTEM", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBox.Show(ToChangeLanguage("是否要刪除此環境?"), "SYSTEM", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 ALBUM.DelEnv(ENVNow.No);
 
@@ -1440,6 +1571,7 @@ namespace Allinone.UISpace.ALBUISpace
             IsNeedToChange = true;
         }
 
+        
         public delegate void TriggerHandler(RCPStatusEnum status, string opstr);
         public event TriggerHandler TriggerAction;
         public void OnTrigger(RCPStatusEnum status, string opstr)
@@ -1448,6 +1580,121 @@ namespace Allinone.UISpace.ALBUISpace
             {
                 TriggerAction(status, opstr);
             }
+        }
+
+        private Light2Settings _changeLanguageLightSettings()
+        {
+            string _collectDataStr = string.Empty;
+            if (Light2Setting == null)
+                return null;
+
+            foreach (System.Reflection.PropertyInfo prop in Light2Setting.GetType().GetProperties())
+            {
+                string name = prop.Name;
+                if (prop.GetCustomAttribute<DisplayNameAttribute>() != null)
+                {
+                    string dispName = prop.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
+                    _collectDataStr += dispName + Environment.NewLine;
+                    if (name != "")
+                    {
+                        string strNewName = ToChangeLanguage(dispName);
+                        if (strNewName != dispName)
+                        {
+                            PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(Light2Setting);
+                            Type displayType = typeof(DisplayNameAttribute);
+                            FieldInfo fieldInfo = displayType.GetField("_displayName", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                            if (fieldInfo != null)
+                            {
+                                fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+                            }
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                }
+
+                if (prop.GetCustomAttribute<DescriptionAttribute>() != null)
+                {
+                    string strDescription = prop.GetCustomAttribute<DescriptionAttribute>().Description;
+                    _collectDataStr += strDescription + Environment.NewLine;
+                    string strNewName = ToChangeLanguage(strDescription);
+                    if (strNewName != strDescription)
+                    {
+                        PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(Light2Setting);
+                        Type displayType = typeof(DescriptionAttribute);
+                        FieldInfo fieldInfo = displayType.GetField("description", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                        if (fieldInfo != null)
+                            fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+                    }
+                }
+
+                if (prop.GetCustomAttribute<CategoryAttribute>() != null)
+                {
+                    string strCategory = prop.GetCustomAttribute<CategoryAttribute>().Category;
+                    _collectDataStr += strCategory + Environment.NewLine;
+                    string strNewName = ToChangeLanguage(strCategory);
+                    if (strNewName != strCategory)
+                    {
+                        PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(Light2Setting);
+                        Type displayType = typeof(CategoryAttribute);
+                        FieldInfo fieldInfo = displayType.GetField("categoryValue", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                        if (fieldInfo != null)
+                            fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+                    }
+                }
+                switch(Universal.FACTORYNAME)
+                {
+                    case FactoryName.DAGUI:
+                        if (prop.GetCustomAttribute<BrowsableAttribute>() != null)
+                        {
+                            bool bBrowsable = prop.GetCustomAttribute<BrowsableAttribute>().Browsable;
+                            if (name.Contains("IsCheckBarcodeOpen") || name.Contains("IsOpenCheckRepeatCode") || name.Contains("IsOpenCheckCurLotRepeatCode"))
+                            {
+                                PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(Light2Setting);
+                                Type displayType = typeof(BrowsableAttribute);
+                                FieldInfo fieldInfo = displayType.GetField("browsable", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                                if (fieldInfo != null)
+                                    fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], false);
+                            }
+                        }
+                        break;
+                    case FactoryName.DONGGUAN:
+                        if (prop.GetCustomAttribute<BrowsableAttribute>() != null)
+                        {
+                            bool bBrowsable = prop.GetCustomAttribute<BrowsableAttribute>().Browsable;
+                            if (name.Contains("IsOpenCheckRepeatCode") || name.Contains("IsOpenCheckCurLotRepeatCode"))
+                            {
+                                PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(Light2Setting);
+                                Type displayType = typeof(BrowsableAttribute);
+                                FieldInfo fieldInfo = displayType.GetField("browsable", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                                if (fieldInfo != null)
+                                    fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], false);
+                            }
+                        }
+                        break;
+                }
+            }
+
+            //SaveData(_collectDataStr, "D:\\log.csv");
+
+            return Light2Setting;
+        }
+        string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
+        }
+        void SaveData(string DataStr, string FileName)
+        {
+            StreamWriter Swr = new StreamWriter(FileName, true, Encoding.Default);
+
+            Swr.Write(DataStr);
+
+            Swr.Flush();
+            Swr.Close();
         }
     }
 }

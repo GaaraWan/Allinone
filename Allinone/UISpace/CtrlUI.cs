@@ -441,7 +441,7 @@ namespace Allinone.UISpace
                             AllinoneSDM3CTRL.SDDispose();
                             break;
                         case OptionEnum.MAIN_SDM5:
-                            //AllinoneSDM5CTRL.SDDispose();
+                            AllinoneSDM5CTRL.SDDispose();
                             break;
                     }
                     break;

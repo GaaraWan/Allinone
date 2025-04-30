@@ -203,6 +203,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\JzDlls\Opencv\OpenCvSharp.Extensions.dll</HintPath>
     </Reference>
+    <Reference Include="PaddleOCRSharp">
+      <HintPath>..\JzDlls\PaddleOCRSharp.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="SFSPortal">
       <HintPath>..\JzDlls\SFSPortal.dll</HintPath>
@@ -247,9 +250,9 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="TIS.Imaging.ICImagingControl33, Version=3.3.4.1837, Culture=neutral, PublicKeyToken=257805929e8b7928, processorArchitecture=x86">
+    <Reference Include="TIS.Imaging.ICImagingControl35, Version=3.5.7.4039, Culture=neutral, PublicKeyToken=257805929e8b7928, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Common Files\IC Imaging Control 3.3\bin\v4.0.30319\x64\TIS.Imaging.ICImagingControl33.dll</HintPath>
+      <HintPath>..\JzDlls\TIS.Imaging.ICImagingControl35.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="ZstdSharp, Version=0.8.0.0, Culture=neutral, PublicKeyToken=8d151af33a4ad5cf, processorArchitecture=MSIL">
@@ -286,6 +289,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="BasicSpace\JzProperty.cs" />
+    <Compile Include="BasicSpace\OCRByPaddle.cs" />
     <Compile Include="ControlSpace\CAMERAClass.cs" />
     <Compile Include="ControlSpace\CamLinkDriver\Euresys\MultiCam.cs" />
     <Compile Include="ControlSpace\CamLinkDriver\Linescan_Dvp2.cs" />
@@ -340,6 +344,12 @@
     </Compile>
     <Compile Include="FormSpace\ExportForm.designer.cs">
       <DependentUpon>ExportForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\LanguageForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\LanguageForm.Designer.cs">
+      <DependentUpon>LanguageForm.cs</DependentUpon>
     </Compile>
     <Compile Include="FormSpace\PopForm.cs">
       <SubType>Form</SubType>
@@ -445,6 +455,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\ExportForm.resx">
       <DependentUpon>ExportForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\LanguageForm.resx">
+      <DependentUpon>LanguageForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\PopForm.resx">
       <DependentUpon>PopForm.cs</DependentUpon>

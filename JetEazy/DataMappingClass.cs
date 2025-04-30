@@ -13,7 +13,10 @@ namespace JetEazy
         {
 
         }
-
+        /// <summary>
+        /// 0默认表格式  1银胶表格式
+        /// </summary>
+        public int TypeIndex { get; set; } = 0;
         public PointF PtfCenter { get; set; } = new PointF();
         public string ReportStr { get; set; } = string.Empty;
         public int ReportBinValue { get; set; } = 0;

@@ -703,7 +703,8 @@ namespace Allinone.ControlSpace.MachineSpace
             {
                 case RobotType.HCFA:
 
-                    mRobotHCFA.MoveTo(x, y, z);
+                    float c = PLCMOTIONCollection[3].READYPOSITION;
+                    mRobotHCFA.MoveTo(x, y, z, c);
 
                     break;
                 default:
@@ -752,7 +753,8 @@ namespace Allinone.ControlSpace.MachineSpace
             switch (mRobotType)
             {
                 case RobotType.HCFA:
-                    mRobotHCFA.MoveTo(x, y, z);
+                    float c = PLCMOTIONCollection[3].READYPOSITION;
+                    mRobotHCFA.MoveTo(x, y, z, c);
                     break;
                 case RobotType.NONE:
                     PLCMOTIONCollection[0].Go(x);

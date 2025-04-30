@@ -138,5 +138,14 @@ namespace Allinone.ControlSpace.MachineSpace
                 TriggerAction(machineevent, obj);
             }
         }
+        public delegate void MachineCommErrorStringHandler(string str);
+        public event MachineCommErrorStringHandler MachineCommErrorStringAction;
+        public void MachineCommError(string str)
+        {
+            if (MachineCommErrorStringAction != null)
+            {
+                MachineCommErrorStringAction(str);
+            }
+        }
     }
 }

@@ -35,16 +35,16 @@ namespace Allinone
         CHECKSNERRORCODE,
 
         ISNEEDSN,               //是否必需要SN    
-        ISMANYPAR ,             //是否多机种混测
+        ISMANYPAR,             //是否多机种混测
 
         ISONLYCHICKWB,         //只检查黑白的螺丝
-        
+
         ISCHECKMEMBRANE,       //检查有无放膜
 
         LASERNGADDBC,          //如果雷雕不良，是否在回复SF时增加BC 字样
 
         FINGERPRINT,        //是否是用指纹模块登入登出
-        
+
 
         BCNGCOUNT,            //雷雕的数量
         ALLCOUNT,             //当天生产的数量
@@ -60,7 +60,7 @@ namespace Allinone
         /// <summary>
         /// 是否是SF给颜色
         /// </summary>
-        ISSFCOLOR,       
+        ISSFCOLOR,
 
 
         //[R32 Control]
@@ -103,7 +103,7 @@ namespace Allinone
 
         KEYCAPEXPOSURE,
         FRAMEEXPOSURE,
-        
+
 
         //Hiveclient Control
         ISHIVECLIENT,
@@ -295,6 +295,8 @@ namespace Allinone
         public static string DATA_FIXTUREID = "FIXTUREID";
         public static bool DATA_SCREW_TEN = false;
 
+        public static string SDM5FindCount = "";
+
         //MainX6 Control
         /// <summary>
         /// 0:原始参数 1:TYPE_18 切换位1800W 用数字代替 为了以后更好的扩展
@@ -351,6 +353,33 @@ namespace Allinone
         public static bool IsOpenForceAllCheck = false;
         public static bool IsOpenBehindOKSign = false;
         public static bool IsOpenCip = false;
+        /// <summary>
+        /// 开启QC抽检功能
+        /// </summary>
+        public static bool IsOpenQcRandom = false;
+        public static int AutoLogoutTime = 30;
+        /// <summary>
+        /// 强制关闭重复码
+        /// </summary>
+        public static bool IsOpenForceNoCheckRepeat = true;//强制关闭重复码
+        public static int FactoryNameIndex = 0;
+        public static int MappingTypeIndex = 0;
+
+
+        /// <summary>
+        /// 是否开启容错率
+        /// </summary>
+        public static bool IsOpenFaultToleranceRate = false;
+        public static double FaultToleranceRate = 0.05;
+
+        /// <summary>
+        /// 显示等级码
+        /// </summary>
+        public static bool IsOpenShowGrade = false;//显示等级码
+
+        public static bool IsOpenAutoChangeRecipe = false;
+        public static PMatchType pMatchType = PMatchType.HPM;
+        public static float fTolerance = 0.7f;
 
         //Jcet Contorl
         public static bool JCET_IS_USE_SHOPFLOOR = false;
@@ -411,7 +440,23 @@ namespace Allinone
         /// </summary>
         public static bool IsDEBUGCHIP = false;
 
+        /// <summary>
+        /// 开启通过参数名记录数据
+        /// </summary>
+        public static bool IsOpenRecipeDataRecord = false;
 
+        /// <summary>
+        /// 开启判断sensor
+        /// </summary>
+        public static bool IsOpenCheckSensor = false;
+
+        public static float CamLinescanStartPos = -7;
+        public static float CamLinescanEndPos = 270;
+        public static int CamLinescanSpeed = 50;
+        public static float CamAreaMatchPos = 85;
+
+        public static int TestImageOvertime = 15000;
+        public static int TestResultOvertime = 10000;
 
         public static int chipTestAllCount = 0;
         public static int chipTestPassCount = 0;
@@ -546,6 +591,8 @@ namespace Allinone
 
         public static void Load()
         {
+            SDM5FindCount = ReadINIValue("Basic Control", "SDM5FindCount", SDM5FindCount, INIFILE);
+
             //[Basic Control]
             MACHINENAME = ReadINIValue("Basic Control", INIEnum.MACHINENAME.ToString(), MACHINENAME, INIFILE);
             MACHINENAMEID = ReadINIValue("Basic Control", INIEnum.MACHINENAMEID.ToString(), MACHINENAMEID, INIFILE);
@@ -567,16 +614,19 @@ namespace Allinone
             ISONLYCHECKSN = int.Parse(ReadINIValue("Basic Control", INIEnum.ISONLYCHECKSN.ToString(), "0", INIFILE)) == 1;
             R3VENDOR = ReadINIValue("Basic Control", INIEnum.R3VENDOR.ToString(), "", INIFILE);
 
-            isR5_MOTOR_TO_Rs485 = ReadINIValue("Basic Control", INIEnum.R5MOTORTO485.ToString(), "0", INIFILE)=="1";
-            iR5MOTORCOUNT = int.Parse(ReadINIValue("Basic Control", INIEnum.R5MOTORCOUNT.ToString(), "9", INIFILE) );
+            isR5_MOTOR_TO_Rs485 = ReadINIValue("Basic Control", INIEnum.R5MOTORTO485.ToString(), "0", INIFILE) == "1";
+            iR5MOTORCOUNT = int.Parse(ReadINIValue("Basic Control", INIEnum.R5MOTORCOUNT.ToString(), "9", INIFILE));
+
+            FactoryNameIndex = int.Parse(ReadINIValue("Basic Control", "FactoryNameIndex", FactoryNameIndex.ToString(), INIFILE));
+            MappingTypeIndex = int.Parse(ReadINIValue("Basic Control", "MappingTypeIndex", MappingTypeIndex.ToString(), INIFILE));
 
             string page = ReadINIValue("Basic Control", INIEnum.CHECKPAGE.ToString(), "0", INIFILE);
-           
-            NextDuriation= int.Parse(ReadINIValue("Basic Control", INIEnum.NextDuriation.ToString(), "500", INIFILE)) ;
 
-            R5RUNCOUNT= int.Parse(ReadINIValue("Basic Control", INIEnum.R5RUNCOUNT.ToString(), "4", INIFILE));
+            NextDuriation = int.Parse(ReadINIValue("Basic Control", INIEnum.NextDuriation.ToString(), "500", INIFILE));
 
-            ISSFCOLOR= ReadINIValue("Basic Control", INIEnum.ISSFCOLOR.ToString(), "0", INIFILE) == "1";
+            R5RUNCOUNT = int.Parse(ReadINIValue("Basic Control", INIEnum.R5RUNCOUNT.ToString(), "4", INIFILE));
+
+            ISSFCOLOR = ReadINIValue("Basic Control", INIEnum.ISSFCOLOR.ToString(), "0", INIFILE) == "1";
 
 
             CHECKPAGE = new bool[100];
@@ -722,15 +772,20 @@ namespace Allinone
             CHIP_CAL_MODE = int.Parse(ReadINIValue("MainSD Control", "CHIP_CAL_MODE", "0", INIFILE));
             CHIP_ISSMOOTHEN = ReadINIValue("MainSD Control", "CHIP_ISSMOOTHEN", (CHIP_ISSMOOTHEN ? "1" : "0"), INIFILE) == "1";
 
-            chipTestAllCount = int.Parse(ReadINIValue("Basic Control", "chipTestAllCount", "0", INIFILE));
-            chipTestPassCount = int.Parse(ReadINIValue("Basic Control", "chipTestPassCount", "0", INIFILE));
-            chipTestFailCount = int.Parse(ReadINIValue("Basic Control", "chipTestFailCount", "0", INIFILE));
-            chipTestNoChipCount = int.Parse(ReadINIValue("Basic Control", "chipTestNoChipCount", "0", INIFILE));
-            chipN1Count = int.Parse(ReadINIValue("Basic Control", "chipN1Count", "0", INIFILE));
-            chipN2Count = int.Parse(ReadINIValue("Basic Control", "chipN2Count", "0", INIFILE));
-            chipN3Count = int.Parse(ReadINIValue("Basic Control", "chipN3Count", "0", INIFILE));
-            chipN4Count = int.Parse(ReadINIValue("Basic Control", "chipN4Count", "0", INIFILE));
-            chipN5Count = int.Parse(ReadINIValue("Basic Control", "chipN5Count", "0", INIFILE));
+            IsOpenCheckSensor = ReadINIValue("MainSD Control", "IsOpenCheckSensor", (IsOpenCheckSensor ? "1" : "0"), INIFILE) == "1";
+
+            IsOpenRecipeDataRecord = ReadINIValue("Basic Control", "IsOpenRecipeDataRecord", (IsOpenRecipeDataRecord ? "1" : "0"), INIFILE) == "1";
+            DataRecordName = ReadINIValue("Basic Control", "DataRecordName", DataRecordName, INIFILE);
+
+            //chipTestAllCount = int.Parse(ReadINIValue("Basic Control", "chipTestAllCount", "0", INIFILE));
+            //chipTestPassCount = int.Parse(ReadINIValue("Basic Control", "chipTestPassCount", "0", INIFILE));
+            //chipTestFailCount = int.Parse(ReadINIValue("Basic Control", "chipTestFailCount", "0", INIFILE));
+            //chipTestNoChipCount = int.Parse(ReadINIValue("Basic Control", "chipTestNoChipCount", "0", INIFILE));
+            //chipN1Count = int.Parse(ReadINIValue("Basic Control", "chipN1Count", "0", INIFILE));
+            //chipN2Count = int.Parse(ReadINIValue("Basic Control", "chipN2Count", "0", INIFILE));
+            //chipN3Count = int.Parse(ReadINIValue("Basic Control", "chipN3Count", "0", INIFILE));
+            //chipN4Count = int.Parse(ReadINIValue("Basic Control", "chipN4Count", "0", INIFILE));
+            //chipN5Count = int.Parse(ReadINIValue("Basic Control", "chipN5Count", "0", INIFILE));
             chipUseAI = ReadINIValue("Basic Control", "chipUseAI", (chipUseAI ? "1" : "0"), INIFILE) == "1";
             AI_IP = ReadINIValue("Basic Control", "AI_IP", "127.0.0.1", INIFILE);
             AI_Port = int.Parse(ReadINIValue("Basic Control", "AI_Port", "9001", INIFILE));
@@ -773,12 +828,33 @@ namespace Allinone
             IsLightAlwaysOn = ReadINIValue("MainX6 Control", "IsLightAlwaysOn", (IsLightAlwaysOn ? "1" : "0"), INIFILE) == "1";
             IsCollectPictures = ReadINIValue("MainX6 Control", "IsCollectPictures", (IsCollectPictures ? "1" : "0"), INIFILE) == "1";
             IsSaveScreen = ReadINIValue("MainX6 Control", "IsSaveScreen", (IsSaveScreen ? "1" : "0"), INIFILE) == "1";
-            IsCheckBarcodeOpen = ReadINIValue("MainX6 Control", "IsCheckBarcodeOpen", (IsCheckBarcodeOpen ? "1" : "0"), INIFILE) == "1";
+            //IsCheckBarcodeOpen = ReadINIValue("MainX6 Control", "IsCheckBarcodeOpen", (IsCheckBarcodeOpen ? "1" : "0"), INIFILE) == "1";
             IsOnlyShowCurrentImage = ReadINIValue("MainX6 Control", "IsOnlyShowCurrentImage", (IsOnlyShowCurrentImage ? "1" : "0"), INIFILE) == "1";
             IsCollectStripPictures = ReadINIValue("MainX6 Control", "IsCollectStripPictures", (IsCollectStripPictures ? "1" : "0"), INIFILE) == "1";
             IsCollectPicturesSingle = ReadINIValue("MainX6 Control", "IsCollectPicturesSingle", (IsCollectPicturesSingle ? "1" : "0"), INIFILE) == "1";
             AI_Model_FilenamePath = ReadINIValue("MainX6 Control", "AI_Model_FilenamePath", "", INIFILE);
             IsOpenCip = ReadINIValue("MainX6 Control", "IsOpenCip", (IsOpenCip ? "1" : "0"), INIFILE) == "1";
+            IsOpenQcRandom = ReadINIValue("MainX6 Control", "IsOpenQcRandom", (IsOpenQcRandom ? "1" : "0"), INIFILE) == "1";
+            IsOpenAutoChangeRecipe = ReadINIValue("MainX6 Control", "IsOpenAutoChangeRecipe", (IsOpenAutoChangeRecipe ? "1" : "0"), INIFILE) == "1";
+            pMatchType = (PMatchType)Enum.Parse(typeof(PMatchType), ReadINIValue("MainX6 Control", "pMatchType", pMatchType.ToString(), INIFILE));
+            fTolerance = float.Parse(ReadINIValue("MainX6 Control", "fTolerance", fTolerance.ToString(), INIFILE));
+            AutoLogoutTime = int.Parse(ReadINIValue("MainX6 Control", "AutoLogoutTime", AutoLogoutTime.ToString(), INIFILE));
+            IsOpenForceNoCheckRepeat = ReadINIValue("MainX6 Control", "IsOpenForceNoCheckRepeat", (IsOpenForceNoCheckRepeat ? "1" : "0"), INIFILE) == "1";
+            IsOpenShowGrade = ReadINIValue("MainX6 Control", "IsOpenShowGrade", (IsOpenShowGrade ? "1" : "0"), INIFILE) == "1";
+
+            IsOpenFaultToleranceRate = ReadINIValue("MainX6 Control", "IsOpenFaultToleranceRate", (IsOpenFaultToleranceRate ? "1" : "0"), INIFILE) == "1";
+            FaultToleranceRate = double.Parse(ReadINIValue("MainX6 Control", "FaultToleranceRate", FaultToleranceRate.ToString(), INIFILE));
+
+            RootPath = ReadINIValue("MainX6 Control", "RootPath", "D:\\", INIFILE);
+            //DeviceName = ReadINIValue("MainX6 Control", "DeviceName", "None", INIFILE);
+
+            CamLinescanStartPos = float.Parse(ReadINIValue("MainX6 Control", "CamLinescanStartPos", CamLinescanStartPos.ToString(), INIFILE));
+            CamLinescanEndPos = float.Parse(ReadINIValue("MainX6 Control", "CamLinescanEndPos", CamLinescanEndPos.ToString(), INIFILE));
+            CamLinescanSpeed = int.Parse(ReadINIValue("MainX6 Control", "CamLinescanSpeed", CamLinescanSpeed.ToString(), INIFILE));
+            CamAreaMatchPos = float.Parse(ReadINIValue("MainX6 Control", "CamAreaMatchPos", CamAreaMatchPos.ToString(), INIFILE));
+
+            TestImageOvertime = int.Parse(ReadINIValue("MainX6 Control", "TestImageOvertime", TestImageOvertime.ToString(), INIFILE));
+            TestResultOvertime = int.Parse(ReadINIValue("MainX6 Control", "TestResultOvertime", TestResultOvertime.ToString(), INIFILE));
 
             handle_delaytime = int.Parse(ReadINIValue("MainX6 Control", "handle_delaytime", handle_delaytime.ToString(), INIFILE));
 
@@ -854,6 +930,8 @@ namespace Allinone
                 WriteINIValue("C3 Compensate", "H", "0", INIFILE);
                 fC3_H = 0;
             }
+
+            LoadDataRecord();
         }
 
         public static void Save()
@@ -861,11 +939,13 @@ namespace Allinone
             //Write [Basic Control] Parameters
 
             WriteINIValue("Basic Control", INIEnum.MACHINENAME.ToString(), MACHINENAME, INIFILE);
-            WriteINIValue("Basic Control", INIEnum.DELAYTIME.ToString(), DELAYTIME.ToString(),INIFILE);
+            WriteINIValue("Basic Control", INIEnum.DELAYTIME.ToString(), DELAYTIME.ToString(), INIFILE);
             WriteINIValue("Basic Control", INIEnum.LANGUAGE.ToString(), LANGUAGE.ToString(), INIFILE);
             WriteINIValue("Basic Control", INIEnum.SHOPFLOORPATH.ToString(), SHOPFLOORPATH, INIFILE);
             WriteINIValue("Basic Control", INIEnum.ISSAVEWITHTIMESTAMP.ToString(), (ISSAVEWITHTIMESTAMP ? "1" : "0"), INIFILE);
             WriteINIValue("Basic Control", INIEnum.RETESTTIME.ToString(), RETESTTIME.ToString(), INIFILE);
+
+            WriteINIValue("Basic Control", "FactoryNameIndex", FactoryNameIndex.ToString(), INIFILE);
 
             WriteINIValue("Basic Control", INIEnum.CHECKSNERRORCODE.ToString(), CHECKSNERRORCODE, INIFILE);
             WriteINIValue("Basic Control", "chipSaveImageFormat", ((int)chipSaveImageFormat).ToString(), INIFILE);
@@ -925,6 +1005,9 @@ namespace Allinone
             WriteINIValue("MainSD Control", "CHIP_CAL_MODE", CHIP_CAL_MODE.ToString(), INIFILE);
             WriteINIValue("MainSD Control", "CHIP_ISSMOOTHEN", (CHIP_ISSMOOTHEN ? "1" : "0"), INIFILE);
 
+            WriteINIValue("MainSD Control", "IsOpenCheckSensor", (IsOpenCheckSensor ? "1" : "0"), INIFILE);
+
+            WriteINIValue("Basic Control", "IsOpenRecipeDataRecord", (IsOpenRecipeDataRecord ? "1" : "0"), INIFILE);
             //WriteINIValue("Basic Control", "chipTestAllCount", chipTestAllCount.ToString(), INIFILE);
             //WriteINIValue("Basic Control", "chipTestPassCount", chipTestPassCount.ToString(), INIFILE);
             //WriteINIValue("Basic Control", "chipTestFailCount", chipTestFailCount.ToString(), INIFILE);
@@ -975,13 +1058,34 @@ namespace Allinone
             WriteINIValue("MainX6 Control", "IsLightAlwaysOn", (IsLightAlwaysOn ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsCollectPictures", (IsCollectPictures ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsSaveScreen", (IsSaveScreen ? "1" : "0"), INIFILE);
-            WriteINIValue("MainX6 Control", "IsCheckBarcodeOpen", (IsCheckBarcodeOpen ? "1" : "0"), INIFILE);
+            //WriteINIValue("MainX6 Control", "IsCheckBarcodeOpen", (IsCheckBarcodeOpen ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsOnlyShowCurrentImage", (IsOnlyShowCurrentImage ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsCollectStripPictures", (IsCollectStripPictures ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsCollectPicturesSingle", (IsCollectPicturesSingle ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsOpenCip", (IsOpenCip ? "1" : "0"), INIFILE);
+            WriteINIValue("MainX6 Control", "IsOpenQcRandom", (IsOpenQcRandom ? "1" : "0"), INIFILE);
+            WriteINIValue("MainX6 Control", "IsOpenAutoChangeRecipe", (IsOpenAutoChangeRecipe ? "1" : "0"), INIFILE);
+            WriteINIValue("MainX6 Control", "pMatchType", pMatchType.ToString(), INIFILE);
+            WriteINIValue("MainX6 Control", "fTolerance", fTolerance.ToString(), INIFILE);
+            WriteINIValue("MainX6 Control", "IsOpenForceNoCheckRepeat", (IsOpenForceNoCheckRepeat ? "1" : "0"), INIFILE);
+            WriteINIValue("MainX6 Control", "IsOpenShowGrade", (IsOpenShowGrade ? "1" : "0"), INIFILE);
+
+            WriteINIValue("MainX6 Control", "IsOpenFaultToleranceRate", (IsOpenFaultToleranceRate ? "1" : "0"), INIFILE);
+            WriteINIValue("MainX6 Control", "FaultToleranceRate", FaultToleranceRate.ToString(), INIFILE);
 
             WriteINIValue("MainX6 Control", "handle_delaytime", handle_delaytime.ToString(), INIFILE);
+            WriteINIValue("MainX6 Control", "AutoLogoutTime", AutoLogoutTime.ToString(), INIFILE);
+
+            WriteINIValue("MainX6 Control", "RootPath", RootPath.ToString(), INIFILE);
+            //WriteINIValue("MainX6 Control", "DeviceName", DeviceName.ToString(), INIFILE);
+
+            WriteINIValue("MainX6 Control", "CamLinescanStartPos", CamLinescanStartPos.ToString(), INIFILE);
+            WriteINIValue("MainX6 Control", "CamLinescanEndPos", CamLinescanEndPos.ToString(), INIFILE);
+            WriteINIValue("MainX6 Control", "CamLinescanSpeed", CamLinescanSpeed.ToString(), INIFILE);
+            WriteINIValue("MainX6 Control", "CamAreaMatchPos", CamAreaMatchPos.ToString(), INIFILE);
+
+            WriteINIValue("MainX6 Control", "TestImageOvertime", TestImageOvertime.ToString(), INIFILE);
+            WriteINIValue("MainX6 Control", "TestResultOvertime", TestResultOvertime.ToString(), INIFILE);
 
             WriteINIValue("MainX6_JCET Control", "JCET_IS_USE_SHOPFLOOR", (JCET_IS_USE_SHOPFLOOR ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6_JCET Control", "JCET_STRIP_BUFF", JCET_STRIP_BUFF.ToString(), INIFILE);
@@ -1002,18 +1106,76 @@ namespace Allinone
         {
             WriteINIValue("R32 Control", INIEnum.ISSAVEOCRIMAGE.ToString(), (ISSAVEOCRIMAGE ? "1" : "0"), INIFILE);
         }
+        public static void SaveSDM5Setup()
+        {
+            WriteINIValue("Basic Control", "SDM5FindCount", SDM5FindCount, INIFILE);
+        }
+
+        public static string DATA_ROOT
+        {
+            get
+            {
+                string iret = RootPath + $"DataRoot\\{DateTime.Now.ToString("yyyyMMdd")}";
+                if (string.IsNullOrEmpty(RootPath))
+                    iret = $"D:\\DataRoot\\{DateTime.Now.ToString("yyyyMMdd")}";
+
+                //string iret = RootPath + $"DataRoot\\{DeviceName}\\{DateTime.Now.ToString("yyyyMMdd")}";
+                //if (string.IsNullOrEmpty(RootPath))
+                //    iret = $"D:\\DataRoot\\{DeviceName}\\{DateTime.Now.ToString("yyyyMMdd")}";
+                return iret;
+            }
+        }
+
+        public static string RootPath = "D:\\";
+        //public static string DeviceName = "None";
+
+        static string m_DataRecordPath // = "D:\\report\\DataRecord";
+        {
+            get
+            {
+                string iret = DATA_ROOT + $"\\{DataRecordName}\\DataRecord";
+                if (!Directory.Exists(iret))
+                    Directory.CreateDirectory(iret);
+                return iret;
+            }
+        }
+        public static string DataRecordName = "None";
+
+        public static void LoadDataRecord()
+        {
+            WriteINIValue("Basic Control", "DataRecordName", DataRecordName, INIFILE);
+
+            string _path = INIFILE;
+            if (IsOpenRecipeDataRecord)
+                _path = $"{m_DataRecordPath}\\{DataRecordName}.ini";
+
+            chipTestAllCount = int.Parse(ReadINIValue("Basic Control", "chipTestAllCount", "0", _path));
+            chipTestPassCount = int.Parse(ReadINIValue("Basic Control", "chipTestPassCount", "0", _path));
+            chipTestFailCount = int.Parse(ReadINIValue("Basic Control", "chipTestFailCount", "0", _path));
+            chipTestNoChipCount = int.Parse(ReadINIValue("Basic Control", "chipTestNoChipCount", "0", _path));
+            chipN1Count = int.Parse(ReadINIValue("Basic Control", "chipN1Count", "0", _path));
+            chipN2Count = int.Parse(ReadINIValue("Basic Control", "chipN2Count", "0", _path));
+            chipN3Count = int.Parse(ReadINIValue("Basic Control", "chipN3Count", "0", _path));
+            chipN4Count = int.Parse(ReadINIValue("Basic Control", "chipN4Count", "0", _path));
+            chipN5Count = int.Parse(ReadINIValue("Basic Control", "chipN5Count", "0", _path));
+        }
         public static void SaveDataRecord()
         {
-            WriteINIValue("Basic Control", "chipTestAllCount", chipTestAllCount.ToString(), INIFILE);
-            WriteINIValue("Basic Control", "chipTestPassCount", chipTestPassCount.ToString(), INIFILE);
-            WriteINIValue("Basic Control", "chipTestFailCount", chipTestFailCount.ToString(), INIFILE);
-            WriteINIValue("Basic Control", "chipTestNoChipCount", chipTestNoChipCount.ToString(), INIFILE);
-            WriteINIValue("Basic Control", "chipN1Count", chipN1Count.ToString(), INIFILE);
-            WriteINIValue("Basic Control", "chipN2Count", chipN2Count.ToString(), INIFILE);
-            WriteINIValue("Basic Control", "chipN3Count", chipN3Count.ToString(), INIFILE);
-            WriteINIValue("Basic Control", "chipN4Count", chipN4Count.ToString(), INIFILE);
-            WriteINIValue("Basic Control", "chipN5Count", chipN5Count.ToString(), INIFILE);
+            string _path = INIFILE;
+            if (IsOpenRecipeDataRecord)
+                _path = $"{m_DataRecordPath}\\{DataRecordName}.ini";
+
+            WriteINIValue("Basic Control", "chipTestAllCount", chipTestAllCount.ToString(), _path);
+            WriteINIValue("Basic Control", "chipTestPassCount", chipTestPassCount.ToString(), _path);
+            WriteINIValue("Basic Control", "chipTestFailCount", chipTestFailCount.ToString(), _path);
+            WriteINIValue("Basic Control", "chipTestNoChipCount", chipTestNoChipCount.ToString(), _path);
+            WriteINIValue("Basic Control", "chipN1Count", chipN1Count.ToString(), _path);
+            WriteINIValue("Basic Control", "chipN2Count", chipN2Count.ToString(), _path);
+            WriteINIValue("Basic Control", "chipN3Count", chipN3Count.ToString(), _path);
+            WriteINIValue("Basic Control", "chipN4Count", chipN4Count.ToString(), _path);
+            WriteINIValue("Basic Control", "chipN5Count", chipN5Count.ToString(), _path);
         }
+
         public static void SaveKeyRecord()
         {
             WriteINIValue("Basic Control", "keyx", keyx.ToString(), INIFILE);
@@ -1033,6 +1195,7 @@ namespace Allinone
             WriteINIValue("MainX6 Control", "AI_Model_FilenamePath", AI_Model_FilenamePath.ToString(), INIFILE);
 
         }
+
         public static void ResetDataResult()
         {
             chipTestAllCount = 0;
@@ -1051,8 +1214,8 @@ namespace Allinone
             chipTestFailCount = chipN1Count + chipN2Count + chipN3Count + chipN4Count;
             chipTestAllCount = passcount + chipTestFailCount;
             string str = string.Empty;
-            
-            switch(Universal.OPTION)
+
+            switch (Universal.OPTION)
             {
                 case OptionEnum.MAIN_SDM2:
 
@@ -1078,7 +1241,7 @@ namespace Allinone
                     str += "检测错误颗数：" + chipN2Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN2Count) + ")" + Environment.NewLine;
                     str += "量测错误颗数：" + chipN3Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN3Count) + ")" + Environment.NewLine;
                     str += "表面边角缺陷颗数：" + chipN4Count.ToString() + " pcs" + "(" + _getPercent(chipTestAllCount, chipN4Count) + ")" + Environment.NewLine;
-                    
+
 
                     break;
             }
@@ -1092,7 +1255,7 @@ namespace Allinone
             //str += "晶片溢胶颗数：" + Environment.NewLine + chipN3Count.ToString() + Environment.NewLine;
             //str += "胶水宽度异常颗数：" + Environment.NewLine + chipN4Count.ToString() + Environment.NewLine;
             //str += "无芯片颗数：" + Environment.NewLine + chipN5Count.ToString() + Environment.NewLine;
-
+            SaveDataRecord();
             return str;
         }
         static string _getPercent(int iAllCount, int iCount)
@@ -1161,7 +1324,7 @@ namespace Allinone
             set
             {
                 LaserNgAddBC = value;
-                WriteINIValue("Basic Control", INIEnum.LASERNGADDBC.ToString(), LaserNgAddBC?"1":"0", INIFILE);
+                WriteINIValue("Basic Control", INIEnum.LASERNGADDBC.ToString(), LaserNgAddBC ? "1" : "0", INIFILE);
             }
         }
 
@@ -1197,7 +1360,7 @@ namespace Allinone
                 WriteINIValue("Basic Control", INIEnum.ALLCOUNT.ToString(), myALLCOUNT.ToString(), INIFILE);
             }
         }
-        static DateTime myDATATIMERNOW ; //当天生产的日期
+        static DateTime myDATATIMERNOW; //当天生产的日期
         /// <summary>
         /// 当日日期
         /// </summary>
@@ -1226,7 +1389,7 @@ namespace Allinone
         /// 检查BC日期，如果过期就更新，同时更新BC的数量
         /// </summary>
         /// <returns></returns>
-      public  static bool CheckBCData()
+        public static bool CheckBCData()
         {
             bool isok = true;
             if (DATATIMERNOW.Year != DateTime.Now.Year)
@@ -1245,10 +1408,10 @@ namespace Allinone
 
                 return true;
             }
-            
+
             return false;
         }
-        
+
 
         /// <summary>
         /// 雷雕不良
@@ -1444,13 +1607,13 @@ namespace Allinone
 
             iALLCOUNT++;
         }
-        
+
         public class RecodeRepoer
         {
             public bool isLaserNG = false;
             public bool isKeycapNG = false;
             public bool isScrewNG = false;
-          //  public bool isSNNG = false;
+            //  public bool isSNNG = false;
         }
     }
 }

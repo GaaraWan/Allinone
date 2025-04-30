@@ -122,7 +122,7 @@ namespace Allinone.FormSpace
                 return Universal.ALBCollection;
             }
         }
-
+        NumericUpDown numCamGain;
         ComboBox cboPageNo;
         ComboBox cboCamIndex;
         NumericUpDown numExposure;
@@ -293,7 +293,7 @@ namespace Allinone.FormSpace
             txtExposure = textBox1;
             txtAliasname = textBox2;
             txtRelateToVersion = textBox3;
-
+            numCamGain = numericUpDown2;
             lblExposure = label4;
             lblRelateStatic = label15;
             lblRelateToVersion = label6;
@@ -429,7 +429,7 @@ namespace Allinone.FormSpace
             txtAliasname.LostFocus += TxtAliasname_LostFocus;
             txtRelateToVersion.LostFocus += TxtRelateToVersion_LostFocus;
             chkMactching.CheckedChanged += chkMactching_CheckedChanged;
-
+            numCamGain.ValueChanged += NumCamGain_ValueChanged;
            // cboRelateStatic.SelectedIndexChanged += cboRelateStatic_SelectedIndexChanged;
             cboPageNo.SelectedIndexChanged += cboPageNo_SelectedIndexChanged;
             this.KeyPreview = true;
@@ -473,6 +473,8 @@ namespace Allinone.FormSpace
                     //        break;
                     //}
 
+                    button5.Visible = false;
+
                     switch (Universal.OPTION)
                     {
                         case OptionEnum.MAIN_SDM3:
@@ -498,6 +500,13 @@ namespace Allinone.FormSpace
                                     btnLEDControl.BackColor = (((JzMainSDM3MachineClass)MACHINECollection.MACHINE).PLCIO.TopLight ? Color.Red : Color.FromArgb(128, 255, 128));
                                     break;
                                 case OptionEnum.MAIN_SDM2:
+
+                                    button5.Visible = true;
+
+                                    numCamGain.Visible = true;
+                                    label8.Visible = true;
+
+                                    label7.Visible = true;
                                     btnLEDControl.BackColor = (((JzMainSDM2MachineClass)MACHINECollection.MACHINE).PLCIO.TopLight ? Color.Red : Color.FromArgb(128, 255, 128));
                                     break;
                             }
@@ -515,7 +524,7 @@ namespace Allinone.FormSpace
                     button8.Visible = false;
                     button14.Visible = false;
                     button3.Visible = false;
-                    button5.Visible = false;
+                 
                     #endregion
                     _updateUI();
                     LanguageExClass.Instance.EnumControls(this);
@@ -526,6 +535,16 @@ namespace Allinone.FormSpace
 
             #endregion
 
+        }
+
+        private void NumCamGain_ValueChanged(object sender, EventArgs e)
+        {
+            if (!IsNeedToChange)
+                return;
+
+            PageNow.CamGain = (float)numCamGain.Value;
+            int biasvalue = 0;
+            CCDCollection.SetGain((float)numCamGain.Value, PageNow.CamIndex + biasvalue);
         }
 
         frmMark mFrmMark = null;
@@ -901,10 +920,26 @@ namespace Allinone.FormSpace
 
         private void BtnCheckColor_MouseDown(object sender, MouseEventArgs e)
         {
-            if (PAGEUI.PageNow != null)
-                PAGEUI.CheckColor(e.Button == MouseButtons.Right);
-            else
-                PAGEUI.CheckColorRootNow(e.Button == MouseButtons.Right);
+
+            switch(OPTION)
+            {
+                case OptionEnum.MAIN_SDM2:
+
+                    if (PAGEUI.IsPageSelectCorrect())
+                    {
+                        PAGEUI.CheckNoGlueMeanValue();
+                    }
+
+                    break;
+                default:
+
+                    if (PAGEUI.PageNow != null)
+                        PAGEUI.CheckColor(e.Button == MouseButtons.Right);
+                    else
+                        PAGEUI.CheckColorRootNow(e.Button == MouseButtons.Right);
+
+                    break;
+            }
         }
         private void BtnCheckGreysacle_MouseUp(object sender, MouseEventArgs e)
         {
@@ -1373,7 +1408,7 @@ namespace Allinone.FormSpace
         }
         void FillDisplay()
         {
-            MESSAGEFORM = new MessageForm("資料載入中，請稍候...", true);
+            MESSAGEFORM = new MessageForm("資料載入中請稍候...", true);
             MESSAGEFORM.Show();
             MESSAGEFORM.Refresh();
 
@@ -1392,12 +1427,12 @@ namespace Allinone.FormSpace
                     cboCamIndex.SelectedIndex = PageNow.CamIndex;
                 else
                     cboCamIndex.SelectedIndex = cboCamIndex.Items.Count-1;
-                numExposure.Value = PageNow.Exposure;
+                numExposure.Value = (decimal)PageNow.Exposure;
                 PageNow.PageOPTypeIndex = cboPageOPType.SelectedIndex;
                 txtExposure.Text = PageNow.ExposureString;
                 txtAliasname.Text = PageNow.AliasName;
                 txtRelateToVersion.Text = PageNow.RelateToVersionString;
-
+                numCamGain.Value = (decimal)PageNow.CamGain;
                 cboRelateStatic.SelectedIndex = CheckcboRelateStaticIndex(PageNow);
                 
                 PAGEUI.SetPage(PageNow);
@@ -1634,7 +1669,7 @@ namespace Allinone.FormSpace
             if (!IsNeedToChange)
                 return;
 
-            PageNow.Exposure = (int)numExposure.Value;
+            PageNow.Exposure = (float)numExposure.Value;
             int biasvalue = 0;
 
             switch (VERSION)
@@ -1925,7 +1960,7 @@ namespace Allinone.FormSpace
                 if (pageClass.No == PageNow.No)
                     continue;
 
-                pageClass.Exposure = (int)numExposure.Value;
+                pageClass.Exposure = (float)numExposure.Value;
                 CCDCollection.SetExposure(pageClass.Exposure, pageClass.CamIndex);
             }
 

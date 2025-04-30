@@ -21,6 +21,10 @@ using JzMSR;
 using JzMSR.OPSpace;
 using JzMSR.FormSpace;
 using Allinone.BasicSpace;
+using static Allinone.UISpace.ALBUISpace.AllinoneAlbUI;
+using System.IO;
+using System.Reflection;
+using Allinone.FormSpace;
 
 namespace Allinone.UISpace.STPUISpace
 {
@@ -88,6 +92,8 @@ namespace Allinone.UISpace.STPUISpace
 
         Button btnICAM0;
         Button btnICAM1;
+        Button btnCreateSqlTable;
+        Button btnFindCount;
 
         Button btnCorrect;
         Button btnCommonTest;
@@ -126,6 +132,11 @@ namespace Allinone.UISpace.STPUISpace
                 return Universal.CCDCollection;
             }
         }
+        JzMainSDPositionParaClass JzMainSDPositionParas
+        {
+            get { return Universal.JZMAINSDPOSITIONPARA; }
+        }
+
 
         KHCClass KHCCollection
         {
@@ -139,6 +150,7 @@ namespace Allinone.UISpace.STPUISpace
         Allinone.BasicSpace.JzINIPropertyGridClass m_JzINIptGrid = new BasicSpace.JzINIPropertyGridClass();
         Allinone.BasicSpace.JzINIMAIN_X6PropertyGridClass m_mainx6Grid = new BasicSpace.JzINIMAIN_X6PropertyGridClass();
         Allinone.BasicSpace.JzINIMAIN_SDPropertyGridClass m_mainsdGrid = new BasicSpace.JzINIMAIN_SDPropertyGridClass();
+        Allinone.BasicSpace.JzINIMAINSDMPropertyGridClass m_mainsdmGrid = new JzINIMAINSDMPropertyGridClass();
 
         public StpUI()
         {
@@ -177,6 +189,8 @@ namespace Allinone.UISpace.STPUISpace
             btnResetINI = button24;
             btnLanguage = button25;
             btnCommonTest = button26;
+            btnCreateSqlTable = button27;
+            btnFindCount = button28;
 
             chkIsAllSize = checkBox4;
 
@@ -245,12 +259,15 @@ namespace Allinone.UISpace.STPUISpace
             btnR3Login.Click += BtnR3Login_Click;
             btnLanguage.Click += btn_Click;
             btnCommonTest.Click += btn_Click;
+            btnCreateSqlTable.Click += BtnCreateSqlTable_Click;
+            btnFindCount.Click += BtnFindCount_Click;
 
             ADJUI.TriggerMoveScreen += ADJUI_TriggerMoveScreen;
 
             DBStatus = DBStatusEnum.NONE;
 
             btnCorrect.Visible = true;
+            btnFindCount.Visible = false;
 
             chkIsAllSize.Visible = false;
             switch (Universal.OPTION)
@@ -262,6 +279,12 @@ namespace Allinone.UISpace.STPUISpace
                 case OptionEnum.MAIN_X6:
                 case OptionEnum.MAIN_SD:
                 case OptionEnum.MAIN_SERVICE:
+
+                    if (Universal.OPTION == OptionEnum.MAIN_SDM5)
+                    {
+                        btnFindCount.Visible = true;
+                    }
+
                     #region 隐藏按钮
 
                     //INIpropertyGrid.Visible = false;
@@ -300,6 +323,7 @@ namespace Allinone.UISpace.STPUISpace
                     myToolTip.SetToolTip(chkIsAllSize, "切换状态后需要重启程序才能生效。");
                     btnCommonTest.Visible = false;
 
+                    
                     break;
             }
 
@@ -331,6 +355,34 @@ namespace Allinone.UISpace.STPUISpace
             btnADD80004.Click += BtnADD80004_Click;
             ShowRecodeData();
           
+        }
+
+        frmCheckRecipe mfrmTestCommon = null;
+        private void BtnFindCount_Click(object sender, EventArgs e)
+        {
+            mfrmTestCommon = new frmCheckRecipe(INI.SDM5FindCount);
+            if (mfrmTestCommon.ShowDialog() == DialogResult.OK)
+            {
+                INI.SDM5FindCount = mfrmTestCommon.ResultParaStr;
+                INI.SaveSDM5Setup();
+            }
+            mfrmTestCommon.Close();
+            mfrmTestCommon.Dispose();
+            mfrmTestCommon = null;
+        }
+
+        private void BtnCreateSqlTable_Click(object sender, EventArgs e)
+        {
+            //if (INI.IsOpenCheckRepeatCode)
+            //{
+            //    if (INI.IsOpenCheckCurLotRepeatCode)
+            //    {
+            //        int iret = JzMainSDPositionParas.MySqlCreateTable();
+            //        MessageBox.Show($"返回数据:{iret.ToString()}");
+            //    }
+            //}
+
+            OnTrigger(INIStatusEnum.CHECK_REPEATCODE_INSERT_SQL);
         }
 
         private void BtnLanguage_Click(object sender, EventArgs e)
@@ -498,7 +550,7 @@ namespace Allinone.UISpace.STPUISpace
                             break;
                         default:
                             btnEEEECODE.Visible = false;
-                            btnSetupOCR.Visible = false;
+                            btnSetupOCR.Visible = true;
                             btnSetupMSR.Visible = false;
                             btnSetupJSP.Visible = false;
                             btnPGPoint.Visible = false;
@@ -520,7 +572,22 @@ namespace Allinone.UISpace.STPUISpace
                     break;
             }
 
+            switch (Universal.FACTORYNAME)
+            {
+                case FactoryName.DAGUI:
+
+                    button1.Visible = false;
+                    button27.Visible = false;
+                    button14.Visible = false;
+                    button17.Visible = false;
+                    checkBox3.Visible = false;
+
+                    break;
+            }
+
             FillDisplay();
+
+            //_changeLanguage();
         }
 
         private void ADJUI_TriggerMoveScreen(string movestring)
@@ -780,7 +847,7 @@ namespace Allinone.UISpace.STPUISpace
         void SetupOCR()
         {
             OnTrigger(INIStatusEnum.SETUP_PARA);
-            OCRFrm = new OCRForm(OCRCollection, CCDCollection);
+            OCRFrm = new OCRForm(OCRCollection, Universal.mOCRByPaddle, CCDCollection, Universal.IsNoUseIO);
             OCRFrm.ShowDialog();
         }
 
@@ -883,9 +950,12 @@ namespace Allinone.UISpace.STPUISpace
                         case OptionEnum.MAIN_SDM3:
                         case OptionEnum.MAIN_SDM2:
                         case OptionEnum.MAIN_SDM1:
+                            INIpropertyGrid.SelectedObject = m_mainsdmGrid;
+                            break;
                         case OptionEnum.MAIN_X6:
                         case OptionEnum.MAIN_SERVICE:
-                            INIpropertyGrid.SelectedObject = m_mainx6Grid;
+                            //INIpropertyGrid.SelectedObject = m_mainx6Grid;
+                            INIpropertyGrid.SelectedObject = _changeLanguage();
                             break;
                         default:
                             INIpropertyGrid.SelectedObject = m_JzINIptGrid;
@@ -898,6 +968,121 @@ namespace Allinone.UISpace.STPUISpace
 
             IsNeedToChange = true;
         }
+
+
+        private JzINIMAIN_X6PropertyGridClass _changeLanguage()
+        {
+            string _collectDataStr = string.Empty;
+
+            foreach (System.Reflection.PropertyInfo prop in m_mainx6Grid.GetType().GetProperties())
+            {
+                string name = prop.Name;
+                if (prop.GetCustomAttribute<DisplayNameAttribute>() != null)
+                {
+                    string dispName = prop.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
+                    _collectDataStr += dispName + Environment.NewLine;
+                    if (name != "")
+                    {
+                        string strNewName = ToChangeLanguage(dispName);
+                        if (strNewName != dispName)
+                        {
+                            PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(m_mainx6Grid);
+                            Type displayType = typeof(DisplayNameAttribute);
+                            FieldInfo fieldInfo = displayType.GetField("_displayName", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                            if (fieldInfo != null)
+                            {
+                                fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+                            }
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                }
+
+                if (prop.GetCustomAttribute<DescriptionAttribute>() != null)
+                {
+                    string strDescription = prop.GetCustomAttribute<DescriptionAttribute>().Description;
+                    _collectDataStr += strDescription + Environment.NewLine;
+                    string strNewName = ToChangeLanguage(strDescription);
+                    if (strNewName != strDescription)
+                    {
+                        PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(m_mainx6Grid);
+                        Type displayType = typeof(DescriptionAttribute);
+                        FieldInfo fieldInfo = displayType.GetField("description", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                        if (fieldInfo != null)
+                            fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+                    }
+                }
+
+                if (prop.GetCustomAttribute<CategoryAttribute>() != null)
+                {
+                    string strCategory = prop.GetCustomAttribute<CategoryAttribute>().Category;
+                    _collectDataStr += strCategory + Environment.NewLine;
+                    string strNewName = ToChangeLanguage(strCategory);
+                    if (strNewName != strCategory)
+                    {
+                        PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(m_mainx6Grid);
+                        Type displayType = typeof(CategoryAttribute);
+                        FieldInfo fieldInfo = displayType.GetField("categoryValue", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                        if (fieldInfo != null)
+                            fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+                    }
+                }
+
+                switch (Universal.FACTORYNAME)
+                {
+                    case FactoryName.DAGUI:
+                        if (prop.GetCustomAttribute<BrowsableAttribute>() != null)
+                        {
+                            bool bBrowsable = prop.GetCustomAttribute<BrowsableAttribute>().Browsable;
+                            if (
+                                name.Contains("IsOpenCip")
+                                || name.Contains("IsOpenQcRandom")
+                                || name.Contains("IsOpenForceNoCheckRepeat")
+                                || name.Contains("IsOpenForceAllCheck")
+                                || name.Contains("IsOpenShowGrade")
+                                || name.Contains("IsOnlyShowCurrentImage")
+                                || name.Contains("IsCollectPicturesSingle")
+                                || name.Contains("JCET_IS_USE_SHOPFLOOR")
+                                 || name.Contains("JCET_STRIP_BUFF")
+                                  || name.Contains("JCET_TIMESTOP_SET")
+                                   || name.Contains("JCET_WEBSERVICE_URL")
+                                )
+                            {
+                                PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(m_mainx6Grid);
+                                Type displayType = typeof(BrowsableAttribute);
+                                FieldInfo fieldInfo = displayType.GetField("browsable", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                                if (fieldInfo != null)
+                                    fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], false);
+                            }
+                        }
+                        break;
+                }
+
+            }
+
+            //SaveData(_collectDataStr, "D:\\log.csv");
+
+            return m_mainx6Grid;
+        }
+        string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
+        }
+        void SaveData(string DataStr, string FileName)
+        {
+            StreamWriter Swr = new StreamWriter(FileName, true, Encoding.Default);
+
+            Swr.Write(DataStr);
+
+            Swr.Flush();
+            Swr.Close();
+        }
+
 
         public void ShowRecodeData()
         {

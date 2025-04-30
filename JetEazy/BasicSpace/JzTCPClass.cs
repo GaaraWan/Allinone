@@ -157,14 +157,14 @@ namespace JetEazy.BasicSpace
                             }
                             else
                             {
-                                _recipename = string.Empty;
-                                _lot_name = string.Empty;
+                                _recipename = _recipename.Trim();
+                                _lot_name = "none";
                             }
                         }
                         else
                         {
                             _recipename = string.Empty;
-                            _lot_name = string.Empty;
+                            _lot_name = "none";
                         }
                         _qcbypass = null;
 
@@ -191,24 +191,91 @@ namespace JetEazy.BasicSpace
                             int _row = ddrow;// (int)bytes[35] * 255 * 255 * 255 + (int)bytes[34] * 255 * 255 + (int)bytes[33] * 255 + (int)bytes[32];
                             int _col = ddcol;// (int)bytes[39] * 255 * 255 * 255 + (int)bytes[38] * 255 * 255 + (int)bytes[37] * 255 + (int)bytes[36];
                             int irowcol = _row * _col;
-                            _qcbypass = new bool[irowcol];
-                            int i = 48;
-                            while (i < 48 + irowcol)
+                            //_qc2ddata = new string[irowcol];
+                            //byte[] tmp = new byte[irowcol];
+                            //int i = 40;
+                            //while (i < 40 + irowcol)
+                            //{
+                            //    tmp[i - 40] = bytes[i];
+                            //    i++;
+                            //}
+
+                            _qc2ddata = System.Text.Encoding.ASCII.GetString(bytes, 40, idatalength - 9);
+                            //1是正常打印的需要检测
+                            //0是没有打印不用检测
+                            //X是打印了异常内容比如打了个或其他标志
+
+                            string[] vs = _qc2ddata.Replace('\0', ' ').Split(';');
+                            List<string> vs2 = new List<string>();
+                            vs2.Clear();
+                            for (int i = 0; i < vs.Length; i++)
                             {
-                                _qcbypass[i - 48] = bytes[i] == 0;
-                                i++;
+                                if (!string.IsNullOrEmpty(vs[i]))
+                                {
+                                    string[] vs1 = vs[i].Split(' ');
+                                    foreach (string s in vs1)
+                                    {
+                                        if (!string.IsNullOrEmpty(s))
+                                        {
+                                            vs2.Add(s);
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (vs2.Count == irowcol)
+                            {
+                                _qcbypass = new bool[irowcol];
+                                int i = 0;
+                                while (i < irowcol)
+                                {
+                                    _qcbypass[i] = vs2[i] != "1";
+                                    i++;
+                                }
                             }
 
                         }
                         else
+                        {
                             _qcbypass = null;
+                            _qc2ddata = null;
+                        }
 
-                        byte[] cmdqcbypass = bytes.Take(32 + idatalength).ToArray();
+                        byte[] cmdqc2ddata = bytes.Take(32 + idatalength).ToArray();
                         rev_data = string.Empty;
-                        foreach (byte b in cmdqcbypass)
+                        foreach (byte b in cmdqc2ddata)
                         {
                             rev_data += b.ToString() + " ";
                         }
+
+                        //if (bytes.Length >= 32 + idatalength)
+                        //{
+                        //    byte[] brow = bytes.Skip(32).Take(4).ToArray();
+                        //    Int32 ddrow = BitConverter.ToInt32(brow, 0);
+                        //    byte[] bcol = bytes.Skip(36).Take(4).ToArray();
+                        //    Int32 ddcol = BitConverter.ToInt32(bcol, 0);
+
+                        //    int _row = ddrow;// (int)bytes[35] * 255 * 255 * 255 + (int)bytes[34] * 255 * 255 + (int)bytes[33] * 255 + (int)bytes[32];
+                        //    int _col = ddcol;// (int)bytes[39] * 255 * 255 * 255 + (int)bytes[38] * 255 * 255 + (int)bytes[37] * 255 + (int)bytes[36];
+                        //    int irowcol = _row * _col;
+                        //    _qcbypass = new bool[irowcol];
+                        //    int i = 48;
+                        //    while (i < 48 + irowcol)
+                        //    {
+                        //        _qcbypass[i - 48] = bytes[i] == 0;
+                        //        i++;
+                        //    }
+
+                        //}
+                        //else
+                        //    _qcbypass = null;
+
+                        //byte[] cmdqcbypass = bytes.Take(32 + idatalength).ToArray();
+                        //rev_data = string.Empty;
+                        //foreach (byte b in cmdqcbypass)
+                        //{
+                        //    rev_data += b.ToString() + " ";
+                        //}
 
                         break;
                     case 27:
@@ -276,7 +343,7 @@ namespace JetEazy.BasicSpace
                             _qc2dbarcode = null;
                         }
 
-                        byte[] cmdqc2ddata = bytes.Take(32 + idatalength).ToArray();
+                        cmdqc2ddata = bytes.Take(32 + idatalength).ToArray();
                         rev_data = string.Empty;
                         foreach (byte b in cmdqc2ddata)
                         {
@@ -337,7 +404,7 @@ namespace JetEazy.BasicSpace
                                 int i = 0;
                                 while (i < irowcol)
                                 {
-                                    _qcbypass[i] = vs2[i] == "0";
+                                    _qcbypass[i] = vs2[i] != "1";
                                     i++;
                                 }
                             }

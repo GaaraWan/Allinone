@@ -37,12 +37,12 @@ namespace Allinone.BasicSpace
         /// <summary>
         /// 水平方向
         /// </summary>
-        [Description("水平方向")]
+        //[Description("水平方向")]
         HORIZONTAL,
         /// <summary>
         /// 垂直方向
         /// </summary>
-        [Description("垂直方向")]
+        //[Description("垂直方向")]
         VERTICAL,
     }
     public class GetPlugsPropertyEditor : UITypeEditor
@@ -71,6 +71,11 @@ namespace Allinone.BasicSpace
                     {
                         case "HIVE_exe_path":
                             str = OpenFilePicker("", "hiveagent.exe");
+                            if (!string.IsNullOrEmpty(str))
+                                pValue = str;
+                            break;
+                        case "RootPath":
+                            str = PathPicker("", pValue.ToString());
                             if (!string.IsNullOrEmpty(str))
                                 pValue = str;
                             break;
@@ -103,6 +108,25 @@ namespace Allinone.BasicSpace
             {
                 retStr = dlg.FileName;
             }
+            return retStr;
+        }
+        public string PathPicker(string Description, string DefaultPath)
+        {
+            string retStr = "";
+
+            FolderBrowserDialog fd = new FolderBrowserDialog();
+            fd.Description = Description;
+            fd.ShowNewFolderButton = false;
+            fd.SelectedPath = DefaultPath;
+
+            if (fd.ShowDialog().Equals(DialogResult.OK))
+            {
+                if (fd.SelectedPath != "")
+                    retStr = fd.SelectedPath;
+            }
+            else
+                retStr = "";
+
             return retStr;
         }
     }
@@ -356,6 +380,373 @@ namespace Allinone.BasicSpace
 
         }
 
+        const string cat0 = "00.MainX6 Comm Setup";
+
+        [CategoryAttribute(cat0), DescriptionAttribute("连接打标服务器的ip地址")]
+        [DisplayName("打标服务器IP")]
+        public string tcp_ip
+        {
+            get { return INI.tcp_ip; }
+            set { INI.tcp_ip = value; }
+        }
+
+        [CategoryAttribute(cat0), DescriptionAttribute("连接打标服务器的端口")]
+        [DisplayName("打标服务器端口")]
+        public int tcp_port
+        {
+            get { return INI.tcp_port; }
+            set { INI.tcp_port = value; }
+        }
+
+        [CategoryAttribute(cat0), DescriptionAttribute("是否打开连接Handle服务器 true打开  false关闭")]
+        [DisplayName("Handle服务器Open")]
+        public bool tcp_handle_open
+        {
+            get { return INI.tcp_handle_open; }
+            set { INI.tcp_handle_open = value; }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute("连接Handle服务器的ip地址")]
+        [DisplayName("Handle服务器IP")]
+        public string tcp_handle_ip
+        {
+            get { return INI.tcp_handle_ip; }
+            set { INI.tcp_handle_ip = value; }
+        }
+
+        [CategoryAttribute(cat0), DescriptionAttribute("连接Handle服务器的端口")]
+        [DisplayName("Handle服务器端口")]
+        public int tcp_handle_port
+        {
+            get { return INI.tcp_handle_port; }
+            set { INI.tcp_handle_port = value; }
+        }
+
+        [CategoryAttribute(cat0), DescriptionAttribute("Cip通讯使用 true使用  false不使用")]
+        [DisplayName("Cip通讯使用")]
+        [Browsable(true)]
+        public bool IsOpenCip
+        {
+            get { return INI.IsOpenCip; }
+            set
+            {
+                INI.IsOpenCip = value;
+                if (value)
+                    Universal.CipExtend.Init();
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute("Cip通讯使用 true使用  false不使用")]
+        [DisplayName("A0.是否开启抽检功能")]
+        [Browsable(true)]
+        public bool IsOpenQcRandom
+        {
+            get { return INI.IsOpenQcRandom; }
+            set
+            {
+                INI.IsOpenQcRandom = value;
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute("开启自动切换参数(需要重启程序) true使用  false不使用")]
+        [DisplayName("A1.是否开启自动切换参数")]
+        [Browsable(false)]
+        public bool IsOpenAutoChangeRecipe
+        {
+            get { return INI.IsOpenAutoChangeRecipe; }
+            set
+            {
+                INI.IsOpenAutoChangeRecipe = value;
+                //if (value)
+                //    Universal.JzMVDJudgeRecipe.Init();
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute("在RUN状态下长时间未操作的登出时间  单位秒")]
+        [DisplayName("A4.登出时间")]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(5, 99999999)]
+        public int AutoLogoutTime
+        {
+            get { return INI.AutoLogoutTime; }
+            set
+            {
+                INI.AutoLogoutTime = value;
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute(" true关闭  false开启")]
+        [DisplayName("A5.强制关闭重复码")]
+        [Browsable(true)]
+        public bool IsOpenForceNoCheckRepeat
+        {
+            get { return INI.IsOpenForceNoCheckRepeat; }
+            set
+            {
+                INI.IsOpenForceNoCheckRepeat = value;
+            }
+        }
+
+        const string cat1 = "01.MainX6 Screen Setup";
+        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [DisplayName("分辨率宽度")]
+        public int user_screen_width
+        {
+            get { return INI.user_screen_width; }
+            set { INI.user_screen_width = value; }
+        }
+        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [DisplayName("分辨率高度")]
+        public int user_screen_height
+        {
+            get { return INI.user_screen_height; }
+            set { INI.user_screen_height = value; }
+        }
+        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [DisplayName("分辨率字体")]
+        public float user_screen_scale
+        {
+            get { return INI.user_screen_scale; }
+            set { INI.user_screen_scale = value; }
+        }
+        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [DisplayName("分辨率字体加粗")]
+        public bool user_screen_bold
+        {
+            get { return INI.user_screen_bold; }
+            set { INI.user_screen_bold = value; }
+        }
+
+        const string cat2 = "02.MainX6 Other Setup";
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 常亮 false:测完关闭")]
+        [DisplayName("灯光是否常亮")]
+        public bool IsLightAlwaysOn
+        {
+            get { return INI.IsLightAlwaysOn; }
+            set { INI.IsLightAlwaysOn = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 收集 false:不收集")]
+        [DisplayName("是否收集资料")]
+        public bool IsCollectPictures
+        {
+            get { return INI.IsCollectPictures; }
+            set { INI.IsCollectPictures = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 收集 false:不收集")]
+        [DisplayName("是否收集小图错误资料")]
+        public bool IsCollectErrorSmall
+        {
+            get { return INI.IsCollectErrorSmall; }
+            set { INI.IsCollectErrorSmall = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 收集 false:不收集")]
+        [DisplayName("是否收集Strip资料")]
+        public bool IsCollectStripPictures
+        {
+            get { return INI.IsCollectStripPictures; }
+            set { INI.IsCollectStripPictures = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 保存 false:不保存")]
+        [DisplayName("保存屏幕截图")]
+        public bool IsSaveScreen
+        {
+            get { return INI.IsSaveScreen; }
+            set { INI.IsSaveScreen = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("延时拍照时间 单位 ms")]
+        [DisplayName("延时拍照时间")]
+        public int MAINSD_GETIMAGE_DELAYTIME
+        {
+            get { return INI.MAINSD_GETIMAGE_DELAYTIME; }
+            set { INI.MAINSD_GETIMAGE_DELAYTIME = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("延时拍照时间 单位 ms")]
+        [DisplayName("延时启动时间")]
+        public int MAINSDM1_GETSTART_DELAYTIME
+        {
+            get { return INI.MAINSDM1_GETSTART_DELAYTIME; }
+            set { INI.MAINSDM1_GETSTART_DELAYTIME = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("信号交互延时 单位 ms")]
+        [DisplayName("信号交互延时")]
+        public int HANDLE_DELAYTIME
+        {
+            get { return INI.handle_delaytime; }
+            set { INI.handle_delaytime = value; }
+        }
+
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 比对 false:不比对")]
+        [DisplayName("是否比对条码")]
+        [Browsable(false)]
+        public bool IsCheckBarcodeOpen
+        {
+            get { return INI.IsCheckBarcodeOpen; }
+            set { INI.IsCheckBarcodeOpen = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 比对 false:不比对")]
+        [DisplayName("A01.是否比对重复码")]
+        [Browsable(false)]
+        public bool IsOpenCheckRepeatCode
+        {
+            get { return INI.IsOpenCheckRepeatCode; }
+            set { INI.IsOpenCheckRepeatCode = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 比对 false:不比对 注:需要先开启 是否比对重复码")]
+        [DisplayName("A02.是否比对当前批号重复码")]
+        [Browsable(false)]
+        public bool IsOpenCheckCurLotRepeatCode
+        {
+            get { return INI.IsOpenCheckCurLotRepeatCode; }
+            set { INI.IsOpenCheckCurLotRepeatCode = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 开启 false:关闭 强制全检即跳过Mapping的不检测")]
+        [DisplayName("A03.是否强制全检")]
+        [Browsable(true)]
+        public bool IsOpenForceAllCheck
+        {
+            get { return INI.IsOpenForceAllCheck; }
+            set { INI.IsOpenForceAllCheck = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 开启 false:关闭 ")]
+        [DisplayName("A04.是否提前给信号")]
+        [Browsable(false)]
+        public bool IsOpenBehindOKSign
+        {
+            get { return INI.IsOpenBehindOKSign; }
+            set { INI.IsOpenBehindOKSign = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 开启 false:关闭 ")]
+        [DisplayName("A05.是否显示等级码")]
+        [Browsable(true)]
+        public bool IsOpenShowGrade
+        {
+            get { return INI.IsOpenShowGrade; }
+            set { INI.IsOpenShowGrade = value; }
+        }
+
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 只显示当前图片 false:正常显示")]
+        [DisplayName("是否只显示当前图片")]
+        [Browsable(true)]
+        public bool IsOnlyShowCurrentImage
+        {
+            get { return INI.IsOnlyShowCurrentImage; }
+            set { INI.IsOnlyShowCurrentImage = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 收集 false:不收集")]
+        [DisplayName("A05a.是否收集结果图")]
+        [Browsable(true)]
+        public bool IsCollectPicturesSingle
+        {
+            get { return INI.IsCollectPicturesSingle; }
+            set { INI.IsCollectPicturesSingle = value; }
+        }
+        //[CategoryAttribute(cat2), DescriptionAttribute("")]
+        //[DisplayName("A05b.保存图片的格式")]
+        //public SaveImageFormat chipSaveImageFormat
+        //{
+        //    get { return INI.chipSaveImageFormat; }
+        //    set { INI.chipSaveImageFormat = value; }
+        //}
+
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 开启 false:关闭")]
+        [DisplayName("A06.是否开启容错率")]
+        public bool IsOpenFaultToleranceRate
+        {
+            get { return INI.IsOpenFaultToleranceRate; }
+            set { INI.IsOpenFaultToleranceRate = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("即 错误的个数占总数的百分比")]
+        [DisplayName("A06a.容错率")]
+        public double FaultToleranceRate
+        {
+            get { return INI.FaultToleranceRate; }
+            set { INI.FaultToleranceRate = value; }
+        }
+
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 开启 false:关闭")]
+        [DisplayName("是否开启接收信号")]
+        public bool IsReadHandlerOKSign
+        {
+            get { return INI.IsReadHandlerOKSign; }
+            set { INI.IsReadHandlerOKSign = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 屏蔽 false:打开")]
+        [DisplayName("是否屏蔽handler完成信号")]
+        public bool IsNoUseHandlerOKSign
+        {
+            get { return INI.IsNoUseHandlerOKSign; }
+            set { INI.IsNoUseHandlerOKSign = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 开启 false:关闭")]
+        [DisplayName("是否开启发送Tcp完成信号")]
+        public bool IsSendHandlerTcpOKSign
+        {
+            get { return INI.IsSendHandlerTcpOKSign; }
+            set { INI.IsSendHandlerTcpOKSign = value; }
+        }
+
+        const string cat3 = "03.MainX6 Shopfloor";
+        [CategoryAttribute(cat3), DescriptionAttribute("true: 打开 false:关闭")]
+        [DisplayName("是否打开SF")]
+        [Browsable(true)]
+        public bool JCET_IS_USE_SHOPFLOOR
+        {
+            get { return INI.JCET_IS_USE_SHOPFLOOR; }
+            set { INI.JCET_IS_USE_SHOPFLOOR = value; }
+        }
+        [CategoryAttribute(cat3), DescriptionAttribute("")]
+        [DisplayName("BUFF")]
+        [Browsable(true)]
+        public int JCET_STRIP_BUFF
+        {
+            get { return INI.JCET_STRIP_BUFF; }
+            set { INI.JCET_STRIP_BUFF = value; }
+        }
+        [CategoryAttribute(cat3), DescriptionAttribute("停止检测时间")]
+        [DisplayName("STOPTIME")]
+        [Browsable(true)]
+        public int JCET_TIMESTOP_SET
+        {
+            get { return INI.JCET_TIMESTOP_SET; }
+            set { INI.JCET_TIMESTOP_SET = value; }
+        }
+        [CategoryAttribute(cat3), DescriptionAttribute("eg http://localhost:34489/Service1.asmx")]
+        [DisplayName("SF地址")]
+        [Browsable(true)]
+        public string JCET_WEBSERVICE_URL
+        {
+            get { return INI.JCET_WEBSERVICE_URL; }
+            set { INI.JCET_WEBSERVICE_URL = value; }
+        }
+
+        const string cat4 = "04.MainSD Setup";
+        [CategoryAttribute(cat4), DescriptionAttribute("每像素的實際尺寸 單位mm")]
+        [DisplayName("01.圖像解析度")]
+        [Browsable(true)]
+        public double MAINSD_PAD_MIL_RESOLUTION
+        {
+            get { return INI.MAINSD_PAD_MIL_RESOLUTION; }
+            set { INI.MAINSD_PAD_MIL_RESOLUTION = value; }
+        }
+        [CategoryAttribute(cat4), DescriptionAttribute("DEBUG使用  只收集NG 正式跑线为false")]
+        [DisplayName("03.只收集NG")]
+        [Browsable(true)]
+        public bool CHIP_NG_collect
+        {
+            get { return INI.CHIP_NG_collect; }
+            set { INI.CHIP_NG_collect = value; }
+        }
+        [CategoryAttribute(cat4), DescriptionAttribute("DEBUG使用  强制通过 正式跑线为false")]
+        [DisplayName("04.强制通过")]
+        [Browsable(true)]
+        public bool CHIP_force_pass
+        {
+            get { return INI.CHIP_force_pass; }
+            set { INI.CHIP_force_pass = value; }
+        }
+    }
+    
+    class JzINIMAINSDMPropertyGridClass
+    {
+        public JzINIMAINSDMPropertyGridClass()
+        {
+
+        }
+
         const string cat0 = "00.MainX6通讯设置";
 
         [CategoryAttribute(cat0), DescriptionAttribute("连接打标服务器的ip地址")]
@@ -407,6 +798,71 @@ namespace Allinone.BasicSpace
                 INI.IsOpenCip = value;
                 if (value)
                     Universal.CipExtend.Init();
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute("Cip通讯使用 true使用  false不使用")]
+        [DisplayName("A0.是否开启抽检功能")]
+        public bool IsOpenQcRandom
+        {
+            get { return INI.IsOpenQcRandom; }
+            set
+            {
+                INI.IsOpenQcRandom = value;
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute("开启自动切换参数(需要重启程序) true使用  false不使用")]
+        [DisplayName("A1.是否开启自动切换参数")]
+        public bool IsOpenAutoChangeRecipe
+        {
+            get { return INI.IsOpenAutoChangeRecipe; }
+            set
+            {
+                INI.IsOpenAutoChangeRecipe = value;
+                //if (value)
+                //    Universal.JzMVDJudgeRecipe.Init();
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute("模型选择(需要重启程序) ")]
+        [DisplayName("A2.模型选择")]
+        [TypeConverter(typeof(JzEnumConverter))]
+        public PMatchType pMatchType
+        {
+            get { return INI.pMatchType; }
+            set
+            {
+                INI.pMatchType = value;
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute("相似度(需要重启程序) ")]
+        [DisplayName("A3.相似度")]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 1, 0.1f, 2)]
+        public float fTolerance
+        {
+            get { return INI.fTolerance; }
+            set
+            {
+                INI.fTolerance = value;
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute("在RUN状态下长时间未操作的登出时间  单位秒")]
+        [DisplayName("A4.登出时间")]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(5, 99999999)]
+        public int AutoLogoutTime
+        {
+            get { return INI.AutoLogoutTime; }
+            set
+            {
+                INI.AutoLogoutTime = value;
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute(" true关闭  false开启")]
+        [DisplayName("A5.强制关闭重复码")]
+        public bool IsOpenForceNoCheckRepeat
+        {
+            get { return INI.IsOpenForceNoCheckRepeat; }
+            set
+            {
+                INI.IsOpenForceNoCheckRepeat = value;
             }
         }
 
@@ -500,6 +956,7 @@ namespace Allinone.BasicSpace
 
         [CategoryAttribute(cat2), DescriptionAttribute("true: 比对 false:不比对")]
         [DisplayName("是否比对条码")]
+        [Browsable(false)]
         public bool IsCheckBarcodeOpen
         {
             get { return INI.IsCheckBarcodeOpen; }
@@ -507,6 +964,7 @@ namespace Allinone.BasicSpace
         }
         [CategoryAttribute(cat2), DescriptionAttribute("true: 比对 false:不比对")]
         [DisplayName("A01.是否比对重复码")]
+        [Browsable(false)]
         public bool IsOpenCheckRepeatCode
         {
             get { return INI.IsOpenCheckRepeatCode; }
@@ -514,6 +972,7 @@ namespace Allinone.BasicSpace
         }
         [CategoryAttribute(cat2), DescriptionAttribute("true: 比对 false:不比对 注:需要先开启 是否比对重复码")]
         [DisplayName("A02.是否比对当前批号重复码")]
+        [Browsable(false)]
         public bool IsOpenCheckCurLotRepeatCode
         {
             get { return INI.IsOpenCheckCurLotRepeatCode; }
@@ -532,6 +991,13 @@ namespace Allinone.BasicSpace
         {
             get { return INI.IsOpenBehindOKSign; }
             set { INI.IsOpenBehindOKSign = value; }
+        }
+        [CategoryAttribute(cat2), DescriptionAttribute("true: 开启 false:关闭 ")]
+        [DisplayName("A05.是否显示等级码")]
+        public bool IsOpenShowGrade
+        {
+            get { return INI.IsOpenShowGrade; }
+            set { INI.IsOpenShowGrade = value; }
         }
 
         [CategoryAttribute(cat2), DescriptionAttribute("true: 只显示当前图片 false:正常显示")]
@@ -686,8 +1152,38 @@ namespace Allinone.BasicSpace
             get { return INI.AXIS_Z_JJS; }
             set { INI.AXIS_Z_JJS = value; }
         }
+        [CategoryAttribute(cat4), DescriptionAttribute("通过参数名和版本记录测试数据")]
+        [DisplayName("12.开启参数记录数据")]
+        public bool IsOpenRecipeDataRecord
+        {
+            get { return INI.IsOpenRecipeDataRecord; }
+            set { INI.IsOpenRecipeDataRecord = value; }
+        }
 
-        const string cat5 = "05.机械臂設置";
+        [CategoryAttribute(cat4), DescriptionAttribute("选择数据存储的路径 eg.D:\\ 数据将存于D:\\DataRoot")]
+        [DisplayName("13.数据存储路径")]
+        [Editor(typeof(GetPlugsPropertyEditor), typeof(UITypeEditor))]
+        public string RootPath
+        {
+            get { return INI.RootPath; }
+            set { INI.RootPath = value; }
+        }
+        [CategoryAttribute(cat4), DescriptionAttribute("")]
+        [DisplayName("14.开启判断sensor")]
+        public bool IsOpenCheckSensor
+        {
+            get { return INI.IsOpenCheckSensor; }
+            set { INI.IsOpenCheckSensor = value; }
+        }
+        //[CategoryAttribute(cat4), DescriptionAttribute("设备名称 即DeviceName 用于存储归纳数据")]
+        //[DisplayName("14.设备名称")]
+        //public string DeviceName
+        //{
+        //    get { return INI.DeviceName; }
+        //    set { INI.DeviceName = value; }
+        //}
+
+        const string cat5 = "05.其他設置";
         [CategoryAttribute(cat5), DescriptionAttribute("")]
         [DisplayName("手动加速")]
         public int AXIS_MANUAL_JJS_ADD
@@ -725,6 +1221,56 @@ namespace Allinone.BasicSpace
             get { return INI.RobotSpeedValue; }
             set { INI.RobotSpeedValue = value; }
         }
+
+        [CategoryAttribute(cat5), DescriptionAttribute("")]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(-100, 1000)]
+        [DisplayName("01.线扫开始位置")]
+        public float CamLinescanStartPos
+        {
+            get { return INI.CamLinescanStartPos; }
+            set { INI.CamLinescanStartPos = value; }
+        }
+        [CategoryAttribute(cat5), DescriptionAttribute("")]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(-100, 1000)]
+        [DisplayName("02.线扫结束位置")]
+        public float CamLinescanEndPos
+        {
+            get { return INI.CamLinescanEndPos; }
+            set { INI.CamLinescanEndPos = value; }
+        }
+        [CategoryAttribute(cat5), DescriptionAttribute("")]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(-100, 1000)]
+        [DisplayName("03.线扫速度")]
+        public int CamLinescanSpeed
+        {
+            get { return INI.CamLinescanSpeed; }
+            set { INI.CamLinescanSpeed = value; }
+        }
+        [CategoryAttribute(cat5), DescriptionAttribute("")]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(-100, 1000)]
+        [DisplayName("04.面阵相机位置")]
+        public float CamAreaMatchPos
+        {
+            get { return INI.CamAreaMatchPos; }
+            set { INI.CamAreaMatchPos = value; }
+        }
+        [CategoryAttribute(cat5), DescriptionAttribute("单位 毫秒")]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 99999999)]
+        [DisplayName("05.拍图超时")]
+        public int TestImageOvertime
+        {
+            get { return INI.TestImageOvertime; }
+            set { INI.TestImageOvertime = value; }
+        }
+        [CategoryAttribute(cat5), DescriptionAttribute("单位 毫秒")]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 99999999)]
+        [DisplayName("06.结果超时")]
+        public int TestResultOvertime
+        {
+            get { return INI.TestResultOvertime; }
+            set { INI.TestResultOvertime = value; }
+        }
+
     }
     class JzINIMAIN_SDPropertyGridClass
     {

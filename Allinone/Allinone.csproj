@@ -30,12 +30,12 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;xOPT_USE_THROUGH | xOPT_USE_THROUGH_CRYSTAL | xCollectGIF | xUSEHIKROT</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;xOPT_USE_THROUGH | xOPT_USE_THROUGH_CRYSTAL | xCollectGIF | USEHIKROT | FX3U</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -200,6 +200,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Common\MVDCore.Net.dll</HintPath>
     </Reference>
+    <Reference Include="MVDGrayPatMatch.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=a8b65b043ba16bb7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDGrayPatMatch.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MVDGrayPatMatchV2.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=3f69ec037058254f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDGrayPatMatchV2.Net.dll</HintPath>
+    </Reference>
     <Reference Include="MVDImage.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=ce2c144a3e6a9a93, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Common\MVDImage.Net.dll</HintPath>
@@ -248,11 +256,18 @@
     <Compile Include="BasicSpace\CipExtendClass.cs" />
     <Compile Include="BasicSpace\EzImageUtils.cs" />
     <Compile Include="BasicSpace\EzSegDMTX.cs" />
+    <Compile Include="BasicSpace\JzBarcodeParaGridClass.cs" />
     <Compile Include="BasicSpace\JzCameraForMatchClass.cs" />
+    <Compile Include="BasicSpace\JzCheckRecipeParaClass.cs" />
+    <Compile Include="BasicSpace\JzFourSideAnalyze.cs" />
     <Compile Include="BasicSpace\JzINIPropertyGridClass.cs" />
+    <Compile Include="BasicSpace\JzMVDJudgeRecipeClass.cs" />
     <Compile Include="BasicSpace\JzOCRStringConverter.cs" />
     <Compile Include="BasicSpace\JzASNItemStringConverter.cs" />
     <Compile Include="BasicSpace\JzASNStringConverter.cs" />
+    <Compile Include="BasicSpace\JzSliderItemClass.cs" />
+    <Compile Include="BasicSpace\MeasureD\BlobMeasureClass.cs" />
+    <Compile Include="BasicSpace\MVD\JzMVDGrayPatMatchClass.cs" />
     <Compile Include="BasicSpace\ServiceClass.cs" />
     <Compile Include="BasicSpace\WinAPI.cs" />
     <Compile Include="ControlSpace\IOSpace\GeoIOClass.cs" />
@@ -344,6 +359,12 @@
     <Compile Include="FormSpace\frmCAMTester.Designer.cs">
       <DependentUpon>frmCAMTester.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSpace\frmCheckRecipe.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\frmCheckRecipe.Designer.cs">
+      <DependentUpon>frmCheckRecipe.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSpace\frmCorpBmp.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -434,6 +455,12 @@
     </Compile>
     <Compile Include="FormSpace\OtherSetExposureForm.Designer.cs">
       <DependentUpon>OtherSetExposureForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PadInspectDataForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PadInspectDataForm.Designer.cs">
+      <DependentUpon>PadInspectDataForm.cs</DependentUpon>
     </Compile>
     <Compile Include="FormSpace\PageInsertForm.cs">
       <SubType>Form</SubType>
@@ -749,17 +776,35 @@
     <Compile Include="UISpace\MSRUISpace\BkUI.Designer.cs">
       <DependentUpon>BkUI.cs</DependentUpon>
     </Compile>
+    <Compile Include="UISpace\MSRUISpace\BlobsUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UISpace\MSRUISpace\BlobsUI.Designer.cs">
+      <DependentUpon>BlobsUI.cs</DependentUpon>
+    </Compile>
     <Compile Include="UISpace\MSRUISpace\ColorUI.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="UISpace\MSRUISpace\ColorUI.Designer.cs">
       <DependentUpon>ColorUI.cs</DependentUpon>
     </Compile>
+    <Compile Include="UISpace\MSRUISpace\IPDV1UI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UISpace\MSRUISpace\IPDV1UI.Designer.cs">
+      <DependentUpon>IPDV1UI.cs</DependentUpon>
+    </Compile>
     <Compile Include="UISpace\MSRUISpace\MbUI.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="UISpace\MSRUISpace\MbUI.Designer.cs">
       <DependentUpon>MbUI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UISpace\MSRUISpace\PadUI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UISpace\MSRUISpace\PadUI.Designer.cs">
+      <DependentUpon>PadUI.cs</DependentUpon>
     </Compile>
     <Compile Include="UISpace\MSRUISpace\SolderUI.cs">
       <SubType>UserControl</SubType>
@@ -870,6 +915,9 @@
     <EmbeddedResource Include="FormSpace\frmCAMTester.resx">
       <DependentUpon>frmCAMTester.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\frmCheckRecipe.resx">
+      <DependentUpon>frmCheckRecipe.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\frmCorpBmp.resx">
       <DependentUpon>frmCorpBmp.cs</DependentUpon>
     </EmbeddedResource>
@@ -914,6 +962,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\OtherSetExposureForm.resx">
       <DependentUpon>OtherSetExposureForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\PADForm\PadInspectDataForm.resx">
+      <DependentUpon>PadInspectDataForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\PageInsertForm.resx">
       <DependentUpon>PageInsertForm.cs</DependentUpon>
@@ -1057,11 +1108,20 @@
     <EmbeddedResource Include="UISpace\MSRUISpace\BkUI.resx">
       <DependentUpon>BkUI.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UISpace\MSRUISpace\BlobsUI.resx">
+      <DependentUpon>BlobsUI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UISpace\MSRUISpace\ColorUI.resx">
       <DependentUpon>ColorUI.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UISpace\MSRUISpace\IPDV1UI.resx">
+      <DependentUpon>IPDV1UI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UISpace\MSRUISpace\MbUI.resx">
       <DependentUpon>MbUI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UISpace\MSRUISpace\PadUI.resx">
+      <DependentUpon>PadUI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UISpace\MSRUISpace\SolderUI.resx">
       <DependentUpon>SolderUI.cs</DependentUpon>

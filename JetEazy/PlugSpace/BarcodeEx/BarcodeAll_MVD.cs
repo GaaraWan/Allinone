@@ -1,5 +1,6 @@
 ﻿
 #define OPT_USE_MVD_READER
+
 //#define OPT_USE_MVD_CNN_READER
 #if OPT_USE_MVD_CNN_READER
 using System;
@@ -31,8 +32,8 @@ namespace JetEazy.PlugSpace.BarcodeEx
 
     public class BarcodeAll_MVD : IDisposable
     {
-        CNNCodeReaderTool Code2DReaderTool = null;
-        CNNCodeVerifyTool c2DCodeVerifyTool = null;
+        CNNCodeReaderTool Code2DReaderTool = null;// new CNNCodeReaderTool(MVD_ALGORITHM_PLATFORM_TYPE.MVD_ALGORITHM_PLATFORM_CPU);
+        CNNCodeVerifyTool c2DCodeVerifyTool = null;// new CNNCodeVerifyTool(MVD_ALGORITHM_PLATFORM_TYPE.MVD_ALGORITHM_PLATFORM_CPU);
 
         private long m_DurTime = 0;
         private string m_ErrMsg = string.Empty;
@@ -42,18 +43,23 @@ namespace JetEazy.PlugSpace.BarcodeEx
         }
 
         public BarcodeItem GetBarcodeItem = new BarcodeItem();
-
+        ~BarcodeAll_MVD()
+        {
+            Dispose();
+        }
         public BarcodeAll_MVD()
         {
+            //if (Code2DReaderTool == null)
+            //    Code2DReaderTool = new CNNCodeReaderTool(MVD_ALGORITHM_PLATFORM_TYPE.MVD_ALGORITHM_PLATFORM_CPU);
 
+            //if (c2DCodeVerifyTool == null)
+            //    c2DCodeVerifyTool = new CNNCodeVerifyTool(MVD_ALGORITHM_PLATFORM_TYPE.MVD_ALGORITHM_PLATFORM_CPU);
         }
 
         public int DecodeTrain()
         {
             if (Code2DReaderTool == null)
                 Code2DReaderTool = new CNNCodeReaderTool(MVD_ALGORITHM_PLATFORM_TYPE.MVD_ALGORITHM_PLATFORM_CPU);
-
-           
 
             if (c2DCodeVerifyTool == null)
                 c2DCodeVerifyTool = new CNNCodeVerifyTool(MVD_ALGORITHM_PLATFORM_TYPE.MVD_ALGORITHM_PLATFORM_CPU);
@@ -284,24 +290,30 @@ namespace JetEazy.PlugSpace.BarcodeEx
                 //二维码识别实例创建与赋值
                 //CNNCodeReaderTool Code2DReaderTool = new CNNCodeReaderTool(MVD_ALGORITHM_PLATFORM_TYPE.MVD_ALGORITHM_PLATFORM_CPU);
                 Code2DReaderTool.InputImage = cInputImg;
-                Code2DReaderTool.ROI = cRectROIObj;
+                Code2DReaderTool.ROI = null;// cRectROIObj;
 
+                Code2DReaderTool.SetRunParam("WaitTimeOut", "1000");
+                Code2DReaderTool.SetRunParam("Code39Flag", "0");
+                Code2DReaderTool.SetRunParam("Code128Flag", "0");
+                Code2DReaderTool.SetRunParam("CodaBarFlag", "0");
+                Code2DReaderTool.SetRunParam("CodeEAN8Flag", "0");
+                Code2DReaderTool.SetRunParam("CodeITF25Flag", "0");
+                Code2DReaderTool.SetRunParam("Code93Flag", "0");
+                Code2DReaderTool.SetRunParam("CodeUPCEFlag", "0");
+                Code2DReaderTool.SetRunParam("CodeUPCAFlag", "0");
+                Code2DReaderTool.SetRunParam("CodeEAN13Flag", "0");
+                Code2DReaderTool.SetRunParam("CodeITF14Flag", "0");
+                Code2DReaderTool.SetRunParam("CodeMATRIX25Flag", "0");
+                Code2DReaderTool.SetRunParam("CodeMSIFlag", "0");
+                Code2DReaderTool.SetRunParam("CodeCODE11Flag", "0");
+                Code2DReaderTool.SetRunParam("CodeINDUSTRIAL25Flag", "0");
+                Code2DReaderTool.SetRunParam("CodeCHINAPOSTFlag", "0");
                 Code2DReaderTool.SetRunParam("Loc2DCodeNum", "1");
-                Code2DReaderTool.SetRunParam("Polarity", "Both");
-                Code2DReaderTool.SetRunParam("CodeQRFlag", "0");
-                Code2DReaderTool.SetRunParam("MinBarSize", "20");
-                Code2DReaderTool.SetRunParam("RectangleFlag", "Both");
-                //Code2DReaderTool.SetRunParam("WaitTimeOut", "500");
-                //Code2DReaderTool.SetRunParam("Polarity", "2");
-                //Code2DReaderTool.SetRunParam("QR", "0");
-                //Code2DReaderTool.SetRunParam("CodeQRFlag", "0");
+                //Code2DReaderTool.SetRunParam("PerfMode", "0");
+                Code2DReaderTool.SetRunParam("DM", "1");
+                Code2DReaderTool.SetRunParam("QR", "1");
+                Code2DReaderTool.SetRunParam("ECC140", "0");
 
-                //string strkey = "";
-                //Code2DReaderTool.SetRunParam("Polarity", "2");
-                //Code2DReaderTool.GetRunParam("Polarity", ref strkey);
-
-                //Code2DReaderTool.SetRunParam("Loc2DCodeNum", "1");
-                //Code2DReaderTool.GetRunParam("Loc2DCodeNum", ref strkey);
                 //运行
                 Code2DReaderTool.Run();
 
@@ -309,29 +321,27 @@ namespace JetEazy.PlugSpace.BarcodeEx
                 m_DurTime = RunLineWatch.ElapsedMilliseconds;
                 RunLineWatch = null;
 
-                if (Code2DReaderTool.Result.CodeInfo.Count() > 0 && eGradeUse)
+                if (Code2DReaderTool.Result.CodeInfo.Count() > 0)
                 {
                     retStr = Code2DReaderTool.Result.CodeInfo[0].Content.ToString();
-                    //CNNCodeVerifyTool c2DCodeVerifyTool = new CNNCodeVerifyTool(MVD_ALGORITHM_PLATFORM_TYPE.MVD_ALGORITHM_PLATFORM_CPU);
-                    c2DCodeVerifyTool.InputImage = cInputImg;
-                    c2DCodeVerifyTool.BasicParam.RecognitionInfo = Code2DReaderTool.Result;
-                    //c2DCodeVerifyTool.BasicParam.VerifyPrcType2D = MVD_SYMBOL_VERIFY_PROCESS_TYPE.MVD_SYMBOL_VERIFY_PROCESS_TYPE_I;
-                    //c2DCodeVerifyTool.BasicParam.VerifyLabel2D = MVD_SYMBOL_VERIFY_LABEL.MVD_SYMBOL_VERIFY_LABEL_STANDARD;
-                    //c2DCodeVerifyTool.BasicParam.VerifyStandard2D = MVD_SYMBOL_VERIFY_STANDARD.MVD_SYMBOL_VERIFY_ISO_STANDARD_29158;
-
-                    c2DCodeVerifyTool.Run();
-                    if (c2DCodeVerifyTool.Result.QualityInfo2D.Count() > 0)
+                    if (eGradeUse)
                     {
+                        c2DCodeVerifyTool.InputImage = cInputImg;
+                        c2DCodeVerifyTool.BasicParam.RecognitionInfo = Code2DReaderTool.Result;
+                        c2DCodeVerifyTool.Run();
+                        if (c2DCodeVerifyTool.Result.QualityInfo2D.Count() > 0)
+                        {
 
-                        CNNCodeQualityInfoByISO29158 c2DCodeQualityInfoByISO29158
-                            = (CNNCodeQualityInfoByISO29158)c2DCodeVerifyTool.Result.QualityInfo2D[0];
+                            CNNCodeQualityInfoByISO29158 c2DCodeQualityInfoByISO29158
+                                = (CNNCodeQualityInfoByISO29158)c2DCodeVerifyTool.Result.QualityInfo2D[0];
 
-                        CNNCodeReaderResult c2DCodeReaderResult
-                            = c2DCodeVerifyTool.BasicParam.RecognitionInfo;
-                        GetBarcodeItem.DCodeInfo = c2DCodeReaderResult.CodeInfo[0];
+                            CNNCodeReaderResult c2DCodeReaderResult
+                                = c2DCodeVerifyTool.BasicParam.RecognitionInfo;
+                            GetBarcodeItem.DCodeInfo = c2DCodeReaderResult.CodeInfo[0];
 
-                        GetBarcodeItem.OverGrade = _getBarcodeGrade(c2DCodeQualityInfoByISO29158.OverQuality);
-                        GetBarcodeItem.DecodeGrade = _getBarcodeGrade(c2DCodeQualityInfoByISO29158.DecodeGrade);
+                            GetBarcodeItem.OverGrade = _getBarcodeGrade(c2DCodeQualityInfoByISO29158.OverQuality);
+                            GetBarcodeItem.DecodeGrade = _getBarcodeGrade(c2DCodeQualityInfoByISO29158.DecodeGrade);
+                        }
                     }
                 }
 
@@ -560,7 +570,10 @@ namespace JetEazy.PlugSpace.BarcodeEx
         }
 
         public BarcodeItem GetBarcodeItem = new BarcodeItem();
-
+        ~BarcodeAll_MVD()
+        {
+            Dispose();
+        }
         public BarcodeAll_MVD()
         {
 
@@ -585,7 +598,7 @@ namespace JetEazy.PlugSpace.BarcodeEx
             {
 
             }
-           
+
 
             return 0;
         }
@@ -629,6 +642,8 @@ namespace JetEazy.PlugSpace.BarcodeEx
                     cInputImg.ConvertImagePixelFormat(MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08);
                 }
 
+                //cInputImg.SaveImage("d:\\testtest\\2d\\Mvd_" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + "_" + ".png", MVD_FILE_FORMAT.MVD_FILE_BMP);
+                //System.Threading.Thread.Sleep(300);
                 int nImageWidth = (int)cInputImg.Width;
                 int nImageHeight = (int)cInputImg.Height;
 
@@ -650,44 +665,72 @@ namespace JetEazy.PlugSpace.BarcodeEx
                 //二维码识别实例创建与赋值
                 //CNNCodeReaderTool Code2DReaderTool = new CNNCodeReaderTool(MVD_ALGORITHM_PLATFORM_TYPE.MVD_ALGORITHM_PLATFORM_CPU);
                 Code2DReaderTool.InputImage = cInputImg;
-                Code2DReaderTool.ROI = cRectROIObj;
+                Code2DReaderTool.ROI = null;// cRectROIObj;
 
-                Code2DReaderTool.SetRunParam("Polarity", "DarkOnBright");
+                //Code2DReaderTool.SetRunParam("Polarity", "DarkOnBright");
+                //Code2DReaderTool.SetRunParam("Polarity", "Both");
                 Code2DReaderTool.SetRunParam("CodeQRFlag", "0");
                 Code2DReaderTool.SetRunParam("RectangleFlag", "Both");
-                Code2DReaderTool.SetRunParam("AppMode", "ProMode");
+                //Code2DReaderTool.SetRunParam("AppMode", "ProMode");
                 Code2DReaderTool.SetRunParam("Loc2DCodeNum", "5");
+                Code2DReaderTool.SetRunParam("MaxBarSize", "1000");
 
-                //运行
-                Code2DReaderTool.Run();
+                int i = 0;
+                while (i < 3)
+                {
+
+                    switch (i)
+                    {
+                        case 0:
+                            Code2DReaderTool.SetRunParam("Polarity", "DarkOnBright");
+                            break;
+                        case 1:
+                            Code2DReaderTool.SetRunParam("Polarity", "BirghtOnDark");
+                            break;
+                        default:
+                            Code2DReaderTool.SetRunParam("Polarity", "Both");
+                            break;
+                    }
+
+                    //运行
+                    Code2DReaderTool.Run();
+
+                    if (Code2DReaderTool.Result.CodeInfoList.Count() > 0)
+                        break;
+
+                    i++;
+                }
 
                 RunLineWatch.Stop();
                 m_DurTime = RunLineWatch.ElapsedMilliseconds;
                 RunLineWatch = null;
 
-                if (Code2DReaderTool.Result.CodeInfoList.Count() > 0 && eGradeUse)
+                if (Code2DReaderTool.Result.CodeInfoList.Count() > 0)
                 {
                     retStr = Code2DReaderTool.Result.CodeInfoList[0].Content.ToString();
-                    //CNNCodeVerifyTool c2DCodeVerifyTool = new CNNCodeVerifyTool(MVD_ALGORITHM_PLATFORM_TYPE.MVD_ALGORITHM_PLATFORM_CPU);
-                    c2DCodeVerifyTool.InputImage = cInputImg;
-                    c2DCodeVerifyTool.BasicParam.RecognitionInfo = Code2DReaderTool.Result;
-                    //c2DCodeVerifyTool.BasicParam.VerifyPrcType2D = MVD_SYMBOL_VERIFY_PROCESS_TYPE.MVD_SYMBOL_VERIFY_PROCESS_TYPE_I;
-                    //c2DCodeVerifyTool.BasicParam.VerifyLabel2D = MVD_SYMBOL_VERIFY_LABEL.MVD_SYMBOL_VERIFY_LABEL_STANDARD;
-                    //c2DCodeVerifyTool.BasicParam.VerifyStandard2D = MVD_SYMBOL_VERIFY_STANDARD.MVD_SYMBOL_VERIFY_ISO_STANDARD_29158;
-
-                    c2DCodeVerifyTool.Run();
-                    if (c2DCodeVerifyTool.Result.QualityInfoList.Count() > 0)
+                    if (eGradeUse)
                     {
+                        //CNNCodeVerifyTool c2DCodeVerifyTool = new CNNCodeVerifyTool(MVD_ALGORITHM_PLATFORM_TYPE.MVD_ALGORITHM_PLATFORM_CPU);
+                        c2DCodeVerifyTool.InputImage = cInputImg;
+                        c2DCodeVerifyTool.BasicParam.RecognitionInfo = Code2DReaderTool.Result;
+                        //c2DCodeVerifyTool.BasicParam.VerifyPrcType2D = MVD_SYMBOL_VERIFY_PROCESS_TYPE.MVD_SYMBOL_VERIFY_PROCESS_TYPE_I;
+                        //c2DCodeVerifyTool.BasicParam.VerifyLabel2D = MVD_SYMBOL_VERIFY_LABEL.MVD_SYMBOL_VERIFY_LABEL_STANDARD;
+                        //c2DCodeVerifyTool.BasicParam.VerifyStandard2D = MVD_SYMBOL_VERIFY_STANDARD.MVD_SYMBOL_VERIFY_ISO_STANDARD_29158;
 
-                        C2DCodeQualityInfoByISO29158 c2DCodeQualityInfoByISO29158
-                            = (C2DCodeQualityInfoByISO29158)c2DCodeVerifyTool.Result.QualityInfoList[0];
+                        c2DCodeVerifyTool.Run();
+                        if (c2DCodeVerifyTool.Result.QualityInfoList.Count() > 0)
+                        {
 
-                        C2DCodeReaderResult c2DCodeReaderResult
-                            = c2DCodeVerifyTool.BasicParam.RecognitionInfo;
-                        GetBarcodeItem.DCodeInfo = c2DCodeReaderResult.CodeInfoList[0];
+                            C2DCodeQualityInfoByISO29158 c2DCodeQualityInfoByISO29158
+                                = (C2DCodeQualityInfoByISO29158)c2DCodeVerifyTool.Result.QualityInfoList[0];
 
-                        GetBarcodeItem.OverGrade = _getBarcodeGrade(c2DCodeQualityInfoByISO29158.OverQuality);
-                        GetBarcodeItem.DecodeGrade = _getBarcodeGrade(c2DCodeQualityInfoByISO29158.DecodeGrade);
+                            C2DCodeReaderResult c2DCodeReaderResult
+                                = c2DCodeVerifyTool.BasicParam.RecognitionInfo;
+                            GetBarcodeItem.DCodeInfo = c2DCodeReaderResult.CodeInfoList[0];
+
+                            GetBarcodeItem.OverGrade = _getBarcodeGrade(c2DCodeQualityInfoByISO29158.OverQuality);
+                            GetBarcodeItem.DecodeGrade = _getBarcodeGrade(c2DCodeQualityInfoByISO29158.DecodeGrade);
+                        }
                     }
                 }
 

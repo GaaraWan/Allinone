@@ -64,7 +64,7 @@
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(475, 28);
             this.label4.TabIndex = 47;
-            this.label4.Text = "F7:新增，F8:刪除";
+            this.label4.Text = "F7:新增-F8:刪除";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // myPropertyGrid1
@@ -151,7 +151,7 @@
             0,
             0});
             this.numericUpDown2.Name = "numericUpDown2";
-            this.numericUpDown2.Size = new System.Drawing.Size(47, 22);
+            this.numericUpDown2.Size = new System.Drawing.Size(47, 21);
             this.numericUpDown2.TabIndex = 56;
             this.numericUpDown2.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.numericUpDown2.Value = new decimal(new int[] {
@@ -159,6 +159,7 @@
             0,
             0,
             0});
+            this.numericUpDown2.Visible = false;
             // 
             // label11
             // 
@@ -168,9 +169,10 @@
             this.label11.ForeColor = System.Drawing.Color.Red;
             this.label11.Location = new System.Drawing.Point(479, 489);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(56, 16);
+            this.label11.Size = new System.Drawing.Size(55, 16);
             this.label11.TabIndex = 55;
             this.label11.Text = "位移大小";
+            this.label11.Visible = false;
             // 
             // button1
             // 

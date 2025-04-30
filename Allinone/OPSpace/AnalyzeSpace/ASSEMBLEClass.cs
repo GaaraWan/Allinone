@@ -13,6 +13,7 @@ using JetEazy.UISpace;
 using JetEazy;
 using Allinone.BasicSpace;
 using Allinone.FormSpace;
+using Allinone.FormSpace.PADForm;
 
 namespace Allinone.OPSpace.AnalyzeSpace
 {
@@ -78,6 +79,46 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         if (msrdataform.ShowDialog() == DialogResult.OK)
                         {
                             pValue = JzToolsClass.PassingString;
+                            JzToolsClass.PassingString = "";
+                        }
+
+                        //pValue = "FUCK YOU!";
+                    }
+                }
+                return pValue;
+            }
+        }
+
+        public class GetPADDataPropertyEditor : UITypeEditor
+        {
+            public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext pContext)
+            {
+                if (pContext != null && pContext.Instance != null)
+                {
+                    //以「...」按鈕的方式顯示
+                    //UITypeEditorEditStyle.DropDown    下拉選單
+                    //UITypeEditorEditStyle.None        預設的輸入欄位
+                    return UITypeEditorEditStyle.Modal;
+                }
+                return base.GetEditStyle(pContext);
+            }
+            public override object EditValue(ITypeDescriptorContext pContext, IServiceProvider pProvider, object pValue)
+            {
+                IWindowsFormsEditorService editorService = null;
+                if (pContext != null && pContext.Instance != null && pProvider != null)
+                {
+                    editorService = (IWindowsFormsEditorService)pProvider.GetService(typeof(IWindowsFormsEditorService));
+                    if (editorService != null)
+                    {
+                        //將顯示得視窗放在這邊，並透過ShowDialog方式來呼叫
+                        //取得到的值再回傳回去
+                        //MessageBox.Show("sfsf");
+                        PadInspectDataForm msrdataform = new PadInspectDataForm((string)pValue);
+
+                        if (msrdataform.ShowDialog() == DialogResult.OK)
+                        {
+                            pValue = JzToolsClass.PassingString;
+                            JzToolsClass.PassingString = "";
                         }
 
                         //pValue = "FUCK YOU!";
@@ -938,7 +979,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             get; set;
         }
-
+        [Category("10.PADCHECK"), DefaultValue(true)]
+        [Description("")]
+        [DisplayName("4A.找芯片底色白色")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public virtual bool ChipFindWhite
+        {
+            get; set;
+        }
         [Category("10.PADCHECK"), DefaultValue(128)]
         [Description("即 寻找中心位置的灰阶阈值")]
         [DisplayName("4.中心灰阶值")]
@@ -954,6 +1003,24 @@ namespace Allinone.OPSpace.AnalyzeSpace
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 255, 1, 0)]
         public virtual int PADBlobGrayThreshold
+        {
+            get; set;
+        }
+        [Category("10.PADCHECK"), DefaultValue(true)]
+        [Description("")]
+        [DisplayName("5B.找银胶底色白色")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public virtual bool GLEFindWhite
+        {
+            get; set;
+        }
+        [Category("10.PADCHECK"), DefaultValue(100)]
+        [Description("即 寻找中心位置中银胶的灰阶阈值")]
+        [DisplayName("5A.银胶灰阶值")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 255, 1, 0)]
+        public virtual int PADChipInBlobGrayThreshold
         {
             get; set;
         }
@@ -1123,6 +1190,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             get; set;
         }
+        [Category("11.PADCHECK"), DefaultValue(0)]
+        [Description("小于设定的值则为四周无胶PASS，反之NG")]
+        [DisplayName("A1d.检测四周无胶的值")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 255)]
+        public virtual int FourSideNoGluePassValue
+        {
+            get; set;
+        }
         [Category("11.PADCHECK"), DefaultValue(0.75)]
         [Description("")]
         [DisplayName("A4.检查有无胶水容许值")]
@@ -1157,6 +1233,25 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             get; set;
         }
+        [Category("10.PADCHECK"), DefaultValue(""),ReadOnly(true)]
+        [Description("")]
+        [DisplayName("C1.通用模式模型")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1f, 0.1f, 2)]
+        public virtual PadInspectMethodEnum PadInspectMethod
+        {
+            get; set;
+        }
+        [Category("10.PADCHECK"), DefaultValue("")]
+        [Description("")]
+        [DisplayName("C1.通用模式模型参数")]
+        [Editor(typeof(GetPADDataPropertyEditor), typeof(UITypeEditor))]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1f, 0.1f, 2)]
+        public virtual string PADINSPECTOPString
+        {
+            get; set;
+        }
         [Category("10.PADCHECK"), DefaultValue(AICategory.Baseline)]
         [Description("在AI模式下选择不同模型以适应芯片的大小")]
         [DisplayName("C1.AI模型")]
@@ -1165,6 +1260,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             get; set;
         }
+
+
 
 
         [Category("11.PADCHECK"), DefaultValue(0.6)]
@@ -1308,33 +1405,83 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             #region NORMAL
 
-            publicproperties.Add(new myProperty("Name", "01.Normal"));
-            publicproperties.Add(new myProperty("AliasName", "01.Normal"));
-            publicproperties.Add(new myProperty("Brightness", "01.Normal"));
-            publicproperties.Add(new myProperty("Contrast", "01.Normal"));
-            publicproperties.Add(new myProperty("MaskMethod", "01.Normal"));
-            publicproperties.Add(new myProperty("ExtendX", "01.Normal"));
-            publicproperties.Add(new myProperty("ExtendY", "01.Normal"));
-            publicproperties.Add(new myProperty("RelateASN", "01.Normal"));
-            publicproperties.Add(new myProperty("RelateASNItem", "01.Normal"));
-            publicproperties.Add(new myProperty("IsSeed", "01.Normal"));
+            switch (opt)
+            {
+                case OptionEnum.MAIN_X6:
 
-            publicproperties.Add(new myProperty("AlignMethod", "02.Align"));
-            publicproperties.Add(new myProperty("AlignMode", "02.Align"));
-            publicproperties.Add(new myProperty("MTPSample", "02.Align"));
-            publicproperties.Add(new myProperty("MTCannyAuto", "02.Align"));
-            publicproperties.Add(new myProperty("MTCannyH", "02.Align"));
-            publicproperties.Add(new myProperty("MTCannyL", "02.Align"));
-            publicproperties.Add(new myProperty("MTRotation", "02.Align"));
-            publicproperties.Add(new myProperty("MTScaling", "02.Align"));
-            publicproperties.Add(new myProperty("MTMaxOcc", "02.Align"));
-            publicproperties.Add(new myProperty("MTTolerance", "02.Align"));
-            //publicproperties.Add(new myProperty("MTIsSubPixel", "02.Align")); //No Use Now
-            publicproperties.Add(new myProperty("MTOffset", "02.Align"));
-            publicproperties.Add(new myProperty("MTResolution", "02.Align"));
+                    publicproperties.Add(new myProperty("Name", "01.Normal"));
+                    publicproperties.Add(new myProperty("AliasName", "01.Normal"));
+                    //publicproperties.Add(new myProperty("Brightness", "01.Normal"));
+                    //publicproperties.Add(new myProperty("Contrast", "01.Normal"));
+                    //publicproperties.Add(new myProperty("MaskMethod", "01.Normal"));
+                    publicproperties.Add(new myProperty("ExtendX", "01.Normal"));
+                    publicproperties.Add(new myProperty("ExtendY", "01.Normal"));
+                    //publicproperties.Add(new myProperty("RelateASN", "01.Normal"));
+                    //publicproperties.Add(new myProperty("RelateASNItem", "01.Normal"));
+            
 
-            publicproperties.Add(new myProperty("ABSAlignMethod", "02.Align"));
-            publicproperties.Add(new myProperty("ABSOffset", "02.Align"));
+                    publicproperties.Add(new myProperty("AlignMethod", "02.Align"));
+                    publicproperties.Add(new myProperty("AlignMode", "02.Align"));
+                    publicproperties.Add(new myProperty("MTPSample", "02.Align"));
+                    //publicproperties.Add(new myProperty("MTCannyAuto", "02.Align"));
+                    //publicproperties.Add(new myProperty("MTCannyH", "02.Align"));
+                    //publicproperties.Add(new myProperty("MTCannyL", "02.Align"));
+                    publicproperties.Add(new myProperty("MTRotation", "02.Align"));
+                    //publicproperties.Add(new myProperty("MTScaling", "02.Align"));
+                    //publicproperties.Add(new myProperty("MTMaxOcc", "02.Align"));
+                    publicproperties.Add(new myProperty("MTTolerance", "02.Align"));
+                    //publicproperties.Add(new myProperty("MTIsSubPixel", "02.Align")); //No Use Now
+                    publicproperties.Add(new myProperty("MTOffset", "02.Align"));
+                    publicproperties.Add(new myProperty("MTResolution", "02.Align"));
+
+                    publicproperties.Add(new myProperty("ABSAlignMethod", "02.Align"));
+                    publicproperties.Add(new myProperty("ABSOffset", "02.Align"));
+
+                    switch (Universal.FACTORYNAME)
+                    {
+                        case FactoryName.DAGUI:
+                            break;
+                        default:
+                            publicproperties.Add(new myProperty("IsSeed", "01.Normal"));
+                            break;
+                    }
+
+
+                    break;
+                default:
+
+                    publicproperties.Add(new myProperty("Name", "01.Normal"));
+                    publicproperties.Add(new myProperty("AliasName", "01.Normal"));
+                    publicproperties.Add(new myProperty("Brightness", "01.Normal"));
+                    publicproperties.Add(new myProperty("Contrast", "01.Normal"));
+                    publicproperties.Add(new myProperty("MaskMethod", "01.Normal"));
+                    publicproperties.Add(new myProperty("ExtendX", "01.Normal"));
+                    publicproperties.Add(new myProperty("ExtendY", "01.Normal"));
+                    publicproperties.Add(new myProperty("RelateASN", "01.Normal"));
+                    publicproperties.Add(new myProperty("RelateASNItem", "01.Normal"));
+                    publicproperties.Add(new myProperty("IsSeed", "01.Normal"));
+
+                    publicproperties.Add(new myProperty("AlignMethod", "02.Align"));
+                    publicproperties.Add(new myProperty("AlignMode", "02.Align"));
+                    publicproperties.Add(new myProperty("MTPSample", "02.Align"));
+                    publicproperties.Add(new myProperty("MTCannyAuto", "02.Align"));
+                    publicproperties.Add(new myProperty("MTCannyH", "02.Align"));
+                    publicproperties.Add(new myProperty("MTCannyL", "02.Align"));
+                    publicproperties.Add(new myProperty("MTRotation", "02.Align"));
+                    publicproperties.Add(new myProperty("MTScaling", "02.Align"));
+                    publicproperties.Add(new myProperty("MTMaxOcc", "02.Align"));
+                    publicproperties.Add(new myProperty("MTTolerance", "02.Align"));
+                    //publicproperties.Add(new myProperty("MTIsSubPixel", "02.Align")); //No Use Now
+                    publicproperties.Add(new myProperty("MTOffset", "02.Align"));
+                    publicproperties.Add(new myProperty("MTResolution", "02.Align"));
+
+                    publicproperties.Add(new myProperty("ABSAlignMethod", "02.Align"));
+                    publicproperties.Add(new myProperty("ABSOffset", "02.Align"));
+
+                    break;
+            }
+
+            
 
             #endregion
 
@@ -1501,6 +1648,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             publicproperties.Add(new myProperty("PADOAreaRatio", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("PADGrayThreshold", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("PADBlobGrayThreshold", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("PADChipInBlobGrayThreshold", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("PADCheckDArea", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("PADCheckDWidth", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("PADCheckDHeight", "10.PADCHECK"));
@@ -1508,22 +1656,27 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             publicproperties.Add(new myProperty("PADExtendX", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("PADExtendY", "10.PADCHECK"));
 
-                            publicproperties.Add(new myProperty("GlueMax", "10.PADCHECK"));
-                            publicproperties.Add(new myProperty("GlueMin", "10.PADCHECK"));
+                            //publicproperties.Add(new myProperty("GlueMax", "10.PADCHECK"));
+                            //publicproperties.Add(new myProperty("GlueMin", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("GlueCheck", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("ChipDirlevel", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("ChipGleCheck", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("ChipFindWhite", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("GLEFindWhite", "10.PADCHECK"));
 
                             publicproperties.Add(new myProperty("PADThresholdMode", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("NoGlueThresholdValue", "10.PADCHECK"));
-                            publicproperties.Add(new myProperty("PADCalMode", "10.PADCHECK"));
+                            //publicproperties.Add(new myProperty("PADCalMode", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("PADChipSizeMode", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("PADAICategory", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("PadInspectMethod", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("PADINSPECTOPString", "10.PADCHECK"));
 
                             publicproperties.Add(new myProperty("CalExtendX", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("CalExtendY", "10.PADCHECK"));
 
                             publicproperties.Add(new myProperty("BloodFillValueRatio", "10.PADCHECK"));
+                            publicproperties.Add(new myProperty("FourSideNoGluePassValue", "10.PADCHECK"));
 
                             publicproperties.Add(new myProperty("GlueMaxTop", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("GlueMinTop", "10.PADCHECK"));
@@ -1554,8 +1707,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         case OptionEnum.MAIN_X6:
                         case JetEazy.OptionEnum.MAIN_SERVICE:
 
-                            publicproperties.Add(new myProperty("OCRMethod", "05.OCR or Barcode", "字符或条码检测"));
-                            publicproperties.Add(new myProperty("OCRMappingMethod", "05.OCR or Barcode", "字符或条码检测"));
+                            switch(Universal.FACTORYNAME)
+                            {
+                                case FactoryName.DAGUI:
+                                    break;
+                                default:
+                                    publicproperties.Add(new myProperty("OCRMethod", "05.OCR or Barcode", "字符或条码检测"));
+                                    publicproperties.Add(new myProperty("OCRMappingMethod", "05.OCR or Barcode", "字符或条码检测"));
+                                    break;
+                            }
 
                             publicproperties.Add(new myProperty("InspectionMethod", "03.Inspection"));
                             publicproperties.Add(new myProperty("Inspection_A_B_Method", "03.Inspection"));
@@ -1563,12 +1723,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             publicproperties.Add(new myProperty("IBArea", "03.Inspection"));
                             publicproperties.Add(new myProperty("IBTolerance", "03.Inspection"));
 
-                            publicproperties.Add(new myProperty("AOIMethod", "06.AOI"));
-                            publicproperties.Add(new myProperty("CheckDirtMethod", "06.AOI"));
-                            //publicproperties.Add(new myProperty("CheckColorMethod", "06.AOI"));
-                            publicproperties.Add(new myProperty("IsNG", "06.AOI"));
-                            publicproperties.Add(new myProperty("DirtRatio", "06.AOI"));
-                            publicproperties.Add(new myProperty("DirtArea", "06.AOI"));
+                            //publicproperties.Add(new myProperty("MeasureMethod", "04.Measure"));
+                            //publicproperties.Add(new myProperty("MMOPString", "04.Measure"));
+
+                            //publicproperties.Add(new myProperty("AOIMethod", "06.AOI"));
+                            //publicproperties.Add(new myProperty("CheckDirtMethod", "06.AOI"));
+                            ////publicproperties.Add(new myProperty("CheckColorMethod", "06.AOI"));
+                            //publicproperties.Add(new myProperty("IsNG", "06.AOI"));
+                            //publicproperties.Add(new myProperty("DirtRatio", "06.AOI"));
+                            //publicproperties.Add(new myProperty("DirtArea", "06.AOI"));
 
 
                             break;
@@ -1964,6 +2127,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             PADOAreaRatio = PAD.OAreaRatio;
             PADGrayThreshold = PAD.PADGrayThreshold;
             PADBlobGrayThreshold = PAD.PADBlobGrayThreshold;
+            PADChipInBlobGrayThreshold = PAD.PADChipInBlobGrayThreshold;
             PADCheckDArea = PAD.CheckDArea;
             PADCheckDWidth = PAD.CheckDWidth;
             PADCheckDHeight = PAD.CheckDHeight;
@@ -1996,6 +2160,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             BlackOffsetY = PAD.BlackOffsetY;
             ChipDirLevel = PAD.ChipDirlevel;
             ChipGleCheck = PAD.ChipGleCheck;
+            ChipFindWhite = PAD.ChipFindWhite;
+            GLEFindWhite = PAD.GLEFindWhite;
 
             FontSize = PAD.FontSize;
             LineWidth = PAD.LineWidth;
@@ -2006,6 +2172,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
             GleHeightLower = PAD.GleHeightLower;
             GleAreaUpper = PAD.GleAreaUpper;
             GleAreaLower = PAD.GleAreaLower;
+
+            FourSideNoGluePassValue = PAD.FourSideNoGluePassValue;
+
+            PadInspectMethod = PAD.PadInspectMethod;
+            PADINSPECTOPString = PAD.PadInspectMethod.ToString() + "#" + PAD.PADINSPECTOPString;
         }
         public void SetPADCHECK(PADINSPECTClass PAD)
         {
@@ -2015,6 +2186,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             PAD.OAreaRatio = PADOAreaRatio;
             PAD.PADGrayThreshold = PADGrayThreshold;
             PAD.PADBlobGrayThreshold = PADBlobGrayThreshold;
+            PAD.PADChipInBlobGrayThreshold = PADChipInBlobGrayThreshold;
             PAD.CheckDArea = PADCheckDArea;
             PAD.CheckDWidth = PADCheckDWidth;
             PAD.CheckDHeight = PADCheckDHeight;
@@ -2047,6 +2219,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             PAD.BlackOffsetY = BlackOffsetY;
             PAD.ChipDirlevel = ChipDirLevel;
             PAD.ChipGleCheck = ChipGleCheck;
+            PAD.ChipFindWhite = ChipFindWhite;
+            PAD.GLEFindWhite = GLEFindWhite;
 
             PAD.FontSize = FontSize;
             PAD.LineWidth = LineWidth;
@@ -2058,7 +2232,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
             PAD.GleAreaUpper = GleAreaUpper;
             PAD.GleAreaLower = GleAreaLower;
 
+            PAD.FourSideNoGluePassValue = FourSideNoGluePassValue;
 
+            PAD.PadInspectMethod = (PadInspectMethodEnum)Enum.Parse(typeof(PadInspectMethodEnum), PADINSPECTOPString.Split('#')[0], true);
+            PAD.PADINSPECTOPString = PADINSPECTOPString.Split('#')[1];
         }
 
     }
@@ -2903,7 +3080,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             get; set;
         }
-
+        [Category("10.PADCHECK"), DefaultValue(true)]
+        [Description("")]
+        [DisplayName("4A.找芯片底色白色")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public override bool ChipFindWhite
+        {
+            get; set;
+        }
         [Category("10.PADCHECK"), DefaultValue(128)]
         [Description("即 寻找中心位置的灰阶阈值")]
         [DisplayName("4.中心灰阶值")]
@@ -2922,6 +3107,25 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             get; set;
         }
+        [Category("10.PADCHECK"), DefaultValue(true)]
+        [Description("")]
+        [DisplayName("5B.找银胶底色白色")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1000000f, 1, 2)]
+        public override bool GLEFindWhite
+        {
+            get; set;
+        }
+        [Category("10.PADCHECK"), DefaultValue(100)]
+        [Description("即 寻找中心位置中银胶的灰阶阈值")]
+        [DisplayName("5A.银胶灰阶值")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 255, 1, 0)]
+        public override int PADChipInBlobGrayThreshold
+        {
+            get; set;
+        }
+
         [Category("10.PADCHECK"), DefaultValue(15)]
         [Description("溢胶的面积大小 大于此值NG 反之OK (單位 mil)")]
         [DisplayName("6.检查溢胶面积")]
@@ -3013,6 +3217,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             get; set;
         }
+        [Category("11.PADCHECK"), DefaultValue(0)]
+        [Description("小于设定的值则为四周无胶PASS，反之NG")]
+        [DisplayName("A1d.检测四周无胶的值")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 255)]
+        public override int FourSideNoGluePassValue
+        {
+            get; set;
+        }
         [Category("11.PADCHECK"), DefaultValue(0.75)]
         [Description("")]
         [DisplayName("A4.检查有无胶水容许值")]
@@ -3038,6 +3251,26 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             get; set;
         }
+        [Category("10.PADCHECK"), DefaultValue(""), ReadOnly(true)]
+        [Description("")]
+        [DisplayName("C1.通用模式模型")]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1f, 0.1f, 2)]
+        public override PadInspectMethodEnum PadInspectMethod
+        {
+            get; set;
+        }
+        [Category("10.PADCHECK"), DefaultValue("")]
+        [Description("")]
+        [DisplayName("C1.通用模式模型参数")]
+        [Editor(typeof(GetPADDataPropertyEditor), typeof(UITypeEditor))]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1f, 0.1f, 2)]
+        public override string PADINSPECTOPString
+        {
+            get; set;
+        }
+
         [Category("10.PADCHECK"), DefaultValue(AICategory.Baseline)]
         [Description("在AI模式下选择不同模型以适应芯片的大小")]
         [DisplayName("C1.AI模型")]

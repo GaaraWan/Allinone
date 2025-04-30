@@ -187,9 +187,12 @@ namespace Allinone.UISpace
         {
             switch (oper)
             {
+                case SubOperEnum.OUTPUT:
+                    FillSUBUI(true, false);
+                    break;
                 case SubOperEnum.PATTERN:
                 case SubOperEnum.MASK:
-                case SubOperEnum.OUTPUT:
+                //case SubOperEnum.OUTPUT:
                 case SubOperEnum.CHANGE:
 
                     FillSUBUI(true);
@@ -347,7 +350,7 @@ namespace Allinone.UISpace
         /// <summary>
         /// 將處理過後的影像顯示在 SUB UI 中
         /// </summary>
-        void FillSUBUI(bool isreplace)
+        void FillSUBUI(bool isreplace,bool istrain=true)
         {
             if (AnalyzeSelectNo > 1)
             {
@@ -358,8 +361,15 @@ namespace Allinone.UISpace
 
                     if (!IsLearn)
                         AnalyzeSelectNow.Z02_CreateTrainRequirement(PageNow.GetbmpORG(), new PointF(0, 0));
-                    AnalyzeSelectNow.Z05_AlignTrainProcess();
-
+                    switch (AnalyzeSelectNow.PADPara.PADMethod)
+                    {
+                        case PADMethodEnum.QLE_CHECK:
+                            AnalyzeSelectNow.Z05_AlignTrainProcess(istrain);
+                            break;
+                        default:
+                            AnalyzeSelectNow.Z05_AlignTrainProcess();
+                            break;
+                    }
                     string str = AnalyzeSelectNow.TrainStatusCollection.AllProcessString;
 
                     SUBUI.SetImage(AnalyzeSelectNow, isreplace);
@@ -1048,6 +1058,19 @@ namespace Allinone.UISpace
                 CHECKFRM.Show();
             }
         }
+        public void CheckNoGlueMeanValue()
+        {
+            if (AnalyzeSelectNow != null)
+            {
+                AnalyzeSelectNow.A02_CreateTrainRequirement(PageNow.GetbmpORG((PageOPTypeEnum)PageNow.PageOPTypeIndex), new PointF(0, 0));
+                Bitmap bmpFourSide = new Bitmap(AnalyzeSelectNow.bmpPATTERN,
+                    new Size(AnalyzeSelectNow.bmpPATTERN.Width >> 3, AnalyzeSelectNow.bmpPATTERN.Height >> 3));
+                m_Histogram.GetHistogram(bmpFourSide, 100);
+                int _mean = m_Histogram.MeanGrade;
+                CHECKFRM = new CheckForm($"平均值：{_mean}");
+                CHECKFRM.Show();
+            }
+        }
 
         public void CheckStilts()
         {
@@ -1584,7 +1607,7 @@ namespace Allinone.UISpace
         }
 
 
-        public void FindSimilarEx(float tolerance)
+        public void FindSimilarEx(float tolerance,float eCompressed=0.5f)
         {
 
             ATREEUI.DismissAnalyzeTable();
@@ -1602,13 +1625,13 @@ namespace Allinone.UISpace
             //AnalyzeSelectNow.B08_RunAndFindSimilar(bmpPageOrg, tolerance, DoffsetList);
 
             m_RectClone = AnalyzeSelectNow.GetMoverRectF(bmpPageOrg);
-            m_RectClone.Inflate(-AnalyzeSelectNow.ExtendX, -AnalyzeSelectNow.ExtendY);
+            //m_RectClone.Inflate(-AnalyzeSelectNow.ExtendX, -AnalyzeSelectNow.ExtendY);
 
 
             OpencvMatchClass opencvMatch = new OpencvMatchClass();
             m_bmpPattern.Dispose();
             m_bmpPattern = bmpPageOrg.Clone(m_RectClone, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            Bitmap bitmap = opencvMatch.Recoganize(bmpPageOrg, m_bmpPattern, DoffsetList, tolerance, 1);
+            Bitmap bitmap = opencvMatch.Recoganize(bmpPageOrg, m_bmpPattern, DoffsetList, tolerance, eCompressed);
             //bitmap.Save("D:\\_tmp\\bmpMatched.png", System.Drawing.Imaging.ImageFormat.Png);
             //AnalyzeSelectNow.IsTempSave = false;
             bitmap.Dispose();
@@ -2860,7 +2883,8 @@ namespace Allinone.UISpace
                         analyze.MEASUREPara.FromString(AnalyzeSelectNow.MEASUREPara.ToString());
                         analyze.AOIPara.FromString(AnalyzeSelectNow.AOIPara.ToString());
                         if (analyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
-                                 || analyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
+                                 || analyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE
+                                 || analyze.OCRPara.OCRMethod == OCRMethodEnum.QRCODE)
                         {
                         }
                         else

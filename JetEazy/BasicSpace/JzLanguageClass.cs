@@ -118,17 +118,21 @@ namespace JetEazy.BasicSpace
 
         public void Initial(string uidbfile, int LanguageIndex, UserControl myControl)
         {
+
+            return;
             if (Initial(uidbfile, LanguageIndex))
                 SetControlLanguage(myControl, LanguageIndex);
         }
         public void Initial(string uidbfile, int LanguageIndex, Form myForm)
         {
+            return;
             if (Initial(uidbfile, LanguageIndex))
                 SetControlLanguage(myForm, LanguageIndex);
         }
 
         public bool Initial(string uidbfile, int LanguageIndex)
         {
+            return true;
             JzToolsClass myJzTools = new JzToolsClass();
 
             if (!File.Exists(uidbfile))
@@ -153,6 +157,7 @@ namespace JetEazy.BasicSpace
 
         public void SetControlLanguage(UserControl myControl,int languageindex)
         {
+            return;
             Tips.RemoveAll();
             Tips.AutoPopDelay = ToolTipAutoDelay;
 
@@ -204,6 +209,7 @@ namespace JetEazy.BasicSpace
         }
         public void SetControlLanguage(Form myForm, int languageindex)
         {
+            return;
             Tips.RemoveAll();
             Tips.AutoPopDelay = ToolTipAutoDelay;
 
@@ -258,6 +264,7 @@ namespace JetEazy.BasicSpace
         
         void CheckLanguage(Control K,int LanguageIndex)
         {
+            return;
             foreach (LanguageItemClass languageitem in LanguageList)
             {
                 if (languageitem.SetLanguage(K, LanguageIndex))
@@ -266,6 +273,7 @@ namespace JetEazy.BasicSpace
         }
         void CheckLanguage(Form K, int LanguageIndex)
         {
+            return;
             foreach (LanguageItemClass languageitem in LanguageList)
             {
                 if(languageitem.Name.Equals("Form"))
@@ -278,6 +286,7 @@ namespace JetEazy.BasicSpace
 
         public string Messages(string MsgName,int languageindex)
         {
+            return "";
             int i = 0;
             string retStr = "";
 
@@ -421,6 +430,10 @@ namespace JetEazy.BasicSpace
             if (!bExist)
             {
                 retStr = eCurrentName;
+                //if (SelectLanguageIndex < LanguageList.Count)
+                //{
+                //    retStr = LanguageList[SelectLanguageIndex];
+                //}
             }
             else
             {
@@ -439,6 +452,60 @@ namespace JetEazy.BasicSpace
 
             return retStr;
         }
+        public bool GetLanguageExist(string eCurrentName)
+        {
+            bExist = false;
+
+            foreach (string str in LanguageList)
+            {
+                if (string.IsNullOrEmpty(str))
+                    continue;
+
+                if (eCurrentName.Trim() == str.Trim())
+                {
+                    bExist = true;
+                    break;
+                }
+            }
+            return bExist;
+        }
+        public string GetLanguageText()
+        {
+            string retStr = "";
+            if (SelectLanguageIndex < LanguageList.Count)
+            {
+                if (IsShowCode)
+                    retStr = Name;
+                else
+                    retStr = LanguageList[SelectLanguageIndex];
+            }
+            else
+            {
+                retStr = Name;
+            }
+
+            return retStr;
+        }
+        public string GetLanguageIDName(string eName)
+        {
+            if (eName != Name)
+                return eName;
+
+            string retStr = "";
+            if (SelectLanguageIndex < LanguageList.Count)
+            {
+                if (IsShowCode)
+                    retStr = Name;
+                else
+                    retStr = LanguageList[SelectLanguageIndex];
+            }
+            else
+            {
+                retStr = Name;
+            }
+
+            return retStr;
+        }
     }
 
     public class LanguageExClass
@@ -453,6 +520,14 @@ namespace JetEazy.BasicSpace
         }
 
         public List<LanguageExItemClass> ControlLanguageList = new List<LanguageExItemClass>();
+        public List<string> LanguageList = new List<string>();
+
+        private bool m_FirstCsv = false;
+        public bool FirstCsv
+        {
+            get { return m_FirstCsv; }
+            set { m_FirstCsv = value; }
+        }
 
         /// <summary>
         /// 选择哪一种语言
@@ -474,10 +549,22 @@ namespace JetEazy.BasicSpace
 
             StreamReader sr = new StreamReader(_filename, Encoding.UTF8);
             string strReadLine = sr.ReadLine();
+            //读第一行收集语言
+            string[] strs = strReadLine.Split(',');
+            if (strs.Length > 3)
+            {
+                int i = 3;
+                while (i < strs.Length - 1)
+                {
+                    LanguageList.Add(strs[i]);
+                    i++;
+                }
+            }
+
             while (!sr.EndOfStream)
             {
                 strReadLine = sr.ReadLine();
-                string[] strs = strReadLine.Split(',');
+                strs = strReadLine.Split(',');
 
                 LanguageExItemClass _item = new LanguageExItemClass();
 
@@ -499,9 +586,8 @@ namespace JetEazy.BasicSpace
                             {
                                 _item.LanguageList.Add(strs[i]);
                             }
-
-                            i++;
                         }
+                        i++;
                     }
 
                     ControlLanguageList.Add(_item);
@@ -515,40 +601,85 @@ namespace JetEazy.BasicSpace
             return iret;
         }
 
-        public void EnumControls(Control eContainer)
+        public void EnumControls(Control eContainer, bool fromCsv = true)
         {
-            EnumControl(eContainer);
+            if (eContainer is NumericUpDown)
+                return;
+            if (eContainer is ComboBox)
+                return;
+            if (eContainer is TextBox)
+                return;
+            EnumControl(eContainer, fromCsv);
             foreach (Control c in eContainer.Controls)
             {
-                EnumControl(eContainer);
-                EnumControls(c);//递归的方法
+                EnumControl(eContainer, fromCsv);
+                EnumControls(c, fromCsv);//递归的方法
             }
         }
         int m_LanguageIndex = 0;
-        private void EnumControl(Control eContainer)
+        private void EnumControl(Control eContainer, bool fromCsv = true)
         {
-            //第一次生成文件用
-            //if (!eContainer.Visible)
-            //    return;
-            //第一次生成文件用
-            //if (eContainer is NumericUpDown)
-            //    return;
+            //if (m_FirstCsv)
+            {
+                //if (!eContainer.Visible)
+                //    return;
+                if (eContainer is NumericUpDown)
+                    return;
+                if (eContainer is ComboBox)
+                    return;
+                if (eContainer is TextBox)
+                    return;
+                //if(eContainer is CheckBox)
+                //{
+
+                //}
+            }
+
             if (!string.IsNullOrEmpty(eContainer.Text))
             {
-
-                foreach (LanguageExItemClass myItem in ControlLanguageList)
+                if (fromCsv)
                 {
-                    myItem.SelectLanguageIndex = m_languageIndex;
-                    eContainer.Text = myItem.GetLanguageText(eContainer.Text);
+
+                    foreach (LanguageExItemClass myItem in ControlLanguageList)
+                    {
+                        myItem.SelectLanguageIndex = m_languageIndex;
+                        bool bok = myItem.GetLanguageExist(eContainer.Text);
+                        if (bok)
+                            eContainer.Text = myItem.GetLanguageText();
+                        //eContainer.Text = myItem.GetLanguageText(eContainer.Text);
+                    }
+
+                    if (m_FirstCsv)
+                    {
+                        //第一次生成文件用
+                        if (!string.IsNullOrEmpty(eContainer.Text))
+                        {
+                            if (eContainer.Text[0] != 'A')
+                            {
+                                string _OrgText = eContainer.Text;
+                                eContainer.Text = "A" + m_LanguageIndex.ToString() + "," + _OrgText;
+                                m_LanguageIndex++;
+                                JetEazy.BasicSpace.LogClass.Instance.Log(eContainer.Text + "," + eContainer.Name, ".csv");
+                            }
+                        }
+                    }
+                    ////第一次生成文件用
+                    //if (eContainer.Text[0] != 'A')
+                    //{
+                    //    string _OrgText = eContainer.Text;
+                    //    eContainer.Text = "A" + m_LanguageIndex.ToString() + "," + _OrgText;
+                    //    m_LanguageIndex++;
+                    //    JetEazy.BasicSpace.LogClass.Instance.Log(eContainer.Text, ".csv");
+                    //}
                 }
-                ////第一次生成文件用
-                //if (eContainer.Text[0] != 'A')
-                //{
-                //    string _OrgText = eContainer.Text;
-                //    eContainer.Text = "A" + m_LanguageIndex.ToString() + "," + _OrgText;
-                //    m_LanguageIndex++;
-                //    JetEazy.BasicSpace.LogClass.Instance.Log(eContainer.Text, ".csv");
-                //}
+                else
+                {
+                    //繁体
+
+                    eContainer.Text = ToTraditionalChinese(eContainer.Text);
+                }
+
+
             }
         }
 
@@ -567,6 +698,47 @@ namespace JetEazy.BasicSpace
             }
             return ret;
         }
+        public string GetLanguageIDName(string eInputText)
+        {
+            string ret = eInputText;
+            if (!string.IsNullOrEmpty(eInputText))
+            {
+                foreach (LanguageExItemClass myItem in ControlLanguageList)
+                {
+                    myItem.SelectLanguageIndex = m_languageIndex;
+                    ret = myItem.GetLanguageIDName(eInputText);
+                    if (ret != eInputText)
+                        break;
+                }
+            }
+            return ret;
+        }
+
+        /// <summary>
+        /// 字符串简体转繁体
+        /// </summary>
+        /// <param name="strSimple"></param>
+        /// <returns></returns>
+        public string ToTraditionalChinese(string strSimple)
+        {
+
+            return GetLanguageText(strSimple.Trim());
+            ////string strTraditional = Microsoft.VisualBasic.Strings.StrConv(strSimple, Microsoft.VisualBasic.VbStrConv.TraditionalChinese, 0);
+            ////return strTraditional;
+
+            //return JzLangKernel32.ToTraditional(strSimple);
+        }
+
+        ///// <summary>
+        ///// 字符串繁体转简体
+        ///// </summary>
+        ///// <param name="strTraditional"></param>
+        ///// <returns></returns>
+        //public string ToSimplifiedChinese(string strTraditional)
+        //{
+        //    string strSimple = Microsoft.VisualBasic.Strings.StrConv(strTraditional, VbStrConv.SimplifiedChinese, 0);
+        //    return strSimple;
+        //}
 
     }
 

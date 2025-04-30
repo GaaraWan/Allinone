@@ -5895,6 +5895,283 @@ namespace JetEazy.BasicSpace
 
 
         }
+
+        /// <summary>
+        /// 找点先找黑再找白 ；IsXdir  水平true 垂直false ；IsReverse true左到右,上到下  false右到左,下到上
+        /// </summary>
+        /// <param name="bmp"></param>
+        /// <param name="IsXdir">水平true 垂直false</param>
+        /// <param name="IsReverse">true左到右,上到下  false右到左,下到上</param>
+        /// <returns></returns>
+        public PointF GetBoraderPointBW(Bitmap bmp, bool IsXdir, bool IsReverse)
+        {
+            Rectangle rectbmp = SimpleRect(bmp.Size);
+            BitmapData bmpData = bmp.LockBits(rectbmp, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+            IntPtr Scan0 = bmpData.Scan0;
+
+            try
+            {
+                unsafe
+                {
+                    byte* scan0 = (byte*)(void*)Scan0;
+                    byte* pucPtr;
+                    byte* pucStart;
+                    byte* pucMin;
+
+                    int xmin = rectbmp.X;
+                    int ymin = rectbmp.Y;
+                    int xmax = xmin + rectbmp.Width;
+                    int ymax = ymin + rectbmp.Height;
+
+                    int x = xmin;
+                    int y = ymin;
+                    int iStride = bmpData.Stride;
+
+                    PointF ptf = new PointF();
+
+                    float Avaerage = 0;
+
+                    bool IsStage2 = false;
+                    int recordblackIndex = 0;
+
+                    if (IsXdir)
+                    {
+                        if (!IsReverse)
+                        {
+                            #region Check From Left White
+
+                            while (y < ymax)
+                            {
+                                x = xmin;
+
+                                pucStart = scan0 + ((x - xmin) << 2) + (iStride * (y - ymin));
+                                pucPtr = pucStart;
+                                pucMin = pucPtr;
+
+                                IsStage2 = false;
+
+                                while (x < xmax)
+                                {
+                                    if (pucPtr[0] == 0 && !IsStage2)
+                                    {
+                                        //pucPtr[0] = 0;
+                                        //pucPtr[1] = 0;
+                                        //pucPtr[2] = 255;
+                                        IsStage2 = true;
+                                    }
+                                    else if (pucPtr[0] == 255 && IsStage2)
+                                    {
+                                        pucPtr[0] = 0;
+                                        pucPtr[1] = 0;
+                                        pucPtr[2] = 255;
+
+                                        recordblackIndex = x;
+                                        break;
+                                    }
+
+
+                                    pucPtr += 4;
+                                    x++;
+                                }
+
+                                x--;
+                                Avaerage += recordblackIndex;
+
+                                pucStart += iStride;
+                                y++;
+                            }
+
+                            Avaerage = Avaerage / (float)ymax;
+
+                            ptf.X = Avaerage;
+                            ptf.Y = (ymax - ymin) >> 2;
+
+                            #endregion
+                        }
+                        else
+                        {
+                            #region Check From Right White
+
+                            while (y < ymax)
+                            {
+                                x = xmax - 1;
+
+                                pucStart = scan0 + ((x - xmin) << 2) + (iStride * (y - ymin));
+                                pucPtr = pucStart;
+                                pucMin = pucPtr;
+
+                                IsStage2 = false;
+
+                                while (x > -1)
+                                {
+
+                                    if (pucPtr[0] == 0 && !IsStage2)
+                                    {
+                                        //pucPtr[0] = 0;
+                                        //pucPtr[1] = 0;
+                                        //pucPtr[2] = 255;
+                                        IsStage2 = true;
+                                    }
+                                    else if (pucPtr[0] == 255 && IsStage2)
+                                    {
+                                        pucPtr[0] = 0;
+                                        pucPtr[1] = 0;
+                                        pucPtr[2] = 255;
+                                        //找到黑色记录位置
+                                        recordblackIndex = x;
+                                        break;
+                                    }
+
+                                    pucPtr -= 4;
+                                    x--;
+                                }
+
+                                x++;
+                                Avaerage += recordblackIndex;
+
+                                pucStart += iStride;
+                                y++;
+                            }
+
+                            Avaerage = Avaerage / (float)ymax;
+
+                            ptf.X = Avaerage;
+                            ptf.Y = (ymax - ymin) >> 2;
+
+                            #endregion
+                        }
+                    }
+                    else
+                    {
+                        if (!IsReverse)
+                        {
+                            #region Check From Top White
+
+                            while (x < xmax)
+                            {
+                                y = ymin;
+
+                                pucStart = scan0 + ((x - xmin) << 2) + (iStride * (y - ymin));
+
+                                pucPtr = pucStart;
+                                pucMin = pucPtr;
+
+                                IsStage2 = false;
+
+                                while (y < ymax)
+                                {
+                                    if (pucPtr[0] == 0 && !IsStage2)
+                                    {
+                                        //先找到黑色
+                                        //pucPtr[0] = 0;
+                                        //pucPtr[1] = 0;
+                                        //pucPtr[2] = 255;
+                                        IsStage2 = true;
+                                    }
+                                    else if (pucPtr[0] == 255 && IsStage2)
+                                    {
+                                        pucPtr[0] = 0;
+                                        pucPtr[1] = 0;
+                                        pucPtr[2] = 255;
+                                        
+                                        recordblackIndex = y;
+                                        break;
+                                    }
+
+
+                                    pucPtr += iStride;
+                                    y++;
+                                }
+
+                                y--;
+                                Avaerage += recordblackIndex;
+
+                                pucStart += 4;
+                                x++;
+                            }
+
+                            Avaerage = Avaerage / (float)xmax;
+
+                            ptf.X = (xmax - xmin) >> 2;
+                            ptf.Y = Avaerage;
+
+                            #endregion
+                        }
+                        else
+                        {
+                            #region Check From Bottom White
+
+                            while (x < xmax)
+                            {
+                                y = ymax - 1;
+
+                                pucStart = scan0 + ((x - xmin) << 2) + (iStride * (y - ymin));
+
+                                pucPtr = pucStart;
+                                pucMin = pucPtr;
+
+                                IsStage2 = false;
+
+                                while (y > -1)
+                                {
+                                    if (pucPtr[0] == 0 && !IsStage2)
+                                    {
+                                        //pucPtr[0] = 0;
+                                        //pucPtr[1] = 0;
+                                        //pucPtr[2] = 255;
+                                        IsStage2 = true;
+                                    }
+                                    else if (pucPtr[0] == 255 && IsStage2)
+                                    {
+                                        pucPtr[0] = 0;
+                                        pucPtr[1] = 0;
+                                        pucPtr[2] = 255;
+
+                                        recordblackIndex = y;
+                                        break;
+                                    }
+
+
+                                    pucPtr -= iStride;
+                                    y--;
+                                }
+
+                                y++;
+                                Avaerage += recordblackIndex;
+
+                                pucStart += 4;
+                                x++;
+                            }
+
+                            Avaerage = Avaerage / (float)xmax;
+
+                            ptf.X = (xmax - xmin) >> 2;
+                            ptf.Y = Avaerage;
+
+                            #endregion
+                        }
+                    }
+
+                    return ptf;
+                }
+            }
+            catch (Exception e)
+            {
+                //bmp.UnlockBits(bmpData);
+
+                if (IsDebug)
+                    MessageBox.Show("Error :" + e.ToString());
+
+                return new PointF();
+            }
+            finally
+            {
+                bmp.UnlockBits(bmpData);
+            }
+
+
+        }
+
         public Rectangle DrawCircleMask(Bitmap bmp, Rectangle rect, int reduceratio, Color color,bool IsArround)
         {
             Point Pt = GetRectCenter(rect);
@@ -7116,6 +7393,7 @@ namespace JetEazy.BasicSpace
                 found.rotatedRectangleF = JetBlobFeature.ComputeMinRectangle(jetBlob, i);
                 FoundList.Add(found);
             }
+            
         }
         #endregion
 

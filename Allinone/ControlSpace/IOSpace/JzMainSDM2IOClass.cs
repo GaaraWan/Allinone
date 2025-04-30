@@ -12,7 +12,7 @@ namespace Allinone.ControlSpace.IOSpace
 {
     public enum MainSDM2AddressEnum : int
     {
-        COUNT = 19,
+        COUNT = 21,
 
         ADR_ISSTART = 0,
         ADR_ISEMC = 1,
@@ -45,11 +45,14 @@ namespace Allinone.ControlSpace.IOSpace
         ADR_GETIMAGERESET = 13,
         ADR_ISRESET = 14,
 
-        ADR_CLEAR_ALARM=15,
-        ADR_ABS=16,
+        ADR_CLEAR_ALARM = 15,
+        ADR_ABS = 16,
 
-        ADR_ISUSERSTART=17,
-        ADR_ISUSERSTOP=18,
+        ADR_ISUSERSTART = 17,
+        ADR_ISUSERSTOP = 18,
+
+        ADR_ISSENSOR1 = 19,
+        ADR_ISSENSOR2 = 20,
 
     }
     public class JzMainSDM2IOClass : GeoIOClass
@@ -77,6 +80,10 @@ namespace Allinone.ControlSpace.IOSpace
             ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISRESET] = new FATEKAddressClass(ReadINIValue("Status Address", MainSDM2AddressEnum.ADR_ISRESET.ToString(), "", INIFILE));
             ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISUSERSTART] = new FATEKAddressClass(ReadINIValue("Status Address", MainSDM2AddressEnum.ADR_ISUSERSTART.ToString(), "", INIFILE));
             ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISUSERSTOP] = new FATEKAddressClass(ReadINIValue("Status Address", MainSDM2AddressEnum.ADR_ISUSERSTOP.ToString(), "", INIFILE));
+            ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISSENSOR1] = new FATEKAddressClass(ReadINIValue("Status Address", MainSDM2AddressEnum.ADR_ISSENSOR1.ToString(), "", INIFILE));
+
+            ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISSENSOR2] = new FATEKAddressClass(ReadINIValue("Status Address", MainSDM2AddressEnum.ADR_ISSENSOR2.ToString(), "", INIFILE));
+
 
 
             ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISGETIMAGE] = new FATEKAddressClass(ReadINIValue("Status Address", MainSDM2AddressEnum.ADR_ISGETIMAGE.ToString(), "", INIFILE));
@@ -216,6 +223,50 @@ namespace Allinone.ControlSpace.IOSpace
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
         }
+
+        public bool IsSensor1
+        {
+            get
+            {
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISSENSOR1];
+
+                switch (robotType1)
+                {
+                    case RobotType.HCFA:
+                        if (string.IsNullOrEmpty(address.Address0))
+                            return false;
+                        return robotHCFA.GetDI(int.Parse(address.Address0));
+                        break;
+                }
+
+                //if (Ready)
+                //    return PLC[address.SiteNo].IOData.GetBit(address.Address1);
+
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+        }
+        public bool IsSensor2
+        {
+            get
+            {
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISSENSOR2];
+
+                switch (robotType1)
+                {
+                    case RobotType.HCFA:
+                        if (string.IsNullOrEmpty(address.Address0))
+                            return false;
+                        return robotHCFA.GetDI(int.Parse(address.Address0));
+                        break;
+                }
+
+                //if (Ready)
+                //    return PLC[address.SiteNo].IOData.GetBit(address.Address1);
+
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+        }
+
         public bool IsEMC
         {
             get
@@ -287,18 +338,36 @@ namespace Allinone.ControlSpace.IOSpace
             get
             {
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_COAXIALLIGHT];
-                if (string.IsNullOrEmpty(address.Address0))
-                    return false;
+
+                switch (robotType1)
+                {
+                    case RobotType.HCFA:
+                        if (string.IsNullOrEmpty(address.Address0))
+                            return false;
+                        return robotHCFA.GetDO(int.Parse(address.Address0));
+                        break;
+                }
+
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
             {
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_COAXIALLIGHT];
-                if (string.IsNullOrEmpty(address.Address0))
-                    return;
+
+                switch (robotType1)
+                {
+                    case RobotType.HCFA:
+                        if (string.IsNullOrEmpty(address.Address0))
+                            return;
+                        robotHCFA.SetDO(int.Parse(address.Address0), value);
+                        return;
+                        break;
+                }
+
                 PLC[address.SiteNo].SetIO(value, address.Address0);
             }
         }
+       
         public bool ClearAlarm
         {
             get

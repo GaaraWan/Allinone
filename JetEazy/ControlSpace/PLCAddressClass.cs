@@ -116,7 +116,7 @@ namespace JetEazy.ControlSpace
 
         string CovertToNormalAddressHC_Q1_1300D(string str)
         {
-            string ret = "";
+            string ret = str;
             long addressvalue = 0;// long.Parse(str.Substring(2));
 
             switch (str.Substring(0, 2))

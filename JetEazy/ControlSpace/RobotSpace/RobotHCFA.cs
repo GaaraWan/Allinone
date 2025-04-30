@@ -126,7 +126,7 @@ namespace JetEazy.ControlSpace.RobotSpace
                 }
             }
         }
-        public void MoveTo(double x, double y, double z)
+        public void MoveTo(double x, double y, double z, double c = 0)
         {
             if (handle == IntPtr.Zero)
                 return;
@@ -139,7 +139,7 @@ namespace JetEazy.ControlSpace.RobotSpace
             target.rob.pos[2] = (double)z / 1000;
             target.rob.rot[0] = 0;
             target.rob.rot[1] = 0;
-            target.rob.rot[2] = 0;// (double)this.inputA.Value * Math.PI / 180;
+            target.rob.rot[2] = (double)c * Math.PI / 180;
             target.ext.datas[0] = 0;
             target.ext.datas[1] = 0;
             target.ext.datas[2] = 0;

@@ -59,6 +59,7 @@ using System.Threading.Tasks;
 
 using JetEazy.BasicSpace;
 using System.Diagnostics;
+//using Google.Protobuf.WellKnownTypes;
 
 namespace JetEazy.ControlSpace
 {
@@ -3185,6 +3186,17 @@ namespace JetEazy.ControlSpace
                 }
             }
         }
+        public void SetGain(float exposevalue, int relateindex, bool isindexADD = false)
+        {
+            int biasbvalue = 0;
+            foreach (CCDClass ccd in CCDList)
+            {
+                if (ccd.SetGain(exposevalue, relateindex + biasbvalue))
+                {
+                    break;
+                }
+            }
+        }
         public void SetExposure(string exposurestr, int relateindex)
         {
             int i = 0;
@@ -3290,6 +3302,54 @@ namespace JetEazy.ControlSpace
                 }
 
                 i++;
+            }
+        }
+        public void SetExposureToSetOCR(float exposevalue, int relateindex, bool isindexADD = false)
+        {
+
+            int biasbvalue = 0;
+
+            switch (VERSION)
+            {
+                case VersionEnum.ALLINONE:
+                    switch (OPTION)
+                    {
+                        case OptionEnum.R32:
+                            biasbvalue = 9;
+                            break;
+                        case OptionEnum.R26:
+                        case OptionEnum.R15:
+                        case OptionEnum.R9:
+                            biasbvalue = 5;
+                            //if (ISR9FOR7CCD)
+                            //    biasbvalue = 3;
+                            break;
+                        case OptionEnum.R5:
+                            biasbvalue = 1;
+                            //if (R5RUNCount == 5)
+                            //    biasbvalue = 3;
+                            break;
+                        case OptionEnum.R1:
+                            //case OptionEnum.J4:
+                            //case OptionEnum.R532:
+                            //    biasbvalue = 0;
+                            break;
+                        case OptionEnum.R3:
+                        case OptionEnum.C3:
+                            biasbvalue = 0;
+                            break;
+                    }
+                    break;
+            }
+
+            if (!isindexADD || relateindex == 0)
+                biasbvalue = 0;
+            foreach (CCDClass ccd in CCDList)
+            {
+                if (ccd.SetExposure(exposevalue, relateindex + biasbvalue))
+                {
+                    break;
+                }
             }
         }
 
@@ -3774,6 +3834,10 @@ namespace JetEazy.ControlSpace
         public static string WORKPATH = "";
         public static string ENVPATH = "";
         public static string PAGEOPTYPE = "";
+
+        int iw = 5480;
+        int ih = 3648;
+        Bitmap bmpnewtemp;
 
         public CCDTYPEEnum CCDType = CCDTYPEEnum.FILE;
         public int[] CCDRelateIndexArray;
@@ -4392,7 +4456,7 @@ namespace JetEazy.ControlSpace
                     switch (CCDType)
                     {
                         case CCDTYPEEnum.TIS:
-                            TIS_SetGainAbs(TISCAM[i], 0);
+                            //TIS_SetGainAbs(TISCAM[i], 0);
                             TISCAM[i].DeviceFrameRate = 15;
                             break;
                         case CCDTYPEEnum.TISUSB:
@@ -6408,8 +6472,8 @@ namespace JetEazy.ControlSpace
                             //Bitmap tis
 
                             //3648x2432
-                            int iw = 3648;
-                            int ih = 2432;
+                            iw = 3648;
+                            ih = 2432;
                             iw = SizeDefArray[relateindex].OrgSize.Width;
                             ih = SizeDefArray[relateindex].OrgSize.Height;
                             try
@@ -6425,7 +6489,7 @@ namespace JetEazy.ControlSpace
 
                             }
 
-                            Bitmap bmpnewtemp = new Bitmap(iw, ih);
+                            bmpnewtemp = new Bitmap(iw, ih);
                             RenderBMPSizeChange(TISImageBuffer[index].Bitmap, bmpnewtemp);
                             bmplist[relateindex] = bmpnewtemp;// new Bitmap(bmpnewtemp);
 
@@ -6458,9 +6522,32 @@ namespace JetEazy.ControlSpace
 #if DVP2
                     case CCDTYPEEnum.DVP2:
 
-                        bmp = dvp2GetImageNow(index);
-                        //bmp.Save("D:\\test.bmp");
-                        bmplist[relateindex] = bmp;
+                        //5480x3648
+                        iw = 5480;
+                        ih = 3648;
+                        iw = SizeDefArray[relateindex].OrgSize.Width;
+                        ih = SizeDefArray[relateindex].OrgSize.Height;
+                        try
+                        {
+                            if (bmplist[relateindex] != null)
+                            {
+                                iw = bmplist[relateindex].Width;
+                                ih = bmplist[relateindex].Height;
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+
+                        bmpnewtemp = new Bitmap(iw, ih);
+                        RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
+                        bmplist[relateindex] = bmpnewtemp;
+
+
+                        //bmp = dvp2GetImageNow(index);
+                        ////bmp.Save("D:\\test.bmp");
+                        //bmplist[relateindex] = bmp;
                         break;
 #endif
                 }
@@ -6485,8 +6572,12 @@ namespace JetEazy.ControlSpace
                         //bmp = bmplist[relateindex];
                         string bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + relateindex.ToString("000") + Universal.GlobalImageTypeString;
 
+                        bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + (relateindex + basecount).ToString("000") + ".bmp";
                         if (!File.Exists(bmpstring))
-                            bmpstring = SystemWORKPATH + "\\" + relateindex.ToString("000") + Universal.GlobalImageTypeString;
+                            bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + ".bmp";
+
+                        //if (!File.Exists(bmpstring))
+                        //    bmpstring = SystemWORKPATH + "\\" + relateindex.ToString("000") + Universal.GlobalImageTypeString;
                         //bmplist.RemoveAt(relateindex);
                         //bmp.Dispose();
 
@@ -6496,19 +6587,30 @@ namespace JetEazy.ControlSpace
 
                                 switch (OPTION)
                                 {
+                                    case OptionEnum.MAIN_X6:
+                                    case OptionEnum.MAIN_SDM5:
                                     case OptionEnum.MAIN_SDM3:
                                     case OptionEnum.MAIN_SDM2:
                                     case OptionEnum.MAIN_SDM1:
 
-                                       
-                                        bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + (relateindex + basecount).ToString("000") + ".jpg";
                                         if (!File.Exists(bmpstring))
-                                            bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + Universal.GlobalImageTypeString;
+                                            bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + (relateindex + basecount).ToString("000") + ".jpg";
+                                        //if (!File.Exists(bmpstring))
+                                        //    bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + Universal.GlobalImageTypeString;
 
                                         if (!File.Exists(bmpstring))
                                             bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" + PAGEOPTYPE + "-" : "") + (relateindex + basecount).ToString("000") + Universal.GlobalImageTypeString;
+                                        //if (!File.Exists(bmpstring))
+                                        //    bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + ".jpg";
                                         if (!File.Exists(bmpstring))
-                                            bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + ".jpg";
+                                            bmpstring = SystemWORKPATH + "\\" + (relateindex + basecount).ToString("000") + Universal.GlobalImageTypeString;
+                                        if (relateindex == -1)
+                                        {
+                                            bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" : "") + "Barcode.bmp";
+
+                                            if (!File.Exists(bmpstring))
+                                                bmpstring = WORKPATH + "\\" + (ENVPATH != "" ? ENVPATH + "\\" : "") + "Barcode.jpg";
+                                        }
 
                                         break;
                                 }
@@ -6524,7 +6626,21 @@ namespace JetEazy.ControlSpace
 
                         if (relateindex >= bmplist.Count)
                             relateindex = 0;
-                        RenderBMP(bmp, bmplist[relateindex]);
+
+                        if (relateindex == -1)
+                        {
+                            switch (OPTION)
+                            {
+                                case OptionEnum.MAIN_SDM5:
+                                    RenderBMP(bmp, bmplist[0]);
+                                    break;
+                                default:
+                                    RenderBMP(bmp, bmplist[0]);
+                                    break;
+                            }
+                        }
+                        else
+                            RenderBMP(bmp, bmplist[relateindex]);
 
                         //bmplist.Insert(relateindex, bmp);
 
@@ -6662,9 +6778,32 @@ namespace JetEazy.ControlSpace
 #endif
 #if DVP2
                     case CCDTYPEEnum.DVP2:
-                        bmp = dvp2GetImageNow(index);
-                        //bmp.Save("D:\\test.png");
-                        bmplist[relateindex] = bmp;
+
+                        //5480x3648
+                        iw = 5480;
+                        ih = 3648;
+                        iw = SizeDefArray[relateindex].OrgSize.Width;
+                        ih = SizeDefArray[relateindex].OrgSize.Height;
+                        try
+                        {
+                            if (bmplist[relateindex] != null)
+                            {
+                                iw = bmplist[relateindex].Width;
+                                ih = bmplist[relateindex].Height;
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+
+                        bmpnewtemp = new Bitmap(iw, ih);
+                        RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
+                        bmplist[relateindex] = bmpnewtemp;
+
+                        //bmp = dvp2GetImageNow(index);
+                        ////bmp.Save("D:\\test.png");
+                        //bmplist[relateindex] = bmp;
                         break;
 #endif
                 }
@@ -6831,8 +6970,31 @@ namespace JetEazy.ControlSpace
 #if DVP2
                     case CCDTYPEEnum.DVP2:
 
-                        bmp = bmplist[relateindex];
-                        bmp = dvp2GetImageNow(index);
+                        //5480x3648
+                        iw = 5480;
+                        ih = 3648;
+                        iw = SizeDefArray[relateindex].OrgSize.Width;
+                        ih = SizeDefArray[relateindex].OrgSize.Height;
+                        try
+                        {
+                            if (bmplist[relateindex] != null)
+                            {
+                                iw = bmplist[relateindex].Width;
+                                ih = bmplist[relateindex].Height;
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+
+                        bmpnewtemp = new Bitmap(iw, ih);
+                        RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
+                        bmplist[relateindex] = bmpnewtemp;
+
+
+                        //bmp = bmplist[relateindex];
+                        //bmp = dvp2GetImageNow(index);
                         break;
 #endif
                 }
@@ -6913,9 +7075,32 @@ namespace JetEazy.ControlSpace
 #if DVP2
                     case CCDTYPEEnum.DVP2:
 
+                        //5480x3648
+                        iw = 5480;
+                        ih = 3648;
+                        iw = SizeDefArray[relateindex].OrgSize.Width;
+                        ih = SizeDefArray[relateindex].OrgSize.Height;
+                        try
+                        {
+                            if (bmpR32Captured[relateindex] != null)
+                            {
+                                iw = bmpR32Captured[relateindex].Width;
+                                ih = bmpR32Captured[relateindex].Height;
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+
+                        bmpnewtemp = new Bitmap(iw, ih);
+                        RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
+                        bmpR32Captured[relateindex] = bmpnewtemp;
+
+
                         //bmp = dvp2GetImageNow(index);
                         //     bmp.Save("D:\\test.png");
-                        bmpR32Captured[relateindex] = dvp2GetImageNow(index);
+                        //bmpR32Captured[relateindex] = dvp2GetImageNow(index);
                         break;
 #endif
                 }
@@ -6987,9 +7172,32 @@ namespace JetEazy.ControlSpace
 #if DVP2
                     case CCDTYPEEnum.DVP2:
 
-                        bmp = dvp2GetImageNow(index);
-                        //     bmp.Save("D:\\test.png");
-                        bmpR32Captured[relateindex] = bmp;
+                        //5480x3648
+                        iw = 5480;
+                        ih = 3648;
+                        iw = SizeDefArray[relateindex].OrgSize.Width;
+                        ih = SizeDefArray[relateindex].OrgSize.Height;
+                        try
+                        {
+                            if (bmpR32Captured[relateindex] != null)
+                            {
+                                iw = bmpR32Captured[relateindex].Width;
+                                ih = bmpR32Captured[relateindex].Height;
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+
+                        bmpnewtemp = new Bitmap(iw, ih);
+                        RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
+                        bmpR32Captured[relateindex] = bmpnewtemp;
+
+
+                        //bmp = dvp2GetImageNow(index);
+                        ////     bmp.Save("D:\\test.png");
+                        //bmpR32Captured[relateindex] = bmp;
                         break;
 #endif
 
@@ -7095,7 +7303,7 @@ namespace JetEazy.ControlSpace
         }
 
         //   public static string Exposure = "";
-
+       
         public bool SetExposure(float expvalue, int relateindex)
         {
             int index = Array.IndexOf(CCDRelateIndexArray, relateindex);
@@ -7146,8 +7354,18 @@ namespace JetEazy.ControlSpace
 #if DVP2
                     case CCDTYPEEnum.DVP2:
 
-                        float value = ((expvalue / 100f) * (float)ExposureBaseArray[index]);
-                        dvp2SetExpo(index, value);
+                        switch (OPTION)
+                        {
+                            case OptionEnum.MAIN_SDM2:
+                                dvp2SetExpo(index, expvalue * 1000);
+                                break;
+                            default:
+                                float value = ((expvalue / 100f) * (float)ExposureBaseArray[index]);
+                                dvp2SetExpo(index, value);
+                                break;
+                        }
+
+                       
                         break;
 #endif
 
@@ -7174,6 +7392,29 @@ namespace JetEazy.ControlSpace
         //    }
         //    return index > -1;
         //}
+        public bool SetGain(float gainvalue, int relateindex)
+        {
+            int index = Array.IndexOf(CCDRelateIndexArray, relateindex);
+            if (index > -1)
+            {
+                switch (CCDType)
+                {
+#if DVP2
+                    case CCDTYPEEnum.DVP2:
+                        switch (OPTION)
+                        {
+                            case OptionEnum.MAIN_SDM2:
+                                dvp2SetGain(index, gainvalue);
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+#endif
+                }
+            }
+            return index > -1;
+        }
         public void Close()
         {
             switch (CCDType)

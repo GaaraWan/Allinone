@@ -49,7 +49,8 @@ namespace Allinone.OPSpace
 
         #region Basic Data
         public int No = 0;
-        public int Exposure = 200;
+        public float Exposure = 200;
+        public float CamGain = 1.1f;
 
         public int CamIndex = 0;
 
@@ -168,21 +169,25 @@ namespace Allinone.OPSpace
         public void SetbmpRUN(PageOPTypeEnum pageoptype, Bitmap bmp)
         {
             bmpRUN[(int)pageoptype].Dispose();
-            bmpRUN[(int)pageoptype] = new Bitmap(bmp);
-            //switch (OPTION)
-            //{
-            //    case OptionEnum.MAIN_X6:
-            //        switch(CAMACT)
-            //        {
-            //            case CameraActionMode.CAM_MOTOR_LINESCAN:
-            //                bmpRUN[(int)pageoptype] = (Bitmap)bmp.Clone();
-            //                break;
-            //        }
-            //        break;
-            //    default:
-            //        bmpRUN[(int)pageoptype] = new Bitmap(bmp);
-            //        break;
-            //}
+            //bmpRUN[(int)pageoptype] = new Bitmap(bmp);
+            switch (OPTION)
+            {
+                case OptionEnum.MAIN_SDM5:
+                case OptionEnum.MAIN_X6:
+                    switch (CAMACT)
+                    {
+                        case CameraActionMode.CAM_MOTOR_LINESCAN:
+                            bmpRUN[(int)pageoptype] = (Bitmap)bmp.Clone();
+                            break;
+                        default:
+                            bmpRUN[(int)pageoptype] = new Bitmap(bmp);
+                            break;
+                    }
+                    break;
+                default:
+                    bmpRUN[(int)pageoptype] = new Bitmap(bmp);
+                    break;
+            }
 
             //bmpRUN[(int)pageoptype] = new Bitmap(bmp);
             //bmpRUN[(int)pageoptype] = (Bitmap)bmp.Clone();
@@ -207,7 +212,7 @@ namespace Allinone.OPSpace
 
             Exposure = 10;
             AliasName = "PAGE-" + No.ToString("00");
-
+            CamGain = 1;
             CamIndex = No;
             RelateToRcpNo = -1;
 
@@ -229,7 +234,7 @@ namespace Allinone.OPSpace
 
             Exposure = 10;
             AliasName = "PAGE-" + No.ToString("00");
-
+            CamGain = 1;
             CamIndex = 0;
             RelateToRcpNo = -1;
 
@@ -506,7 +511,7 @@ namespace Allinone.OPSpace
             string[] strs = str.Split(Universal.SeperateCharA);
 
             No = int.Parse(strs[0]);
-            Exposure = int.Parse(strs[1]);
+            Exposure = float.Parse(strs[1]);
             AliasName = strs[2];
             RelateToRcpNo = int.Parse(strs[3]);
 
@@ -532,6 +537,11 @@ namespace Allinone.OPSpace
             {
                 Mark1Para = strs[9];
             }
+            if (strs.Length > 10)
+            {
+                //CamGain = float.Parse(strs[10]);
+                float.TryParse(strs[10], out CamGain);
+            }
         }
         public override string ToString()
         {
@@ -547,6 +557,7 @@ namespace Allinone.OPSpace
             retstr += sPagePostion + Universal.SeperateCharA;
             retstr += sPagePostionPara + Universal.SeperateCharA;
             retstr += Mark1Para + Universal.SeperateCharA;
+            retstr += CamGain.ToString() + Universal.SeperateCharA;
             retstr += "";
 
             PagePostionList = sPagePostion.Split(';').ToList();
@@ -1209,8 +1220,8 @@ namespace Allinone.OPSpace
 
 
                         bool bOK = analyze.ALIGNPara.CheckAbsOffset(ptfORG, ptfRUN, analyze.myOPRectF);
-
-                        analyze.IsVeryGood = !bOK;
+                        if (analyze.IsVeryGood)
+                            analyze.IsVeryGood = !bOK;
                         A100_02RunCheckABSMain(analyze);
                     }
                 }
@@ -1465,6 +1476,103 @@ namespace Allinone.OPSpace
             foreach (AnalyzeClass analyze in BranchList)
             {
                 if (!analyze.CheckAnalyzeReadBarcode())
+                {
+                    m_Mapping_Col = int.Parse(analyze.ReportRowCol.Split('-')[0]);
+                    icount++;
+                }
+            }
+            if (m_Mapping_Col != 0)
+                m_Mapping_Row = icount / m_Mapping_Col;
+            else
+                m_Mapping_Row = 0;
+            //m_Mapping_Col = int.Parse(BranchList[0].ReportRowCol.Split('-')[0]);
+            //m_Mapping_Row = BranchList.Count / m_Mapping_Col;
+
+        }
+        public void PageAutoReportIndexMappingA(int pageIndex)
+        {
+            List<AnalyzeClass> BranchList = AnalyzeRoot.BranchList;
+
+            int Highest = 100000;
+            int HighestIndex = -1;
+            int ReportIndex = 0;
+            List<string> CheckList = new List<string>();
+
+            int i = 0;
+
+            //Clear All Index To 0 and Check the Highest
+
+            foreach (AnalyzeClass keyassign in BranchList)
+            {
+                keyassign.ReportRowCol = "";
+                keyassign.ReportIndex = 0;
+                ReportIndex = 1;
+            }
+
+            i = 0;
+            while (true)
+            {
+                i = 0;
+                Highest = 100000;
+                HighestIndex = -1;
+                foreach (AnalyzeClass keyassign in BranchList)
+                {
+                    if (keyassign.ReportIndex == 0)
+                    {
+                        if (keyassign.myOPRectF.Y < Highest)
+                        {
+                            Highest = (int)keyassign.myOPRectF.Y;
+                            HighestIndex = i;
+                        }
+                    }
+
+                    i++;
+                }
+
+                if (HighestIndex == -1)
+                    break;
+
+                CheckList.Clear();
+
+                //把相同位置的人找出來
+                i = 0;
+                foreach (AnalyzeClass keyassign in BranchList)
+                {
+                    if (keyassign.ReportIndex == 0)
+                    {
+                        if (IsInRange((int)keyassign.myOPRectF.Y, Highest, 138))
+                        {
+                            CheckList.Add(keyassign.myOPRectF.X.ToString("00000000") + "," + i.ToString());
+                        }
+                    }
+                    i++;
+                }
+
+                CheckList.Sort();
+
+                i = 1;
+                foreach (string Str in CheckList)
+                {
+                    string[] Strs = Str.Split(',');
+
+                    BranchList[int.Parse(Strs[1])].ReportIndex = ReportIndex;
+                    BranchList[int.Parse(Strs[1])].ReportRowCol = CheckList.Count.ToString() + "-" + i.ToString();
+                    BranchList[int.Parse(Strs[1])].DataReportIndex = ReportIndex;
+                    ReportIndex++;
+                    i++;
+                }
+            }
+
+            ////从大到小排序
+            //BranchList.Sort((item1, item2) => { return item1.ReportIndex > item2.ReportIndex ? -1 : 1; });
+
+            //从小到大排序
+            BranchList.Sort((item1, item2) => { return item1.ReportIndex > item2.ReportIndex ? 1 : -1; });
+
+            int icount = 0;
+            foreach (AnalyzeClass analyze in BranchList)
+            {
+                //if (!analyze.CheckAnalyzeReadBarcode())
                 {
                     m_Mapping_Col = int.Parse(analyze.ReportRowCol.Split('-')[0]);
                     icount++;

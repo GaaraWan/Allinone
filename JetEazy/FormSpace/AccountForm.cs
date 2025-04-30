@@ -121,7 +121,9 @@ namespace JetEazy.FormSpace
             DBStatus = DBStatusEnum.NONE;
 
             FillDisplay();
-        
+
+            JetEazy.BasicSpace.LanguageExClass.Instance.EnumControls(this);
+
         }
 
         void cboACCName_SelectedIndexChanged(object sender, EventArgs e)
@@ -142,13 +144,13 @@ namespace JetEazy.FormSpace
                     ACCDB.Add(cboACCName.SelectedIndex);
                     DBStatus = DBStatusEnum.ADD;
                     FillDisplay();
- 
+
                     break;
                 case TagEnum.MODIFY:
                     DBStatus = DBStatusEnum.MODIFY;
                     break;
                 case TagEnum.DEL:
-                    if (MessageBox.Show(myLanguage.Messages("msg1",LanguageIndex), "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    if (MessageBox.Show(ToChangeLanguageCode("AccountForm.msg1"), "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         int cboLast = cboACCName.SelectedIndex;
 
@@ -171,7 +173,7 @@ namespace JetEazy.FormSpace
                         ACCDB.DeleteLast();
 
                     DBStatus = DBStatusEnum.NONE;
-                    
+
                     FillDisplay();
 
                     break;
@@ -179,7 +181,7 @@ namespace JetEazy.FormSpace
 
                     if (ACCDB.CheckIsDuplicate(txtName.Text, OperateDataNow.No))
                     {
-                        MessageBox.Show(myLanguage.Messages("msg2", LanguageIndex), "SYS", MessageBoxButtons.OK);
+                        MessageBox.Show(ToChangeLanguageCode("AccountForm.msg2"), "SYS", MessageBoxButtons.OK);
                         txtName.Focus();
                         break;
                     }
@@ -293,7 +295,12 @@ namespace JetEazy.FormSpace
             }
         }
 
-
+        string ToChangeLanguageCode(string eName)
+        {
+            string retStr = eName;
+            retStr = LanguageExClass.Instance.GetLanguageIDName(eName);
+            return retStr;
+        }
 
     }
 }

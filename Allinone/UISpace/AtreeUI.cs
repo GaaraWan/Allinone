@@ -210,7 +210,7 @@ namespace Allinone.UISpace
             {
                 JzToolsClass.myShowCursor(0);
                 List<int> selectnolist = CheckUISelect(FirstSelectNo);
-                
+
                 foreach (int no in selectnolist)
                 {
                     if (no == 1)    //排除ROOT
@@ -219,13 +219,13 @@ namespace Allinone.UISpace
                     AnalyzeClass selectanalyze = GetAnalyzeFromTree(no);
 
                     AnalyzeClass sameanalyze = selectanalyze.Clone(new Point(100, 100), 0d, true, false, false, false);
-                    
+
                     sameanalyze.No = GetMaxNewNoFromRawAnalyzeList();
                     sameanalyze.AliasName = sameanalyze.ToAnalyzeString();
                     sameanalyze.RelateMover(sameanalyze.No, sameanalyze.Level);
                     sameanalyze.RelateASN = "None";
                     sameanalyze.RelateASNItem = "None";
-                    
+
                     sameanalyze.ToPassInfo();
 
                     //AddRowToAnalyzeTable(sameanalyze);
@@ -248,7 +248,7 @@ namespace Allinone.UISpace
                 JzToolsClass.myShowCursor(1);
             }
             else
-                MessageBox.Show("請選擇需要新增同層的項目", "SYSTEM", MessageBoxButtons.OK);
+                MessageBox.Show(ToChangeLanguage("請選擇需要新增同層的項目"), "SYSTEM", MessageBoxButtons.OK);
         }
 
         /// <summary>
@@ -301,7 +301,7 @@ namespace Allinone.UISpace
                 SetSelectFocus(selectanalyzenolist);
             }
             else
-                MessageBox.Show("請選擇需要新增同層的項目", "SYSTEM", MessageBoxButtons.OK);
+                MessageBox.Show(ToChangeLanguage("請選擇需要新增同層的項目"), "SYSTEM", MessageBoxButtons.OK);
         }
 
         /// <summary>
@@ -370,7 +370,7 @@ namespace Allinone.UISpace
             }
             else
             {
-                MessageBox.Show("請選擇需要新增分支的項目", "SYSTEM", MessageBoxButtons.OK);
+                MessageBox.Show(ToChangeLanguage("請選擇需要新增分支的項目"), "SYSTEM", MessageBoxButtons.OK);
             }
         }
         /// <summary>
@@ -478,13 +478,13 @@ namespace Allinone.UISpace
                         branchanalyze.ALIGNPara.AlignMethod = AlignMethodEnum.AUFIND;
                         branchanalyze.ALIGNPara.AlignMode = AlignModeEnum.AREA;
                         branchanalyze.ALIGNPara.MTOffset = Universal.SetupDefaultOffsetValue;
-                        branchanalyze.ALIGNPara.MTResolution = 0.038f;
+                        branchanalyze.ALIGNPara.MTResolution = Universal.SetupDefaultResolutionValue;
                         branchanalyze.ALIGNPara.MTTolerance = 0.2f;
 
                         branchanalyze.INSPECTIONPara.InspectionMethod = InspectionMethodEnum.Equalize;
-                        branchanalyze.INSPECTIONPara.IBArea = 10;
-                        branchanalyze.INSPECTIONPara.IBCount = 20;
-                        branchanalyze.INSPECTIONPara.IBTolerance = 25;
+                        branchanalyze.INSPECTIONPara.IBArea = 50;
+                        branchanalyze.INSPECTIONPara.IBCount = 1000;
+                        branchanalyze.INSPECTIONPara.IBTolerance = 128;
                         branchanalyze.INSPECTIONPara.InspectionAB = Inspection_A_B_Enum.Histogram;
                     }
 
@@ -627,7 +627,7 @@ namespace Allinone.UISpace
                 JzToolsClass.myShowCursor(1);
             }
             else
-                MessageBox.Show("請選擇需要刪除的項目", "SYSTEM", MessageBoxButtons.OK);
+                MessageBox.Show(ToChangeLanguage("請選擇需要刪除的項目"), "SYSTEM", MessageBoxButtons.OK);
 
         }
 
@@ -709,7 +709,7 @@ namespace Allinone.UISpace
                 RelateAnalyzeTable();
             }
             else
-                MessageBox.Show("請選擇需要刪除的項目", "SYSTEM", MessageBoxButtons.OK);
+                MessageBox.Show(ToChangeLanguage("請選擇需要刪除的項目"), "SYSTEM", MessageBoxButtons.OK);
 
         }
 
@@ -764,7 +764,7 @@ namespace Allinone.UISpace
                 JzToolsClass.myShowCursor(1);
             }
             else
-                MessageBox.Show("請選擇需要複製的項目", "SYSTEM", MessageBoxButtons.OK);
+                MessageBox.Show(ToChangeLanguage("請選擇需要複製的項目"), "SYSTEM", MessageBoxButtons.OK);
 
 
         }
@@ -1161,7 +1161,7 @@ namespace Allinone.UISpace
                 dtlvAnalyze_SelectionChanged();
             }
             else
-                MessageBox.Show("無需要查看項目。", "SYSTEM", MessageBoxButtons.OK);
+                MessageBox.Show(ToChangeLanguage("無需要查看項目。"), "SYSTEM", MessageBoxButtons.OK);
         }
         /// <summary>
         /// 刪除所選定的 Learning
@@ -1170,7 +1170,7 @@ namespace Allinone.UISpace
         {
             if(lsbLearnAnalyze.SelectedIndex > 0)
             {
-                if (MessageBox.Show("是否要刪除此學習?","SYSYTEM",MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (MessageBox.Show(ToChangeLanguage("是否要刪除此學習?"),"SYSYTEM",MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     int lastlearnindex = lsbLearnAnalyze.SelectedIndex;
 
@@ -1600,5 +1600,12 @@ namespace Allinone.UISpace
         }
 
         #endregion
+
+        string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
+        }
     }
 }

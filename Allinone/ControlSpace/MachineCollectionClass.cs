@@ -27,7 +27,7 @@ namespace Allinone.ControlSpace
 
         }
 
-        public void Intial(VersionEnum version,OptionEnum option,GeoMachineClass machine)
+        public void Intial(VersionEnum version, OptionEnum option, GeoMachineClass machine)
         {
             VERSION = version;
             OPTION = option;
@@ -35,7 +35,13 @@ namespace Allinone.ControlSpace
             MACHINE = machine;
 
             MACHINE.TriggerAction += MACHINE_TriggerAction;
+            MACHINE.MachineCommErrorStringAction += MACHINE_MachineCommErrorStringAction;
             SetConfig();
+        }
+
+        private void MACHINE_MachineCommErrorStringAction(string str)
+        {
+            MachineCommError(str);
         }
 
         public void RetryConnect()
@@ -88,6 +94,23 @@ namespace Allinone.ControlSpace
                 case VersionEnum.ALLINONE:
                     switch (OPTION)
                     {
+                        case OptionEnum.MAIN_SDM5:
+                            ((JzMainSDM5MachineClass)MACHINE).PLCIO.CameraByPass = !INI.IsOpenAutoChangeRecipe;
+
+
+#if FX3U
+
+                            MACHINE.PLCCollection[0].SetData(INI.CamLinescanStartPos, 276);//线扫X起点位置
+                            MACHINE.PLCCollection[0].SetData(INI.CamLinescanEndPos, 278);//线扫X终点位置
+                            MACHINE.PLCCollection[0].SetData(INI.CamAreaMatchPos, 280);//面阵相机定位的位置
+                            MACHINE.PLCCollection[0].SetData((float)INI.CamLinescanSpeed, 282);//线扫速度
+
+                            MACHINE.PLCCollection[0].SetData((float)INI.TestImageOvertime, 360);//拍照超时
+                            MACHINE.PLCCollection[0].SetData((float)INI.TestResultOvertime, 362);//结果超时
+
+#endif
+
+                            break;
                         case OptionEnum.MAIN:
                             break;
                         case OptionEnum.MAIN_SDM1:
@@ -126,7 +149,7 @@ namespace Allinone.ControlSpace
                     }
                     break;
             }
-            
+
         }
 
         private void MACHINE_TriggerAction(MachineEventEnum machineevent, object obj = null)
@@ -137,10 +160,10 @@ namespace Allinone.ControlSpace
         {
             //string[] strs = str.Split(',');
 
-            switch(VERSION)
+            switch (VERSION)
             {
                 case VersionEnum.ALLINONE:
-                    switch(OPTION)
+                    switch (OPTION)
                     {
                         case OptionEnum.MAIN_X6:
                             ((JzMainX6MachineClass)MACHINE).SetLight(str);
@@ -203,10 +226,10 @@ namespace Allinone.ControlSpace
         {
             string posstr = "";
 
-            switch(VERSION)
+            switch (VERSION)
             {
                 case VersionEnum.ALLINONE:
-                    switch(OPTION)
+                    switch (OPTION)
                     {
                         case OptionEnum.MAIN:
                             posstr = ((JzAllinoneMachineClass)MACHINE).GetPosition();
@@ -225,10 +248,10 @@ namespace Allinone.ControlSpace
                             break;
                     }
 
-                    
+
                     break;
                 case VersionEnum.AUDIX:
-                    switch(OPTION)
+                    switch (OPTION)
                     {
                         case OptionEnum.MAIN:
 
@@ -366,7 +389,7 @@ namespace Allinone.ControlSpace
                             Str = ((JzMainSDM3MachineClass)MACHINE).Fps();
                             break;
                         case OptionEnum.MAIN_SDM5:
-                            //Str = ((JzMainSDM5MachineClass)MACHINE).Fps();
+                            Str = ((JzMainSDM5MachineClass)MACHINE).PLCFps();
                             break;
                         default:
 
@@ -389,7 +412,7 @@ namespace Allinone.ControlSpace
 
         public void SetPass(bool ispass)
         {
-            switch(VERSION)
+            switch (VERSION)
             {
                 case VersionEnum.AUDIX:
                     ((JzAudixMachineClass)MACHINE).SetPass(ispass);
@@ -409,6 +432,14 @@ namespace Allinone.ControlSpace
             }
         }
 
-
+        public delegate void MachineCommErrorStringHandler(string str);
+        public event MachineCommErrorStringHandler MachineCommErrorStringAction;
+        public void MachineCommError(string str)
+        {
+            if (MachineCommErrorStringAction != null)
+            {
+                MachineCommErrorStringAction(str);
+            }
+        }
     }
 }

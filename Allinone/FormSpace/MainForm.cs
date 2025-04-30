@@ -39,9 +39,13 @@ using ServiceMessageClass;
 using EzSegClientLib;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Windows.Forms.Automation;
+using FreeImageAPI;
+//using System.Windows.Media;
 
 namespace Allinone.FormSpace
 {
+    using static Allinone.UISpace.ALBUISpace.AllinoneAlbUI;
     using HandleCan = IntPtr;
     public partial class MainForm : Form, IMessageFilter
     {
@@ -463,6 +467,23 @@ namespace Allinone.FormSpace
                     ESSUI.FillBCCOUNT(INI.ALLCOUNT, INI.BCNGCOUNT);
                     //ESSUI.ShowPLC_RxTime(Universal.VersionDate + "_" + Universal.OPTION.ToString() + " " + JzHiveClass.HiveVersion);// + "_ " + ms.ToString() + " ms");
 
+                    switch (Universal.VERSION)
+                    {
+                        case VersionEnum.ALLINONE:
+
+                            switch (Universal.OPTION)
+                            {
+                                case OptionEnum.MAIN_SDM2:
+                                case OptionEnum.MAIN_X6:
+
+                                    ESSUI.RunWatchTime = INI.AutoLogoutTime;
+
+                                    break;
+                            }
+
+                            break;
+                    }
+
                     switch (Universal.OPTION)
                     {
                         case OptionEnum.MAIN_SDM5:
@@ -833,10 +854,41 @@ namespace Allinone.FormSpace
                         string _viewer_path = "AJZReportViewer.exe";
                         if (System.IO.File.Exists(_viewer_path))
                         {
+                            switch(Universal.FACTORYNAME)
+                            {
+                                case FactoryName.DAGUI:
+                                    break;
+                                default:
+                                    IntPtr hwnd = FindWindow(null, "JetEazy Viewer");
+                                    if (hwnd == IntPtr.Zero)
+                                    {
+                                        System.Diagnostics.Process.Start(_viewer_path);
+                                    }
+                                    break;
+                            }
+                        }
+
+                        break;
+                    case OptionEnum.MAIN_SDM2:
+                        _viewer_path = "AJZReportViewer.exe";
+                        if (System.IO.File.Exists(_viewer_path))
+                        {
                             IntPtr hwnd = FindWindow(null, "JetEazy Viewer");
                             if (hwnd == IntPtr.Zero)
                             {
-                                System.Diagnostics.Process.Start(_viewer_path);
+                                System.Diagnostics.Process.Start(_viewer_path, "-SDM2");
+                            }
+                        }
+
+                        break;
+                    case OptionEnum.MAIN_SDM5:
+                        _viewer_path = "AJZReportViewer.exe";
+                        if (System.IO.File.Exists(_viewer_path))
+                        {
+                            IntPtr hwnd = FindWindow(null, "JetEazy Viewer");
+                            if (hwnd == IntPtr.Zero)
+                            {
+                                System.Diagnostics.Process.Start(_viewer_path, "-SDM5");
                             }
                         }
 
@@ -970,6 +1022,19 @@ namespace Allinone.FormSpace
                             int _count = AlbumNow.ENVList[0].PageList.Count;
                             CamActClass.Instance.SetStepCount(_count);
 
+                            switch (Universal.jetMappingType)
+                            {
+                                case JetMappingType.MAPPING_A:
+
+                                    EnvClass env = AlbumNow.ENVList[0];
+                                    //Light2Settings _light = new Light2Settings();
+                                    //_light.GetString(env.GeneralLight);
+                                    _count = AlbumNow.ENVList[0].StepCount;// _light.ChipRow * _light.ChipCol;
+                                    CamActClass.Instance.SetStepCount(_count);
+
+                                    break;
+                            }
+
                             break;
                     }
 
@@ -1051,7 +1116,27 @@ namespace Allinone.FormSpace
                                             {
                                                 bool bOK = CheckAlbumCollection(tcpdata.RecipeName, false);
                                                 GetStatus();
-                                                RUNUI.MappingInit();
+
+                                                X6_LASER_CLIENT.Log.Log2("tcpdata.RecipeName:" + tcpdata.RecipeName);
+                                                X6_LASER_CLIENT.Log.Log2("tcpdata.LotName:" + tcpdata.LotName);
+
+                                                if (INI.IsOpenQcRandom)
+                                                {
+                                                    //打开抽检功能
+                                                    if (INI.IsOpenCip)
+                                                    {
+                                                        int _row = Universal.CipExtend.QcRowCount;
+                                                        int _col = Universal.CipExtend.QcColCount;
+                                                        int _qccount = Universal.CipExtend.QcCount;
+
+                                                        RUNUI.QcRandomMappingInit(_row, _col);
+
+                                                        CommonLogClass.Instance.Log2($"[CMD_CHANGE]QC抽检读取 行:{_row}列:{_col}拍摄次数{_qccount}");
+                                                    }
+                                                }
+                                                else
+                                                    RUNUI.MappingInit();
+
                                                 if (bOK)
                                                 {
 
@@ -1060,16 +1145,26 @@ namespace Allinone.FormSpace
                                                     JzMainSDPositionParas.INSPECT_NGINDEX = 0;
                                                     JzMainSDPositionParas.SaveRecord();
 
-                                                    if (INI.IsOpenCheckRepeatCode)
-                                                    {
-                                                        if (INI.IsOpenCheckCurLotRepeatCode)
-                                                        {
-                                                            JzMainSDPositionParas.MySqlCreateTable();
-                                                        }
-                                                    }
+                                                    //if (INI.IsOpenCheckRepeatCode)
+                                                    //{
+                                                    //    if (INI.IsOpenCheckCurLotRepeatCode)
+                                                    //    {
+                                                    //        JzMainSDPositionParas.MySqlCreateTable();
+                                                    //    }
+                                                    //}
 
-                                                    X6_LASER_CLIENT.Log.Log2("tcpdata.RecipeName:" + tcpdata.RecipeName);
-                                                    X6_LASER_CLIENT.Log.Log2("tcpdata.LotName:" + tcpdata.LotName);
+                                                    //Light2Settings light2Settings = new Light2Settings();
+                                                    //light2Settings.GetString(AlbumNow.ENVList[0].GeneralLight);
+                                                    //if (light2Settings.IsOpenCheckRepeatCode)
+                                                    //{
+                                                    //    if (light2Settings.IsOpenCheckCurLotRepeatCode)
+                                                    //    {
+                                                    //        JzMainSDPositionParas.MySqlCreateTable();
+                                                    //    }
+                                                    //}
+
+                                                    //X6_LASER_CLIENT.Log.Log2("tcpdata.RecipeName:" + tcpdata.RecipeName);
+                                                    //X6_LASER_CLIENT.Log.Log2("tcpdata.LotName:" + tcpdata.LotName);
                                                 }
 
                                                 X6_LASER_CLIENT.Log.Log2("tcpCmd.CMD_CHANGE" + (bOK ? "成功" : "失败"));
@@ -1095,10 +1190,20 @@ namespace Allinone.FormSpace
                                             {
                                                 if (RUNUI != null)
                                                 {
-                                                    int iret = RUNUI.SetByPass(tcpdata.QcByPass, ref m_tcp_dataCheck);
+                                                    //int iret = RUNUI.SetByPass(tcpdata.QcByPass, ref m_tcp_dataCheck);
+                                                    int iret = 0;
+                                                    switch (Universal.jetMappingType)
+                                                    {
+                                                        case JetMappingType.MAPPING_A:
+                                                            iret = AlbumNow.ENVList[0].MappingA_GridSetMappingBypass(tcpdata.QcByPass, ref m_tcp_dataCheck);
+                                                            break;
+                                                        default:
+                                                            iret = RUNUI.SetByPass(tcpdata.QcByPass, ref m_tcp_dataCheck);
+                                                            break;
+                                                    }
                                                     if (iret == 0)
                                                     {
-                                                        X6_LASER_CLIENT.Log.Log2("tcpdata.QcByPass OK");// + tcpdata.QcByPass);
+                                                        X6_LASER_CLIENT.Log.Log2("tcpdata.QcByPass OK " + tcpdata.Qc2ddata);// + tcpdata.QcByPass);
 
                                                     }
                                                     X6_LASER_CLIENT.Send(tcpdata.CmdStr + (iret == 0 ? "0001" : "0003"));// 0001 切换成功 0003 切换失败
@@ -1118,6 +1223,72 @@ namespace Allinone.FormSpace
                                             X6_LASER_CLIENT.Send(tcpdata.CmdStr + "0005");//不在跑线状态
                                         }
 
+                                        break;
+                                    case tcpCmd.CMD_QC2DBARCODE:
+                                        _currentStatu = ESSUI.GetMainStatus();
+                                        if (_currentStatu == ESSStatusEnum.RUN)
+                                        {
+                                            if (!Universal.RESULT.myResult.MainProcess.IsOn)
+                                            {
+                                                if (RUNUI != null)
+                                                {
+                                                    int iret = 0;
+                                                    switch (Universal.jetMappingType)
+                                                    {
+                                                        case JetMappingType.MAPPING_A:
+                                                            iret = AlbumNow.ENVList[0].MappingA_GridSetMapping2d(tcpdata.QC2dbarcode, ref m_tcp_dataCheck);
+                                                            break;
+                                                        default:
+                                                            iret = RUNUI.SetCheckBarcode(tcpdata.QC2dbarcode, ref m_tcp_dataCheck);
+                                                            break;
+                                                    }
+
+                                                    if (iret == 0)
+                                                    {
+                                                        X6_LASER_CLIENT.Log.Log2("tcpdata.QC2dbarcode" + tcpdata.Qc2ddata);
+
+                                                    }
+                                                    X6_LASER_CLIENT.Log.Log2("tcpCmd.CMD_QC2DBARCODE" + " return=" + iret.ToString() + " " + m_tcp_dataCheck);
+                                                    //byte[] bytedata = new byte[36];
+                                                    //bytedata[0] = 27;
+                                                    //bytedata[4] = 4;
+                                                    //bytedata[8] = 0;
+                                                    //bytedata[32] = (iret == 0 ? (byte)1 : (byte)3);
+                                                    //X6_HANDLE_CLIENT.Send(bytedata);
+                                                    X6_LASER_CLIENT.Send(tcpdata.CmdStr + (iret == 0 ? "0001" : "0003"));// 0001 切换成功 0003 切换失败
+                                                }
+                                                else
+                                                {
+                                                    //byte[] bytedata = new byte[36];
+                                                    //bytedata[0] = 27;
+                                                    //bytedata[4] = 4;
+                                                    //bytedata[8] = 0;
+                                                    //bytedata[32] = (byte)3;
+                                                    //X6_HANDLE_CLIENT.Send(bytedata);
+                                                    X6_LASER_CLIENT.Send(tcpdata.CmdStr + "0003");// 切换失败
+                                                }
+                                            }
+                                            else
+                                            {
+                                                //byte[] bytedata = new byte[36];
+                                                //bytedata[0] = 27;
+                                                //bytedata[4] = 4;
+                                                //bytedata[8] = 0;
+                                                //bytedata[32] = (byte)4;
+                                                //X6_HANDLE_CLIENT.Send(bytedata);
+                                                X6_LASER_CLIENT.Send(tcpdata.CmdStr + "0004");//测试中
+                                            }
+                                        }
+                                        else
+                                        {
+                                            //byte[] bytedata = new byte[36];
+                                            //bytedata[0] = 27;
+                                            //bytedata[4] = 4;
+                                            //bytedata[8] = 0;
+                                            //bytedata[32] = (byte)5;
+                                            //X6_HANDLE_CLIENT.Send(bytedata);
+                                            X6_LASER_CLIENT.Send(tcpdata.CmdStr + "0005");//不在跑线状态
+                                        }
                                         break;
                                     //case tcpCmd.CMD_QC2DDATA:
                                     //    _currentStatu = ESSUI.GetMainStatus();
@@ -1149,7 +1320,7 @@ namespace Allinone.FormSpace
                                     default:
 
                                         X6_LASER_CLIENT.Log.Log2("tcpCmd.NONE" + " 无效指令。");
-                                        //ClientSocket.Instance.Send("0002");// 0002 无法识别的指令
+                                        X6_LASER_CLIENT.Send(tcpdata.CmdStr + "0002");//0002 无法识别的指令
 
                                         break;
                                 }
@@ -1194,7 +1365,17 @@ namespace Allinone.FormSpace
                                             {
                                                 if (RUNUI != null)
                                                 {
-                                                    int iret = RUNUI.SetCheckBarcode(tcpHandledata.QC2dbarcode, ref m_tcp_dataCheck);
+                                                    int iret = 0;
+                                                    switch(Universal.jetMappingType)
+                                                    {
+                                                        case JetMappingType.MAPPING_A:
+                                                            iret = AlbumNow.ENVList[0].MappingA_GridSetMapping2d(tcpHandledata.QC2dbarcode, ref m_tcp_dataCheck);
+                                                            break;
+                                                        default:
+                                                            iret = RUNUI.SetCheckBarcode(tcpHandledata.QC2dbarcode, ref m_tcp_dataCheck);
+                                                            break;
+                                                    }
+                                                  
                                                     if (iret == 0)
                                                     {
                                                         X6_HANDLE_CLIENT.Log.Log2("tcpHandledata.QC2dbarcode" + tcpHandledata.Qc2ddata);
@@ -1250,7 +1431,16 @@ namespace Allinone.FormSpace
                                             {
                                                 if (RUNUI != null)
                                                 {
-                                                    int iret = RUNUI.SetByPass(tcpHandledata.QcByPass, ref m_tcp_dataCheck);
+                                                    int iret = 0;
+                                                    switch (Universal.jetMappingType)
+                                                    {
+                                                        case JetMappingType.MAPPING_A:
+                                                            iret = AlbumNow.ENVList[0].MappingA_GridSetMappingBypass(tcpHandledata.QcByPass, ref m_tcp_dataCheck);
+                                                            break;
+                                                        default:
+                                                            iret = RUNUI.SetByPass(tcpHandledata.QcByPass, ref m_tcp_dataCheck);
+                                                            break;
+                                                    }
                                                     if (iret == 0)
                                                     {
                                                         X6_HANDLE_CLIENT.Log.Log2("tcpHandledata.Qc2ddata" + tcpHandledata.Qc2ddata);
@@ -1353,6 +1543,7 @@ namespace Allinone.FormSpace
                                         break;
                                     default:
                                         X6_HANDLE_CLIENT.Log.Log2("tcpCmd.NONE" + " 无效指令。");
+                                        //X6_HANDLE_CLIENT.Send(tcpdata.CmdStr + "0002");//0002 无法识别的指令
                                         break;
                                 }
                             }
@@ -1446,7 +1637,7 @@ namespace Allinone.FormSpace
 
         private void LblConnectionFail_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("您需要重新连接PLC或机械臂吗?", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBox.Show(ToChangeLanguage("您需要重新连接PLC或机械臂吗?"), "Msg", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 Universal.MACHINECollection.RetryConnect();
             }
@@ -1658,7 +1849,9 @@ namespace Allinone.FormSpace
                         {
                             case OptionEnum.MAIN_SDM3:
                             case OptionEnum.MAIN_SDM2:
-                                _recoredDataSevenPoint();
+                                if (!INI.IsOpenRecipeDataRecord)
+                                    _recoredDataSevenPoint();
+
                                 _getAutoMainSDM2Test();
                                 break;
                             case JetEazy.OptionEnum.MAIN_SERVICE:
@@ -1723,6 +1916,7 @@ namespace Allinone.FormSpace
                     }
 
                     break;
+                case OptionEnum.MAIN_SDM5:
                 case OptionEnum.MAIN_SDM3:
                 case OptionEnum.MAIN_SDM2:
                 case OptionEnum.MAIN_SDM1:
@@ -1886,7 +2080,7 @@ namespace Allinone.FormSpace
             //savelog(14);
 
 
-            if (MainTime.msDuriation > Universal.DISPLAYTICK && Universal.OPTION != OptionEnum.MAIN_X6)
+            if (MainTime.msDuriation > Universal.DISPLAYTICK && Universal.CAMACT != CameraActionMode.CAM_MOTOR_LINESCAN)
             {
                 if (!RESULT.myResult.MainProcess.IsOn && !DISPUI.ISMOUSEDOWN)
                 {
@@ -1994,6 +2188,27 @@ namespace Allinone.FormSpace
 
                     //AlbumWork.FillFirstEnvResultMover(ShowMover, CCDCollection);
                     AlbumWork.FillCompoundMover(ShowMover);
+
+                    DISPUI.SetMover(ShowMover);
+                    DISPUI.RefreshDisplayShape();
+
+                    //DISPUI.GetOrgBMP().Save(@"D:\LOA\TEST.PNG");
+                    //DISPUI.SaveScreen();
+
+                    break;
+            }
+        }
+        void DISPUIShowResultAndBarcode(bool isshowbarcode = false)
+        {
+            switch (VERSION)
+            {
+                case VersionEnum.ALLINONE:
+                case VersionEnum.AUDIX:
+
+                    DISPUI.ClearMover();
+
+                    //AlbumWork.FillFirstEnvResultMover(ShowMover, CCDCollection);
+                    AlbumWork.FillCompoundMoverAndBarcode(ShowMover, isshowbarcode);
 
                     DISPUI.SetMover(ShowMover);
                     DISPUI.RefreshDisplayShape();
@@ -2200,8 +2415,65 @@ namespace Allinone.FormSpace
             RESULT.TriggerOPMess += RESULT_TriggerOPMess;
             RESULT.TriggerShowImageCurrent += RESULT_TriggerShowImageCurrent;
 
+
+
             CCDCollection.TriggerAction += CCDCollection_TriggerAction;
             MACHINECollection.TriggerAction += MACHINECollection_TriggerAction;
+
+            switch (Universal.VERSION)
+            {
+                case VersionEnum.ALLINONE:
+                    switch (Universal.OPTION)
+                    {
+                        case OptionEnum.MAIN_SDM5:
+
+                            m_plcCommError = new bool[((ControlSpace.MachineSpace.JzMainSDM5MachineClass)Universal.MACHINECollection.MACHINE).PLCCollection.Length];
+                            int i = 0;
+                            while (i < ((ControlSpace.MachineSpace.JzMainSDM5MachineClass)Universal.MACHINECollection.MACHINE).PLCCollection.Length)
+                            {
+                                m_plcCommError[i] = false;
+                                i++;
+                            }
+                            MACHINECollection.MachineCommErrorStringAction += MACHINECollection_MachineCommErrorStringAction;
+                            break;
+                    }
+                    break;
+            }
+
+
+        }
+
+        bool[] m_plcCommError;
+        private void MACHINECollection_MachineCommErrorStringAction(string str)
+        {
+            //輸出那個plc掉綫
+            int index = 0;
+            string _plcIndex = str.Replace("PLC", "");
+            bool bOK = int.TryParse(_plcIndex, out index);
+            string _errorStr = "plc通訊中斷!!!\r\n(編號Index=" + index.ToString() + ")\r\n是否重連?";
+            //先停掉流程
+            //StopAllProcesses("DisPlc");
+            if (!m_plcCommError[index])
+            {
+                m_plcCommError[index] = true;
+                if (VsMSG.Instance.Question(_errorStr) == DialogResult.OK)
+                {
+                    //重連
+                    MACHINECollection.RetryConnect();
+                    m_plcCommError[index] = false;
+                }
+                else
+                {
+                    try
+                    {
+                        Environment.Exit(0);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
         }
 
         private void RESULT_TriggerShowImageCurrent(Bitmap ebmpInput)
@@ -2811,7 +3083,7 @@ namespace Allinone.FormSpace
                                     }
 
                                     break;
-
+                                case OptionEnum.MAIN_SDM5:
                                 case OptionEnum.MAIN_SDM1:
                                 case OptionEnum.MAIN_SD:
                                 case OptionEnum.MAIN_X6:
@@ -2874,6 +3146,14 @@ namespace Allinone.FormSpace
 
                             break;
                     }
+                    break;
+
+                case ESSStatusEnum.LANGUAGE:
+
+                    LanguageExClass.Instance.EnumControls(this);
+                    INI.LANGUAGE = LanguageExClass.Instance.LanguageIndex;
+                    INI.Save();
+
                     break;
             }
         }
@@ -3128,6 +3408,9 @@ namespace Allinone.FormSpace
             IsLiveCapturing = INI.ISLIVECAPTURE;
         }
 
+
+        //MessageForm m_MsgWarning = null;
+
         /// <summary>
         /// 切換參數並加入 AlbumCollection
         /// </summary>
@@ -3175,6 +3458,33 @@ namespace Allinone.FormSpace
 
                 Universal.BackupDATADB();
                 RCPDB.Save();
+
+
+                switch(Universal.VERSION)
+                {
+                    case VersionEnum.ALLINONE:
+
+                        switch(Universal.OPTION)
+                        {
+                            case OptionEnum.MAIN_SDM2:
+
+                                if (INI.IsOpenRecipeDataRecord)
+                                {
+                                    string tempstr = $"{RCPDB.DataNow.Name}-{RCPDB.DataNow.Version}";
+                                    if (!INI.DataRecordName.Contains(tempstr))
+                                    {
+                                        INI.DataRecordName = $"{RCPDB.DataNow.Name}-{RCPDB.DataNow.Version}-{DateTime.Now.ToString("HHmmss")}";
+                                    }
+                                    INI.LoadDataRecord();
+                                    ShowLabelMappingDataString();
+                                }
+
+                                break;
+                        }
+
+                        break;
+                }
+
             }
             else
             {
@@ -3218,6 +3528,75 @@ namespace Allinone.FormSpace
             }
             //设定相机的亮度
             SetCamLight(AlbumNow);
+
+            #region 切换参数判断光源是否符合
+
+            switch (Universal.VERSION)
+            {
+                case VersionEnum.ALLINONE:
+
+                    switch (Universal.OPTION)
+                    {
+                        case OptionEnum.MAIN_SDM2:
+
+                            //if (INI.IsOpenCheckSensor)
+                            {
+                                MainsdLightSettings mainsdLight = new MainsdLightSettings();
+                                mainsdLight.GetString(AlbumNow.ENVList[0].GeneralLight);
+
+                                //bool s1 = ((ControlSpace.MachineSpace.JzMainSDM2MachineClass)MACHINECollection.MACHINE).PLCIO.IsSensor1;
+                                //bool s2 = ((ControlSpace.MachineSpace.JzMainSDM2MachineClass)MACHINECollection.MACHINE).PLCIO.IsSensor2;
+
+                                if (mainsdLight.PANNEL)
+                                {
+                                    //if (s1 && s2)
+                                    {
+                                        //_LOG_MSG_ERR("外同轴未安装 无法测试");
+                                        //return;
+
+                                        Task task = new Task(() =>
+                                        {
+                                            MessageForm m_MsgWarning = new MessageForm(true, "请将外同轴安装于镜头下方进行测试，谢谢。");
+                                            m_MsgWarning.TopMost = true;
+                                            m_MsgWarning.ShowDialog();
+                                            m_MsgWarning.Close();
+                                            m_MsgWarning.Dispose();
+                                            m_MsgWarning = null;
+                                        });
+                                        task.Start();
+
+                                    }
+                                }
+                                else if (mainsdLight.BOTTOMLED)
+                                {
+                                    //if (!s1 || !s2)
+                                    {
+                                        //_LOG_MSG_ERR("外同轴未放置正确位置 无法测试");
+                                        //return;
+
+                                        Task task = new Task(() =>
+                                        {
+                                            MessageForm m_MsgWarning = new MessageForm(true, "请取下外同轴进行测试，谢谢。");
+                                            m_MsgWarning.TopMost = true;
+                                            m_MsgWarning.ShowDialog();
+                                            m_MsgWarning.Close();
+                                            m_MsgWarning.Dispose();
+                                            m_MsgWarning = null;
+                                        });
+                                        task.Start();
+                                    }
+                                }
+                            }
+
+                            break;
+                    }
+
+                    break;
+            }
+
+            #endregion
+
+            
 
             //Need To Refresh Figures
             if (INI.ISLIVECAPTURE)
@@ -3584,6 +3963,23 @@ namespace Allinone.FormSpace
                     JetEazy.LoggerClass.Instance.WriteLog("点击设定中的确定或取消");
                     DISPUI.SetDisplayType(DisplayTypeEnum.SHOW);
 
+                    switch(Universal.VERSION)
+                    {
+                        case VersionEnum.ALLINONE:
+
+                            switch(Universal.OPTION)
+                            {
+                                case OptionEnum.MAIN_SDM2:
+                                case OptionEnum.MAIN_X6:
+
+                                    ESSUI.RunWatchTime = INI.AutoLogoutTime;
+
+                                    break;
+                            }
+
+                            break;
+                    }
+
                     switch (status)
                     {
                         case INIStatusEnum.OK:
@@ -3624,7 +4020,7 @@ namespace Allinone.FormSpace
 
                     break;
                 case INIStatusEnum.CALIBRATE:
-                    if (MessageBox.Show("是否要執行校正抓圖作業?", "SYSTEM", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    if (MessageBox.Show(ToChangeLanguage("是否要執行校正抓圖作業?"), "SYSTEM", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         JetEazy.LoggerClass.Instance.WriteLog("点击设定中的图像校正");
                         RESULT.StartCalibrate("Local");
@@ -3636,6 +4032,20 @@ namespace Allinone.FormSpace
                 case INIStatusEnum.SHOWASSIGN:
                     JetEazy.LoggerClass.Instance.WriteLog("点击设定中的 ASN ");
                     ShowASN();
+                    break;
+                case INIStatusEnum.CHECK_REPEATCODE_INSERT_SQL:
+
+                    Light2Settings light2Settings = new Light2Settings();
+                    light2Settings.GetString(AlbumNow.ENVList[0].GeneralLight);
+                    if (light2Settings.IsOpenCheckRepeatCode)
+                    {
+                        if (light2Settings.IsOpenCheckCurLotRepeatCode)
+                        {
+                            int iret = JzMainSDPositionParas.MySqlCreateTable();
+                            MessageBox.Show($"返回数据:{iret.ToString()}");
+                        }
+                    }
+
                     break;
             }
         }
@@ -3709,36 +4119,37 @@ namespace Allinone.FormSpace
                                     {
                                         case CameraActionMode.CAM_MOTOR_LINESCAN:
                                         case CameraActionMode.CAM_MOTOR_MODE2:
-
-                                            #region MODE2
-                                            //读取步数=0  并且 读取测试完成信号
-                                            if (
-                                                //CamActClass.Instance.StepCurrent == 0 &&
-                                                //!((ControlSpace.MachineSpace.JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.Busy &&
-                                                !Universal.IsRunningTest
-                                                )
+                                            this.Invoke(new Action(() =>
                                             {
-                                                //不要執行包含在固定參數的參數
-                                                if (("," + INI.PRELOADSTATICNO + ",").IndexOf("," + RCPDB.DataNow.No.ToString() + ",") > -1)
-                                                    MessageBox.Show("Please Check " + RCPDB.DataNow.Name + " ID = " + RCPDB.DataNow.No.ToString() + ".");
-                                                else
+                                                #region MODE2
+                                                //读取步数=0  并且 读取测试完成信号
+                                                if (!INI.IsOpenAutoChangeRecipe &&
+                                                    //CamActClass.Instance.StepCurrent == 0 &&
+                                                    //!((ControlSpace.MachineSpace.JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.Busy &&
+                                                    !Universal.IsRunningTest
+                                                    )
                                                 {
-                                                    if (CheckAlbumCollection(RCPDB.DataNow.Version, true))
+                                                    //不要執行包含在固定參數的參數
+                                                    if (("," + INI.PRELOADSTATICNO + ",").IndexOf("," + RCPDB.DataNow.No.ToString() + ",") > -1)
+                                                        MessageBox.Show("Please Check " + RCPDB.DataNow.Name + " ID = " + RCPDB.DataNow.No.ToString() + ".");
+                                                    else
                                                     {
-                                                        RESULT.TestMethod = TestMethodEnum.IO;
-                                                        RESULT.Calculate();
-
-
-                                                        if (RUNUI != null)
+                                                        if (CheckAlbumCollection(RCPDB.DataNow.Version, true))
                                                         {
-                                                            Universal.IsSaveRaw = RUNUI.IsSaveRaw;
+                                                            RESULT.TestMethod = TestMethodEnum.IO;
+                                                            RESULT.Calculate();
+
+
+                                                            if (RUNUI != null)
+                                                            {
+                                                                Universal.IsSaveRaw = RUNUI.IsSaveRaw;
+                                                            }
                                                         }
                                                     }
                                                 }
-                                            }
 
-                                            #endregion
-
+                                                #endregion
+                                            }));
                                             break;
                                         default:
 
@@ -3853,36 +4264,60 @@ namespace Allinone.FormSpace
                                         case CameraActionMode.CAM_MOTOR_LINESCAN:
                                         case CameraActionMode.CAM_MOTOR_MODE2:
 
-                                            CTRLUI_TriggerAction(ActionEnum.ACT_CIPMAPPING, "");
-
-                                            #region MODE2
-                                            //读取步数=0  并且 读取测试完成信号
-                                            if (
-                                                CamActClass.Instance.StepCurrent == 0 &&
-                                                //!((ControlSpace.MachineSpace.JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.Busy &&
-                                                !Universal.IsRunningTest
-                                                )
+                                            this.Invoke(new Action(() =>
                                             {
-                                                //不要執行包含在固定參數的參數
-                                                if (("," + INI.PRELOADSTATICNO + ",").IndexOf("," + RCPDB.DataNow.No.ToString() + ",") > -1)
-                                                    MessageBox.Show("Please Check " + RCPDB.DataNow.Name + " ID = " + RCPDB.DataNow.No.ToString() + ".");
-                                                else
+                                                CTRLUI_TriggerAction(ActionEnum.ACT_CIPMAPPING, "");
+
+                                                #region MODE2
+                                                //读取步数=0  并且 读取测试完成信号
+                                                if (
+                                                    CamActClass.Instance.StepCurrent == 0 &&
+                                                    //!((ControlSpace.MachineSpace.JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.Busy &&
+                                                    !Universal.IsRunningTest
+                                                    )
                                                 {
-                                                    if (CheckAlbumCollection(RCPDB.DataNow.Version, true))
+
+                                                    if (INI.IsOpenQcRandom)
                                                     {
-                                                        RESULT.TestMethod = TestMethodEnum.IO;
-                                                        RESULT.Calculate();
-
-
-                                                        if (RUNUI != null)
+                                                        //打开抽检功能
+                                                        if (INI.IsOpenCip)
                                                         {
-                                                            Universal.IsSaveRaw = RUNUI.IsSaveRaw;
+                                                            int _row = Universal.CipExtend.QcRowCount;
+                                                            int _col = Universal.CipExtend.QcColCount;
+                                                            int _qccount = Universal.CipExtend.QcCount;
+
+                                                            RUNUI.QcRandomMappingInit(_row, _col);
+
+                                                            CommonLogClass.Instance.Log2($"[AUTOSTART]QC抽检读取 行:{_row}列:{_col}拍摄次数{_qccount}");
+
+                                                            CamActClass.Instance.SetStepCount(_qccount);
+                                                        }
+                                                    }
+
+                                                    //不要執行包含在固定參數的參數
+                                                    if (("," + INI.PRELOADSTATICNO + ",").IndexOf("," + RCPDB.DataNow.No.ToString() + ",") > -1)
+                                                        MessageBox.Show("Please Check " + RCPDB.DataNow.Name + " ID = " + RCPDB.DataNow.No.ToString() + ".");
+                                                    else
+                                                    {
+                                                        if (CheckAlbumCollection(RCPDB.DataNow.Version, true))
+                                                        {
+                                                            RESULT.TestMethod = TestMethodEnum.IO;
+                                                            RESULT.Calculate();
+
+
+                                                            if (RUNUI != null)
+                                                            {
+                                                                Universal.IsSaveRaw = RUNUI.IsSaveRaw;
+                                                            }
                                                         }
                                                     }
                                                 }
-                                            }
 
-                                            #endregion
+                                                #endregion
+                                            }));
+
+
+                                            
 
                                             break;
                                         default:
@@ -3966,866 +4401,62 @@ namespace Allinone.FormSpace
                     break;
                 case ResultStatusEnum.CALEND:
 
-                    //CCDCollection.GetBmpAll(-2);
-                    AlbumWork.CPD.GenRUNVIEWData(ASNCollection);
-
-                    if (AlbumWork.CPD.bmpOCRCheckErr != null && OPTION != OptionEnum.R3 && OPTION != OptionEnum.C3)
+                    switch(OPTION)
                     {
-                        Bitmap bmpresult = AlbumWork.CPD.bmpRUNVIEW;
-                        Point lo = new Point();
-                        lo.X = 20;
-                        lo.Y = bmpresult.Height - AlbumWork.CPD.bmpOCRCheckErr.Height;
-                        Graphics g = Graphics.FromImage(bmpresult);
-                        g.DrawImage(AlbumWork.CPD.bmpOCRCheckErr, lo);
-
-                        if (Universal.isR3ByPass)
-                        {
-                            lo.X = bmpresult.Width - 1000;
-                            lo.Y = bmpresult.Height - 300;
-                            Font fonta = new Font(FontFamily.GenericSansSerif, 120, FontStyle.Bold);
-                            g.DrawString("SN复判OK", fonta, new SolidBrush(Color.Red), lo);
-
-                        }
-                        g.Dispose();
+                        case OptionEnum.MAIN_SDM5:
+                        case OptionEnum.MAIN_X6:
+                            switch (Universal.jetMappingType)
+                            {
+                                case JetMappingType.MAPPING_A:
+                                    break;
+                                default:
+                                    switch (Universal.CAMACT)
+                                    {
+                                        case CameraActionMode.CAM_MOTOR_LINESCAN:
+                                            break;
+                                        default:
+                                            AlbumWork.CPD.GenRUNVIEWData(ASNCollection);
+                                            break;
+                                    }
+                                    break;
+                            }
+                            break;
+                        default:
+                            AlbumWork.CPD.GenRUNVIEWData(ASNCollection);
+                            break;
                     }
+                    
 
-
-                    Bitmap bmpShow = new Bitmap(4000, 2060);
+                    //RESULT.myResult.LogProcessIDTimer(9998, $"ASN构造");
                     switch (OPTION)
                     {
-                        case OptionEnum.R3:
-                            #region R3
-                            if (!Universal.R3UI.isTest)
-                            {
-                                Graphics ggTest = Graphics.FromImage(bmpShow);
-                                ggTest.DrawLine(new Pen(Color.Yellow, 5), new Point(0, 0), new Point(bmpShow.Width, bmpShow.Height));
-                                ggTest.DrawLine(new Pen(Color.Yellow, 5), new Point(bmpShow.Width, 0), new Point(0, bmpShow.Height));
-                                ggTest.Dispose();
-
-                                DISPUI.SetDisplayImage(bmpShow);
-                                Universal.R3UI.bmpResult = bmpShow;
-
-                                break;
-                            }
-                            if (Universal.R3UI.isBYPASS)
-                            {
-                                RunTime.Store();
-                                Graphics ggTest = Graphics.FromImage(bmpShow);
-
-                                Font fonta1 = new Font(FontFamily.GenericSansSerif, 300, FontStyle.Bold);
-                                Point p11 = new Point(1300, 100);
-                                //     ggTest.DrawString("BYPASS", fonta1, new SolidBrush(Color.White), p11);
-
-                                fonta1 = new Font(FontFamily.GenericSansSerif, 800, FontStyle.Bold);
-                                p11 = new Point(500, 600);
-                                ggTest.DrawString("PASS", fonta1, new SolidBrush(Color.Lime), p11);
-
-                                ggTest.Dispose();
-
-                                DISPUI.SetDisplayImage(bmpShow);
-                                Universal.R3UI.bmpResult = bmpShow;
-
-                                break;
-                            }
-
-                            DISPUI.ClearMover();
-                            List<RectangleF> mylist = AlbumWork.FillCompoundMoverR3(false);
-
-                            if (Universal.R3UI.bmpC == null)
-                                throw new Exception("有图片为null");
-
-                            Bitmap bmp2Temp = (Bitmap)Universal.R3UI.bmpC.Clone();
-                            bool isbmp2 = true;
-                            if (mylist.Count > 0)
-                            {
-                                Graphics gc = Graphics.FromImage(bmp2Temp);
-                                foreach (RectangleF rectf in mylist)
-                                {
-                                    Rectangle rect = new Rectangle((int)rectf.X, (int)rectf.Y, (int)rectf.Width, (int)rectf.Height);
-                                    Point center = new Point(rect.X + rect.Width / 2, rect.Y + rect.Height / 2);
-
-                                    if (Universal.R3UI.RectST.Contains(center))
-                                    {
-                                        gc.DrawRectangle(new Pen(Color.Red, 2), rect);
-                                        isbmp2 = false;
-                                    }
-
-                                }
-                                gc.Dispose();
-                            }
-
-                            #region Bmp1
-                            Bitmap bmp1 = new Bitmap(4000, 500);
-                            Graphics g1 = Graphics.FromImage(bmp1);
-                            g1.FillRectangle(new SolidBrush(Color.Black), new RectangleF(0, 0, 4000, 500));
-
-
-                            Bitmap bmpA = new Bitmap(Universal.R3UI.bmpL, new Size(700, 500));
-                            Bitmap bmpB = new Bitmap(Universal.R3UI.bmpR, new Size(700, 500));
-                            g1.DrawImage(bmpA, new PointF(0, 0));
-                            g1.DrawImage(bmpB, new PointF(700, 0));
-                            bmpB.Dispose();
-                            bmpA.Dispose();
-
-                            Color color = Color.White;
-                            if (!AlbumWork.CPD.mGapResult.ISANGLE && !Universal.isR3ByPass)
-                                color = Color.Red;
-                            Point p1 = new Point(1500, 50);
-                            Font fonta = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Regular);
-                            //SizeF s = g1.MeasureString(AlbumWork.CPD.mGapResult.STRANGLE, fonta);
-                            //g1.FillRectangle(new SolidBrush(Color.White), p1.X, p1.Y, (int)s.Width, (int)s.Height);
-                            g1.DrawString(AlbumWork.CPD.mGapResult.STRANGLE, fonta, new SolidBrush(color), p1);
-
-
-                            color = Color.White;
-                            if (!AlbumWork.CPD.mGapResult.ISRange && !Universal.isR3ByPass)
-                                color = Color.Red;
-                            p1 = new Point(1500, 150);
-                            //   fonta = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Regular);
-                            //s = g1.MeasureString(AlbumWork.CPD.mGapResult.STRRange, fonta);
-                            //g1.FillRectangle(new SolidBrush(Color.White), p1.X, p1.Y, (int)s.Width, (int)s.Height);
-                            g1.DrawString(AlbumWork.CPD.mGapResult.STRRange, fonta, new SolidBrush(color), p1);
-
-                            string strtemp = AlbumWork.CPD.mGapResult.STRRangeLR.Replace(Environment.NewLine, "#");
-                            string[] strs = strtemp.Split('#');
-
-
-                            color = Color.White;
-                            if (!AlbumWork.CPD.mGapResult.ISRangeLR && !Universal.isR3ByPass)
-                                color = Color.Red;
-                            p1 = new Point(1500, 250);
-                            //   fonta = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Regular);
-                            //s = g1.MeasureString(strs[0], fonta);
-                            //g1.FillRectangle(new SolidBrush(Color.White), p1.X, p1.Y, (int)s.Width, (int)s.Height);
-                            g1.DrawString(strs[0], fonta, new SolidBrush(color), p1);
-
-                            p1 = new Point(1500, 350);
-                            //   fonta = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Regular);
-                            //s = g1.MeasureString(strs[1], fonta);
-                            //g1.FillRectangle(new SolidBrush(Color.White), p1.X, p1.Y, (int)s.Width, (int)s.Height);
-                            g1.DrawString(strs[1], fonta, new SolidBrush(color), p1);
-
-                            Color colorui = Color.Lime;
-                            if (!AlbumWork.CPD.mGapResult.ISANGLE && !Universal.isR3ByPass)
-                                colorui = Color.Red;
-                            if (!AlbumWork.CPD.mGapResult.ISRange && !Universal.isR3ByPass)
-                                colorui = Color.Red;
-                            if (!AlbumWork.CPD.mGapResult.ISRangeLR && !Universal.isR3ByPass)
-                                colorui = Color.Red;
-
-                            g1.FillRectangle(new SolidBrush(colorui), new RectangleF(3000, 0, 1000, 500));
-
-                            fonta = new Font(FontFamily.GenericSansSerif, 80, FontStyle.Bold);
-                            p1 = new Point(3200, 20);
-                            g1.DrawString("Placement", fonta, new SolidBrush(Color.White), p1);
-
-
-                            fonta = new Font(FontFamily.GenericSansSerif, 250, FontStyle.Bold);
-                            p1 = new Point(3200, 100);
-                            if (colorui == Color.Lime)
-                                g1.DrawString("OK", fonta, new SolidBrush(Color.White), p1);
-                            else
-                                g1.DrawString("NG", fonta, new SolidBrush(Color.White), p1);
-
-                            g1.Dispose();
-                            #endregion
-
-                            #region Bmp2
-                            Bitmap bmp2 = new Bitmap(4000, 500);
-                            Graphics g2 = Graphics.FromImage(bmp2);
-                            g2.FillRectangle(new SolidBrush(Color.Black), new RectangleF(0, 0, 4000, 500));
-
-                            Bitmap bmpTemp2 = bmp2Temp.Clone(Universal.R3UI.RectST, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-                            bmpTemp2 = new Bitmap(bmpTemp2, new Size(3000, 500));
-                            g2.DrawImage(bmpTemp2, new PointF(0, 0));
-                            bmp2Temp.Dispose();
-
-                            //bool isst = true;
-
-                            //foreach (WorkStatusClass work in Universal.RESULT.myResult.RunStatusCollection.WorkStatusList)
-                            //{
-                            //    if (work.AnalyzeProcedure == AnanlyzeProcedureEnum.CHECKOCR ||
-                            //        work.AnalyzeProcedure == AnanlyzeProcedureEnum.CHECKBARCODE)
-                            //    {
-
-                            //        continue;
-                            //    }
-                            //    if (work.Reason == ReasonEnum.NG)
-                            //    {
-                            //        isst = false;
-                            //        break;
-                            //    }
-
-                            //}
-
-                            //if (Universal.RESULT.myResult.RunStatusCollection.NGCOUNT == 1)
-                            //{
-
-                            //    if (Universal.R3UI.isSNResult)
-                            //    {
-                            //        isst = false;
-                            //    }
-                            //}
-                            //else
-                            //{
-                            //    isst = false;
-                            //}
-                            colorui = Color.Lime;
-                            if (!isbmp2 && !Universal.isR3ByPass)
-                                colorui = Color.Red;
-
-
-                            g2.FillRectangle(new SolidBrush(colorui), new RectangleF(3000, 0, 1000, 500));
-
-                            fonta = new Font(FontFamily.GenericSansSerif, 80, FontStyle.Bold);
-                            p1 = new Point(3150, 10);
-                            g2.DrawString("Compliancy", fonta, new SolidBrush(Color.White), p1);
-
-                            fonta = new Font(FontFamily.GenericSansSerif, 60, FontStyle.Bold);
-                            p1 = new Point(3300, 120);
-                            g2.DrawString("Cosmetc", fonta, new SolidBrush(Color.White), p1);
-
-                            fonta = new Font(FontFamily.GenericSansSerif, 250, FontStyle.Bold);
-                            p1 = new Point(3200, 160);
-                            if (colorui == Color.Lime)
-                                g2.DrawString("OK", fonta, new SolidBrush(Color.White), p1);
-                            else
-                                g2.DrawString("NG", fonta, new SolidBrush(Color.White), p1);
-                            g2.Dispose();
-                            #endregion
-
-                            #region Bmp3
-                            Bitmap bmp3 = new Bitmap(4000, 500);
-                            Graphics g3 = Graphics.FromImage(bmp3);
-                            g3.FillRectangle(new SolidBrush(Color.Black), new RectangleF(0, 0, 4000, 500));
-
-                            Bitmap bmp3Temp = (Bitmap)Universal.R3UI.bmpC.Clone();
-                            bool isbmp3 = true;
-                            if (mylist.Count > 0 && !Universal.isR3ByPass)
-                            {
-                                Graphics gc = Graphics.FromImage(bmp3Temp);
-                                foreach (RectangleF rectf in mylist)
-                                {
-                                    Rectangle rect = new Rectangle((int)rectf.X, (int)rectf.Y, (int)rectf.Width, (int)rectf.Height);
-                                    Point center = new Point(rect.X + rect.Width / 2, rect.Y + rect.Height / 2);
-
-                                    //          if (Universal.R3UI.RectSN.Contains(center))
-                                    {
-                                        gc.DrawRectangle(new Pen(Color.Red, 2), rect);
-                                        isbmp3 = false;
-                                    }
-
-                                }
-                                gc.Dispose();
-                            }
-
-                            // mylist = AlbumWork.FillCompoundMoverR3(true);
-
-                            //Bitmap bmp3Temp = (Bitmap)Universal.R3UI.bmpC.Clone();
-                            //if (mylist.Count > 0)
-                            //{
-                            //    Graphics gc = Graphics.FromImage(bmp3Temp);
-                            //    foreach (RectangleF rectf in mylist)
-                            //    {
-                            //        Rectangle rect = new Rectangle((int)rectf.X, (int)rectf.Y, (int)rectf.Width, (int)rectf.Height);
-                            //        gc.DrawRectangle(new Pen(Color.Red, 2), rect);
-                            //    }
-                            //    gc.Dispose();
-                            //}
-
-                            Bitmap bmpTemp3 = bmp3Temp.Clone(Universal.R3UI.RectSN, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                            bmp3Temp.Dispose();
-
-                            if (Universal.R3UI.isCheckBarcodeErr && !Universal.isR3ByPass)
-                                bmpTemp3 = Universal.R3UI.bmpBarcodeCHECKERR;
-
-                            bmpTemp3 = new Bitmap(bmpTemp3, new Size(3000, 500));
-                            g3.DrawImage(bmpTemp3, new PointF(0, 0));
-
-
-                            //if (AlbumWork.CPD.bmpOCRCheckErr != null)
-                            //{
-                            //    g3.DrawImage(AlbumWork.CPD.bmpOCRCheckErr, new PointF(0, 0));
-
-                            //    bmpTemp3 = new Bitmap(bmpTemp3, new Size(3000 - AlbumWork.CPD.bmpOCRCheckErr.Width, 500));
-                            //    g3.DrawImage(bmpTemp3, new PointF(AlbumWork.CPD.bmpOCRCheckErr.Width, 0));
-                            //}
-                            //else
-                            //{
-                            //    bmpTemp3 = new Bitmap(bmpTemp3, new Size(3000 , 500));
-                            //    g3.DrawImage(bmpTemp3, new PointF(0, 0));
-                            //}
-
-                            colorui = Color.Lime;
-                            //   if (!Universal.R3UI.isSNResult)
-                            if (!isbmp3 && !Universal.isR3ByPass)
-                                colorui = Color.Red;
-
-                            g3.FillRectangle(new SolidBrush(colorui), new RectangleF(3000, 0, 1000, 500));
-
-                            fonta = new Font(FontFamily.GenericSansSerif, 80, FontStyle.Bold);
-                            p1 = new Point(3400, 10);
-                            g3.DrawString("SN", fonta, new SolidBrush(Color.White), p1);
-
-                            fonta = new Font(FontFamily.GenericSansSerif, 60, FontStyle.Bold);
-                            p1 = new Point(3300, 120);
-                            g3.DrawString("Cosmetc", fonta, new SolidBrush(Color.White), p1);
-
-                            fonta = new Font(FontFamily.GenericSansSerif, 250, FontStyle.Bold);
-                            p1 = new Point(3200, 160);
-                            if (colorui == Color.Lime)
-                                g3.DrawString("OK", fonta, new SolidBrush(Color.White), p1);
-                            else
-                                g3.DrawString("NG", fonta, new SolidBrush(Color.White), p1);
-                            g3.Dispose();
-                            #endregion
-
-                            #region Bmp4
-                            Bitmap bmp4 = new Bitmap(4000, 500);
-                            Graphics g4 = Graphics.FromImage(bmp4);
-                            g4.FillRectangle(new SolidBrush(Color.Black), new RectangleF(0, 0, 4000, 500));
-
-
-                            fonta = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Bold);
-                            p1 = new Point(300, 10);
-                            g4.DrawString("Line:", fonta, new SolidBrush(Color.White), p1);
-                            p1 = new Point(1800, 10);
-                            g4.DrawString(INI.HIVE_line, fonta, new SolidBrush(Color.White), p1);
-
-                            p1 = new Point(300, 80);
-                            g4.DrawString("PROGRAM:", fonta, new SolidBrush(Color.White), p1);
-                            p1 = new Point(1800, 80);
-                            g4.DrawString(Universal.VersionDate, fonta, new SolidBrush(Color.White), p1);
-
-                            p1 = new Point(300, 150);
-                            g4.DrawString("BUILD:", fonta, new SolidBrush(Color.White), p1);
-                            p1 = new Point(1800, 150);
-                            g4.DrawString(INI.HIVE_line_type, fonta, new SolidBrush(Color.White), p1);
-
-                            p1 = new Point(300, 230);
-                            g4.DrawString("TESTTIMER:", fonta, new SolidBrush(Color.White), p1);
-                            p1 = new Point(1800, 230);
-                            g4.DrawString(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), fonta, new SolidBrush(Color.White), p1);
-
-
-                            string strbarcode = Universal.R3UI.isSNHaveS ? "S" + JzToolsClass.PassingBarcode : JzToolsClass.PassingBarcode;
-                            p1 = new Point(300, 300);
-                            g4.DrawString("SFSN:", fonta, new SolidBrush(Color.White), p1);
-                            p1 = new Point(1800, 300);
-                            g4.DrawString(strbarcode, fonta, new SolidBrush(Color.White), p1);
-
-                            p1 = new Point(300, 370);
-                            g4.DrawString("USETIME:", fonta, new SolidBrush(Color.White), p1);
-                            p1 = new Point(1800, 370);
-                            g4.DrawString(RunTime.StoreSecond(), fonta, new SolidBrush(Color.White), p1);
-
-                            if (Universal.R3UI.Barcode1D != "")
-                            {
-                                p1 = new Point(300, 440);
-                                g4.DrawString("1DBARCODE:", fonta, new SolidBrush(Color.White), p1);
-                                p1 = new Point(1800, 440);
-                                g4.DrawString(Universal.R3UI.Barcode1D, fonta, new SolidBrush(Color.White), p1);
-                            }
-
-                            colorui = Color.Lime;
-                            if (!Universal.R3UI.IsPass && !Universal.isR3ByPass)
-                                colorui = Color.Red;
-
-                            g4.FillRectangle(new SolidBrush(colorui), new RectangleF(3000, 0, 1000, 500));
-
-                            fonta = new Font(FontFamily.GenericSansSerif, 80, FontStyle.Bold);
-                            p1 = new Point(3350, 20);
-                            g4.DrawString("UNIT", fonta, new SolidBrush(Color.White), p1);
-
-
-                            fonta = new Font(FontFamily.GenericSansSerif, 250, FontStyle.Bold);
-                            p1 = new Point(3200, 100);
-                            if (colorui == Color.Lime)
-                                g4.DrawString("OK", fonta, new SolidBrush(Color.White), p1);
-                            else
-                                g4.DrawString("NG", fonta, new SolidBrush(Color.White), p1);
-                            #endregion
-
-
-                            Graphics gg = Graphics.FromImage(bmpShow);
-                            gg.FillRectangle(new SolidBrush(Color.White), new RectangleF(0, 0, 4000, 2100));
-
-
-                            gg.DrawImage(bmp1, new Point(0, 0));
-                            gg.DrawImage(bmp2, new PointF(0, 520));
-                            gg.DrawImage(bmp3, new PointF(0, 1040));
-                            gg.DrawImage(bmp4, new PointF(0, 1560));
-
-                            if (Universal.isR3ByPass && !Universal.R3UI.IsPass)
-                            {
-                                Bitmap bmpbypass = new Bitmap(700, 200);
-                                Graphics gtemp = Graphics.FromImage(bmpbypass);
-                                fonta = new Font(FontFamily.GenericSansSerif, 100, FontStyle.Bold);
-                                p1 = new Point(0, 40);
-                                gtemp.FillRectangle(new SolidBrush(Color.Blue), new RectangleF(0, 0, bmpbypass.Width, bmpbypass.Height));
-                                gtemp.DrawString("复判PASS", fonta, new SolidBrush(Color.Lime), p1);
-                                gtemp.Dispose();
-
-                                gg.DrawImage(bmpbypass, new PointF(bmpShow.Width - bmpbypass.Width - 20, bmpShow.Height - bmpbypass.Height - 20));
-
-                                JzToolsClass tools = new JzToolsClass();
-                                string strsavedata = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " 复判条码:" + strbarcode + Environment.NewLine;
-                                string strpath = "D:\\Log\\Retrial.log";
-
-                                if (!System.IO.Directory.Exists("D:\\Log\\"))
-                                    System.IO.Directory.CreateDirectory("D:\\Log\\");
-                                tools.SaveDataEX(strsavedata, strpath);
-
-                            }
-
-                            gg.Dispose();
-
-                            DISPUI.SetDisplayImage(bmpShow);
-
-                            Universal.R3UI.bmpResult = bmpShow;
-                            #endregion
-                            break;
-                        case OptionEnum.C3:
-                            #region C3
-                            if (!Universal.C3UI.isTest)
-                            {
-                                Graphics ggTestC = Graphics.FromImage(bmpShow);
-                                ggTestC.DrawLine(new Pen(Color.Yellow, 5), new Point(0, 0), new Point(bmpShow.Width, bmpShow.Height));
-                                ggTestC.DrawLine(new Pen(Color.Yellow, 5), new Point(bmpShow.Width, 0), new Point(0, bmpShow.Height));
-                                ggTestC.Dispose();
-
-                                DISPUI.SetDisplayImage(bmpShow);
-                                Universal.C3UI.bmpResult = bmpShow;
-
-                                break;
-                            }
-                            if (Universal.C3UI.isBYPASS)
-                            {
-                                RunTime.Store();
-                                Graphics ggTestC = Graphics.FromImage(bmpShow);
-
-                                Font fonta1C = new Font(FontFamily.GenericSansSerif, 300, FontStyle.Bold);
-                                Point p11C = new Point(1300, 100);
-                                //     ggTest.DrawString("BYPASS", fonta1, new SolidBrush(Color.White), p11);
-
-                                fonta1C = new Font(FontFamily.GenericSansSerif, 800, FontStyle.Bold);
-                                p11C = new Point(500, 600);
-                                ggTestC.DrawString("PASS", fonta1C, new SolidBrush(Color.Lime), p11C);
-
-                                ggTestC.Dispose();
-
-                                DISPUI.SetDisplayImage(bmpShow);
-                                Universal.C3UI.bmpResult = bmpShow;
-
-                                break;
-                            }
-
-                            DISPUI.ClearMover();
-                            List<RectangleF> mylistC = AlbumWork.FillCompoundMoverR3(false);
-
-                            if (Universal.C3UI.bmpC != null)
-                            {
-                                //    throw new Exception("有图片为null");
-
-                                Bitmap bmp2TempC = (Bitmap)Universal.C3UI.bmpC.Clone();
-                                bool isbmp2C = true;
-                                if (mylistC.Count > 0)
-                                {
-                                    Graphics gc = Graphics.FromImage(bmp2TempC);
-                                    foreach (RectangleF rectf in mylistC)
-                                    {
-                                        Rectangle rect = new Rectangle((int)rectf.X, (int)rectf.Y, (int)rectf.Width, (int)rectf.Height);
-                                        Point center = new Point(rect.X + rect.Width / 2, rect.Y + rect.Height / 2);
-
-                                        if (Universal.C3UI.RectST.Contains(center))
-                                        {
-                                            gc.DrawRectangle(new Pen(Color.Red, 2), rect);
-                                            isbmp2C = false;
-                                        }
-
-                                    }
-                                    gc.Dispose();
-                                }
-
-                                #region Bmp1
-                                Bitmap bmp1C = new Bitmap(4000, 500);
-                                Graphics g1C = Graphics.FromImage(bmp1C);
-                                g1C.FillRectangle(new SolidBrush(Color.Black), new RectangleF(0, 0, 4000, 500));
-
-
-                                Bitmap bmpAC = new Bitmap(Universal.C3UI.bmpL, new Size(700, 500));
-                                Bitmap bmpBC = new Bitmap(Universal.C3UI.bmpR, new Size(700, 500));
-                                g1C.DrawImage(bmpAC, new PointF(0, 0));
-                                g1C.DrawImage(bmpBC, new PointF(700, 0));
-                                bmpBC.Dispose();
-                                bmpAC.Dispose();
-
-                                Color colorC = Color.White;
-                                if (!AlbumWork.CPD.mGapResult.ISANGLE && !Universal.isC3ByPass)
-                                    colorC = Color.Red;
-                                Point p1C = new Point(1450, 50);
-                                Font fontaC = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Regular);
-                                g1C.DrawString(AlbumWork.CPD.mGapResult.STRANGLE, fontaC, new SolidBrush(colorC), p1C);
-
-
-                                colorC = Color.White;
-                                if (!AlbumWork.CPD.mGapResult.isA && !Universal.isC3ByPass)
-                                    colorC = Color.Red;
-                                p1C = new Point(1450, 150);
-                                //   fonta = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Regular);
-                                //s = g1.MeasureString(AlbumWork.CPD.mGapResult.STRRange, fonta);
-                                //g1.FillRectangle(new SolidBrush(Color.White), p1.X, p1.Y, (int)s.Width, (int)s.Height);
-                                g1C.DrawString(AlbumWork.CPD.mGapResult.strA, fontaC, new SolidBrush(colorC), p1C);
-
-
-
-                                colorC = Color.White;
-                                if (!AlbumWork.CPD.mGapResult.isB && !Universal.isC3ByPass)
-                                    colorC = Color.Red;
-                                p1C = new Point(1450, 250);
-                                //   fonta = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Regular);
-                                //s = g1.MeasureString(strs[0], fonta);
-                                //g1.FillRectangle(new SolidBrush(Color.White), p1.X, p1.Y, (int)s.Width, (int)s.Height);
-                                g1C.DrawString(AlbumWork.CPD.mGapResult.strB, fontaC, new SolidBrush(colorC), p1C);
-
-                                colorC = Color.White;
-                                if (!AlbumWork.CPD.mGapResult.isC && !Universal.isC3ByPass)
-                                    colorC = Color.Red;
-                                p1C = new Point(1450, 350);
-                                //   fonta = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Regular);
-                                //s = g1.MeasureString(strs[1], fonta);
-                                //g1.FillRectangle(new SolidBrush(Color.White), p1.X, p1.Y, (int)s.Width, (int)s.Height);
-                                g1C.DrawString(AlbumWork.CPD.mGapResult.strC, fontaC, new SolidBrush(colorC), p1C);
-
-                                colorC = Color.White;
-                                if (!AlbumWork.CPD.mGapResult.isD && !Universal.isC3ByPass)
-                                    colorC = Color.Red;
-                                p1C = new Point(2200, 50);
-                                g1C.DrawString(AlbumWork.CPD.mGapResult.strD, fontaC, new SolidBrush(colorC), p1C);
-
-                                colorC = Color.White;
-                                if (!AlbumWork.CPD.mGapResult.isE && !Universal.isC3ByPass)
-                                    colorC = Color.Red;
-                                p1C = new Point(2200, 150);
-                                g1C.DrawString(AlbumWork.CPD.mGapResult.strE, fontaC, new SolidBrush(colorC), p1C);
-
-                                colorC = Color.White;
-                                if (!AlbumWork.CPD.mGapResult.isF && !Universal.isC3ByPass)
-                                    colorC = Color.Red;
-                                p1C = new Point(2200, 250);
-                                g1C.DrawString(AlbumWork.CPD.mGapResult.strF, fontaC, new SolidBrush(colorC), p1C);
-
-                                colorC = Color.White;
-                                if (!AlbumWork.CPD.mGapResult.isG && !Universal.isC3ByPass)
-                                    colorC = Color.Red;
-                                p1C = new Point(2200, 350);
-                                g1C.DrawString(AlbumWork.CPD.mGapResult.strG, fontaC, new SolidBrush(colorC), p1C);
-
-                                Color coloruiC = Color.Lime;
-                                if (!AlbumWork.CPD.mGapResult.ISANGLE && !Universal.isC3ByPass)
-                                    coloruiC = Color.Red;
-                                if (!AlbumWork.CPD.mGapResult.isA && !Universal.isC3ByPass)
-                                    coloruiC = Color.Red;
-                                if (!AlbumWork.CPD.mGapResult.isB && !Universal.isC3ByPass)
-                                    coloruiC = Color.Red;
-                                if (!AlbumWork.CPD.mGapResult.isC && !Universal.isC3ByPass)
-                                    coloruiC = Color.Red;
-                                if (!AlbumWork.CPD.mGapResult.isD && !Universal.isC3ByPass)
-                                    coloruiC = Color.Red;
-                                if (!AlbumWork.CPD.mGapResult.isE && !Universal.isC3ByPass)
-                                    coloruiC = Color.Red;
-                                if (!AlbumWork.CPD.mGapResult.isF && !Universal.isC3ByPass)
-                                    coloruiC = Color.Red;
-                                if (!AlbumWork.CPD.mGapResult.isG && !Universal.isC3ByPass)
-                                    coloruiC = Color.Red;
-
-
-                                g1C.FillRectangle(new SolidBrush(coloruiC), new RectangleF(3000, 0, 1000, 500));
-
-                                fontaC = new Font(FontFamily.GenericSansSerif, 80, FontStyle.Bold);
-                                p1C = new Point(3200, 20);
-                                g1C.DrawString("Placement", fontaC, new SolidBrush(Color.White), p1C);
-
-
-                                fontaC = new Font(FontFamily.GenericSansSerif, 250, FontStyle.Bold);
-                                p1C = new Point(3200, 100);
-                                if (coloruiC == Color.Lime)
-                                    g1C.DrawString("OK", fontaC, new SolidBrush(Color.White), p1C);
-                                else
-                                    g1C.DrawString("NG", fontaC, new SolidBrush(Color.White), p1C);
-
-                                g1C.Dispose();
-                                #endregion
-
-                                #region Bmp2
-                                Bitmap bmp2C = new Bitmap(4000, 500);
-                                Graphics g2C = Graphics.FromImage(bmp2C);
-                                g2C.FillRectangle(new SolidBrush(Color.Black), new RectangleF(0, 0, 4000, 500));
-
-                                Bitmap bmpTemp2C = bmp2TempC.Clone(Universal.C3UI.RectST, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-                                bmpTemp2C = new Bitmap(bmpTemp2C, new Size(3000, 500));
-                                g2C.DrawImage(bmpTemp2C, new PointF(0, 0));
-                                bmp2TempC.Dispose();
-
-                                //bool isst = true;
-
-                                //foreach (WorkStatusClass work in Universal.RESULT.myResult.RunStatusCollection.WorkStatusList)
-                                //{
-                                //    if (work.AnalyzeProcedure == AnanlyzeProcedureEnum.CHECKOCR ||
-                                //        work.AnalyzeProcedure == AnanlyzeProcedureEnum.CHECKBARCODE)
-                                //    {
-
-                                //        continue;
-                                //    }
-                                //    if (work.Reason == ReasonEnum.NG)
-                                //    {
-                                //        isst = false;
-                                //        break;
-                                //    }
-
-                                //}
-
-                                //if (Universal.RESULT.myResult.RunStatusCollection.NGCOUNT == 1)
-                                //{
-
-                                //    if (Universal.C3UI.isSNResult)
-                                //    {
-                                //        isst = false;
-                                //    }
-                                //}
-                                //else
-                                //{
-                                //    isst = false;
-                                //}
-                                coloruiC = Color.Lime;
-                                if (!isbmp2C && !Universal.isC3ByPass)
-                                    coloruiC = Color.Red;
-
-
-                                g2C.FillRectangle(new SolidBrush(coloruiC), new RectangleF(3000, 0, 1000, 500));
-
-                                fontaC = new Font(FontFamily.GenericSansSerif, 80, FontStyle.Bold);
-                                p1C = new Point(3150, 10);
-                                g2C.DrawString("Compliancy", fontaC, new SolidBrush(Color.White), p1C);
-
-                                fontaC = new Font(FontFamily.GenericSansSerif, 60, FontStyle.Bold);
-                                p1C = new Point(3300, 120);
-                                g2C.DrawString("Cosmetc", fontaC, new SolidBrush(Color.White), p1C);
-
-                                fontaC = new Font(FontFamily.GenericSansSerif, 250, FontStyle.Bold);
-                                p1C = new Point(3200, 160);
-                                if (coloruiC == Color.Lime)
-                                    g2C.DrawString("OK", fontaC, new SolidBrush(Color.White), p1C);
-                                else
-                                    g2C.DrawString("NG", fontaC, new SolidBrush(Color.White), p1C);
-                                g2C.Dispose();
-                                #endregion
-
-                                #region Bmp3
-                                Bitmap bmp3C = new Bitmap(4000, 500);
-                                Graphics g3C = Graphics.FromImage(bmp3C);
-                                g3C.FillRectangle(new SolidBrush(Color.Black), new RectangleF(0, 0, 4000, 500));
-
-                                Bitmap bmp3TempC = (Bitmap)Universal.C3UI.bmpC.Clone();
-                                bool isbmp3C = true;
-                                if (mylistC.Count > 0 && !Universal.isC3ByPass)
-                                {
-                                    Graphics gc = Graphics.FromImage(bmp3TempC);
-                                    foreach (RectangleF rectf in mylistC)
-                                    {
-                                        Rectangle rect = new Rectangle((int)rectf.X, (int)rectf.Y, (int)rectf.Width, (int)rectf.Height);
-                                        Point center = new Point(rect.X + rect.Width / 2, rect.Y + rect.Height / 2);
-
-                                        //          if (Universal.C3UI.RectSN.Contains(center))
-                                        {
-                                            gc.DrawRectangle(new Pen(Color.Red, 2), rect);
-                                            isbmp3C = false;
-                                        }
-
-                                    }
-                                    gc.Dispose();
-                                }
-
-                                // mylist = AlbumWork.FillCompoundMoverR3(true);
-
-                                //Bitmap bmp3Temp = (Bitmap)Universal.C3UI.bmpC.Clone();
-                                //if (mylist.Count > 0)
-                                //{
-                                //    Graphics gc = Graphics.FromImage(bmp3Temp);
-                                //    foreach (RectangleF rectf in mylist)
-                                //    {
-                                //        Rectangle rect = new Rectangle((int)rectf.X, (int)rectf.Y, (int)rectf.Width, (int)rectf.Height);
-                                //        gc.DrawRectangle(new Pen(Color.Red, 2), rect);
-                                //    }
-                                //    gc.Dispose();
-                                //}
-
-                                Bitmap bmpTemp3C = bmp3TempC.Clone(Universal.C3UI.RectSN, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                                bmp3TempC.Dispose();
-
-                                if (Universal.C3UI.isCheckBarcodeErr && !Universal.isC3ByPass)
-                                    bmpTemp3C = Universal.C3UI.bmpBarcodeCHECKERR;
-
-                                bmpTemp3C = new Bitmap(bmpTemp3C, new Size(3000, 500));
-                                g3C.DrawImage(bmpTemp3C, new PointF(0, 0));
-
-
-                                //if (AlbumWork.CPD.bmpOCRCheckErr != null)
-                                //{
-                                //    g3.DrawImage(AlbumWork.CPD.bmpOCRCheckErr, new PointF(0, 0));
-
-                                //    bmpTemp3 = new Bitmap(bmpTemp3, new Size(3000 - AlbumWork.CPD.bmpOCRCheckErr.Width, 500));
-                                //    g3.DrawImage(bmpTemp3, new PointF(AlbumWork.CPD.bmpOCRCheckErr.Width, 0));
-                                //}
-                                //else
-                                //{
-                                //    bmpTemp3 = new Bitmap(bmpTemp3, new Size(3000 , 500));
-                                //    g3.DrawImage(bmpTemp3, new PointF(0, 0));
-                                //}
-
-                                coloruiC = Color.Lime;
-                                //   if (!Universal.C3UI.isSNResult)
-                                if (!isbmp3C && !Universal.isC3ByPass)
-                                    coloruiC = Color.Red;
-
-                                g3C.FillRectangle(new SolidBrush(coloruiC), new RectangleF(3000, 0, 1000, 500));
-
-                                fontaC = new Font(FontFamily.GenericSansSerif, 80, FontStyle.Bold);
-                                p1C = new Point(3400, 10);
-                                g3C.DrawString("SN", fontaC, new SolidBrush(Color.White), p1C);
-
-                                fontaC = new Font(FontFamily.GenericSansSerif, 60, FontStyle.Bold);
-                                p1C = new Point(3300, 120);
-                                g3C.DrawString("Cosmetc", fontaC, new SolidBrush(Color.White), p1C);
-
-                                fontaC = new Font(FontFamily.GenericSansSerif, 250, FontStyle.Bold);
-                                p1C = new Point(3200, 160);
-                                if (coloruiC == Color.Lime)
-                                    g3C.DrawString("OK", fontaC, new SolidBrush(Color.White), p1C);
-                                else
-                                    g3C.DrawString("NG", fontaC, new SolidBrush(Color.White), p1C);
-                                g3C.Dispose();
-                                #endregion
-
-                                #region Bmp4
-                                Bitmap bmp4C = new Bitmap(4000, 500);
-                                Graphics g4C = Graphics.FromImage(bmp4C);
-                                g4C.FillRectangle(new SolidBrush(Color.Black), new RectangleF(0, 0, 4000, 500));
-
-
-                                fontaC = new Font(FontFamily.GenericSansSerif, 40, FontStyle.Bold);
-                                p1C = new Point(300, 10);
-                                g4C.DrawString("Line:", fontaC, new SolidBrush(Color.White), p1C);
-                                p1C = new Point(1800, 10);
-                                g4C.DrawString(INI.HIVE_line, fontaC, new SolidBrush(Color.White), p1C);
-
-                                p1C = new Point(300, 80);
-                                g4C.DrawString("PROGRAM:", fontaC, new SolidBrush(Color.White), p1C);
-                                p1C = new Point(1800, 80);
-                                g4C.DrawString(Universal.VersionDate, fontaC, new SolidBrush(Color.White), p1C);
-
-                                p1C = new Point(300, 150);
-                                g4C.DrawString("BUILD:", fontaC, new SolidBrush(Color.White), p1C);
-                                p1C = new Point(1800, 150);
-                                g4C.DrawString(INI.HIVE_line_type, fontaC, new SolidBrush(Color.White), p1C);
-
-                                p1C = new Point(300, 230);
-                                g4C.DrawString("TESTTIMER:", fontaC, new SolidBrush(Color.White), p1C);
-                                p1C = new Point(1800, 230);
-                                g4C.DrawString(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), fontaC, new SolidBrush(Color.White), p1C);
-
-
-                                string strbarcodeC = Universal.C3UI.isSNHaveS ? "S" + JzToolsClass.PassingBarcode : JzToolsClass.PassingBarcode;
-                                p1C = new Point(300, 300);
-                                g4C.DrawString("SFSN:", fontaC, new SolidBrush(Color.White), p1C);
-                                p1C = new Point(1800, 300);
-                                g4C.DrawString(strbarcodeC, fontaC, new SolidBrush(Color.White), p1C);
-
-                                p1C = new Point(300, 370);
-                                g4C.DrawString("USETIME:", fontaC, new SolidBrush(Color.White), p1C);
-                                p1C = new Point(1800, 370);
-                                g4C.DrawString(RunTime.StoreSecond(), fontaC, new SolidBrush(Color.White), p1C);
-
-                                if (Universal.C3UI.Barcode1D != "")
-                                {
-                                    p1C = new Point(300, 440);
-                                    g4C.DrawString("1DBARCODE:", fontaC, new SolidBrush(Color.White), p1C);
-                                    p1C = new Point(1800, 440);
-                                    g4C.DrawString(Universal.C3UI.Barcode1D, fontaC, new SolidBrush(Color.White), p1C);
-                                }
-
-                                coloruiC = Color.Lime;
-                                if (!Universal.C3UI.IsPass && !Universal.isC3ByPass)
-                                    coloruiC = Color.Red;
-
-                                g4C.FillRectangle(new SolidBrush(coloruiC), new RectangleF(3000, 0, 1000, 500));
-
-                                fontaC = new Font(FontFamily.GenericSansSerif, 80, FontStyle.Bold);
-                                p1C = new Point(3350, 20);
-                                g4C.DrawString("UNIT", fontaC, new SolidBrush(Color.White), p1C);
-
-
-                                fontaC = new Font(FontFamily.GenericSansSerif, 250, FontStyle.Bold);
-                                p1C = new Point(3200, 100);
-                                if (coloruiC == Color.Lime)
-                                    g4C.DrawString("OK", fontaC, new SolidBrush(Color.White), p1C);
-                                else
-                                    g4C.DrawString("NG", fontaC, new SolidBrush(Color.White), p1C);
-                                #endregion
-
-
-                                if (Universal.C3UI.bmpLabel != null)
-                                    bmpShow = new Bitmap(bmpShow.Width + Universal.C3UI.bmpLabel.Width, bmpShow.Height);
-                                Graphics ggC = Graphics.FromImage(bmpShow);
-                                ggC.FillRectangle(new SolidBrush(Color.White), new RectangleF(0, 0, 4000, 2100));
-
-                                ggC.DrawImage(bmp1C, new Point(0, 0));
-                                ggC.DrawImage(bmp2C, new PointF(0, 520));
-                                ggC.DrawImage(bmp3C, new PointF(0, 1040));
-                                ggC.DrawImage(bmp4C, new PointF(0, 1560));
-
-                                if (Universal.C3UI.bmpLabel != null)
-                                    ggC.DrawImage(Universal.C3UI.bmpLabel, new Point(bmpShow.Width - Universal.C3UI.bmpLabel.Width, 0));
-
-                                if (Universal.isC3ByPass && !Universal.C3UI.IsPass)
-                                {
-                                    Bitmap bmpbypass = new Bitmap(700, 200);
-                                    Graphics gtemp = Graphics.FromImage(bmpbypass);
-                                    fontaC = new Font(FontFamily.GenericSansSerif, 100, FontStyle.Bold);
-                                    p1C = new Point(0, 40);
-                                    gtemp.FillRectangle(new SolidBrush(Color.Blue), new RectangleF(0, 0, bmpbypass.Width, bmpbypass.Height));
-                                    gtemp.DrawString("复判PASS", fontaC, new SolidBrush(Color.Lime), p1C);
-                                    gtemp.Dispose();
-
-                                    ggC.DrawImage(bmpbypass, new PointF(bmpShow.Width - bmpbypass.Width - 20, bmpShow.Height - bmpbypass.Height - 20));
-
-                                    JzToolsClass tools = new JzToolsClass();
-                                    string strsavedata = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " 复判条码:" + strbarcodeC + Environment.NewLine;
-                                    string strpath = "D:\\Log\\Retrial.log";
-
-                                    if (!System.IO.Directory.Exists("D:\\Log\\"))
-                                        System.IO.Directory.CreateDirectory("D:\\Log\\");
-                                    tools.SaveDataEX(strsavedata, strpath);
-
-                                }
-
-                                ggC.Dispose();
-                            }
-
-                            DISPUI.SetDisplayImage(bmpShow);
-
-                            Universal.C3UI.bmpResult = bmpShow;
-                            #endregion
-                            break;
+                        case OptionEnum.MAIN_SDM5:
                         case OptionEnum.MAIN_X6:
                         case JetEazy.OptionEnum.MAIN_SERVICE:
-                            if (!INI.IsOnlyShowCurrentImage)
+                            switch (Universal.jetMappingType)
                             {
-                                //Bitmap bmpshowbarcode = _getMainX6ShowBarcode(AlbumWork.CPD.bmpRUNVIEW);
-                                DISPUI.SetDisplayImage(AlbumWork.CPD.bmpRUNVIEW);
+                                case JetMappingType.MAPPING_A:
+                                    break;
+                                default:
+                                    switch (Universal.CAMACT)
+                                    {
+                                        //case CameraActionMode.CAM_MOTOR_MODE2:
+                                        case CameraActionMode.CAM_MOTOR_LINESCAN:
+                                            //这里显示当前抓的图片
+                                            DISPUI.SetDisplayImage(AlbumWork.ENVList[0].PageList[0].GetbmpRUN(PageOPTypeEnum.P00));
+                                            //显示框和条码
+                                            DISPUIShowResultAndBarcode(OPTION == OptionEnum.MAIN_X6);
+                                            break;
+                                        default:
+                                            if (!INI.IsOnlyShowCurrentImage)
+                                            {
+                                                DISPUI.SetDisplayImage(AlbumWork.CPD.bmpRUNVIEW);
+                                            }
+                                            break;
+                                    }
+                                    break;
                             }
+                           
                             break;
                         case OptionEnum.MAIN_SDM2:
                         case OptionEnum.MAIN_SDM3:
@@ -4835,58 +4466,79 @@ namespace Allinone.FormSpace
                             break;
                     }
 
-                    //     bmpShow.Dispose();
+                    //RESULT.myResult.LogProcessIDTimer(9998, $"Display显示图片");
 
                     if (OPTION != OptionEnum.R3 && OPTION != OptionEnum.C3)
                     {
-                        if (OPTION == OptionEnum.MAIN_X6)
+                        switch (Universal.jetMappingType)
                         {
-                            if (!INI.IsOnlyShowCurrentImage)
-                            {
-                                DISPUIShowResult();
-                            }
-                        }
-                        else
-                        {
-                            DISPUIShowResult();
+                            case JetMappingType.MAPPING_A:
+                                break;
+                            default:
+                                switch(OPTION)
+                                {
+                                    case OptionEnum.MAIN_SDM5:
+                                    case OptionEnum.MAIN_X6:
+                                        switch (Universal.CAMACT)
+                                        {
+                                            //case CameraActionMode.CAM_MOTOR_MODE2:
+                                            case CameraActionMode.CAM_MOTOR_LINESCAN:
+
+                                                break;
+                                            default:
+                                                if (!INI.IsOnlyShowCurrentImage)
+                                                {
+                                                    DISPUIShowResult();
+                                                }
+                                                break;
+                                        }
+                                        break;
+                                    default:
+                                        DISPUIShowResult();
+                                        break;
+                                }
+                                break;
                         }
                     }
+
+                    //RESULT.myResult.LogProcessIDTimer(9998, $"Display显示结果框");
 
                     switch (OPTION)
                     {
                         case OptionEnum.MAIN_SDM1:
+                        //case OptionEnum.MAIN_SDM2:
 
                             string myReportStr = "Name(mil),LEFT_Min,LEFT_Max,TOP_Min,TOP_Max,RIGHT_Min,RIGHT_Max,BOTTOM_Min,BOTTOM_Max,";
                             myReportStr = "Name(mm),LEFT_Min,LEFT_Max,TOP_Min,TOP_Max,RIGHT_Min,RIGHT_Max,BOTTOM_Min,BOTTOM_Max," + Environment.NewLine;
 
-                            int RestoreSeq = Smoothen();
+                            //int RestoreSeq = Smoothen();
 
-                            int envindex = 0;
-                            int pageindex = 0;
-                            int analyzeindex = 0;
-                            foreach (EnvClass env in AlbumWork.ENVList)
-                            {
-                                foreach (PageClass page in env.PageList)
-                                {
-                                    foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
-                                    {
-                                        if (analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK)
-                                        {
-                                            analyze.CalculateChipWidth();
-                                            if (INI.CHIP_ISSMOOTHEN)
-                                            {
-                                                if (RestoreSeq < 0)
-                                                    analyze.BackupData();
-                                                else
-                                                    analyze.RestoreData(RestoreSeq);
-                                            }
-                                        }
-                                        analyzeindex++;
-                                    }
-                                    pageindex++;
-                                }
-                                envindex++;
-                            }
+                            //int envindex = 0;
+                            //int pageindex = 0;
+                            //int analyzeindex = 0;
+                            //foreach (EnvClass env in AlbumWork.ENVList)
+                            //{
+                            //    foreach (PageClass page in env.PageList)
+                            //    {
+                            //        foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                            //        {
+                            //            if (analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK)
+                            //            {
+                            //                analyze.CalculateChipWidth();
+                            //                if (INI.CHIP_ISSMOOTHEN)
+                            //                {
+                            //                    if (RestoreSeq < 0)
+                            //                        analyze.BackupData();
+                            //                    else
+                            //                        analyze.RestoreData(RestoreSeq);
+                            //                }
+                            //            }
+                            //            analyzeindex++;
+                            //        }
+                            //        pageindex++;
+                            //    }
+                            //    envindex++;
+                            //}
 
                             List<string> list = new List<string>();
                             list.Clear();
@@ -4957,18 +4609,25 @@ namespace Allinone.FormSpace
 
                             break;
                         case OptionEnum.MAIN_X6:
+                            //switch(Universal.jetMappingType)
+                            //{
+                            //    case JetMappingType.MAPPING_A:
+                            //        break;
+                            //    default:
+                            //        if (!INI.IsOnlyShowCurrentImage)
+                            //        {
+                            //            //Bitmap bmpshowbarcode = _getMainX6ShowBarcode(AlbumWork.CPD.bmpRUNVIEW);
+                            //            //DISPUI.SetDisplayImage(bmpshowbarcode);
 
-                            if (!INI.IsOnlyShowCurrentImage)
-                            {
-                                Bitmap bmpshowbarcode = _getMainX6ShowBarcode(AlbumWork.CPD.bmpRUNVIEW);
-                                DISPUI.SetDisplayImage(bmpshowbarcode);
-                            }
-
+                            //            RESULT.myResult.LogProcessIDTimer(9998, $"显示测试的条码");
+                            //        }
+                            //        break;
+                            //}
                             break;
                     }
 
-                    AlbumWork.RecodeRepoer();
-                    STPUI.ShowRecodeData();
+                    //AlbumWork.RecodeRepoer();
+                    //STPUI.ShowRecodeData();
 
                     switch (VERSION)
                     {
@@ -4996,16 +4655,56 @@ namespace Allinone.FormSpace
                             break;
                     }
 
+                    //RESULT.myResult.LogProcessIDTimer(9998, $"RUNUI.ShowResult");
+
                     #region 保存界面显示的图片
 
                     switch (Universal.VERSION)
                     {
                         case VersionEnum.ALLINONE:
 
-                            Bitmap _showResultBmp = new Bitmap(DISPUI.GetScreen());
+                            //Bitmap _showResultBmp = (Bitmap)DISPUI.GetScreen()?.Clone();
+                            //Bitmap _showResultBmp = new Bitmap(DISPUI.GetScreen());
 
                             switch (Universal.OPTION)
                             {
+                                //这里需要添加结果图
+                                case OptionEnum.MAIN_SDM5:
+
+                                    if (INI.IsCollectStripPictures)
+                                    {
+                                        //if (!ispass)
+                                        {
+                                            Task task = new Task(() =>
+                                            {
+                                                try
+                                                {
+                                                    this.Invoke(new Action(() =>
+                                                    {
+                                                        //Bitmap _showResultBmp = (Bitmap)DISPUI.GetScreen()?.Clone();
+                                                        Bitmap _showResultBmp = new Bitmap(DISPUI.GetScreen());
+                                                        string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                                        _imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+
+                                                        if (!System.IO.Directory.Exists(_imagePath + "\\000"))
+                                                            System.IO.Directory.CreateDirectory(_imagePath + "\\000");
+
+                                                        _showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
+                                                                                                System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                                                        _showResultBmp.Dispose();
+                                                    }));
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                                                }
+                                            });
+                                            task.Start();
+                                        }
+                                    }
+
+                                    break;
                                 case OptionEnum.MAIN_X6:
 
                                     if (INI.IsCollectStripPictures)
@@ -5016,14 +4715,20 @@ namespace Allinone.FormSpace
                                             {
                                                 try
                                                 {
-                                                    string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
-                                                    _imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                                    this.Invoke(new Action(() =>
+                                                    {
+                                                        Bitmap _showResultBmp = (Bitmap)DISPUI.GetScreen()?.Clone();
+                                                        string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                                        _imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
 
-                                                    if (!System.IO.Directory.Exists(_imagePath + "\\000"))
-                                                        System.IO.Directory.CreateDirectory(_imagePath + "\\000");
+                                                        if (!System.IO.Directory.Exists(_imagePath + "\\000"))
+                                                            System.IO.Directory.CreateDirectory(_imagePath + "\\000");
 
-                                                    _showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
-                                                                                            System.Drawing.Imaging.ImageFormat.Jpeg);
+                                                        _showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
+                                                                                                System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                                                        _showResultBmp.Dispose();
+                                                    }));
                                                 }
                                                 catch (Exception ex)
                                                 {
@@ -5047,14 +4752,14 @@ namespace Allinone.FormSpace
 
 
                                 case OptionEnum.R32:
-                                    if (INI.ISQSMCALLSAVE)
-                                    {
-                                        //ADD Gaara
-                                        Allinone.OPSpace.ResultSpace.JzR32ResultClass jzr32result = (Allinone.OPSpace.ResultSpace.JzR32ResultClass)RESULT.myResult;
-                                        //           jzr32result.SaveResultScreen(_showResultBmp);
+                                    //if (INI.ISQSMCALLSAVE)
+                                    //{
+                                    //    //ADD Gaara
+                                    //    Allinone.OPSpace.ResultSpace.JzR32ResultClass jzr32result = (Allinone.OPSpace.ResultSpace.JzR32ResultClass)RESULT.myResult;
+                                    //    //           jzr32result.SaveResultScreen(_showResultBmp);
 
-                                        jzr32result.ThreadForSavePictures(_showResultBmp);
-                                    }
+                                    //    jzr32result.ThreadForSavePictures(_showResultBmp);
+                                    //}
                                     break;
                                 case OptionEnum.R26:
                                     //if (INI.ISQSMCALLSAVE)
@@ -5074,37 +4779,37 @@ namespace Allinone.FormSpace
                                     break;
                                 case OptionEnum.R9:
 
-                                    INI.ISQSMCALLSAVE = true;
-                                    if (INI.ISQSMCALLSAVE)
-                                    {
-                                        //ADD Gaara
-                                        Allinone.OPSpace.ResultSpace.JzR9ResultClass jzr9result = (Allinone.OPSpace.ResultSpace.JzR9ResultClass)RESULT.myResult;
-                                        //     jzr9result.SaveResultScreen(_showResultBmp);
+                                    //INI.ISQSMCALLSAVE = true;
+                                    //if (INI.ISQSMCALLSAVE)
+                                    //{
+                                    //    //ADD Gaara
+                                    //    Allinone.OPSpace.ResultSpace.JzR9ResultClass jzr9result = (Allinone.OPSpace.ResultSpace.JzR9ResultClass)RESULT.myResult;
+                                    //    //     jzr9result.SaveResultScreen(_showResultBmp);
 
-                                        jzr9result.ThreadForSavePictures(_showResultBmp);
-                                    }
+                                    //    jzr9result.ThreadForSavePictures(_showResultBmp);
+                                    //}
                                     break;
                                 case OptionEnum.R5:
 
-                                    INI.ISQSMCALLSAVE = true;
-                                    if (INI.ISQSMCALLSAVE)
-                                    {
-                                        //ADD Gaara
-                                        Allinone.OPSpace.ResultSpace.JzR5ResultClass jzr5result = (Allinone.OPSpace.ResultSpace.JzR5ResultClass)RESULT.myResult;
-                                        //     jzr9result.SaveResultScreen(_showResultBmp);
+                                    //INI.ISQSMCALLSAVE = true;
+                                    //if (INI.ISQSMCALLSAVE)
+                                    //{
+                                    //    //ADD Gaara
+                                    //    Allinone.OPSpace.ResultSpace.JzR5ResultClass jzr5result = (Allinone.OPSpace.ResultSpace.JzR5ResultClass)RESULT.myResult;
+                                    //    //     jzr9result.SaveResultScreen(_showResultBmp);
 
-                                        jzr5result.ThreadForSavePictures(_showResultBmp);
-                                    }
+                                    //    jzr5result.ThreadForSavePictures(_showResultBmp);
+                                    //}
                                     break;
                                 case OptionEnum.R1:
 
-                                    INI.ISQSMCALLSAVE = true;
-                                    if (INI.ISQSMCALLSAVE)
-                                    {
-                                        //ADD Gaara
-                                        Allinone.OPSpace.ResultSpace.JzR1ResultClass jzr1result = (Allinone.OPSpace.ResultSpace.JzR1ResultClass)RESULT.myResult;
-                                        jzr1result.ThreadForSavePictures(_showResultBmp);
-                                    }
+                                    //INI.ISQSMCALLSAVE = true;
+                                    //if (INI.ISQSMCALLSAVE)
+                                    //{
+                                    //    //ADD Gaara
+                                    //    Allinone.OPSpace.ResultSpace.JzR1ResultClass jzr1result = (Allinone.OPSpace.ResultSpace.JzR1ResultClass)RESULT.myResult;
+                                    //    jzr1result.ThreadForSavePictures(_showResultBmp);
+                                    //}
                                     break;
                                 case OptionEnum.R3:
 
@@ -5130,34 +4835,36 @@ namespace Allinone.FormSpace
                             break;
                     }
 
+                    //RESULT.myResult.LogProcessIDTimer(9998, $"保存界面显示的图片");
+
                     #endregion
 
                     GetStatus();
 
-                    if (IsDebug)
-                        RESULT.RunstatusCollection.SaveProcessAndError(Universal.TESTPATH);
-                    if (Universal.isAutoDebug)
-                        AutoDebug();
-                    string strmess = JzToolsClass.PassingBarcode + "," + Universal.OCRSN;
-                    {
-                        if (JzToolsClass.PassingBarcode == Universal.OCRSN)
-                            strmess += ",PASS";
-                        else
-                            strmess += ",FAIL";
-                    }
-                    JetEazy.LoggerClass.Instance.WriteSNReport(strmess);
+                    //if (IsDebug)
+                    //    RESULT.RunstatusCollection.SaveProcessAndError(Universal.TESTPATH);
+                    //if (Universal.isAutoDebug)
+                    //    AutoDebug();
+                    //string strmess = JzToolsClass.PassingBarcode + "," + Universal.OCRSN;
+                    //{
+                    //    if (JzToolsClass.PassingBarcode == Universal.OCRSN)
+                    //        strmess += ",PASS";
+                    //    else
+                    //        strmess += ",FAIL";
+                    //}
+                    //JetEazy.LoggerClass.Instance.WriteSNReport(strmess);
 
-                    if (JzToolsClass.PassingBarcode != Universal.OCRSN && Universal.ISCHECKSN)
-                        JetEazy.LoggerClass.Instance.WriteSNReportFail(strmess);
+                    //if (JzToolsClass.PassingBarcode != Universal.OCRSN && Universal.ISCHECKSN)
+                    //    JetEazy.LoggerClass.Instance.WriteSNReportFail(strmess);
 
-                    if (Universal.OLDBARCODE != JzToolsClass.PassingBarcode)
-                    {
-                        INI.SETBCCOUNT(Universal.ISBCNG);
-                        ESSUI.FillBCCOUNT(INI.ALLCOUNT, INI.BCNGCOUNT);
-                    }
-                    Universal.OLDBARCODE = JzToolsClass.PassingBarcode;
-                    if (Universal.OPTION != OptionEnum.R3 && Universal.OPTION != OptionEnum.C3)
-                        Universal.OnR3TickStop("2");
+                    //if (Universal.OLDBARCODE != JzToolsClass.PassingBarcode)
+                    //{
+                    //    INI.SETBCCOUNT(Universal.ISBCNG);
+                    //    ESSUI.FillBCCOUNT(INI.ALLCOUNT, INI.BCNGCOUNT);
+                    //}
+                    //Universal.OLDBARCODE = JzToolsClass.PassingBarcode;
+                    //if (Universal.OPTION != OptionEnum.R3 && Universal.OPTION != OptionEnum.C3)
+                    //    Universal.OnR3TickStop("2");
 
 
 
@@ -5178,6 +4885,16 @@ namespace Allinone.FormSpace
                             SetTrayMapping();
 
                             break;
+                        case OptionEnum.MAIN_X6:
+                            switch (Universal.jetMappingType)
+                            {
+                                case JetMappingType.MAPPING_A:
+
+                                    AlbumNow.ENVList[0].MappingA_GridClear();
+                                    //AlbumNow.ENVList[0].MappingA_GridMapping2dClear();
+                                    break;
+                            }
+                            break;
                     }
 
                     break;
@@ -5189,7 +4906,7 @@ namespace Allinone.FormSpace
                         case OptionEnum.MAIN_SDM3:
                             tabCtrl.SelectedIndex = 0;
 
-                            INI.SaveDataRecord();
+                            //INI.SaveDataRecord();
                             //lblMappingDataString.Text = INI.GetDataResultString();
                             ShowLabelMappingDataString();
                             MappingUI.SetBinString(String.Join(",", AlbumNow.m_EnvNow.DrawMapping));
@@ -5307,6 +5024,7 @@ namespace Allinone.FormSpace
 
                             switch (Universal.OPTION)
                             {
+                                case OptionEnum.MAIN_SDM5:
                                 case OptionEnum.MAIN_SDM3:
                                 case OptionEnum.MAIN_SDM2:
                                 case OptionEnum.MAIN_SDM1:
@@ -5351,6 +5069,7 @@ namespace Allinone.FormSpace
 
                             switch (Universal.OPTION)
                             {
+                                case OptionEnum.MAIN_SDM5:
                                 case OptionEnum.MAIN_SDM3:
                                 case OptionEnum.MAIN_SDM2:
                                 case OptionEnum.MAIN_SDM1:
@@ -5501,6 +5220,110 @@ namespace Allinone.FormSpace
                 case ResultStatusEnum.LOGPROCESS:
                     RUNV1UI.SetLog(operpagestr);
                     break;
+                case ResultStatusEnum.SHOW_QCRANDOM_RESULT:
+
+
+                    switch(Universal.jetMappingType)
+                    {
+                        case JetMappingType.MAPPING_A:
+
+                            List<JzSliderItemClass> mapListTemp = new List<JzSliderItemClass>();
+                            EnvClass env = AlbumNow.ENVList[envindex];
+                            env.MappingA_GridList(ref mapListTemp);
+                            RUNUI.QcMappingAUpdate(mapListTemp);
+
+                            ////这里显示当前抓的图片
+                            //DISPUI.SetDisplayImage(AlbumWork.ENVList[0].PageList[0].GetbmpRUN(PageOPTypeEnum.P00));
+                            ////显示框和条码
+                            //DISPUIShowResultAndBarcode(OPTION == OptionEnum.MAIN_X6);
+
+                            AlbumWork.CPD.GenRUNVIEWData(ASNCollection);
+                            DISPUI.SetDisplayImage(AlbumWork.CPD.bmpRUNVIEW);
+                            DISPUIShowResult();
+
+                            #region 2d show
+                            Bitmap bmpshowbarcode = new Bitmap(AlbumWork.CPD.bmpRUNVIEW);
+                            Graphics graphics = Graphics.FromImage(bmpshowbarcode);
+
+                            foreach (PageClass page in env.PageList)
+                            {
+                                foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                                {
+                                    PointF ptloc = analyze.myDrawAnalyzeStrRectF.Location;
+
+                                    ptloc.Y += 28;
+                                    string _barcode = string.Empty;
+                                    _barcode = env.GetShow2dMessage(analyze);
+                                    graphics.DrawString(_barcode, new Font("宋体", 18), Brushes.Lime, ptloc);
+                                }
+                            }
+
+                            graphics.Dispose();
+                            #endregion
+                            //Bitmap bmpshowbarcode = _getMainX6ShowBarcode(AlbumWork.CPD.bmpRUNVIEW);
+                            DISPUI.SetDisplayImage(bmpshowbarcode);
+
+                            if (INI.IsCollectPicturesSingle)
+                            {
+                                try
+                                {
+                                    this.Invoke(new Action(() =>
+                                    {
+                                        Bitmap _showResultBmp = (Bitmap)DISPUI.GetScreen()?.Clone();
+                                        CamActClass.Instance.SetResultImage(_showResultBmp, CamActClass.Instance.StepCurrent);
+                                        //string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                        //_imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+
+                                        //if (!System.IO.Directory.Exists(_imagePath + "\\000"))
+                                        //    System.IO.Directory.CreateDirectory(_imagePath + "\\000");
+
+                                        //_showResultBmp.Save(_imagePath + $"\\000\\R_P00-{CamActClass.Instance.StepCurrent.ToString("000")}" + ".jpg",
+                                        //                                        System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                                        _showResultBmp.Dispose();
+                                    }));
+                                }
+                                catch (Exception ex)
+                                {
+                                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                                }
+                            }
+
+                            //RUNUI.QcMappingAUpdate(Universal.MapListTemp);
+                            env.ResetRunStatus();
+                            env.MappingA_SliderClear();
+
+
+                            
+
+
+                            break;
+                        default:
+
+                            if (INI.IsOpenQcRandom)
+                            {
+                                //这里显示当前抓的图片
+                                DISPUI.SetDisplayImage(AlbumWork.ENVList[0].PageList[0].GetbmpRUN(PageOPTypeEnum.P00));
+                                //显示框和条码
+                                DISPUIShowResultAndBarcode(OPTION == OptionEnum.MAIN_X6);
+
+                                //AlbumWork.CPD.GenRUNVIEWData(ASNCollection);
+                                //DISPUI.SetDisplayImage(AlbumWork.CPD.bmpRUNVIEW);
+                                //DISPUIShowResult();
+
+                                //bmpshowbarcode = _getMainX6ShowBarcode(AlbumWork.CPD.bmpRUNVIEW);
+                                //DISPUI.SetDisplayImage(bmpshowbarcode);
+
+                                string[] strings = operpagestr.Split(',');
+                                string[] cc = strings[2].Split(';');
+                                Color color = Color.FromArgb(int.Parse(cc[0]), int.Parse(cc[1]), int.Parse(cc[2]), int.Parse(cc[3]));
+                                RUNUI.QcRandomSetResult(strings[0], color, strings[3]);
+                            }
+
+                            break;
+                    }
+
+                    break;
             }
         }
 
@@ -5553,6 +5376,27 @@ namespace Allinone.FormSpace
                                 }
                             }
                             break;
+                        case OptionEnum.MAIN_SDM5:
+                            string[] vsX = str.Split('#');
+                            switch (vsX[0])
+                            {
+                                case "ONLINE":
+
+                                    //if (CheckAlbumCollection(RCPDB.DataNow.Version, true))
+                                    //{
+                                    //    RESULT.TestMethod = TestMethodEnum.CHANGERECIPE;
+                                    //    RESULT.Calculate();
+
+                                    //    if (RUNUI != null)
+                                    //    {
+                                    //        Universal.IsSaveRaw = RUNUI.IsSaveRaw;
+                                    //    }
+                                    //}
+
+                                    DISPUI.SetDisplayImage(CamActClass.Instance.bmpChangeRecipeTemp);
+                                    break;
+                            }
+                            break;
                     }
                     break;
                 case ResultStatusEnum.CAPTUREONCE:
@@ -5582,6 +5426,40 @@ namespace Allinone.FormSpace
 
                     ESSUI.Enabled = true;
                     RCPV1UI.Enabled = true;
+
+                    break;
+                case ResultStatusEnum.CHANGERECIPE:
+
+                    if (INI.IsOpenAutoChangeRecipe)
+                    {
+                        string[] vsX = str.Split('#');
+                        switch (vsX[0])
+                        {
+                            case "ChangeRecipeM":
+                                bool bOK = CheckAlbumCollection(vsX[1], false);
+                                GetStatus();
+                                Universal.IsChangeRecipeing = true;
+
+                                break;
+                            case "ChangeRecipe":
+                                bOK = CheckAlbumCollection(vsX[1], false);
+                                GetStatus();
+                                Universal.IsChangeRecipeing = true;
+
+                                if (CheckAlbumCollection(RCPDB.DataNow.Version, true))
+                                {
+                                    RESULT.TestMethod = TestMethodEnum.CHANGERECIPE;
+                                    RESULT.Calculate();
+
+                                    if (RUNUI != null)
+                                    {
+                                        Universal.IsSaveRaw = RUNUI.IsSaveRaw;
+                                    }
+                                }
+
+                                break;
+                        }
+                    }
 
                     break;
             }
@@ -5628,11 +5506,24 @@ namespace Allinone.FormSpace
 
             switch (Universal.OPTION)
             {
+                case OptionEnum.MAIN_SDM2:
+
+                    //设定相机的亮度 和 增益
+                    foreach (EnvClass env in album.ENVList)
+                    {
+                        foreach (PageClass page in env.PageList)
+                        {
+                            CCDCollection.SetExposure(page.Exposure, page.CamIndex);
+                            CCDCollection.SetGain(page.CamGain, page.CamIndex);
+                        }
+                    }
+
+                    break;
+
                 case OptionEnum.MAIN_SDM3:
                 case OptionEnum.MAIN_SD:
                 case OptionEnum.MAIN_X6:
                 case OptionEnum.MAIN_SDM1:
-                case OptionEnum.MAIN_SDM2:
                 case JetEazy.OptionEnum.MAIN_SERVICE:
                     //设定相机的亮度
                     foreach (EnvClass env in album.ENVList)
@@ -5885,6 +5776,14 @@ namespace Allinone.FormSpace
                         case VersionEnum.ALLINONE:
                             switch (Universal.OPTION)
                             {
+                                case OptionEnum.MAIN_SDM5:
+                                    //ADD Gaara
+                                    if (INI.IsSaveScreen)
+                                    {
+                                        Allinone.OPSpace.ResultSpace.JzMainSDM5ResultClass jzMainSDM5Result = (Allinone.OPSpace.ResultSpace.JzMainSDM5ResultClass)RESULT.myResult;
+                                        jzMainSDM5Result.SavePrintScreenForMainX6();
+                                    }
+                                    break;
                                 case OptionEnum.MAIN_SDM3:
                                     //ADD Gaara
                                     if (INI.IsSaveScreen)
@@ -6141,7 +6040,7 @@ namespace Allinone.FormSpace
                     switch (action)
                     {
                         case ActionEnum.ACT_CIPMAPPING:
-                            if (INI.IsOpenCip)
+                            if (INI.IsOpenCip && Universal.IsOpenJectCipMapping)
                             {
                                 ESSStatusEnum _currentStatu = ESSUI.GetMainStatus();
                                 #region 解析数据
@@ -6279,9 +6178,16 @@ namespace Allinone.FormSpace
 
                     switch (action)
                     {
+                        case ActionEnum.ACT_ONEKEYGETIMAGEAREA:
+                            RESULT.myResult.OneKeyAreaGetImage();
+                            break;
                         case ActionEnum.ACT_ONEKEYGETIMAGE:
                             //RESULT.myResult.SetPara(AlbumNow, CCDCollection);
                             RESULT.myResult.OneKeyGetImage();
+                            break;
+                        case ActionEnum.ACT_MANUALCHANGERECIPE:
+                            RESULT.myResult.SetPara(AlbumNow, CCDCollection);
+                            RESULT.myResult.ManualChangeRecipe();
                             break;
                     }
 
@@ -7046,6 +6952,7 @@ namespace Allinone.FormSpace
 
                         switch (OPTION)
                         {
+                            case OptionEnum.MAIN_SDM5:
                             case OptionEnum.MAIN_SDM2:
                             case OptionEnum.MAIN_X6:
                             case JetEazy.OptionEnum.MAIN_SERVICE:
@@ -7077,6 +6984,13 @@ namespace Allinone.FormSpace
 
                         switch (OPTION)
                         {
+                            case OptionEnum.MAIN_SDM5:
+                                if (rcpno == -1)   //若找不到這個版本，則 Load 第 1 筆參數
+                                {
+                                    isNoVer = true;
+                                    rcpno = 0;
+                                }
+                                break;
                             case OptionEnum.MAIN_SDM2:
                             case OptionEnum.MAIN_X6:
                             case JetEazy.OptionEnum.MAIN_SERVICE:
@@ -7130,7 +7044,7 @@ namespace Allinone.FormSpace
             if (!AlbumCollection.GetAlbumWork(opstring, testmethod))
             {
                 // 如果出現這個，代表參數中的 ENV 的數目和現在 Load進去的不同
-                MessageBox.Show("參數對應錯誤，請確認參數是否正確", "SYSTEM", MessageBoxButtons.OK);
+                MessageBox.Show(ToChangeLanguage("參數對應錯誤 請確認參數是否正確"), "SYSTEM", MessageBoxButtons.OK);
             }
             else
             {
@@ -7141,6 +7055,7 @@ namespace Allinone.FormSpace
 
             switch (OPTION)
             {
+                case OptionEnum.MAIN_SDM5:
                 case OptionEnum.MAIN_SDM3:
                 case OptionEnum.MAIN_SDM2:
                 case OptionEnum.MAIN_X6:
@@ -7302,7 +7217,7 @@ namespace Allinone.FormSpace
                 return;
 
             INI.ResetDataResult();
-            INI.SaveDataRecord();
+            //INI.SaveDataRecord();
             ShowLabelMappingDataString();
             //lblMappingDataString.Text = INI.GetDataResultString();
             //lblMappingDataString.Refresh();
@@ -7599,6 +7514,14 @@ namespace Allinone.FormSpace
             int iret = -1;
             JetEazy.LoggerClass.Instance.WriteLog("更换底图模板");
 
+            bool _isbusy = ((ControlSpace.MachineSpace.JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.Busy;
+            if (_isbusy)
+            {
+                JetEazy.LoggerClass.Instance.WriteLog("测试过程中无法更换底图模板");
+                _almPopForm("测试过程中无法更换底图模板", false);
+                return -3;//测试过程中无法更换底图模板
+            }
+
             //if (Universal.IsNoUseCCD)
             //{
             //    string strPath3 = RESULT.myResult.GetLastDirPath(Universal.DEBUGSRCPATH);
@@ -7643,8 +7566,8 @@ namespace Allinone.FormSpace
                 foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                 {
                     bOK = analyze.IsHaveBranchSeed();
-                    if (bOK)
-                        break;
+                    //if (bOK)
+                    //    break;
                 }
             }
             if (!bOK)
@@ -7656,17 +7579,26 @@ namespace Allinone.FormSpace
 
             //检查是否有种子和种子是否测试OK
             bOK = true;
+            string strFail = string.Empty;
             foreach (PageClass page in env.PageList)
             {
                 foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                 {
-                    bOK &= analyze.IsHaveBranchSeedGood();
+                    bool bOK1 = analyze.IsHaveBranchSeedGood();
+                    //bOK &= bOK1;
+                    if (bOK1)
+                        break;//发现一个就跳出
+                    if (!bOK1)
+                    {
+                        strFail += $"{analyze.AliasName};";
+                        //_almPopForm($"测试FAIL{analyze.AliasName}", false);
+                    }
                 }
             }
             if (!bOK)
             {
-                JetEazy.LoggerClass.Instance.WriteLog("更换底图模板种子测试FAIL");
-                _almPopForm("更换底图模板种子测试FAIL", false);
+                JetEazy.LoggerClass.Instance.WriteLog($"更换底图模板种子测试FAIL {strFail}");
+                _almPopForm($"更换底图模板种子测试FAIL {strFail}", false);
                 return -2;//种子测试NG
             }
 
@@ -7714,43 +7646,33 @@ namespace Allinone.FormSpace
             Bitmap bmpinputtemp = new Bitmap(eBmpInput);
 
             Graphics graphics = Graphics.FromImage(bmpinputtemp);
+            
             foreach (EnvClass env in AlbumWork.ENVList)
             {
                 foreach (PageClass page in env.PageList)
                 {
                     foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                     {
-                        //if (analyze.IsVeryGood)
-                        //    continue;
                         PointF ptloc = analyze.myDrawAnalyzeStrRectF.Location;
 
                         ptloc.Y += 28;
-                        string _barcode = analyze.GetAnalyzeBarcodeStr();// _getAnalyzeBarcodeStr(analyze);
-                        graphics.DrawString(_barcode, new Font("宋体", 18), Brushes.Lime, ptloc);
+                        string _barcode = string.Empty;
 
-                        //JzToolsClass jzToolsClass = new JzToolsClass();
-                        //Rectangle NGRectFill = jzToolsClass.SimpleRect(ptloc, 20);
-                        //Color NGColor = Color.Red;
-                        //if (analyze.PADPara.DescStr.Contains("无胶"))
-                        //{
-                        //    NGColor = Color.Purple;
-                        //}
-                        //else if (analyze.PADPara.DescStr.Contains("尺寸"))
-                        //{
-                        //    NGColor = Color.Yellow;
-                        //}
-                        //else if (analyze.PADPara.DescStr.Contains("溢胶"))
-                        //{
-                        //    NGColor = Color.Orange;
-                        //}
-                        //graphics.FillRectangle(new SolidBrush(NGColor), NGRectFill);
-                        //graphics.DrawString(analyze.PADPara.DescStr + "(" + analyze.ToAnalyzeString() + ")", new Font("宋体", 18), Brushes.Red, ptloc);
-                        //ptloc.Y += 28;
-                        //graphics.DrawString(analyze.PADPara.DescStr, new Font("宋体", 18), Brushes.Red, ptloc);
-                        //ptloc.Y += 28;
-                        //graphics.DrawString("(" + analyze.ToAnalyzeString() + ")", new Font("宋体", 18), Brushes.Red, ptloc);
+                        switch (Universal.jetMappingType)
+                        {
+                            case JetMappingType.MAPPING_A:
 
+                                //_barcode = env.GetShow2dMessage(analyze);
 
+                                break;
+                            default:
+                                analyze.CollectAllBarcodeStr(ref _barcode);
+                                break;
+                        }
+                        if (_barcode.Contains("[FAIL]"))
+                            graphics.DrawString(_barcode, new Font("宋体", 18), Brushes.Red, ptloc);
+                        else
+                            graphics.DrawString(_barcode, new Font("宋体", 18), Brushes.Lime, ptloc);
                     }
                 }
             }
@@ -7821,7 +7743,7 @@ namespace Allinone.FormSpace
                     SaveDataEX(INI.GetDataResultString(), Universal.DATAREPORTPATH + "\\" + m_RecordFileName);
 
                     INI.ResetDataResult();
-                    INI.SaveDataRecord();
+                    //INI.SaveDataRecord();
                     //lblMappingDataString.Text = INI.GetDataResultString();
                     ShowLabelMappingDataString();
                     //ESSDB.Reset(true);
@@ -7841,7 +7763,7 @@ namespace Allinone.FormSpace
                     SaveDataEX(INI.GetDataResultString(), Universal.DATAREPORTPATH + "\\" + m_RecordFileName);
 
                     INI.ResetDataResult();
-                    INI.SaveDataRecord();
+                    //INI.SaveDataRecord();
                     //lblMappingDataString.Text = INI.GetDataResultString();
                     ShowLabelMappingDataString();
                     //ESSDB.Reset(true);
@@ -7917,6 +7839,13 @@ namespace Allinone.FormSpace
             });
             task.Start();
             //isPass = !isPass;
+        }
+
+        string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
         }
     }
 }

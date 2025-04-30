@@ -116,6 +116,14 @@ namespace Allinone.BasicSpace
         private int m_PathCount = 0;
         private int m_calindex = -1;
 
+        ZXing.BarcodeFormat barcodeFormat = ZXing.BarcodeFormat.DATA_MATRIX;
+
+        public ZXing.BarcodeFormat BarcodeFormat
+        {
+            get { return barcodeFormat; }
+            set { barcodeFormat = value; }
+        }
+
         //List<Bitmap> m_InputImages = new List<Bitmap>();
         //public Bitmap[] PreImages
         //{
@@ -307,7 +315,7 @@ namespace Allinone.BasicSpace
             reader.Options = new ZXing.Common.DecodingOptions();
             reader.Options.TryHarder = true;
             reader.Options.TryInverted = true;
-            reader.Options.PossibleFormats = new[] { ZXing.BarcodeFormat.DATA_MATRIX };
+            reader.Options.PossibleFormats = new[] { barcodeFormat };
 
             Bitmap bmpLast = new Bitmap(bmperosion);
 
@@ -392,7 +400,7 @@ namespace Allinone.BasicSpace
             reader.Options = new ZXing.Common.DecodingOptions();
             reader.Options.TryHarder = true;
             reader.Options.TryInverted = true;
-            reader.Options.PossibleFormats = new[] { ZXing.BarcodeFormat.DATA_MATRIX };
+            reader.Options.PossibleFormats = new[] { barcodeFormat };
 
             Bitmap bmpLast = new Bitmap(bmpdilatation2);
 
@@ -477,7 +485,7 @@ namespace Allinone.BasicSpace
             reader.Options = new ZXing.Common.DecodingOptions();
             reader.Options.TryHarder = true;
             reader.Options.TryInverted = true;
-            reader.Options.PossibleFormats = new[] { ZXing.BarcodeFormat.DATA_MATRIX };
+            reader.Options.PossibleFormats = new[] { barcodeFormat };
 
             Bitmap bmpLast = new Bitmap(bmpgray);
 
@@ -566,7 +574,7 @@ namespace Allinone.BasicSpace
             reader.Options = new ZXing.Common.DecodingOptions();
             reader.Options.TryHarder = true;
             reader.Options.TryInverted = true;
-            reader.Options.PossibleFormats = new[] { ZXing.BarcodeFormat.DATA_MATRIX };
+            reader.Options.PossibleFormats = new[] { barcodeFormat };
 
             Bitmap bmpLast = new Bitmap(bmperosion);
 
@@ -661,7 +669,7 @@ namespace Allinone.BasicSpace
             reader.Options = new ZXing.Common.DecodingOptions();
             reader.Options.TryHarder = true;
             reader.Options.TryInverted = true;
-            reader.Options.PossibleFormats = new[] { ZXing.BarcodeFormat.DATA_MATRIX };
+            reader.Options.PossibleFormats = new[] { barcodeFormat };
 
             Bitmap bmpLast = new Bitmap(bmpErosion);
 
@@ -743,7 +751,7 @@ namespace Allinone.BasicSpace
             reader.Options = new ZXing.Common.DecodingOptions();
             reader.Options.TryHarder = true;
             reader.Options.TryInverted = true;
-            reader.Options.PossibleFormats = new[] { ZXing.BarcodeFormat.DATA_MATRIX };
+            reader.Options.PossibleFormats = new[] { barcodeFormat };
 
             Bitmap bmpLast = new Bitmap(bmerosion3X3);
 
@@ -822,7 +830,7 @@ namespace Allinone.BasicSpace
             reader.Options = new ZXing.Common.DecodingOptions();
             reader.Options.TryHarder = true;
             reader.Options.TryInverted = true;
-            reader.Options.PossibleFormats = new[] { ZXing.BarcodeFormat.DATA_MATRIX };
+            reader.Options.PossibleFormats = new[] { barcodeFormat };
 
             Bitmap bmpLast = new Bitmap(bmerosion3X3);
 
@@ -913,7 +921,7 @@ namespace Allinone.BasicSpace
             reader.Options = new ZXing.Common.DecodingOptions();
             reader.Options.TryHarder = true;
             reader.Options.TryInverted = true;
-            reader.Options.PossibleFormats = new[] { ZXing.BarcodeFormat.DATA_MATRIX };
+            reader.Options.PossibleFormats = new[] { barcodeFormat };
 
             Bitmap bmpLast = new Bitmap(bmpfillHoles1);
 
@@ -991,7 +999,7 @@ namespace Allinone.BasicSpace
             reader.Options = new ZXing.Common.DecodingOptions();
             reader.Options.TryHarder = true;
             reader.Options.TryInverted = true;
-            reader.Options.PossibleFormats = new[] { ZXing.BarcodeFormat.DATA_MATRIX };
+            reader.Options.PossibleFormats = new[] { barcodeFormat };
 
             Bitmap bmpLast = new Bitmap(bmclosing);
 
@@ -1056,7 +1064,7 @@ namespace Allinone.BasicSpace
             reader.Options = new ZXing.Common.DecodingOptions();
             reader.Options.TryHarder = true;
             reader.Options.TryInverted = true;
-            reader.Options.PossibleFormats = new[] { ZXing.BarcodeFormat.DATA_MATRIX };
+            reader.Options.PossibleFormats = new[] { barcodeFormat };
 
             Bitmap bmpLast = new Bitmap(bmpdilatation3X3);
 
@@ -1132,7 +1140,7 @@ namespace Allinone.BasicSpace
             reader.Options = new ZXing.Common.DecodingOptions();
             reader.Options.TryHarder = true;
             reader.Options.TryInverted = true;
-            reader.Options.PossibleFormats = new[] { ZXing.BarcodeFormat.DATA_MATRIX };
+            reader.Options.PossibleFormats = new[] { barcodeFormat };
 
             Bitmap bmpLast = new Bitmap(bmpoThreshold1);
 

@@ -439,7 +439,16 @@ namespace Allinone.OPSpace
         public void Calculate()
         {
             GenSavePath();
-            myResult.GetStart(AlbumWork, CCDCollection, TestMethod, IsNoUseCCD);
+            switch(Universal.OPTION)
+            {
+                case OptionEnum.MAIN_X6:
+                    myResult.GetStart(AlbumWorkNow, CCDCollection, TestMethod, IsNoUseCCD);
+                    break;
+                default:
+                    myResult.GetStart(AlbumWork, CCDCollection, TestMethod, IsNoUseCCD);
+                    break;
+            }
+            
 
             //switch(CAMACT)
             //{

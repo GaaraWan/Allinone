@@ -15,6 +15,7 @@ using Allinone.ControlSpace;
 using Allinone.ControlSpace.MachineSpace;
 using Allinone.ControlSpace.IOSpace;
 using JetEazy.PlugSpace;
+using System.Threading;
 
 namespace Allinone.UISpace
 {
@@ -45,6 +46,9 @@ namespace Allinone.UISpace
         VersionEnum VERSION = VersionEnum.ALLINONE;
         OptionEnum OPTION = OptionEnum.MAIN;
         JzMainX6MachineClass MACHINE;
+
+        System.Threading.Thread m_ThreadPlc = null;
+        bool m_ThRunning = false;
 
         JzMainX6IOClass PLCIO
         {
@@ -85,7 +89,7 @@ namespace Allinone.UISpace
 
         JzTimes myJzTimer = new JzTimes();
         public MainX6CtrlUI()
-        {  
+        {
             InitializeComponent();
             InitialInternal();
         }
@@ -274,6 +278,17 @@ namespace Allinone.UISpace
                 updateReConnectHandleServerUI(X6_HANDLE_CLIENT.IsConnecting);
                 X6_HANDLE_CLIENT.TriggerStringAction += X6_HANDLE_CLIENT_TriggerStringAction;
             }
+
+            if (Universal.IsUseThreadReviceTcp)
+            {
+                if (m_ThreadPlc == null)
+                {
+                    m_ThRunning = true;
+                    m_ThreadPlc = new System.Threading.Thread(new System.Threading.ThreadStart(PlcTick));
+                    m_ThreadPlc.IsBackground = true;
+                    m_ThreadPlc.Start();
+                }
+            }
         }
 
         private void X6_LASER_CLIENT_TriggerStringAction(string opstr)
@@ -308,7 +323,7 @@ namespace Allinone.UISpace
                 this.Invoke(new Action(() =>
                 {
                     lblReConnectServer.BackColor = (bOK ? Color.Green : Color.Red);
-                    lblReConnectServer.Text = (bOK ? "Server打标连接成功" : "Server打标连接失败");
+                    lblReConnectServer.Text = ToChangeLanguage((bOK ? "Server打标连接成功" : "Server打标连接失败"));
                 }));
             }
             catch
@@ -324,7 +339,7 @@ namespace Allinone.UISpace
                 this.Invoke(new Action(() =>
                 {
                     lblReConnectHandleServer.BackColor = (bOK ? Color.Green : Color.Red);
-                    lblReConnectHandleServer.Text = (bOK ? "ServerHandle连接成功" : "ServerHandle连接失败");
+                    lblReConnectHandleServer.Text = ToChangeLanguage((bOK ? "ServerHandle连接成功" : "ServerHandle连接失败"));
                 }));
             }
             catch
@@ -375,7 +390,7 @@ namespace Allinone.UISpace
                             //m_ReConnectIndex++;
 
                             lblReConnectServer.BackColor = Color.Red;
-                            lblReConnectServer.Text = "Server打标重连中";
+                            lblReConnectServer.Text = ToChangeLanguage("Server打标重连中");
 
                             System.Threading.Thread thread_DL_ReConnectServer = new System.Threading.Thread(_reConnectServer);
                             thread_DL_ReConnectServer.Start();
@@ -401,7 +416,7 @@ namespace Allinone.UISpace
                             //m_ReConnectIndex++;
 
                             lblReConnectHandleServer.BackColor = Color.Red;
-                            lblReConnectHandleServer.Text = "ServerHandle重连中";
+                            lblReConnectHandleServer.Text = ToChangeLanguage("ServerHandle重连中");
 
                             System.Threading.Thread thread_DL_ReConnectServer = new System.Threading.Thread(_reConnectHandleServer);
                             thread_DL_ReConnectServer.Start();
@@ -411,8 +426,8 @@ namespace Allinone.UISpace
                 #endregion
             }
 
-
-            MACHINE.Tick();
+            if (!Universal.IsUseThreadReviceTcp)
+                MACHINE.Tick();
             lblIsGetImage.BackColor = (PLCIO.IsGetImage ? Color.Green : Color.Black);
             lblIsStart.BackColor = (PLCIO.IsStart ? Color.Green : Color.Black);
             lblIsGetImageReset.BackColor = (PLCIO.IsGetImageReset ? Color.Green : Color.Black);
@@ -421,17 +436,25 @@ namespace Allinone.UISpace
             lblBackLight.BackColor = (PLCIO.BackLight ? Color.Green : Color.Black);
             lblReady.BackColor = (PLCIO.Ready ? Color.Green : Color.Black);
             lblBusy.BackColor = (PLCIO.Busy ? Color.Green : Color.Black);
-            lblPass.BackColor = (PLCIO.Pass ? Color.Red : Color.Black);
-            lblFail.BackColor = (PLCIO.Fail ? Color.Green : Color.Black);
+            lblPass.BackColor = (PLCIO.Pass ? Color.Green : Color.Black);
+            lblFail.BackColor = (PLCIO.Fail ? Color.Red : Color.Black);
             lblGetImageOK.BackColor = (PLCIO.GetImageOK ? Color.Green : Color.Black);
             lblGetImageIndex.BackColor = Color.Black;
-            lblGetImageIndex.Text = JetEazy.PlugSpace.CamActClass.Instance.StepCurrent.ToString() + " 总[" +
+            lblGetImageIndex.Text = JetEazy.PlugSpace.CamActClass.Instance.StepCurrent.ToString() + " Total [" +
                 JetEazy.PlugSpace.CamActClass.Instance.StepCount.ToString() + "]";
 
             if (INI.IsReadHandlerOKSign && !INI.IsNoUseHandlerOKSign)
                 lblHandlerOK.BackColor = (PLCIO.IsHandlerOK ? Color.Green : Color.Black);
 
             myJzTimer.Cut();
+        }
+        public void PlcTick()
+        {
+            while (m_ThRunning)
+            {
+                MACHINE.Tick();
+                Thread.Sleep(50);
+            }
         }
 
         /// <summary>
@@ -449,6 +472,13 @@ namespace Allinone.UISpace
             MACHINE.PLCIO.TopLight = false;
             MACHINE.PLCIO.FrontLight = false;
             MACHINE.PLCIO.BackLight = false;
+
+            m_ThRunning = false;
+            if (m_ThreadPlc != null)
+            {
+                m_ThreadPlc.Abort();
+                m_ThreadPlc = null;
+            }
         }
 
         private void _reConnectServer()
@@ -509,6 +539,13 @@ namespace Allinone.UISpace
 
         }
 
+
+        string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
+        }
 
         public delegate void TriggerHandler(ActionEnum action, string opstr);
         public event TriggerHandler TriggerAction;

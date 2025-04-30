@@ -78,7 +78,7 @@
             this.label16.BackColor = System.Drawing.Color.Green;
             this.label16.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.label16.ForeColor = System.Drawing.Color.Yellow;
-            this.label16.Location = new System.Drawing.Point(150, 100);
+            this.label16.Location = new System.Drawing.Point(223, 100);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(67, 18);
             this.label16.TabIndex = 221;
@@ -116,7 +116,7 @@
             this.label12.ForeColor = System.Drawing.Color.Yellow;
             this.label12.Location = new System.Drawing.Point(79, 100);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(67, 18);
+            this.label12.Size = new System.Drawing.Size(138, 18);
             this.label12.TabIndex = 218;
             this.label12.Text = "0 总[4]";
             this.label12.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;

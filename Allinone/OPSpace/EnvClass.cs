@@ -12,6 +12,10 @@ using System.IO;
 using JetEazy;
 using JetEazy.BasicSpace;
 using JetEazy.ControlSpace;
+using static Allinone.UISpace.ALBUISpace.AllinoneAlbUI;
+using Allinone.BasicSpace;
+using iTextSharp.text.pdf;
+using System.Windows.Input;
 
 namespace Allinone.OPSpace
 {
@@ -45,6 +49,7 @@ namespace Allinone.OPSpace
         public int No = 0;
         public string GeneralLight = "1,0,1,0,1,0";
         public string GeneralPosition = "0,0,0";
+        public string GeneralBarcodeSetup = string.Empty;
 
         public PassInfoClass PassInfo = new PassInfoClass();
 
@@ -214,6 +219,10 @@ namespace Allinone.OPSpace
             {
                 GeneralPosition = strs[1];
             }
+            if (strs.Length > 3)
+            {
+                GeneralBarcodeSetup = strs[2];
+            }
         }
         public override string ToString()
         {
@@ -221,6 +230,7 @@ namespace Allinone.OPSpace
 
             retstr = GeneralLight + Universal.SeperateCharA;
             retstr += GeneralPosition + Universal.SeperateCharA;
+            retstr += GeneralBarcodeSetup + Universal.SeperateCharA;
             retstr += "";
 
             return retstr;
@@ -724,30 +734,6 @@ namespace Allinone.OPSpace
 
                 if (!ispagegood)
                     isgood = false;
-
-                if (Universal.IsNoUseCCD)
-                {
-                    string strmess = "";
-                    foreach (PageClass page in Temp)
-                    {
-                        if (page.PassInfo.RcpNo == 80002)
-                        {
-                            foreach (AnalyzeClass analy in page.AnalyzeRootArray)
-                            {
-                                foreach (AnalyzeClass branchanalyze in analy.BranchList)
-                                {
-                                    if (branchanalyze.MaskMethod == MaskMethodEnum.NONE)
-                                    {
-                                        if (branchanalyze.ALIGNPara.AlignMethod == AlignMethodEnum.AUFIND)
-                                            strmess += branchanalyze.AliasName + ", " + branchanalyze.ALIGNPara.Score + Environment.NewLine;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (strmess != "")
-                        File.WriteAllText("D:\\80002.txt", strmess, Encoding.Default);
-                }
             }
             //else
             {
@@ -999,7 +985,89 @@ namespace Allinone.OPSpace
             return str;
         }
 
-        public bool A09_RunRepeatCodeProcess(PageOPTypeEnum pageoptype)
+        public bool A09_RunRepeatCodeProcess(PageOPTypeEnum pageoptype, bool echeckCurLotRepeatCode)
+        {
+            bool isgood = true;
+            //收集所有页面读取到的二维码
+            List<string> _collectCodeList = new List<string>();
+
+            _collectCodeList.Clear();
+            for (int i = 0; i < PageList.Count; i++)
+            {
+                if (PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList.Count > 0)
+                {
+                    foreach (AnalyzeClass analyze in PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList)
+                    {
+                        string barcodeStr = analyze.GetAnalyzeOnlyBarcodeStr();
+                        if (!string.IsNullOrEmpty(barcodeStr))
+                            _collectCodeList.Add(barcodeStr);
+                    }
+                }
+            }
+
+            List<string> _collectRepeatCodeList = new List<string>();
+            //查询数据库中所有的条码
+            isgood = Universal.JZMAINSDPOSITIONPARA.MySqlTableQuery(_collectCodeList, ref _collectRepeatCodeList) <= 0;
+            List<string> _collectNoRepeatCodeList = new List<string>();
+            //匹配到各个分支
+            if (!isgood)
+            {
+                _collectNoRepeatCodeList.Clear();
+                for (int i = 0; i < PageList.Count; i++)
+                {
+                    if (PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList.Count > 0)
+                    {
+                        foreach (AnalyzeClass analyze in PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList)
+                        {
+                            string barcodeStr = analyze.GetAnalyzeOnlyBarcodeStr();
+                            if (!string.IsNullOrEmpty(barcodeStr))
+                            {
+                                bool bOK = analyze.CheckRepeatCode(_collectRepeatCodeList, 0);
+                                //if (analyze.IsByPass)
+                                //    analyze.IsByPass = analyze.IsByPass;
+                                analyze.IsVeryGood &= (bOK || analyze.IsByPass);
+                                //analyze.IsVeryGood &= bOK;
+                                if (bOK)
+                                {
+                                    _collectNoRepeatCodeList.Add(barcodeStr);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Universal.JZMAINSDPOSITIONPARA.MySqlTableInsert(_collectNoRepeatCodeList);
+
+            }
+            else
+            {
+                Universal.JZMAINSDPOSITIONPARA.MySqlTableInsert(_collectCodeList);
+            }
+
+            //比对同一片的重复码
+            for (int i = 0; i < PageList.Count; i++)
+            {
+                if (PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList.Count > 0)
+                {
+                    foreach (AnalyzeClass analyze in PageList[i].AnalyzeRootArray[(int)pageoptype].BranchList)
+                    {
+                        //if (analyze.IsVeryGood)
+                        {
+                            bool bOK = analyze.CheckRepeatCode(_collectCodeList);
+                            analyze.IsVeryGood &= (bOK || analyze.IsByPass);
+                            //analyze.IsVeryGood &= bOK;
+                            isgood &= bOK;
+                        }
+                    }
+                }
+            }
+            return isgood;
+        }
+
+        #region 备份之前的测试代码
+        /*
+         * 
+         public bool A09_RunRepeatCodeProcess(PageOPTypeEnum pageoptype,bool echeckCurLotRepeatCode)
         {
             bool isgood = true;
             //收集所有页面读取到的二维码
@@ -1017,17 +1085,32 @@ namespace Allinone.OPSpace
                         {
                             _collectCodeList.Add(barcodeStr);
                             //插入数据
-                            if (INI.IsOpenCheckCurLotRepeatCode)
+                            //if (INI.IsOpenCheckCurLotRepeatCode)
+                            if (echeckCurLotRepeatCode)
                             {
-                                bool bOK = Universal.JZMAINSDPOSITIONPARA.MySqlTableInsert(barcodeStr) >= 0;
-                                if (!bOK)
+                                //查询表是否存在条码   <=0表示不存在
+                                bool bOK = Universal.JZMAINSDPOSITIONPARA.MySqlTableQuery(barcodeStr) <= 0;
+                                if (bOK)
+                                {
+                                    Universal.JZMAINSDPOSITIONPARA.MySqlTableInsert(barcodeStr);
+                                    ////检查表是否存在
+                                    //bool bExist = Universal.JZMAINSDPOSITIONPARA.MySqlCheckTableExist();
+                                    //if (!bExist)
+                                    //{
+                                    //    //不存在则建立表
+                                    //    int iret = Universal.JZMAINSDPOSITIONPARA.MySqlCreateTable();
+                                    //    if (iret >= 0)//建立成功插入数据
+                                    //        Universal.JZMAINSDPOSITIONPARA.MySqlTableInsert(barcodeStr);
+                                    //}
+                                }
+                                else
                                 {
                                     _collectCodeList_single.Add(barcodeStr);
                                     _collectCodeList_single.Add(barcodeStr);
                                     bOK = analyze.CheckRepeatCode(_collectCodeList_single);
-                                    analyze.IsVeryGood = bOK || analyze.IsByPass;
-                                    isgood &= bOK;
                                 }
+                                analyze.IsVeryGood = bOK || analyze.IsByPass;
+                                isgood &= bOK;
                             }
                         }
                     }
@@ -1051,6 +1134,1074 @@ namespace Allinone.OPSpace
             }
             return isgood;
         }
+         * 
+         */
+        #endregion
+
+
+        #region 分步走位 顺序和S型 MAPPING_A
+
+        public int StepCount
+        {
+            get { return stepRows * stepCols; }
+        }
+        //public int StepRows
+        //{
+        //    get { return stepRows; }
+        //    //set { stepRows = value; }
+        //}
+        //public int StepCols
+        //{
+        //    get { return stepCols; }
+        //    //set { stepCols = value; }
+        //}
+        
+        int stepRows = 1;
+        int stepCols = 1;
+        int stepCurrent = 0;
+
+
+        // 网格大小
+        int GridRows = 1;
+        int GridCols = 1;
+
+        // 滑块大小
+        int SliderRows = 1;
+        int SliderCols = 1;
+
+        // 网格和滑块
+        JzSliderItemClass[,] grid = new JzSliderItemClass[1, 1];
+        JzSliderItemClass[,] slider = new JzSliderItemClass[1, 1];
+
+        // 滑块的初始位置
+        int sliderX = 0;
+        int sliderY = 0;
+
+        PathPlan myPathPlan = PathPlan.p1;
+        bool myDirToLeft = false;
+        bool myDirToDown = false;
+
+        // 初始化网格和滑块
+        public void MappingA_Initialize()
+        {
+            PageList[0].PageAutoReportIndexMappingA(0);
+
+            Light2Settings _light = new Light2Settings();
+            _light.GetString(GeneralLight);
+
+            GridRows = _light.ChipRow;
+            GridCols = _light.ChipCol;
+
+            SliderRows = PageList[0].m_Mapping_Row;
+            SliderCols = PageList[0].m_Mapping_Col;
+
+            if (GridRows == 0)
+                GridRows = 1;
+            if (GridCols == 0)
+                GridCols = 1;
+            if (SliderRows == 0)
+                SliderRows = 1;
+            if (SliderCols == 0)
+                SliderCols = 1;
+
+            myPathPlan = _light.ChipPathPlan;
+            myDirToLeft = false;
+
+            grid = new JzSliderItemClass[GridRows, GridCols];
+            slider = new JzSliderItemClass[SliderRows, SliderCols];
+
+            //计算需要移动的步数
+            stepRows = (GridRows / SliderRows) + (GridRows % SliderRows == 0 ? 0 : 1);
+            stepCols = (GridCols / SliderCols) + (GridCols % SliderCols == 0 ? 0 : 1);
+
+            // 初始化网格为0（空白）
+            for (int i = 0; i < GridRows; i++)
+            {
+                for (int j = 0; j < GridCols; j++)
+                {
+                    grid[i, j] = new JzSliderItemClass();
+                    grid[i, j].IntOperate = 0;
+                }
+            }
+
+            int k = 0;
+            // 初始化滑块为1（滑块区域）
+            for (int i = 0; i < SliderRows; i++)
+            {
+                for (int j = 0; j < SliderCols; j++)
+                {
+                    slider[i, j] = new JzSliderItemClass();
+                    slider[i, j].IntOperate = 1;
+
+                    if (PageList[0].AnalyzeRoot.BranchList.Count > 0)
+                    {
+                        slider[i, j].AnalyzeNameStr = PageList[0].AnalyzeRoot.BranchList[k].ToAnalyzeString();
+                        slider[i, j].AnalyzeOpeateStr = _rectToString(PageList[0].AnalyzeRoot.BranchList[k].myOPRectF);
+                        k++;
+
+
+                    }
+                }
+            }
+
+            MappingA_GridClear(); 
+            MappingA_SliderClear();
+        }
+        public void MappingA_GridClear()
+        {
+            // 清空网格
+            for (int i = 0; i < GridRows; i++)
+            {
+                for (int j = 0; j < GridCols; j++)
+                {
+                    grid[i, j].Reset();
+                }
+            }
+
+            switch (myPathPlan)
+            {
+                case PathPlan.p4:
+                    //case PathPlan.p4:
+
+                    sliderX = GridRows - SliderRows;
+                    sliderY = GridCols - SliderCols;
+
+                    //if (GridRows % SliderRows == 0)
+                    //{
+                    //    sliderX = GridRows - SliderRows;
+                    //}
+                    //else
+                    //{
+                    //    sliderX = GridRows - (GridRows % SliderRows);
+                    //}
+                   
+                    //if (GridCols % SliderCols == 0)
+                    //    sliderY = GridCols - SliderCols;
+                    //else
+                    //{
+                    //    sliderY = GridCols - (GridCols % SliderCols);
+                    //}
+
+                    stepCurrent = 0;
+                    myDirToDown = true;
+                    break;
+                case PathPlan.p3:
+                    //case PathPlan.p4:
+                    sliderX = 0;// GridRows - SliderRows;
+                    sliderY = GridCols - SliderCols;
+
+                    //if (GridCols % SliderCols == 0)
+                    //    sliderY = GridCols - SliderCols;
+                    //else
+                    //{
+                    //    sliderY = GridCols - (GridCols % SliderCols);
+                    //}
+                    stepCurrent = 0;
+                    myDirToDown = false;
+                    break;
+                default:
+                    sliderX = 0;
+                    sliderY = 0;
+                    stepCurrent = 0;
+                    myDirToLeft = false;
+                    break;
+            }
+        }
+        public void MappingA_GridMapping2dClear()
+        {
+            // 清空网格
+            for (int i = 0; i < GridRows; i++)
+            {
+                for (int j = 0; j < GridCols; j++)
+                {
+                    grid[i, j].ResetMapping2d();
+                }
+            }
+        }
+        public int MappingA_GridSetMapping2d(string[] eValues, ref string datalogStr)
+        {
+            int grid_length = GridRows * GridCols;
+            datalogStr = string.Empty;
+            if (eValues == null)
+                return -3;
+            datalogStr += grid_length.ToString() + ",";
+            datalogStr += grid_length.ToString() + ",";
+            datalogStr += eValues.Length.ToString();
+
+            if (grid_length != eValues.Length)
+                return -5;
+
+            //sliderX = 0;
+            //sliderY = 0;
+
+            int k = 0;
+            // 清空网格
+            for (int i = 0; i < GridRows; i++)
+            {
+                for (int j = 0; j < GridCols; j++)
+                {
+                    grid[i, j].Mapping2dStr = eValues[k];
+                    k++;
+                }
+            }
+
+            // 将滑块放入网格 赋值条码
+            for (int i = 0; i < SliderRows; i++)
+            {
+                for (int j = 0; j < SliderCols; j++)
+                {
+                    if (sliderX + i < GridRows && sliderY + j < GridCols)
+                    {
+                        string bar = grid[sliderX + i, sliderY + j].Mapping2dStr;
+                        //slider[i, j].Mapping2dStr = bar;
+                        foreach (PageClass page in PageList)
+                        {
+                            foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                            {
+                                if (slider[i, j].AnalyzeNameStr == analyze.ToAnalyzeString())
+                                {
+                                    analyze.SetAnalyzeCheckBarcodeStr(bar);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            return 0;
+        }
+        public int MappingA_GridSetMappingBypass(bool[] eValues, ref string datalogStr)
+        {
+            int grid_length = GridRows * GridCols;
+            datalogStr = string.Empty;
+            if (eValues == null)
+                return -3;
+            datalogStr += grid_length.ToString() + ",";
+            datalogStr += grid_length.ToString() + ",";
+            datalogStr += eValues.Length.ToString();
+
+            if (grid_length != eValues.Length)
+                return -5;
+
+            int k = 0;
+            // 清空网格
+            for (int i = 0; i < GridRows; i++)
+            {
+                for (int j = 0; j < GridCols; j++)
+                {
+                    grid[i, j].AnalyzeBypass = eValues[k];
+                    k++;
+                }
+            }
+
+            // 将滑块放入网格 赋值条码
+            for (int i = 0; i < SliderRows; i++)
+            {
+                for (int j = 0; j < SliderCols; j++)
+                {
+                    if (sliderX + i < GridRows && sliderY + j < GridCols)
+                    {
+                        bool bar = grid[sliderX + i, sliderY + j].AnalyzeBypass;
+                        //slider[i, j].Mapping2dStr = bar;
+                        foreach (PageClass page in PageList)
+                        {
+                            foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                            {
+                                if (slider[i, j].AnalyzeNameStr == analyze.ToAnalyzeString())
+                                {
+                                    analyze.SetAnalyzeByPass(bar);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            return 0;
+        }
+        public void MappingA_SliderClear()
+        {
+            // 初始化滑块为1（滑块区域）
+            for (int i = 0; i < SliderRows; i++)
+            {
+                for (int j = 0; j < SliderCols; j++)
+                {
+                    slider[i, j].IntResult = -1;
+                    slider[i, j].StrMessage = string.Empty;
+                }
+            }
+
+            //// 将滑块放入网格 赋值条码
+            //for (int i = 0; i < SliderRows; i++)
+            //{
+            //    for (int j = 0; j < SliderCols; j++)
+            //    {
+            //        if (sliderX + i < GridRows && sliderY + j < GridCols)
+            //        {
+            //            string bar = grid[sliderX + i, sliderY + j].Mapping2dStr;
+            //            //slider[i, j].Mapping2dStr = bar;
+            //            foreach (PageClass page in PageList)
+            //            {
+            //                foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+            //                {
+            //                    if (slider[i, j].AnalyzeNameStr == analyze.ToAnalyzeString())
+            //                    {
+            //                        analyze.SetAnalyzeCheckBarcodeStr(bar);
+            //                    }
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+        }
+        public void MappingA_CopyAnalyze()
+        {
+            // 将滑块放入网格 赋值条码
+            for (int i = 0; i < SliderRows; i++)
+            {
+                for (int j = 0; j < SliderCols; j++)
+                {
+                    if (sliderX + i < GridRows && sliderY + j < GridCols)
+                    {
+                        int x = sliderX + i;
+                        int y = sliderY + j;
+
+                        if (x >= 0 && y >= 0)
+                        {
+                            string bar = grid[x, y].Mapping2dStr;
+                            bool bypass = grid[x, y].AnalyzeBypass;
+                            //slider[i, j].Mapping2dStr = bar;
+                            foreach (PageClass page in PageList)
+                            {
+                                foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                                {
+                                    if (slider[i, j].AnalyzeNameStr == analyze.ToAnalyzeString())
+                                    {
+                                        analyze.SetAnalyzeCheckBarcodeStr(bar);
+                                        analyze.SetAnalyzeByPass(bypass);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        public void MappingA_SetCurrentStep(int eCurrentStep = 0)
+        {
+            stepCurrent = eCurrentStep;
+
+            switch(myPathPlan)
+            {
+                case PathPlan.p4:
+
+                    if (stepCurrent % stepRows == 0 && stepCurrent > 0)
+                    {
+                        sliderY -= SliderCols; // 左移
+                        sliderX = GridRows - SliderRows;
+                    }
+                    MappingA_UpdateGrid(eCurrentStep);
+                    sliderX -= SliderRows; // 上移
+                    break;
+                case PathPlan.p3:
+
+                    if (stepCurrent % stepRows == 0 && stepCurrent > 0)
+                    {
+                        sliderY -= SliderCols; // 左移
+                        sliderX = 0;
+                    }
+
+                    MappingA_UpdateGrid(eCurrentStep);
+                    sliderX += SliderRows; // 下移
+
+                    break;
+                case PathPlan.p2:
+
+                    if (stepCurrent % stepCols == 0 && stepCurrent > 0)
+                    {
+                        sliderX += SliderRows; // 下移
+                        myDirToLeft = !myDirToLeft;
+
+                        if (sliderY <= 0 || sliderY + SliderCols > GridCols)
+                        {
+                            if (myDirToLeft)
+                            {
+                                if (GridCols % SliderCols == 0)
+                                    sliderY = GridCols - SliderCols;
+                                else
+                                    sliderY = GridCols - (GridCols % SliderCols);
+                                //sliderY -= SliderCols; // 左移
+                            }
+                            else
+                            {
+                                sliderY = 0;
+                            }
+                        }
+                    }
+                        
+
+                    ////var key = JetMoveType.MOVE_RIGHT;
+                    //if (stepCurrent % stepCols == 0 && stepCurrent > 0)
+                    //{
+                    //    sliderX += SliderRows; // 下移
+                    //                           //if (sliderX % 2 == 0 && sliderX > 0)
+                    //                           //{
+                    //                           //    sliderY = 0;
+                    //                           //    myDirToLeft = false;
+                    //                           //}
+                    //                           //else
+                    //                           //{
+                    //                           //    if (GridCols == SliderCols)
+                    //                           //    {
+                    //                           //        sliderY = 0;
+                    //                           //        myDirToLeft = false;
+                    //                           //    }
+                    //                           //    else
+                    //                           //    {
+                    //                           //        if (GridCols % 2 == 0)
+                    //                           //            sliderY = GridCols - SliderCols;
+                    //                           //        else
+                    //                           //            sliderY = GridCols - (GridCols % SliderCols);
+                    //                           //        myDirToLeft = true;
+                    //                           //    }
+                    //                           //}
+
+                    //    myDirToLeft = !myDirToLeft;
+
+                    //    //if (myDirToLeft)
+                    //    //{
+                    //    //    if (sliderY >= SliderCols)
+                    //    //        sliderY -= SliderCols; // 左移
+                    //    //}
+                    //    //else
+                    //    //{
+                    //    //    if (sliderY <= GridCols - SliderCols)
+                    //    //        sliderY += SliderCols; // 右移
+                    //    //}
+                    //}
+                    if (myDirToLeft)
+                    {
+                        MappingA_UpdateGrid(eCurrentStep);
+                        if (sliderY >= SliderCols)
+                            sliderY -= SliderCols; // 左移
+                    }
+                    else
+                    {
+                        MappingA_UpdateGrid(eCurrentStep);
+                        if (sliderY <= GridCols - SliderCols)
+                            sliderY += SliderCols; // 右移
+                    }
+
+                    break;
+                default:
+
+                    //var key = JetMoveType.MOVE_RIGHT;
+                    if (stepCurrent % stepCols == 0 && stepCurrent > 0)
+                    {
+                        sliderX += SliderRows; // 下移
+                        sliderY = 0;
+                    }
+
+                    MappingA_UpdateGrid(eCurrentStep);
+                    sliderY += SliderCols; // 右移
+
+                    break;
+            }
+        }
+        public void MappingA_GridList(ref List<JzSliderItemClass> mapList)
+        {
+            mapList.Clear();
+            // 打印网格
+            for (int i = 0; i < GridRows; i++)
+            {
+                for (int j = 0; j < GridCols; j++)
+                {
+                    mapList.Add(grid[i, j]);
+                    Console.Write(grid[i, j].IntResult.ToString());
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+        }
+        public bool IsPass()
+        {
+            bool isPass = true;
+            #region 添加比对码 当前批号重复码 此条的重复码
+
+            //if (!INI.IsOpenForceNoCheckRepeat)
+            //{
+            //    List<string> _collectCodeList = new List<string>();
+            //    _collectCodeList.Clear();
+
+            //    Light2Settings _light = new Light2Settings();
+            //    _light.GetString(GeneralLight);
+            //    //检测比对码
+            //    if (_light.IsCheckBarcodeOpen)
+            //    {
+            //        for (int i = 0; i < GridRows; i++)
+            //        {
+            //            for (int j = 0; j < GridCols; j++)
+            //            {
+            //                if (!grid[i, j].CheckBarcode())
+            //                {
+            //                    grid[i, j].IntResult = 7;//2d比对错误
+            //                    grid[i, j].StrMessage = $"Compare[FAIL] ";
+            //                }
+            //                else
+            //                {
+            //                    grid[i, j].StrMessage = $"Compare[PASS] ";
+            //                }
+            //                grid[i, j].StrMessage += Environment.NewLine;
+            //                grid[i, j].StrMessage += $"Marking 2D[{grid[i, j].Mapping2dStr}] ";
+            //                grid[i, j].StrMessage += Environment.NewLine;
+            //                grid[i, j].StrMessage += $"Read 2D[{grid[i, j].Read2dStr}] ";
+            //                grid[i, j].StrMessage += Environment.NewLine;
+            //            }
+            //        }
+            //    }
+
+            //    //检测重复码
+            //    if (_light.IsOpenCheckRepeatCode)
+            //    {
+            //        //判断表是否存在
+            //        bool bExist = Universal.JZMAINSDPOSITIONPARA.MySqlCheckTableExist();
+            //        if (!bExist)
+            //        {
+            //            int iret = Universal.JZMAINSDPOSITIONPARA.MySqlCreateTable();
+            //        }
+            //        for (int i = 0; i < GridRows; i++)
+            //        {
+            //            for (int j = 0; j < GridCols; j++)
+            //            {
+            //                if (!string.IsNullOrEmpty(grid[i, j].Read2dStr))
+            //                {
+            //                    _collectCodeList.Add(grid[i, j].Read2dStr);
+            //                }
+            //            }
+            //        }
+
+            //        List<string> _collectRepeatCodeList = new List<string>();
+            //        //查询数据库中所有的条码
+            //        bool bOK = Universal.JZMAINSDPOSITIONPARA.MySqlTableQuery(_collectCodeList, ref _collectRepeatCodeList) <= 0;
+            //        List<string> _collectNoRepeatCodeList = new List<string>();
+            //        //匹配到各个分支
+            //        if (!bOK)
+            //        {
+            //            _collectNoRepeatCodeList.Clear();
+            //            for (int i = 0; i < GridRows; i++)
+            //            {
+            //                for (int j = 0; j < GridCols; j++)
+            //                {
+            //                    bool bok = true;
+            //                    if (!string.IsNullOrEmpty(grid[i, j].Read2dStr))
+            //                    {
+            //                        foreach (string s in _collectRepeatCodeList)
+            //                        {
+            //                            //if (s.Contains(m_BarcodeReadStr))
+            //                            if (s.Trim() == grid[i, j].Read2dStr.Trim())
+            //                            {
+            //                                bok = false;
+            //                                break;
+            //                            }
+            //                        }
+
+            //                        if (!bOK)
+            //                        {
+            //                            grid[i, j].IntResult = 9;//2d重复
+            //                            _collectNoRepeatCodeList.Add(grid[i, j].Read2dStr.Trim());
+            //                        }
+            //                    }
+            //                }
+            //            }
+
+            //            Universal.JZMAINSDPOSITIONPARA.MySqlTableInsert(_collectNoRepeatCodeList);
+            //        }
+            //        else
+            //        {
+            //            Universal.JZMAINSDPOSITIONPARA.MySqlTableInsert(_collectCodeList);
+            //        }
+
+            //    }
+            //}
+
+            #endregion
+
+
+            if (INI.IsOpenFaultToleranceRate)
+            {
+                int ngcount = 0;
+                int count = 0;
+
+                for (int i = 0; i < GridRows; i++)
+                {
+                    for (int j = 0; j < GridCols; j++)
+                    {
+                        if (grid[i, j].IntResult != 0)
+                        {
+                            ngcount++;
+                        }
+                        count++;
+                    }
+                }
+
+                double rate = ngcount * 1.0 / count;
+                isPass = rate <= INI.FaultToleranceRate;
+
+            }
+            else
+            {
+                for (int i = 0; i < GridRows; i++)
+                {
+                    for (int j = 0; j < GridCols; j++)
+                    {
+                        if (grid[i, j].IntResult != 0)
+                        {
+                            isPass = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            MappingA_GridMapping2dClear();
+            return isPass;
+        }
+        public string GetShow2dMessage(AnalyzeClass eAnalyze)
+        {
+            string str = string.Empty;
+            for (int i = 0; i < SliderRows; i++)
+            {
+                for (int j = 0; j < SliderCols; j++)
+                {
+                    if (slider[i, j].AnalyzeNameStr == eAnalyze.ToAnalyzeString())
+                    {
+                        str = slider[i, j].Show2dMessage;
+                    }
+                }
+            }
+            return str;
+        }
+        // 更新网格显示
+        void MappingA_UpdateGrid(int eStepIndex)
+        {
+            //对应结果数据
+            WorkStatusCollectionClass RunStatusCollectionTemp = new WorkStatusCollectionClass();
+            FillRunStatus(RunStatusCollectionTemp);
+            for (int i = 0; i < SliderRows; i++)
+            {
+                for (int j = 0; j < SliderCols; j++)
+                {
+                    foreach (PageClass page in PageList)
+                    {
+                        foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                        {
+                            PassInfoClass passInfo = new PassInfoClass();
+                            Color color = myCheckAnalyzeResult(analyze, RunStatusCollectionTemp, out passInfo);
+                            if (slider[i, j].AnalyzeNameStr == analyze.ToAnalyzeString())
+                            {
+                                slider[i, j].IntResult = _getColorIndex(color);
+                                slider[i, j].StrMessage = _getAnalyzeBarcodeStr(analyze);
+                                slider[i, j].IntStepIndex = eStepIndex;
+                                slider[i, j].Read2dStr = analyze.GetAnalyzeOnlyBarcodeStr();
+                                //slider[i, j].Show2dMessage = _getAnalyzeBarcodeStr(analyze);
+                                string bar = string.Empty;
+                                analyze.CollectAllBarcodeStr(ref bar);
+                                slider[i, j].Show2dMessage = bar;
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            //// 清空网格
+            //for (int i = 0; i < GridRows; i++)
+            //{
+            //    for (int j = 0; j < GridCols; j++)
+            //    {
+            //        grid[i, j].IntOperate = 0;
+            //    }
+            //}
+
+            // 将滑块放入网格
+            for (int i = 0; i < SliderRows; i++)
+            {
+                for (int j = 0; j < SliderCols; j++)
+                {
+                    if (sliderX + i < GridRows && sliderY + j < GridCols)
+                    {
+                        int x = sliderX + i;
+                        int y = sliderY + j;
+
+                        if (x >= 0 && y >= 0)
+                            grid[sliderX + i, sliderY + j].Clone(slider[i, j]);
+                        //grid[sliderX + i, sliderY + j] = slider[i, j];
+                    }
+                }
+            }
+
+            #region 添加比对码 当前批号重复码 此条的重复码
+
+            //if (!INI.IsOpenForceNoCheckRepeat)
+            //{
+            //    List<string> _collectCodeList = new List<string>();
+            //    _collectCodeList.Clear();
+
+            //    Light2Settings _light = new Light2Settings();
+            //    _light.GetString(GeneralLight);
+            //    //检测比对码
+            //    if (_light.IsCheckBarcodeOpen)
+            //    {
+            //        for (int i = 0; i < GridRows; i++)
+            //        {
+            //            for (int j = 0; j < GridCols; j++)
+            //            {
+            //                if (!grid[i, j].CheckBarcode())
+            //                {
+            //                    grid[i, j].IntResult = 7;//2d比对错误
+            //                    grid[i, j].StrMessage = $"Compare[FAIL] ";
+            //                }
+            //                else
+            //                {
+            //                    grid[i, j].StrMessage = $"Compare[PASS] ";
+            //                }
+            //                grid[i, j].StrMessage += Environment.NewLine;
+            //                grid[i, j].StrMessage += $"Marking 2D[{grid[i, j].Mapping2dStr}] ";
+            //                grid[i, j].StrMessage += Environment.NewLine;
+            //                grid[i, j].StrMessage += $"Read 2D[{grid[i, j].Read2dStr}] ";
+            //                grid[i, j].StrMessage += Environment.NewLine;
+            //            }
+            //        }
+            //    }
+
+            //    //检测重复码
+            //    if (_light.IsOpenCheckRepeatCode)
+            //    {
+            //        //判断表是否存在
+            //        bool bExist = Universal.JZMAINSDPOSITIONPARA.MySqlCheckTableExist();
+            //        if (!bExist)
+            //        {
+            //            int iret = Universal.JZMAINSDPOSITIONPARA.MySqlCreateTable();
+            //        }
+            //        for (int i = 0; i < GridRows; i++)
+            //        {
+            //            for (int j = 0; j < GridCols; j++)
+            //            {
+            //                if (!string.IsNullOrEmpty(grid[i, j].Read2dStr))
+            //                {
+            //                    _collectCodeList.Add(grid[i, j].Read2dStr);
+            //                }
+            //            }
+            //        }
+
+            //        List<string> _collectRepeatCodeList = new List<string>();
+            //        //查询数据库中所有的条码
+            //        bool bOK = Universal.JZMAINSDPOSITIONPARA.MySqlTableQuery(_collectCodeList, ref _collectRepeatCodeList) <= 0;
+            //        List<string> _collectNoRepeatCodeList = new List<string>();
+            //        //匹配到各个分支
+            //        if (!bOK)
+            //        {
+            //            _collectNoRepeatCodeList.Clear();
+            //            for (int i = 0; i < GridRows; i++)
+            //            {
+            //                for (int j = 0; j < GridCols; j++)
+            //                {
+            //                    bool bok = true;
+            //                    if (!string.IsNullOrEmpty(grid[i, j].Read2dStr))
+            //                    {
+            //                        foreach (string s in _collectRepeatCodeList)
+            //                        {
+            //                            //if (s.Contains(m_BarcodeReadStr))
+            //                            if (s.Trim() == grid[i, j].Read2dStr.Trim())
+            //                            {
+            //                                bok = false;
+            //                                break;
+            //                            }
+            //                        }
+
+            //                        if (!bOK)
+            //                        {
+            //                            grid[i, j].IntResult = 9;//2d重复
+            //                            _collectNoRepeatCodeList.Add(grid[i, j].Read2dStr.Trim());
+            //                        }
+            //                    }
+            //                }
+            //            }
+
+            //            Universal.JZMAINSDPOSITIONPARA.MySqlTableInsert(_collectNoRepeatCodeList);
+            //        }
+            //        else
+            //        {
+            //            Universal.JZMAINSDPOSITIONPARA.MySqlTableInsert(_collectCodeList);
+            //        }
+
+            //    }
+            //}
+
+            #endregion
+
+            //// 打印网格
+            //for (int i = 0; i < GridRows; i++)
+            //{
+            //    for (int j = 0; j < GridCols; j++)
+            //    {
+            //        Console.Write(grid[i, j].IntResult == 1 ? "# " : ". ");
+            //    }
+            //    Console.WriteLine();
+            //}
+            //Console.WriteLine();
+
+            //ResetRunStatus();
+            //MappingA_SliderClear();
+        }
+        // 监听键盘输入
+        void MappiingA_MoveSlider(JetMoveType eMoveType)
+        {
+            ////while (true)
+            //{
+            //    var key = eMoveType;
+
+            //    if (key == JetMoveType.MOVE_UP && sliderX >= SliderRows)
+            //    {
+            //        sliderX -= SliderRows; // 上移
+            //        MappingA_UpdateGrid();
+            //    }
+            //    else if (key == JetMoveType.MOVE_DOWN && sliderX <= GridRows - SliderRows)
+            //    {
+            //        sliderX += SliderRows; // 下移
+            //        MappingA_UpdateGrid();
+            //    }
+            //    else if (key == JetMoveType.MOVE_LEFT && sliderY >= SliderCols)
+            //    {
+            //        sliderY -= SliderCols; // 左移
+            //        MappingA_UpdateGrid();
+            //    }
+            //    else if (key == JetMoveType.MOVE_RIGHT && sliderY <= GridCols - SliderCols)
+            //    {
+            //        sliderY += SliderCols; // 右移
+            //        MappingA_UpdateGrid();
+            //    }
+            //    //else if (key == ConsoleKey.Q) // 按Q退出
+            //    //{
+            //    //    break;
+            //    //}
+            //}
+        }
+        Color myCheckAnalyzeResult(AnalyzeClass eanalyze, WorkStatusCollectionClass runstatuscollection, out PassInfoClass passInfo)
+        {
+            Color c = Color.Green;
+            int i = 0;
+
+            passInfo = new PassInfoClass();
+
+            if (runstatuscollection.NGCOUNT == 0)
+                return c;
+
+            bool bfind = false;
+
+            i = 0;
+            while (i < runstatuscollection.NGCOUNT)
+            {
+                if (eanalyze.PassInfo.ToString() == runstatuscollection.GetNGRunStatus(i).PassInfo.ToString())
+                {
+                    bfind = true;
+                    break;
+                }
+                i++;
+            }
+
+            if (bfind)
+            {
+                c = myAnalyzeProcedure(runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure);
+                //passInfo.FromPassInfo(runstatuscollection.GetNGRunStatus(i).PassInfo, OPLevelEnum.COPY);
+                passInfo = new PassInfoClass(runstatuscollection.GetNGRunStatus(i).PassInfo, OPLevelEnum.COPY);
+
+                if (runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure == AnanlyzeProcedureEnum.BIAS)
+                {
+                    passInfo.OperateString = runstatuscollection.GetNGRunStatus(i).ProcessString;
+                }
+
+                return c;
+            }
+
+            i = 0;
+
+            foreach (AnalyzeClass analyze in eanalyze.BranchList)
+            {
+                i = 0;
+                while (i < runstatuscollection.NGCOUNT)
+                {
+                    if (analyze.PassInfo.ToString() == runstatuscollection.GetNGRunStatus(i).PassInfo.ToString())
+                    {
+                        bfind = true;
+                        break;
+                    }
+                    i++;
+                }
+
+                if (bfind)
+                {
+                    c = myAnalyzeProcedure(runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure);
+
+                    //passInfo.FromPassInfo(runstatuscollection.GetNGRunStatus(i).PassInfo, OPLevelEnum.COPY);
+                    passInfo = new PassInfoClass(runstatuscollection.GetNGRunStatus(i).PassInfo, OPLevelEnum.COPY);
+
+                    if (runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure == AnanlyzeProcedureEnum.BIAS)
+                    {
+                        passInfo.OperateString = runstatuscollection.GetNGRunStatus(i).ProcessString;
+                    }
+
+                    break;
+                }
+
+                c = myCheckAnalyzeResult(analyze, runstatuscollection, out passInfo);
+
+            }
+
+            return c;
+        }
+
+        Color myAnalyzeProcedure(AnanlyzeProcedureEnum ananlyzeProcedure)
+        {
+            Color c = Color.Red;
+
+            switch (ananlyzeProcedure)
+            {
+                case AnanlyzeProcedureEnum.LASER:
+                case AnanlyzeProcedureEnum.MONTH:
+                case AnanlyzeProcedureEnum.YEAR:
+                case AnanlyzeProcedureEnum.ALIGNRUN:
+                    c = Color.Cyan;
+                    break;
+                case AnanlyzeProcedureEnum.INSPECTION:
+                    c = Color.Red;
+                    break;
+                case AnanlyzeProcedureEnum.BIAS:
+                    c = Color.Violet;
+                    break;
+                case AnanlyzeProcedureEnum.CHECKDIRT:
+                    c = Color.Yellow;
+                    break;
+                case AnanlyzeProcedureEnum.CHECKBARCODE:
+                    c = Color.Fuchsia;
+                    break;
+                case AnanlyzeProcedureEnum.CHECKMISBARCODE:
+                    c = Color.Orange;
+                    break;
+                case AnanlyzeProcedureEnum.CHECKREPEATBARCODE:
+                    c = Color.LightPink;
+                    break;
+                default:
+                    break;
+            }
+
+            return c;
+        }
+        int _getColorIndex(Color eColor)
+        {
+            int iret = 0;
+            if (eColor == Color.Cyan)
+            {
+                iret = 1;
+            }
+            else if (eColor == Color.Violet)
+            {
+                iret = 2;
+            }
+            else if (eColor == Color.Yellow)
+            {
+                iret = 3;
+            }
+            else if (eColor == Color.Red)
+            {
+                iret = 4;
+            }
+            else if (eColor == Color.Purple)
+            {
+                iret = 5;
+            }
+            else if (eColor == Color.Blue)
+            {
+                iret = 6;
+            }
+            else if (eColor == Color.Orange)
+            {
+                iret = 7;
+            }
+            else if (eColor == Color.Fuchsia)
+            {
+                iret = 8;
+            }
+            else if (eColor == Color.LightPink)
+            {
+                iret = 9;
+            }
+            return iret;
+        }
+        string _getAnalyzeBarcodeStr(AnalyzeClass eAnalyze)
+        {
+            if (eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX || eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.QRCODE)
+            {
+                string tempstr = $"No Compare;{eAnalyze.ReadBarcode2DRealStr}";
+                if (INI.IsCheckBarcodeOpen)
+                {
+                    if (string.IsNullOrEmpty(eAnalyze.ReadBarcode2DRealStr))
+                        tempstr = $"Compare [FAIL];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}]";
+                    else
+                        tempstr = $"Compare [{(eAnalyze.ReadBarcode2DRealStr == eAnalyze.Barcode_2D ? "PASS" : "FAIL")}];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}]";
+                }
+                return tempstr;
+                //return eAnalyze.ReadBarcode2DStr;
+            }
+            else if (eAnalyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
+            {
+                string tempstr = $"No Compare;{eAnalyze.ReadBarcode2DRealStr};{eAnalyze.ReadBarcode2DGrade}";
+                if (INI.IsCheckBarcodeOpen)
+                {
+                    if (INI.IsOpenShowGrade)
+                    {
+                        if (string.IsNullOrEmpty(eAnalyze.ReadBarcode2DRealStr))
+                            tempstr = $"Compare [FAIL];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}];Grade[{eAnalyze.ReadBarcode2DGrade}]";
+                        else
+                            tempstr = $"Compare [{(eAnalyze.ReadBarcode2DRealStr == eAnalyze.Barcode_2D ? "PASS" : "FAIL")}];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}];Grade[{eAnalyze.ReadBarcode2DGrade}]";
+
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(eAnalyze.ReadBarcode2DRealStr))
+                            tempstr = $"Compare [FAIL];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}]";
+                        else
+                            tempstr = $"Compare [{(eAnalyze.ReadBarcode2DRealStr == eAnalyze.Barcode_2D ? "PASS" : "FAIL")}];Marking 2D[{eAnalyze.Barcode_2D}];Read 2D[{eAnalyze.ReadBarcode2DRealStr}]";
+
+                    }
+
+                }
+                return tempstr;
+                //return eAnalyze.ReadBarcode2DStr + ";" + eAnalyze.ReadBarcode2DGrade;
+            }
+            foreach (AnalyzeClass analyzeClass in eAnalyze.BranchList)
+            {
+                string _barcodeStr = _getAnalyzeBarcodeStr(analyzeClass);
+                if (!string.IsNullOrEmpty(_barcodeStr))
+                    return _barcodeStr;
+            }
+            return string.Empty;
+        }
+        string _rectToString(RectangleF eRectF)
+        {
+            string STR = string.Empty;
+
+            STR += eRectF.Location.X + ",";
+            STR += eRectF.Location.Y + ",";
+            STR += eRectF.Width + ",";
+            STR += eRectF.Height;
+
+            return STR;
+        }
+        #endregion
+
         #region 自动编号 
 
         public void SetOffset(int pageindex, Point ePointOffset,bool ison)

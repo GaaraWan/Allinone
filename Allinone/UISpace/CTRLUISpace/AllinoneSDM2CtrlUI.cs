@@ -26,7 +26,7 @@ namespace Allinone.UISpace.CTRLUISpace
         enum TagEnum
         {
             TOPLIGHT,
-            //FRONTLIGHT,
+            FRONTLIGHT,
             //BACKLIGHT,
             READY,
             BUSY,
@@ -82,7 +82,7 @@ namespace Allinone.UISpace.CTRLUISpace
         Label lblIsEMC;
 
         Label lblTopLight;
-        //Label lblFrontLight;
+        Label lblFrontLight;
         //Label lblBackLight;
         Label lblReady;
         Label lblBusy;
@@ -126,7 +126,7 @@ namespace Allinone.UISpace.CTRLUISpace
             lblIsStart = label15;
 
             lblTopLight = label14;
-            //lblFrontLight = label3;
+            lblFrontLight = label16;
             //lblBackLight = label6;
             lblReady = label7;
             lblBusy = label8;
@@ -147,7 +147,7 @@ namespace Allinone.UISpace.CTRLUISpace
             btnRobot = button7;
 
             lblTopLight.Tag = TagEnum.TOPLIGHT;
-            //lblFrontLight.Tag = TagEnum.FRONTLIGHT;
+            lblFrontLight.Tag = TagEnum.FRONTLIGHT;
             //lblBackLight.Tag = TagEnum.BACKLIGHT;
             lblReady.Tag = TagEnum.READY;
             lblBusy.Tag = TagEnum.BUSY;
@@ -168,7 +168,7 @@ namespace Allinone.UISpace.CTRLUISpace
             lblAIMsg.Tag = TagEnum.lblAIModelChange;
 
             lblTopLight.DoubleClick += lbl_DoubleClick;
-            //lblFrontLight.DoubleClick += lbl_DoubleClick;
+            lblFrontLight.DoubleClick += lbl_DoubleClick;
             //lblBackLight.DoubleClick += lbl_DoubleClick;
             lblReady.DoubleClick += lbl_DoubleClick;
             lblBusy.DoubleClick += lbl_DoubleClick;
@@ -409,9 +409,9 @@ namespace Allinone.UISpace.CTRLUISpace
                 case TagEnum.TOPLIGHT:
                     PLCIO.TopLight = !PLCIO.TopLight;
                     break;
-                //case TagEnum.FRONTLIGHT:
-                //    PLCIO.FrontLight = !PLCIO.FrontLight;
-                //    break;
+                case TagEnum.FRONTLIGHT:
+                    PLCIO.CoaxialLight = !PLCIO.CoaxialLight;
+                    break;
                 //case TagEnum.BACKLIGHT:
                 //    PLCIO.BackLight = !PLCIO.BackLight;
                 //    break;
@@ -617,7 +617,7 @@ namespace Allinone.UISpace.CTRLUISpace
             lblIsStart.BackColor = (PLCIO.IsStart ? Color.Green : bkColor);
             lblIsEMC.BackColor = (PLCIO.IsEMC ? Color.Green : bkColor);
             lblTopLight.BackColor = (PLCIO.TopLight ? Color.Green : bkColor);
-            //lblFrontLight.BackColor = (PLCIO.FrontLight ? Color.Green : Color.Black);
+            lblFrontLight.BackColor = (PLCIO.CoaxialLight ? Color.Green : Color.Black);
             //lblBackLight.BackColor = (PLCIO.BackLight ? Color.Green : Color.Black);
             btnAbsMove.BackColor = (PLCIO.RobotAbs ? Color.Green : Color.FromArgb(192, 255, 192));
             lblReady.BackColor = (PLCIO.Ready ? Color.Green : bkColor);

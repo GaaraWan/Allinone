@@ -490,6 +490,57 @@ namespace Allinone.ControlSpace.IOSpace
             }
         }
 
+
+        /// <summary>
+        /// 相机拍照开始
+        /// </summary>
+        public bool IsCameraStart
+        {
+            get
+            {
+                FATEKAddressClass address = new FATEKAddressClass("0:M0029");
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+            //set
+            //{
+            //    FATEKAddressClass address = new FATEKAddressClass("0:M0186");
+            //    PLC[address.SiteNo].SetIO(value, address.Address0);
+            //}
+        }
+        /// <summary>
+        /// 相机拍照完成
+        /// </summary>
+        public bool CameraComplete
+        {
+            get
+            {
+                FATEKAddressClass address = new FATEKAddressClass("0:M0030");
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+            set
+            {
+                FATEKAddressClass address = new FATEKAddressClass("0:M0030");
+                PLC[address.SiteNo].SetIO(value, address.Address0);
+            }
+        }
+        /// <summary>
+        /// 相机拍照完成
+        /// </summary>
+        public bool CameraByPass
+        {
+            get
+            {
+                FATEKAddressClass address = new FATEKAddressClass("0:M0031");
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+            set
+            {
+                FATEKAddressClass address = new FATEKAddressClass("0:M0031");
+                PLC[address.SiteNo].SetIO(value, address.Address0);
+            }
+        }
+
+
         public int GetAlmValue
         {
             get

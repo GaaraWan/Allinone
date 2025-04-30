@@ -16,6 +16,7 @@ using Allinone.ControlSpace.IOSpace;
 using JetEazy.ControlSpace;
 using JetEazy.DBSpace;
 using JetEazy.PlugSpace;
+using System.Threading;
 
 namespace Allinone.UISpace.CTRLUISpace
 {
@@ -37,6 +38,11 @@ namespace Allinone.UISpace.CTRLUISpace
         Button btnBigProduct;
         Button btnSmallProduct;
         Button btnSaveImage;
+        Button btnManualChangeRecipe;
+
+        Button btnOneKeyGetImageAreaCam;
+        Button btnSaveImageAreaCam;
+        Button btnReLoadTrainRecipe;
 
         Label lblAXIS;
         Label lblTestPoint;
@@ -51,6 +57,9 @@ namespace Allinone.UISpace.CTRLUISpace
         ListBox lsbEvent;
 
         JzMainSDM5MachineClass MACHINE;
+
+        System.Threading.Thread m_ThreadPlc = null;
+        bool m_ThRunning = false;
 
         AccDBClass ACCDB
         {
@@ -85,6 +94,10 @@ namespace Allinone.UISpace.CTRLUISpace
             btnBigProduct = button9;
             btnSmallProduct = button10;
             btnSaveImage = button6;
+            btnManualChangeRecipe = button11;
+            btnOneKeyGetImageAreaCam = button12;
+            btnSaveImageAreaCam = button13;
+            btnReLoadTrainRecipe = button14;
 
             lblAlarm = label5;
             lblState = label11;
@@ -100,6 +113,10 @@ namespace Allinone.UISpace.CTRLUISpace
             btnBigProduct.Click += BtnBigProduct_Click;
             btnSmallProduct.Click += BtnSmallProduct_Click;
             btnSaveImage.Click += BtnSaveImage_Click;
+            btnManualChangeRecipe.Click += BtnManualChangeRecipe_Click;
+            btnOneKeyGetImageAreaCam.Click += BtnOneKeyGetImageAreaCam_Click;
+            btnSaveImageAreaCam.Click += BtnSaveImageAreaCam_Click;
+            btnReLoadTrainRecipe.Click += BtnReLoadTrainRecipe_Click;
 
             //lblVacc = label4;
             lblIO = label3;
@@ -141,6 +158,50 @@ namespace Allinone.UISpace.CTRLUISpace
             myTime.Cut();
 
             SetEnable(false);
+
+            if (Universal.IsUseThreadReviceTcp)
+            {
+                if (m_ThreadPlc == null)
+                {
+                    m_ThRunning = true;
+                    m_ThreadPlc = new System.Threading.Thread(new System.Threading.ThreadStart(PlcTick));
+                    m_ThreadPlc.IsBackground = true;
+                    m_ThreadPlc.Start();
+                }
+            }
+        }
+
+        private void BtnReLoadTrainRecipe_Click(object sender, EventArgs e)
+        {
+            int iret = Universal.InitialChangeRecipe();
+            MessageBox.Show("重新加载完成");
+        }
+
+        private void BtnSaveImageAreaCam_Click(object sender, EventArgs e)
+        {
+            string _path = SaveFilePicker($"AreaImage_{DateTime.Now.ToString("yyyyMMddHHmmss")}.png");
+            if (string.IsNullOrEmpty(_path))
+                return;
+
+            Bitmap bmptemp = new Bitmap(CamActClass.Instance.bmpChangeRecipeTemp);
+            bmptemp.Save(_path, System.Drawing.Imaging.ImageFormat.Png);
+            bmptemp.Dispose();
+            M_WARNING_FRM = new MessageForm(true, "图像保存完成", "");
+            if (DialogResult.Yes == M_WARNING_FRM.ShowDialog())
+            {
+            }
+            M_WARNING_FRM.Close();
+            M_WARNING_FRM.Dispose();
+        }
+
+        private void BtnOneKeyGetImageAreaCam_Click(object sender, EventArgs e)
+        {
+            OnTrigger(ActionEnum.ACT_ONEKEYGETIMAGEAREA, "");
+        }
+
+        private void BtnManualChangeRecipe_Click(object sender, EventArgs e)
+        {
+            OnTrigger(ActionEnum.ACT_MANUALCHANGERECIPE, "");
         }
 
         private void BtnSaveImage_Click(object sender, EventArgs e)
@@ -476,8 +537,8 @@ namespace Allinone.UISpace.CTRLUISpace
         {
             if (myTime.msDuriation > 100)
             {
-
-                MACHINE.Tick();
+                if (!Universal.IsUseThreadReviceTcp)
+                    MACHINE.Tick();
 
                 myTime.Cut();
 
@@ -536,7 +597,7 @@ namespace Allinone.UISpace.CTRLUISpace
                 btnStart.Text = (MACHINE.PLCIO.ADR_PROCESSING ? "运行中" : "启动");
                 btnStop.Text = (MACHINE.PLCIO.ForceStopPlcProcess ? "停止中" : "停止");
                 btnReset.Text = (MACHINE.PLCIO.ADR_RESETING ? "复位中" : "复位");
-                btnOnekeyGetImage.Text = (MACHINE.PLCIO.ADR_OnceGetImage ? "单次抓图中" : "一键取像");
+                btnOnekeyGetImage.Text = (MACHINE.PLCIO.ADR_OnceGetImage ? "单次抓图中" : "一键取像(线扫)");
 
                 btnAutoAndManual.BackColor = (MACHINE.PLCIO.ADR_ISAUTO_AND_MANUAL ? Color.Lime : Color.FromArgb(192, 255, 192));
                 btnStart.BackColor = (MACHINE.PLCIO.ADR_PROCESSING ? Color.Red : Color.FromArgb(192, 255, 192));
@@ -545,6 +606,31 @@ namespace Allinone.UISpace.CTRLUISpace
                 btnOnekeyGetImage.BackColor = (MACHINE.PLCIO.ADR_OnceGetImage ? Color.Red : Color.FromArgb(192, 255, 192));
             }
             //lblVacc.BackColor = (MACHINE.PLCIO.ADR_ISVACC ? Color.Green : Color.Black);
+        }
+        public void PlcTick()
+        {
+            while (m_ThRunning)
+            {
+                MACHINE.Tick();
+                Thread.Sleep(50);
+            }
+        }
+        /// <summary>
+        /// 释放资源并关闭线程
+        /// </summary>
+        public void SDDispose()
+        {
+            //MACHINE.PLCIO.Ready = false;
+
+            //MACHINE.PLCIO.Pass = false;
+            //MACHINE.PLCIO.Fail = false;
+
+            m_ThRunning = false;
+            if (m_ThreadPlc != null)
+            {
+                m_ThreadPlc.Abort();
+                m_ThreadPlc = null;
+            }
         }
 
         public delegate void TriggerHandler(ActionEnum action, string opstr);

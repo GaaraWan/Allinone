@@ -62,6 +62,8 @@ namespace JetEazy.FormSpace
 
             btnOK.Click += new EventHandler(btnOK_Click);
             btnCancel.Click += new EventHandler(btnCancel_Click);
+
+            JetEazy.BasicSpace.LanguageExClass.Instance.EnumControls(this);
         }
 
         void txt_KeyDown(object sender, KeyEventArgs e)
@@ -96,11 +98,18 @@ namespace JetEazy.FormSpace
             }
             else
             {
-                MessageBox.Show(myLanguage.Messages("msg1", LanguageIndex), "SYS", MessageBoxButtons.OK);
+                MessageBox.Show(ToChangeLanguageCode("LoginForm.msg1"), "SYS", MessageBoxButtons.OK);
 
                 txtName.Focus();
                 txtName.SelectAll();
             }
+        }
+
+        string ToChangeLanguageCode(string eName)
+        {
+            string retStr = eName;
+            retStr = LanguageExClass.Instance.GetLanguageIDName(eName);
+            return retStr;
         }
     }
 }

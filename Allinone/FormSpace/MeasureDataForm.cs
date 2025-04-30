@@ -18,12 +18,13 @@ namespace Allinone.FormSpace
 
         string InitialString = "";
         ComboBox cboMeasureMethod;
-        public Bitmap bmpRun = new Bitmap(1,1);
+        public Bitmap bmpRun = new Bitmap(1, 1);
 
         MbUI MBUI;
         BkUI BKUI;
         ColorUI CLUI;
         SolderUI SLUI;
+        BlobsUI BLOBSUI;
 
         Button btnOK;
         Button btnCancel;
@@ -42,6 +43,7 @@ namespace Allinone.FormSpace
             BKUI = bkUI1;
             CLUI = colorUI1;
             SLUI = solderUI1;
+            BLOBSUI = blobsUI1;
 
             btnOK = button4;
             btnCancel = button6;
@@ -56,7 +58,7 @@ namespace Allinone.FormSpace
             string[] strs = InitialString.Split('#');
 
             MeasureMethodEnum mm = (MeasureMethodEnum)Enum.Parse(typeof(MeasureMethodEnum), strs[0], true);
-            
+
             cboMeasureMethod.SelectedIndex = (int)mm + 1;
 
             switch (mm)
@@ -69,6 +71,12 @@ namespace Allinone.FormSpace
 
                     BKUI.Initial(strs[1]);
                     BKUI.Visible = true;
+
+                    break;
+                case MeasureMethodEnum.BLOBS:
+
+                    BLOBSUI.Initial(strs[1]);
+                    BLOBSUI.Visible = true;
 
                     break;
                 case MeasureMethodEnum.MBCHECK:
@@ -123,6 +131,11 @@ namespace Allinone.FormSpace
                     BKUI.Visible = true;
 
                     break;
+                case MeasureMethodEnum.BLOBS:
+
+                    BLOBSUI.Visible = true;
+
+                    break;
                 case MeasureMethodEnum.MBCHECK:
 
                     MBUI.Visible = true;
@@ -145,7 +158,7 @@ namespace Allinone.FormSpace
         {
             int i = -1;
 
-            while(i < (int)MeasureMethodEnum.COUNT)
+            while (i < (int)MeasureMethodEnum.COUNT)
             {
                 cboMeasureMethod.Items.Add(((MeasureMethodEnum)i).ToString());
                 i++;
@@ -157,11 +170,13 @@ namespace Allinone.FormSpace
             BKUI.Visible = false;
             CLUI.Visible = false;
             SLUI.Visible = false;
+            BLOBSUI.Visible = false;
 
-            MBUI.Location = new Point(6,58);
+            MBUI.Location = new Point(6, 58);
             BKUI.Location = new Point(6, 58);
             CLUI.Location = new Point(6, 58);
             SLUI.Location = new Point(6, 58);
+            BLOBSUI.Location = new Point(6, 58);
         }
 
         string GetReturnString()
@@ -169,11 +184,14 @@ namespace Allinone.FormSpace
             string retstr = "";
 
             retstr = (MeasureMethodEnum)(cboMeasureMethod.SelectedIndex - 1) + "#";
-            
-            switch((MeasureMethodEnum)(cboMeasureMethod.SelectedIndex - 1))
+
+            switch ((MeasureMethodEnum)(cboMeasureMethod.SelectedIndex - 1))
             {
                 case MeasureMethodEnum.BLIND:
                     retstr += BKUI.GetDataValueString();
+                    break;
+                case MeasureMethodEnum.BLOBS:
+                    retstr += BLOBSUI.GetDataValueString();
                     break;
                 case MeasureMethodEnum.MBCHECK:
                     retstr += MBUI.GetDataValueString();

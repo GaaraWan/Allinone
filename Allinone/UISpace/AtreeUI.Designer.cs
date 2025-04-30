@@ -51,9 +51,9 @@
             // button4
             // 
             this.button4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button4.Location = new System.Drawing.Point(201, 5);
+            this.button4.Location = new System.Drawing.Point(239, 5);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(62, 23);
+            this.button4.Size = new System.Drawing.Size(80, 23);
             this.button4.TabIndex = 14;
             this.button4.Text = "複制";
             this.button4.UseVisualStyleBackColor = false;
@@ -61,9 +61,9 @@
             // button3
             // 
             this.button3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(192)))));
-            this.button3.Location = new System.Drawing.Point(136, 5);
+            this.button3.Location = new System.Drawing.Point(160, 5);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(62, 23);
+            this.button3.Size = new System.Drawing.Size(80, 23);
             this.button3.TabIndex = 13;
             this.button3.Text = "刪除";
             this.button3.UseVisualStyleBackColor = false;
@@ -71,9 +71,9 @@
             // button2
             // 
             this.button2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button2.Location = new System.Drawing.Point(71, 5);
+            this.button2.Location = new System.Drawing.Point(80, 5);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(62, 23);
+            this.button2.Size = new System.Drawing.Size(80, 23);
             this.button2.TabIndex = 12;
             this.button2.Text = "新增同層";
             this.button2.UseVisualStyleBackColor = false;
@@ -138,9 +138,9 @@
             // button5
             // 
             this.button5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button5.Location = new System.Drawing.Point(6, 5);
+            this.button5.Location = new System.Drawing.Point(3, 5);
             this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(62, 23);
+            this.button5.Size = new System.Drawing.Size(80, 23);
             this.button5.TabIndex = 23;
             this.button5.Text = "新增分支";
             this.button5.UseVisualStyleBackColor = false;

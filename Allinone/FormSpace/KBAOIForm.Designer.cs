@@ -35,6 +35,7 @@
             this.numericUpDown4 = new System.Windows.Forms.NumericUpDown();
             this.label6 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.checkBox6 = new System.Windows.Forms.CheckBox();
             this.checkBox5 = new System.Windows.Forms.CheckBox();
             this.checkBox4 = new System.Windows.Forms.CheckBox();
             this.checkBox3 = new System.Windows.Forms.CheckBox();
@@ -42,6 +43,8 @@
             this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.button14 = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.button2 = new System.Windows.Forms.Button();
@@ -60,14 +63,14 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.button11 = new System.Windows.Forms.Button();
             this.button12 = new System.Windows.Forms.Button();
-            this.DS = new JzDisplay.UISpace.DispUI();
             this.button13 = new System.Windows.Forms.Button();
-            this.checkBox6 = new System.Windows.Forms.CheckBox();
+            this.DS = new JzDisplay.UISpace.DispUI();
             this.groupBox4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown6)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown4)).BeginInit();
             this.groupBox3.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown3)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -180,6 +183,16 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "同位指定";
             // 
+            // checkBox6
+            // 
+            this.checkBox6.AutoSize = true;
+            this.checkBox6.Location = new System.Drawing.Point(6, 93);
+            this.checkBox6.Name = "checkBox6";
+            this.checkBox6.Size = new System.Drawing.Size(120, 16);
+            this.checkBox6.TabIndex = 7;
+            this.checkBox6.Text = "参数资料(同位置)";
+            this.checkBox6.UseVisualStyleBackColor = true;
+            // 
             // checkBox5
             // 
             this.checkBox5.AutoSize = true;
@@ -209,6 +222,7 @@
             this.checkBox3.TabIndex = 4;
             this.checkBox3.Text = "检测位置(计算)";
             this.checkBox3.UseVisualStyleBackColor = true;
+            this.checkBox3.Visible = false;
             // 
             // button3
             // 
@@ -243,21 +257,55 @@
             // groupBox2
             // 
             this.groupBox2.BackColor = System.Drawing.SystemColors.Control;
+            this.groupBox2.Controls.Add(this.label2);
+            this.groupBox2.Controls.Add(this.numericUpDown1);
             this.groupBox2.Controls.Add(this.button14);
             this.groupBox2.Controls.Add(this.label3);
             this.groupBox2.Controls.Add(this.button2);
             this.groupBox2.Controls.Add(this.numericUpDown3);
             this.groupBox2.Location = new System.Drawing.Point(3, 7);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(107, 128);
+            this.groupBox2.Size = new System.Drawing.Size(107, 174);
             this.groupBox2.TabIndex = 6;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "外圍尋找";
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(9, 97);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(65, 12);
+            this.label2.TabIndex = 42;
+            this.label2.Text = "图像压缩%)";
+            // 
+            // numericUpDown1
+            // 
+            this.numericUpDown1.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.numericUpDown1.Location = new System.Drawing.Point(11, 115);
+            this.numericUpDown1.Minimum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.numericUpDown1.Name = "numericUpDown1";
+            this.numericUpDown1.Size = new System.Drawing.Size(48, 21);
+            this.numericUpDown1.TabIndex = 41;
+            this.numericUpDown1.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.numericUpDown1.Value = new decimal(new int[] {
+            30,
+            0,
+            0,
+            0});
+            // 
             // button14
             // 
             this.button14.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button14.Location = new System.Drawing.Point(9, 97);
+            this.button14.Location = new System.Drawing.Point(3, 143);
             this.button14.Name = "button14";
             this.button14.Size = new System.Drawing.Size(75, 25);
             this.button14.TabIndex = 40;
@@ -276,7 +324,7 @@
             // button2
             // 
             this.button2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button2.Location = new System.Drawing.Point(10, 62);
+            this.button2.Location = new System.Drawing.Point(6, 67);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 25);
             this.button2.TabIndex = 1;
@@ -290,7 +338,7 @@
             0,
             0,
             0});
-            this.numericUpDown3.Location = new System.Drawing.Point(52, 17);
+            this.numericUpDown3.Location = new System.Drawing.Point(11, 40);
             this.numericUpDown3.Minimum = new decimal(new int[] {
             10,
             0,
@@ -319,7 +367,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(9, 141);
+            this.label1.Location = new System.Drawing.Point(12, 194);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(29, 12);
             this.label1.TabIndex = 100;
@@ -422,7 +470,7 @@
             this.panel1.Controls.Add(this.button5);
             this.panel1.Controls.Add(this.button8);
             this.panel1.Controls.Add(this.button7);
-            this.panel1.Location = new System.Drawing.Point(3, 187);
+            this.panel1.Location = new System.Drawing.Point(3, 240);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(356, 291);
             this.panel1.TabIndex = 110;
@@ -430,7 +478,7 @@
             // button11
             // 
             this.button11.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button11.Location = new System.Drawing.Point(6, 156);
+            this.button11.Location = new System.Drawing.Point(6, 209);
             this.button11.Name = "button11";
             this.button11.Size = new System.Drawing.Size(104, 25);
             this.button11.TabIndex = 40;
@@ -441,13 +489,24 @@
             // button12
             // 
             this.button12.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button12.Location = new System.Drawing.Point(117, 156);
+            this.button12.Location = new System.Drawing.Point(117, 209);
             this.button12.Name = "button12";
             this.button12.Size = new System.Drawing.Size(77, 25);
             this.button12.TabIndex = 111;
             this.button12.Text = "自动编号";
             this.button12.UseVisualStyleBackColor = false;
             this.button12.Visible = false;
+            // 
+            // button13
+            // 
+            this.button13.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button13.Location = new System.Drawing.Point(201, 209);
+            this.button13.Name = "button13";
+            this.button13.Size = new System.Drawing.Size(77, 25);
+            this.button13.TabIndex = 112;
+            this.button13.Text = "一键删除";
+            this.button13.UseVisualStyleBackColor = false;
+            this.button13.Visible = false;
             // 
             // DS
             // 
@@ -456,27 +515,6 @@
             this.DS.Name = "DS";
             this.DS.Size = new System.Drawing.Size(543, 471);
             this.DS.TabIndex = 101;
-            // 
-            // button13
-            // 
-            this.button13.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button13.Location = new System.Drawing.Point(201, 156);
-            this.button13.Name = "button13";
-            this.button13.Size = new System.Drawing.Size(77, 25);
-            this.button13.TabIndex = 112;
-            this.button13.Text = "一键删除";
-            this.button13.UseVisualStyleBackColor = false;
-            this.button13.Visible = false;
-            // 
-            // checkBox6
-            // 
-            this.checkBox6.AutoSize = true;
-            this.checkBox6.Location = new System.Drawing.Point(6, 93);
-            this.checkBox6.Name = "checkBox6";
-            this.checkBox6.Size = new System.Drawing.Size(120, 16);
-            this.checkBox6.TabIndex = 7;
-            this.checkBox6.Text = "参数资料(同位置)";
-            this.checkBox6.UseVisualStyleBackColor = true;
             // 
             // KBAOIForm
             // 
@@ -506,6 +544,7 @@
             this.groupBox3.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown3)).EndInit();
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
@@ -552,5 +591,7 @@
         private System.Windows.Forms.Button button13;
         private System.Windows.Forms.Button button14;
         private System.Windows.Forms.CheckBox checkBox6;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.NumericUpDown numericUpDown1;
     }
 }

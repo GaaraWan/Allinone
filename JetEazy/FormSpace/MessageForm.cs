@@ -129,7 +129,7 @@ namespace JetEazy.FormSpace
             lblMessage = label1;
             int iHeight = lblMessage.Height;
             int iWidth = lblMessage.Width;
-            lblMessage.Text = rMessageStr;
+            lblMessage.Text = ToChangeLanguage(rMessageStr);
 
             this.TopMost = true;
 
@@ -145,6 +145,8 @@ namespace JetEazy.FormSpace
             btnCancel.Click += new EventHandler(btnCancel_Click);
             
             this.CenterToParent();
+
+            JetEazy.BasicSpace.LanguageExClass.Instance.EnumControls(this);
         }
 
         void btnCancel_Click(object sender, EventArgs e)
@@ -157,6 +159,13 @@ namespace JetEazy.FormSpace
         {
             this.DialogResult = System.Windows.Forms.DialogResult.Yes;
             this.Close();
+        }
+
+        string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
         }
 
     }

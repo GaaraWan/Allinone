@@ -43,7 +43,7 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(462, 48);
             this.label1.TabIndex = 0;
-            this.label1.Text = "参数载入中,请稍后!";
+            this.label1.Text = "参数载入中 请稍后!";
             // 
             // label2
             // 
@@ -74,7 +74,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.LightSteelBlue;
-            this.ClientSize = new System.Drawing.Size(481, 119);
+            this.ClientSize = new System.Drawing.Size(828, 137);
             this.ControlBox = false;
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);

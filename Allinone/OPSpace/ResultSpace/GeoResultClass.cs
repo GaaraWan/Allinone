@@ -626,6 +626,14 @@ namespace Allinone.OPSpace.ResultSpace
         {
 
         }
+        public virtual void ManualChangeRecipe()
+        {
+
+        }
+        public virtual void OneKeyAreaGetImage()
+        {
+
+        }
         public EnvAnalyzePostionSettings ENVAnalyzePostion = null;
 
         System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
@@ -661,7 +669,7 @@ namespace Allinone.OPSpace.ResultSpace
                 if (writer == null)
                     writer = new StreamWriter(logpath + "\\" + logname_HH, true, Encoding.UTF8);
 
-                writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + timerElapsedStr);
+                writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + timerElapsedStr);
 
             }
             catch

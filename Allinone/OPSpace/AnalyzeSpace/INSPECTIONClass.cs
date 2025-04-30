@@ -262,14 +262,43 @@ namespace Allinone.OPSpace.AnalyzeSpace
             {
                 case Inspection_A_B_Enum.Histogram:
 
+                    AForge.Imaging.Filters.Blur blur_pattern = new Blur();
+                    Bitmap b1 = new Bitmap(bmpPattern);
+                    b1 = blur_pattern.Apply(b1);
+                    AUGrayImg8 brun1 = new AUGrayImg8();
+                    Bitmap bmpRun1 = new Bitmap(1, 1);
+                    AUUtility.DrawBitmapToAUGrayImg8(b1, ref brun1);
+                    AUUtility.DrawAUGrayImg8ToBitmap(brun1, ref bmpRun1);
+
+                    //AForge.Imaging.Filters.Blur blur_pattern = new Blur();
+                    Bitmap b2 = new Bitmap(bmpinput);
+                    b2 = blur_pattern.Apply(b2);
+                    AUGrayImg8 brun2 = new AUGrayImg8();
                     Bitmap bmpRun2 = new Bitmap(1, 1);
-                    AUUtility.DrawAUGrayImg8ToBitmap(imginput, ref bmpRun2);
-                    bmpRun2 = new Bitmap(bmpRun2);
+                    AUUtility.DrawBitmapToAUGrayImg8(b2, ref brun2);
+                    AUUtility.DrawAUGrayImg8ToBitmap(brun2, ref bmpRun2);
+
+                    //Bitmap bmpRun2 = new Bitmap(1, 1);
+                    //AUUtility.DrawAUGrayImg8ToBitmap(imginput, ref bmpRun2);
+                    //bmpRun2 = new Bitmap(bmpRun2);
                     int iArea2 = 0;
-                    myImageProcessor.SetBimap_A_BFormat32(bmpRun2, bmpPattern, bmpMask, out bmpoutput, Value, ref iArea2);
+                    myImageProcessor.SetBimap_A_BFormat32(bmpRun2, bmpRun1, bmpMask, out bmpoutput, Value, ref iArea2);
 
                     //          bmpoutput.Save("D:\\bmpout.png");
                     bmpRun2.Dispose();
+                    bmpRun1.Dispose();
+                    b1.Dispose();
+                    b2.Dispose();
+
+                    //Bitmap bmpRun2 = new Bitmap(1, 1);
+                    //AUUtility.DrawAUGrayImg8ToBitmap(imginput, ref bmpRun2);
+                    //bmpRun2 = new Bitmap(bmpRun2);
+                    //int iArea2 = 0;
+                    //myImageProcessor.SetBimap_A_BFormat32(bmpRun2, bmpPattern, bmpMask, out bmpoutput, Value, ref iArea2);
+
+                    ////          bmpoutput.Save("D:\\bmpout.png");
+                    //bmpRun2.Dispose();
+
                     break;
 
                 case Inspection_A_B_Enum.AB:

@@ -13,6 +13,7 @@ namespace JetEazy
 {
     public class Universal
     {
+        public static bool IsOCRTOAI = false;
         public static bool IsDebug = false;
         /// <summary>
         /// 是否开启多线程

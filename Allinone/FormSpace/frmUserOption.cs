@@ -53,6 +53,8 @@ namespace Allinone.FormSpace
             btnCancel.Click += new EventHandler(btnCancel_Click);
 
             this.TopMost = true;
+
+            JetEazy.BasicSpace.LanguageExClass.Instance.EnumControls(this);
         }
 
         void btnCancel_Click(object sender, EventArgs e)

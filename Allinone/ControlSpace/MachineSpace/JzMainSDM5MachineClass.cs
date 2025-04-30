@@ -1034,14 +1034,14 @@ namespace Allinone.ControlSpace.MachineSpace
         //    }
         //}
 
-        public delegate void MachineCommErrorStringHandler(string str);
-        public event MachineCommErrorStringHandler MachineCommErrorStringAction;
-        public void MachineCommError(string str)
-        {
-            if (MachineCommErrorStringAction != null)
-            {
-                MachineCommErrorStringAction(str);
-            }
-        }
+        //public delegate void MachineCommErrorStringHandler(string str);
+        //public event MachineCommErrorStringHandler MachineCommErrorStringAction;
+        //public void MachineCommError(string str)
+        //{
+        //    if (MachineCommErrorStringAction != null)
+        //    {
+        //        MachineCommErrorStringAction(str);
+        //    }
+        //}
     }
 }

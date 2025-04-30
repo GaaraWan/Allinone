@@ -55,7 +55,7 @@ namespace JzDisplay.OPSpace
 
         public DisplayTypeEnum DISPLAYTYPE = DisplayTypeEnum.SHOW;
         public int iMode = 0;
-        
+
         public bool IsHoldForSelct = false;             //檢查是否有Ctrl被按下
 
         public bool ISMOUSEDOWN
@@ -65,7 +65,7 @@ namespace JzDisplay.OPSpace
                 return IsMouseDown;
             }
         }
-        
+
         bool IsResizing = false;
         bool IsRotation = false;
         bool IsMove = false;
@@ -78,20 +78,20 @@ namespace JzDisplay.OPSpace
         Object obj = new object();
 
         JzFindObjectClass JzFind = new JzFindObjectClass();
-                
+
         /// <summary>
         /// 取得圖形最左上角位置的相對實際作標
         /// </summary>
         /// <param name="pt"></param>
         /// <returns></returns>
-        PointF ptfMapping(Point pt)         
+        PointF ptfMapping(Point pt)
         {
             return new PointF(((float)pt.X - rectFPaintTo.X) / (float)RatioNow, ((float)pt.Y - rectFPaintTo.Y) / (float)RatioNow);
         }
-        public OPDisplay(PictureBox pic,Label lbl,float maxratio,float minratio)
+        public OPDisplay(PictureBox pic, Label lbl, float maxratio, float minratio)
         {
-          
-             JzMover = new Mover();
+
+            JzMover = new Mover();
             JzStaticMover = new Mover();
 
             MaxRatio = maxratio;
@@ -140,10 +140,12 @@ namespace JzDisplay.OPSpace
             else
             {
                 bmpOrg.Dispose();
-                bmpOrg = new Bitmap(bmp);
+                //bmpOrg = new Bitmap(bmp);
+                bmpOrg = (Bitmap)bmp.Clone();
 
                 bmpPaint.Dispose();
-                bmpPaint = new Bitmap(bmpOrg);
+                //bmpPaint = new Bitmap(bmpOrg);
+                bmpPaint = (Bitmap)bmp.Clone();
 
                 if (DISPLAYTYPE == DisplayTypeEnum.ADJUST)
                 {
@@ -194,10 +196,12 @@ namespace JzDisplay.OPSpace
             if (bmp != null)    //null 時為回到全影畫面
             {
                 bmpOrg.Dispose();
-                bmpOrg = new Bitmap(bmp);
+                //bmpOrg = new Bitmap(bmp);
+                bmpOrg = (Bitmap)bmp.Clone();
 
                 bmpPaint.Dispose();
-                bmpPaint = new Bitmap(bmpOrg);
+                //bmpPaint = new Bitmap(bmpOrg);
+                bmpPaint = (Bitmap)bmp.Clone();
             }
 
             if (IsResetMover)
@@ -258,12 +262,12 @@ namespace JzDisplay.OPSpace
         public void DefaultView()
         {
             rectFPaintFrom = new RectangleF(0, 0, bmpPaint.Width, bmpPaint.Height);
-            
+
             float wratio = (float)picDisplay.Width / (float)bmpPaint.Width;
             float hratio = (float)picDisplay.Height / (float)bmpPaint.Height;
 
             RatioNow = Math.Min(wratio, hratio);
-            
+
             SizeF szpic = new SizeF((float)(RatioNow * (double)bmpPaint.Width), (float)(RatioNow * (double)bmpPaint.Height));
             PointF ptf = new PointF(((float)picDisplay.Width - szpic.Width) / 2f, ((float)picDisplay.Height - szpic.Height) / 2f);
 
@@ -299,7 +303,7 @@ namespace JzDisplay.OPSpace
                 str += "Grayscale =" + GreyscaleInt(mcolor.R, mcolor.G, mcolor.B).ToString().PadLeft(3, ' ');
             }
 
-            if(DISPLAYTYPE != DisplayTypeEnum.CAPTRUE)
+            if (DISPLAYTYPE != DisplayTypeEnum.CAPTRUE)
                 lblInformation.Text = str + "         " + ToSelectListString();
 
 
@@ -485,7 +489,7 @@ namespace JzDisplay.OPSpace
         /// </summary>
         /// <param name="offsetpt"></param>
         private void StartMove(Point offsetpt)  //Need To Added For New Shape
-        { 
+        {
             GraphicalObject grobj;
 
             for (int i = JzMover.Count - 1; i >= 0; i--)
@@ -584,7 +588,7 @@ namespace JzDisplay.OPSpace
                 }
                 else if (e.Button == MouseButtons.Right)
                 {
-                    StartRotation(e.Location,ref IsRotation);
+                    StartRotation(e.Location, ref IsRotation);
                 }
                 IsCatched = true;
             }
@@ -668,7 +672,7 @@ namespace JzDisplay.OPSpace
             }
 
         }
-        
+
         /// <summary>
         /// 備份原始圖形
         /// </summary>
@@ -718,7 +722,7 @@ namespace JzDisplay.OPSpace
             GraphicalObject grobj;
             bool IsCheckedInside = false;
             Rectangle rect = new Rectangle((int)rectfSelect.X, (int)rectfSelect.Y, (int)rectfSelect.Width, (int)rectfSelect.Height);
-            
+
             //if (!IsHoldForSelct)
             //    ClearSelectShape();
             if (IsHoldForSelct)
@@ -739,7 +743,7 @@ namespace JzDisplay.OPSpace
                     IsCheckedInside = (grobj as GeoFigure).CheckIntersection(rect);
                 else
                     IsCheckedInside = true;
-                
+
                 if (IsCheckedInside)
                 {
                     if (SelectList.IndexOf(i) < 0)
@@ -761,7 +765,7 @@ namespace JzDisplay.OPSpace
                     }
                 }
             }
-            if(isdirect)
+            if (isdirect)
                 OnMover(MoverOpEnum.MOUSEUP, ToSelectListString(false));
             else
                 OnMover(MoverOpEnum.SELECT, ToSelectListString(false));
@@ -807,7 +811,7 @@ namespace JzDisplay.OPSpace
             {
                 grobj = JzMover[i].Source;
 
-                switch(mappingdir)
+                switch (mappingdir)
                 {
                     case MappingDirectionEnum.ToMovingObject:
                         (grobj as GeoFigure).MappingToMovingObject(neworgbias, newratio);
@@ -876,7 +880,7 @@ namespace JzDisplay.OPSpace
                 }
             }
         }
-        private void MappingSelect(List<int> selectlist,bool istolist)
+        private void MappingSelect(List<int> selectlist, bool istolist)
         {
             GraphicalObject grobj;
 
@@ -897,7 +901,7 @@ namespace JzDisplay.OPSpace
                         selectlist.Insert(0, i);
                         //break;
                     }
-                    else if((grobj as GeoFigure).IsSelected)
+                    else if ((grobj as GeoFigure).IsSelected)
                     {
                         selectlist.Add(i);
                     }
@@ -939,7 +943,7 @@ namespace JzDisplay.OPSpace
         /// <param name="StartPoint"></param>
         /// <param name="EndPoint"></param>
         /// <returns></returns>
-        private Rectangle RectTwoPoint(Point StartPoint, Point EndPoint,ref RectangleF rectf)
+        private Rectangle RectTwoPoint(Point StartPoint, Point EndPoint, ref RectangleF rectf)
         {
             Point RecEndPoint = StartPoint;
             Point RecStartPoint = EndPoint;
@@ -999,7 +1003,7 @@ namespace JzDisplay.OPSpace
         {
             tolist.Clear();
 
-            foreach(int index in fromlist)
+            foreach (int index in fromlist)
             {
                 tolist.Add(index);
             }
@@ -1052,13 +1056,13 @@ namespace JzDisplay.OPSpace
         {
             int copyindex = 0;
 
-            if(JzMover.Count == 0)
+            if (JzMover.Count == 0)
             {
                 AddShape(ConvertShape(shape), false, copyindex);
             }
             else
             {
-                if(SelectList.Count == 0)
+                if (SelectList.Count == 0)
                 {
                     copyindex = JzMover.Count - 1;
                     AddShape(Figure_EAG.Any, true, copyindex);
@@ -1077,13 +1081,13 @@ namespace JzDisplay.OPSpace
 
             MappingSelect(SelectBackupList, true);
             TransSelectList(SelectBackupList, SelectList);
-            
+
             OnMover(MoverOpEnum.SELECT, ToSelectListString(false));
 
 
             picDisplay.Invalidate();
             FillInformation();
-            
+
         }
         /// <summary>
         /// 刪除圖形 
@@ -1106,7 +1110,7 @@ namespace JzDisplay.OPSpace
             picDisplay.Invalidate();
             FillInformation();
 
-            
+
         }
         /// <summary>
         /// 新增圖形的副程式
@@ -1114,7 +1118,7 @@ namespace JzDisplay.OPSpace
         /// <param name="figure"></param>
         /// <param name="iscopy"></param>
         /// <param name="copyindex"></param>
-        void AddShape(Figure_EAG figure,bool iscopy,int copyindex)  //Need To Added For New Shape
+        void AddShape(Figure_EAG figure, bool iscopy, int copyindex)  //Need To Added For New Shape
         {
             PointF ptC = new PointF();
             int nVertices = 0;
@@ -1235,7 +1239,7 @@ namespace JzDisplay.OPSpace
                         break;
                     case Figure_EAG.HexO:
                     case Figure_EAG.RectO:
-                        
+
                         polyvertices = 4;
                         polydegree = 45;
 
@@ -1337,7 +1341,7 @@ namespace JzDisplay.OPSpace
         {
             Figure_EAG retfigure = Figure_EAG.Rectangle;
 
-            switch(shape)
+            switch (shape)
             {
                 case ShapeEnum.RECT:
                     retfigure = Figure_EAG.Rectangle;
@@ -1423,7 +1427,7 @@ namespace JzDisplay.OPSpace
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        public void MoveMover(int x,int y)
+        public void MoveMover(int x, int y)
         {
             StartMove(new Point(x, y));
             picDisplay.Invalidate();
@@ -1433,7 +1437,7 @@ namespace JzDisplay.OPSpace
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        public void SizeMover(int x,int y)          //Havn't Complete
+        public void SizeMover(int x, int y)          //Havn't Complete
         {
             for (int i = 0; i < JzMover.Count; i++)
             {
@@ -1458,7 +1462,7 @@ namespace JzDisplay.OPSpace
         /// 允許動的層
         /// </summary>
         /// <param name="level"></param>
-        public void Lock(int level,bool isonly)
+        public void Lock(int level, bool isonly)
         {
             for (int i = 0; i < JzMover.Count; i++)
             {
@@ -1466,7 +1470,7 @@ namespace JzDisplay.OPSpace
 
                 bool isfigureshouldhide = false;
 
-                if(isonly)
+                if (isonly)
                 {
                     isfigureshouldhide = (grobj as GeoFigure).RelateLevel != level && level != 0;
                 }
@@ -1474,10 +1478,10 @@ namespace JzDisplay.OPSpace
                 {
                     isfigureshouldhide = (grobj as GeoFigure).RelateLevel < level && level != 0;
                 }
-                
+
                 //if((grobj as GeoFigure).RelateLevel != level && level != 0)
 
-                if(isfigureshouldhide)
+                if (isfigureshouldhide)
                 {
                     (grobj as GeoFigure).Visible = false;
                     (grobj as GeoFigure).TransparentForMover = true;
@@ -1487,9 +1491,9 @@ namespace JzDisplay.OPSpace
                     (grobj as GeoFigure).Visible = true;
                     (grobj as GeoFigure).TransparentForMover = false;
                 }
-                
+
                 (grobj as GeoFigure).IsFirstSelected = false;
-                (grobj as GeoFigure).IsSelected= false;
+                (grobj as GeoFigure).IsSelected = false;
             }
 
             MappingSelect();
@@ -1502,14 +1506,14 @@ namespace JzDisplay.OPSpace
         /// </summary>
         /// <param name="bmpmatching"></param>
         /// <param name="matchmethod"></param>
-        public void SetMatching(Bitmap bmpmatching,MatchMethodEnum matchmethod)
+        public void SetMatching(Bitmap bmpmatching, MatchMethodEnum matchmethod)
         {
-            lock(obj)
+            lock (obj)
             {
                 bmpPaint.Dispose();
                 bmpPaint = new Bitmap(bmpOrg);
 
-                switch(matchmethod)
+                switch (matchmethod)
                 {
                     case MatchMethodEnum.NONE:
 
@@ -1545,7 +1549,7 @@ namespace JzDisplay.OPSpace
             GraphicalObject grobj;
 
             i = 0;
-            while(i < JzMover.Count)
+            while (i < JzMover.Count)
             {
                 grobj = JzMover[i].Source;
                 (grobj as GeoFigure).Draw(gfx);
@@ -1573,8 +1577,9 @@ namespace JzDisplay.OPSpace
         }
         public Bitmap GetScreen()
         {
-            Bitmap bmp = new Bitmap(bmpOrg);
-
+            //Bitmap bmp = new Bitmap(bmpOrg);
+            var rect = new Rectangle(0, 0, bmpOrg.Width, bmpOrg.Height);
+            Bitmap bmp = bmpOrg.Clone(rect, PixelFormat.Format24bppRgb);
             BackupShape();
 
             MappingShape(new PointF(0, 0), 1d, MappingDirectionEnum.ToMovingObject);
@@ -1590,6 +1595,7 @@ namespace JzDisplay.OPSpace
             {
                 grobj = JzMover[i].Source;
                 (grobj as GeoFigure).MainShowPen.Width = 5;
+                //(grobj as GeoFigure).MainShowPen.Color = (grobj as GeoFigure).BorderColor;
                 (grobj as GeoFigure).Draw(gfx);
 
                 i++;
@@ -1599,6 +1605,7 @@ namespace JzDisplay.OPSpace
             {
                 grobj = JzStaticMover[i].Source;
                 (grobj as GeoFigure).MainShowPen.Width = 5;
+                //(grobj as GeoFigure).MainShowPen.Color = (grobj as GeoFigure).BorderColor;
                 (grobj as GeoFigure).Draw(gfx);
 
                 i++;
@@ -1610,6 +1617,7 @@ namespace JzDisplay.OPSpace
             {
                 grobj = JzMover[i].Source;
                 (grobj as GeoFigure).MainShowPen.Width = 1;
+                //(grobj as GeoFigure).MainShowPen.Color = Color.Lime;
                 //(grobj as GeoFigure).Draw(gfx);
 
                 i++;
@@ -1619,6 +1627,7 @@ namespace JzDisplay.OPSpace
             {
                 grobj = JzStaticMover[i].Source;
                 (grobj as GeoFigure).MainShowPen.Width = 1;
+                //(grobj as GeoFigure).MainShowPen.Color = Color.Lime;
                 //(grobj as GeoFigure).Draw(gfx);
 
                 i++;
@@ -1683,7 +1692,7 @@ namespace JzDisplay.OPSpace
 
             if (IsLeftMouseDown)
             {
-                switch(DISPLAYTYPE)
+                switch (DISPLAYTYPE)
                 {
                     case DisplayTypeEnum.ADJUST:
                     case DisplayTypeEnum.SHOW:
@@ -1714,7 +1723,7 @@ namespace JzDisplay.OPSpace
                 //    picDisplay.Invalidate();
                 //}
 
-                switch(DISPLAYTYPE)
+                switch (DISPLAYTYPE)
                 {
                     case DisplayTypeEnum.ADJUST:
                         OnAdjustAction(ptfOffset);
@@ -1775,12 +1784,12 @@ namespace JzDisplay.OPSpace
 
             ptMouse_Up = e.Location;
 
-            if(MouseUpShapes(e))
+            if (MouseUpShapes(e))
             {
                 MappingShape(rectFPaintTo.Location, RatioNow, MappingDirectionEnum.FromMovingObject);
             }
 
-            switch(DISPLAYTYPE)
+            switch (DISPLAYTYPE)
             {
                 case DisplayTypeEnum.NORMAL:
                 case DisplayTypeEnum.CAPTRUE:
@@ -1792,7 +1801,7 @@ namespace JzDisplay.OPSpace
                     break;
             }
 
-            switch(e.Button)
+            switch (e.Button)
             {
                 case MouseButtons.Left:
 
@@ -1801,13 +1810,13 @@ namespace JzDisplay.OPSpace
                     CheckSelectedShape(true);
                     TransSelectList(SelectList, SelectBackupList);
 
-                    if(IsMove)
+                    if (IsMove)
                     {
                         IsMove = false;
 
                         for (int i = 0; i < JzMover.Count; i++)
                         {
-                           GraphicalObject grobj = JzMover[i].Source;
+                            GraphicalObject grobj = JzMover[i].Source;
 
                             if ((grobj as GeoFigure).IsSelected && (grobj as GeoFigure).RelateNo >= 1)
                             {
@@ -1826,15 +1835,15 @@ namespace JzDisplay.OPSpace
             rectfSelect = new RectangleF(-10000, -10000, 0, 0);
 
             picDisplay.Invalidate();
-            
+
         }
         private void PicDisplay_MouseDown(object sender, MouseEventArgs e)
         {
             if (iMode == -1)
                 return;
-            if (DISPLAYTYPE == DisplayTypeEnum.SHOW  && e.Button == MouseButtons.Left)
+            if (DISPLAYTYPE == DisplayTypeEnum.SHOW && e.Button == MouseButtons.Left)
                 return;
-            
+
             IsMouseDown = true;
 
             ptMouse_Down = e.Location;
@@ -1843,13 +1852,13 @@ namespace JzDisplay.OPSpace
             BackupShape();
 
             //If Catched Then Get Out
-            if(MouseDownShapes(e))
+            if (MouseDownShapes(e))
             {
                 FillInformation();
                 return;
             }
 
-            switch(e.Button)
+            switch (e.Button)
             {
                 case MouseButtons.Left:
                     IsLeftMouseDown = true;
@@ -1859,7 +1868,7 @@ namespace JzDisplay.OPSpace
                     if (!IsHoldForSelct)
                         ClearSelectShape();
 
-                    switch(DISPLAYTYPE)
+                    switch (DISPLAYTYPE)
                     {
                         case DisplayTypeEnum.ADJUST:
                             OnMover(MoverOpEnum.READYTOMOVE, "");
@@ -1940,7 +1949,7 @@ namespace JzDisplay.OPSpace
 
             if (IsMouseEnter)
             {
-                OnDebug("IS ENTER"); 
+                OnDebug("IS ENTER");
 
                 Rectangle rect = new Rectangle(picDisplay.PointToScreen(picDisplay.Location), picDisplay.Size);
                 Rectangle simplerect = new Rectangle(pt, new Size(1, 1));
@@ -1950,7 +1959,7 @@ namespace JzDisplay.OPSpace
 
             return ret;
         }
-        
+
         public string ToSelectListString()
         {
             return ToSelectListString(true);
@@ -1961,8 +1970,8 @@ namespace JzDisplay.OPSpace
 
             if (SelectList.Count > 0)
             {
-                if(iswithquote)
-                    retstr += "[";
+                if (iswithquote)
+                    retstr += $" SelectCount {SelectList.Count}  [";
 
                 foreach (int index in SelectList)
                 {
@@ -2009,7 +2018,7 @@ namespace JzDisplay.OPSpace
         public void SimWheel(int delta)
         {
             float sizingratio = (float)Math.Pow(2d, (delta > 0 ? 1d : -1d));
-            double nextratio = RatioNow * (double) sizingratio;
+            double nextratio = RatioNow * (double)sizingratio;
 
             PointF ptMouse_Move = new PointF(40, 67);
 
@@ -2042,7 +2051,7 @@ namespace JzDisplay.OPSpace
                     rectFPaintTo.Width = ((float)rectFPaintTo.Width * 2);
                     rectFPaintTo.Height = ((float)rectFPaintTo.Height * 2);
 
-                    MappingShape(rectFPaintTo.Location, RatioNow,MappingDirectionEnum.ToMovingObject);
+                    MappingShape(rectFPaintTo.Location, RatioNow, MappingDirectionEnum.ToMovingObject);
 
                     picDisplay.Invalidate();
                 }
@@ -2060,7 +2069,7 @@ namespace JzDisplay.OPSpace
 
             while (i < 1)
             {
-                JzRectEAG jzrect = new JzRectEAG(picDisplay, JzMover, new PointF(100 + i * 30, 100 + i *30), 100, 100, 0, Color.FromArgb(60, Color.Red), false);
+                JzRectEAG jzrect = new JzRectEAG(picDisplay, JzMover, new PointF(100 + i * 30, 100 + i * 30), 100, 100, 0, Color.FromArgb(60, Color.Red), false);
                 jzrect.MappingToMovingObject(rectFPaintTo.Location, RatioNow);
                 JzMover.Add(jzrect);
 
@@ -2080,7 +2089,7 @@ namespace JzDisplay.OPSpace
             for (int i = JzMover.Count - 1; i >= 0; i--)
             {
                 grobj = JzMover[i].Source;
-                
+
                 retstr += (grobj as GeoFigure).ToString() + Environment.NewLine;
 
                 //if (grobj is JzRectEAG)
@@ -2181,7 +2190,7 @@ namespace JzDisplay.OPSpace
 
             SelectBackupList.Clear();
             SelectList.Clear();
-            
+
             JzMover.Clear();
 
             picDisplay.Invalidate();
@@ -2280,18 +2289,18 @@ namespace JzDisplay.OPSpace
                 grobj = JzMover[i].Source;
                 if (grobj is JzRectEAG)
                 {
-                    (grobj as JzRectEAG).GenSearchImage(outrangex, outrangey, bmpPaint, ref bmpfind,ref bmpmask);
-                    
+                    (grobj as JzRectEAG).GenSearchImage(outrangex, outrangey, bmpPaint, ref bmpfind, ref bmpmask);
+
                     //bmpfind.Save(@"D:\\DISPLAYTEST\\" + i.ToString("00") + "L.png", ImageFormat.Png);
                     //bmpmask.Save(@"D:\\DISPLAYTEST\\" + i.ToString("00") + "M.png", ImageFormat.Png);
-                    
+
                     (grobj as JzRectEAG).GetMaskedImage(bmpfind, bmpmask, Color.Black, Color.Red, false);
 
                     //bmpfind.Save(@"D:\\DISPLAYTEST\\" + i.ToString("00") + "M1.png", ImageFormat.Png);
 
                     //(grobj as Rectangle_EAG).DigImage(outrangex, outrangey, bmpfind);
                     //bmpfind.Save(@"D:\\DISPLAYTEST\\" + i.ToString("00") + "N.png", ImageFormat.Png);
-                    
+
                     (grobj as JzRectEAG).GenSearchImage(0, 0, bmpPaint, ref bmpfind, ref bmpmask);
 
                     //bmpfind.Save(@"D:\\DISPLAYTEST\\" + i.ToString("00") + "O.png", ImageFormat.Png);
@@ -2452,7 +2461,7 @@ namespace JzDisplay.OPSpace
         }
         #endregion
 
-        public delegate void MoverHandler(MoverOpEnum moverop,string opstring);
+        public delegate void MoverHandler(MoverOpEnum moverop, string opstring);
         public event MoverHandler MoverAction;
         public void OnMover(MoverOpEnum moverop, string opstring)
         {

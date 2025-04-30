@@ -50,7 +50,7 @@ namespace Allinone.FormSpace
                 ModifyStr = rcp.ToModifyString();
                 RcpIndexString = rcp.RcpNoString;
             }
-            public string ToString(string str1,string str2,string str3)
+            public string ToString(string str1, string str2, string str3)
             {
                 string Str = "";
 
@@ -93,14 +93,14 @@ namespace Allinone.FormSpace
         bool IsNeedToChange = false;
 
         List<FilterItemClass> FilterItemList = new List<FilterItemClass>();
-        public Rectangle ParentWindosw { private get; set; } = new Rectangle(0,0,0, 0);
-        public RcpSelectForm(RcpDBClass rcpdb,string showbmpstring)
+        public Rectangle ParentWindosw { private get; set; } = new Rectangle(0, 0, 0, 0);
+        public RcpSelectForm(RcpDBClass rcpdb, string showbmpstring)
         {
             InitializeComponent();
-            Initial(rcpdb,showbmpstring);
-         
+            Initial(rcpdb, showbmpstring);
+
         }
-        void Initial(RcpDBClass rcpdb,string showbmpstring)
+        void Initial(RcpDBClass rcpdb, string showbmpstring)
         {
             //myLanguage.Initial(INI.UI_PATH + "\\RcpSelectForm.jdb", INI.LANGUAGE, this);
 
@@ -115,7 +115,7 @@ namespace Allinone.FormSpace
             DISPUI.Initial();
 
             ShowBmpString = showbmpstring;
-            
+
             btnSelect = button1;
             btnSelect.Tag = TagEnum.SELECT;
             btnDel = button4;
@@ -126,19 +126,19 @@ namespace Allinone.FormSpace
             btnSelect.Click += new EventHandler(btn_Click);
             btnDel.Click += new EventHandler(btn_Click);
             btnExit.Click += new EventHandler(btn_Click);
-            
+
             txtSearch = textBox1;
             txtSearch.TextChanged += new EventHandler(txtSearch_TextChanged);
 
             lstFilter = listBox1;
             lstFilter.SelectedIndexChanged += new EventHandler(lstFilter_SelectedIndexChanged);
-         
+
             this.Load += RcpSelectForm_Load;
             this.FormClosing += new FormClosingEventHandler(RcpSelectForm_FormClosing);
 
             lblInformation = label3;
 
-            
+            JetEazy.BasicSpace.LanguageExClass.Instance.EnumControls(this);
         }
 
         private void RcpSelectForm_Load(object sender, EventArgs e)
@@ -155,7 +155,7 @@ namespace Allinone.FormSpace
 
         void txtSearch_TextChanged(object sender, EventArgs e)
         {
-            SearchFilter();    
+            SearchFilter();
         }
 
         void btn_Click(object sender, EventArgs e)
@@ -165,19 +165,19 @@ namespace Allinone.FormSpace
             switch (KEYS)
             {
                 case TagEnum.SELECT:
-                    
+
                     JzToolsClass.PassingInteger = FilterItemNow.Index;
 
                     if (JzToolsClass.PassingString != "")
                         JzToolsClass.PassingString = myJzTools.RemoveLastChar(JzToolsClass.PassingString, 1);
 
                     ProgramClose(true);
-                    
+
                     break;
                 case TagEnum.DEL:
                     if (lstFilter.SelectedIndices.Count > 0)
                     {
-                        if (MessageBox.Show("是否要刪除此筆資料?", "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        if (MessageBox.Show(ToChangeLanguage("是否要刪除此筆資料?"), "SYS", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         //if(MessageBox.Show(myLanguage.Messages("msg1",INI.LANGUAGE),"SYS",MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
                         {
                             Delete();
@@ -185,13 +185,13 @@ namespace Allinone.FormSpace
                     }
                     break;
                 case TagEnum.EXIT:
-                    
+
                     ProgramClose(false);
-                    
+
                     break;
             }
         }
-        
+
 
         void Delete()
         {
@@ -239,11 +239,11 @@ namespace Allinone.FormSpace
             //Delstrs = FilterDelStr.Split(',');
 
             i = Delstrs.Length - 1;
-            
+
             while (i > -1)
             {
                 //Add For Avoid Delete Static No
-                if(int.Parse(Delstrs[i]) >= Universal.StaticStartNo)
+                if (int.Parse(Delstrs[i]) >= Universal.StaticStartNo)
                 {
                     i--;
                     continue;
@@ -292,12 +292,12 @@ namespace Allinone.FormSpace
                 int start = FilterItem.SortStr.IndexOf('(') + 1;
                 int stop = FilterItem.SortStr.Length - 1;
                 int length = stop - start;
-                string fromitemTemp ="("+ FilterItem.SortStr.Substring(start, length)+")";
-                string name = FilterItem.SortStr.Substring(0,start-1);
+                string fromitemTemp = "(" + FilterItem.SortStr.Substring(start, length) + ")";
+                string name = FilterItem.SortStr.Substring(0, start - 1);
 
                 fromitemTemp = fromitemTemp.PadRight(7, ' ');
 
-                lstFilter.Items.Add("[" + FilterItem.Index.ToString(RcpClass.ORGRCPNOSTRING) + "] "+ fromitemTemp + name);
+                lstFilter.Items.Add("[" + FilterItem.Index.ToString(RcpClass.ORGRCPNOSTRING) + "] " + fromitemTemp + name);
             }
 
             IsNeedToChange = true;
@@ -310,8 +310,8 @@ namespace Allinone.FormSpace
 
         int CompareSortStr(FilterItemClass fromitem, FilterItemClass toitem)
         {
-            int start = fromitem.SortStr.IndexOf('(')+1;
-            int stop = fromitem.SortStr.Length-1;
+            int start = fromitem.SortStr.IndexOf('(') + 1;
+            int stop = fromitem.SortStr.Length - 1;
             int length = stop - start;
             string fromitemTemp = fromitem.SortStr.Substring(start, length);
 
@@ -321,7 +321,7 @@ namespace Allinone.FormSpace
             string fromitemTemp2 = toitem.SortStr.Substring(start2, length2);
 
             return fromitemTemp.CompareTo(fromitemTemp2);
-         // return (fromitem.SortStr.CompareTo(toitem.SortStr));
+            // return (fromitem.SortStr.CompareTo(toitem.SortStr));
         }
 
         void lstFilter_SelectedIndexChanged(object sender, EventArgs e)
@@ -353,24 +353,24 @@ namespace Allinone.FormSpace
                 //                            myLanguage.Messages("msg3", INI.LANGUAGE),
                 //                            myLanguage.Messages("msg4", INI.LANGUAGE));
 
-                lblInformation.Text = FilterItemNow.ToString("編　　號",
-                                            "修改日期",
-                                            "其他說明");
+                lblInformation.Text = FilterItemNow.ToString(ToChangeLanguage("編　　號"),
+                                            ToChangeLanguage("修改日期"),
+                                            ToChangeLanguage("其他說明"));
 
                 //OpDisplay.SetDispImage(RCPDB.GetRCPItemBmp(FilterItemNow.Index));
 
-                btnDel.Enabled = (INI.PRELOADSTATICNO.IndexOf(FilterItemNow.Index.ToString(RcpClass.ORGRCPNOSTRING)) < 0 
-                                && (FilterItemNow.Index != 1) 
+                btnDel.Enabled = (INI.PRELOADSTATICNO.IndexOf(FilterItemNow.Index.ToString(RcpClass.ORGRCPNOSTRING)) < 0
+                                && (FilterItemNow.Index != 1)
                                 && (FilterItemNow.Index != JzToolsClass.PassingInteger)
                                 && ACCDB.DataNow.AllowSetupRecipe);
-                
+
                 DISPUI.SetDisplayImage(Universal.RCPPATH + "\\" + FilterItemNow.RcpIndexString + "\\" + ShowBmpString);
-                
+
             }
             catch (Exception ex)
             {
                 JetEazy.LoggerClass.Instance.WriteException(ex);
-                MessageBox.Show("無此參數。");
+                MessageBox.Show(ToChangeLanguage("無此參數"));
             }
 
         }
@@ -389,7 +389,12 @@ namespace Allinone.FormSpace
             //OpDisplay.Kill();
         }
 
-
+        string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
+        }
 
 
     }

@@ -653,6 +653,7 @@ namespace WorldOfMoveableObjects
                     BorderPen.Color = MainShowPen.Color;
                     BorderPen.DashStyle = DashStyle.Solid;
                     BorderPen.Width = MainShowPen.Width;
+                    BorderColor = MainShowPen.Color;
                     break;
                 case ShowModeEnum.NORMAL:
 
@@ -720,7 +721,12 @@ namespace WorldOfMoveableObjects
                 }
 
                 //grfx.DrawString(RelateNo.ToString("000") + "," + RelatePosition.ToString("000"), new Font("Arial", 12), new SolidBrush(Color.Red), m_center);
+                if (!string.IsNullOrEmpty(Desc))
+                {
 
+                    //grfx.DrawString(Desc, new Font("Arial", (float)(RectEAG.Width * 0.025)), new SolidBrush(BorderPen.Color), m_center);
+                    grfx.DrawString(Desc, new Font("Arial", FontSize), new SolidBrush(BorderPen.Color), m_center);
+                }
             }
         }
         public override void SetOffset(Point offsetpoint)
@@ -878,6 +884,8 @@ namespace WorldOfMoveableObjects
             Move(OffsetPoint.X, OffsetPoint.Y);
             OffsetPoint = new Point(0, 0);
 
+            FontSize = (float)(50 * ratio);
+
             //MappingFromMovingObject(new PointF(0, 0), 1);
         }
         public override void MappingToMovingObject(PointF bias, SizeF sizeratio)
@@ -901,6 +909,8 @@ namespace WorldOfMoveableObjects
             OffsetPoint = new Point(0, 0);
 
             MappingFromMovingObject(new PointF(0, 0), 1);
+
+            //FontSize = (float)(FontSize * sizeratio.Width);
         }
         public override void MappingFromMovingObject(PointF bias, double ratio)
         {
@@ -911,6 +921,8 @@ namespace WorldOfMoveableObjects
             RectEAG.Height = Height / ratio;
 
             RectEAG.Degree = Auxi_Convert.RadianToDegree(m_angle);
+
+            //FontSize = (float)(FontSize / ratio);
         }
     }
 }

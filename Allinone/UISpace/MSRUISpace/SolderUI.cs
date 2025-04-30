@@ -68,7 +68,8 @@ namespace Allinone.UISpace.MSRUISpace
             picBitmap = pictureBox1;
             picRunBmp = pictureBox2;
             DefaultString = GetDataValueString();
-            Initial(DefaultString);
+            if (DesignMode)
+                Initial(DefaultString);
             btnAutoAnalyze.Click += BtnAutoAnalyze_Click;
             propertyGrid.PropertyValueChanged += PropertyGrid_PropertyValueChanged;
         }

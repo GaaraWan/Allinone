@@ -6,13 +6,13 @@ using System.Drawing;
 using System.Threading.Tasks;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
-using  System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Windows.Media.Imaging;
 using System.Runtime.InteropServices;
 
 namespace JetEazy.BasicSpace
 {
-  public  class myImageProcessor
+    public class myImageProcessor
     {
         /// <summary>  
         ///  Resize图片   
@@ -124,7 +124,7 @@ namespace JetEazy.BasicSpace
         /// <param name="bmp">位图流</param>  
         /// <param name="angle">旋转角度[0,360](前台给的)</param>  
         /// <returns></returns>  
-        public static Bitmap RotateImg(Image bmp, int angle)
+        public static Bitmap RotateImg(Image bmp, float angle)
         {
             angle = angle % 360;
             //弧度转换  
@@ -159,8 +159,10 @@ namespace JetEazy.BasicSpace
             g.ResetTransform();
             g.Save();
             g.Dispose();
+
+
             //保存旋转后的图片  
-            //  bmp.Dispose();
+            //bmp.Dispose();
             //  dsImage.Save("FocusPoint.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
             return dsImage;
         }
@@ -219,7 +221,7 @@ namespace JetEazy.BasicSpace
         /// <param name="angle">旋转角度</param>
         /// <param name="bkColor">背景色</param>
         /// <returns>输出Bitmap</returns>
-        public static Bitmap KiRotate(Bitmap bmp, float angle,Rectangle Rotate, Color bkColor)
+        public static Bitmap KiRotate(Bitmap bmp, float angle, Rectangle Rotate, Color bkColor)
         {
             int w = bmp.Width + 2;
             int h = bmp.Height + 2;
@@ -1278,13 +1280,13 @@ namespace JetEazy.BasicSpace
 
         }
 
-       /// <summary>
-       /// 
-       /// </summary>
-       /// <param name="Bmp"></param>
-       /// <param name="Max">最大值</param>
-       /// <param name="Min">最小值</param>
-       /// <param name="isBack">最大值与最小值之间的颜色</param>
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Bmp"></param>
+        /// <param name="Max">最大值</param>
+        /// <param name="Min">最小值</param>
+        /// <param name="isBack">最大值与最小值之间的颜色</param>
         public static void SetThreshold(Bitmap Bmp, int Max, int Min, bool isBack)
         {
             if (Bmp.PixelFormat == PixelFormat.Format32bppArgb)
@@ -1314,10 +1316,10 @@ namespace JetEazy.BasicSpace
                             CurP = Scan0 + Y * Stride;
                             for (X = 0; X < Width; X++)
                             {
-                             //   Red = (byte)((float)*(CurP) * 0.114f + (float)*(CurP + 1) * 0.587f + (float)*(CurP + 2) * 0.299f);
+                                //   Red = (byte)((float)*(CurP) * 0.114f + (float)*(CurP + 1) * 0.587f + (float)*(CurP + 2) * 0.299f);
                                 Red = (byte)((*(CurP) * 19595 + *(CurP + 1) * 38469 + *(CurP + 2) * 7472) >> 16);
                                 Point p2 = new Point(X, Y);
-                                double JL = Distance(p1,p2);
+                                double JL = Distance(p1, p2);
                                 if (Red < Max && Red > Min && R > JL)
                                 {
                                     if (isBack)
@@ -1368,7 +1370,7 @@ namespace JetEazy.BasicSpace
         /// <param name="p1"></param>
         /// <param name="p2"></param>
         /// <returns></returns>
-        public static double Distance(Point p1,Point p2)
+        public static double Distance(Point p1, Point p2)
         {
             int xdiff = p2.X - p1.X;
             int ydiff = p2.Y - p1.Y;
@@ -1770,7 +1772,7 @@ namespace JetEazy.BasicSpace
         /// <param name="bmp">需要调的图</param>
         /// <param name="bright">高度</param>
         /// <param name="contrast">对比度</param>
-         static void SetBrightContrast32Bit(Bitmap Bmp, int bright, int contrast)
+        static void SetBrightContrast32Bit(Bitmap Bmp, int bright, int contrast)
         {
             if (Bmp.PixelFormat == PixelFormat.Format32bppArgb)
             {
@@ -1811,7 +1813,7 @@ namespace JetEazy.BasicSpace
                                 // Red = (byte)((*(CurP + 2) + *(CurP + 1) + *CurP) / 3);
 
                                 Red = (byte)((float)*(CurP) * 0.114f + (float)*(CurP + 1) * 0.587f + (float)*(CurP + 2) * 0.299f);
-                                Red = (byte)((*(CurP ) * 19595 + *(CurP + 1) * 38469 + *(CurP + 2) * 7472) >> 16);
+                                Red = (byte)((*(CurP) * 19595 + *(CurP + 1) * 38469 + *(CurP + 2) * 7472) >> 16);
 
                                 #region 亮度处理
                                 if (bright != 0)
@@ -2076,103 +2078,103 @@ namespace JetEazy.BasicSpace
                     int inumber = 0;
 
                     Parallel.ForEach(list, lis =>
-                      {
+                    {
 
-                          //});
+                        //});
 
-                          //Parallel.ForEach(Partitioner.Create(0, BmpData.Height), (H) =>
-                          //{
+                        //Parallel.ForEach(Partitioner.Create(0, BmpData.Height), (H) =>
+                        //{
 
-                          inumber++;
+                        inumber++;
 
-                          int X, Y, Width, Height, Stride, pixB = 0, pixG = 0, pixR = 0;
-                          byte Red, Green, Blue;
-                          byte* Scan0, CurP;
+                        int X, Y, Width, Height, Stride, pixB = 0, pixG = 0, pixR = 0;
+                        byte Red, Green, Blue;
+                        byte* Scan0, CurP;
 
-                          double pixelR = 0, pixelG = 0, pixelB = 0;
-                          Width = BmpData.Width;
-                          Height = BmpData.Height;
-                          Stride = BmpData.Stride;
-                          Scan0 = (byte*)BmpData.Scan0;
+                        double pixelR = 0, pixelG = 0, pixelB = 0;
+                        Width = BmpData.Width;
+                        Height = BmpData.Height;
+                        Stride = BmpData.Stride;
+                        Scan0 = (byte*)BmpData.Scan0;
 
-                          for (Y = lis.X; Y < lis.Y; Y++)
-                          {
-                              CurP = Scan0 + Y * Stride;
-                              for (X = 0; X < Width; X++)
-                              {
-                                  // Red = *CurP;
-                                  //Green = *(CurP + 1);
-                                  Red = (byte)((*(CurP + 2) + *(CurP + 1) + *CurP) / 3);
+                        for (Y = lis.X; Y < lis.Y; Y++)
+                        {
+                            CurP = Scan0 + Y * Stride;
+                            for (X = 0; X < Width; X++)
+                            {
+                                // Red = *CurP;
+                                //Green = *(CurP + 1);
+                                Red = (byte)((*(CurP + 2) + *(CurP + 1) + *CurP) / 3);
 
-                                  #region 亮度处理
-                                  if (bright != 0)
-                                  {
-                                      pixR = Red + bright;
-                                      //pixG = Green + bright;
-                                      //pixB = Blue + bright;
-                                      if (bright < 0)
-                                      {
-                                          if (pixR < -255)
-                                              pixR = -255;
-                                          //if (pixG < 0)
-                                          //    pixG = 0;
-                                          //if (pixB < 0)
-                                          //    pixB = 0;
-                                      }
-                                      if (bright > 0)
-                                      {
-                                          if (pixR > 255)
-                                              pixR = 255;
-                                          //if (pixG > 255)
-                                          //    pixG = 255;
-                                          //if (pixG > 255)
-                                          //    pixG = 255;
-                                      }
-                                      Red = (byte)pixR;
-                                      //Green = (byte)pixG;
-                                      //Blue = (byte)pixB;
+                                #region 亮度处理
+                                if (bright != 0)
+                                {
+                                    pixR = Red + bright;
+                                    //pixG = Green + bright;
+                                    //pixB = Blue + bright;
+                                    if (bright < 0)
+                                    {
+                                        if (pixR < -255)
+                                            pixR = -255;
+                                        //if (pixG < 0)
+                                        //    pixG = 0;
+                                        //if (pixB < 0)
+                                        //    pixB = 0;
+                                    }
+                                    if (bright > 0)
+                                    {
+                                        if (pixR > 255)
+                                            pixR = 255;
+                                        //if (pixG > 255)
+                                        //    pixG = 255;
+                                        //if (pixG > 255)
+                                        //    pixG = 255;
+                                    }
+                                    Red = (byte)pixR;
+                                    //Green = (byte)pixG;
+                                    //Blue = (byte)pixB;
 
-                                  }
-                                  #endregion
+                                }
+                                #endregion
 
-                                  #region 对比度处理
-                                  if (contrast != 0)
-                                  {
-                                      pixelR = ((Red / 255.0 - 0.5) * contrastT + 0.5) * 255;
-                                      if (pixelR < 0)
-                                          pixelR = 0;
-                                      if (pixelR > 255)
-                                          pixelR = 255;
-                                      Red = (byte)pixelR;
+                                #region 对比度处理
+                                if (contrast != 0)
+                                {
+                                    pixelR = ((Red / 255.0 - 0.5) * contrastT + 0.5) * 255;
+                                    if (pixelR < 0)
+                                        pixelR = 0;
+                                    if (pixelR > 255)
+                                        pixelR = 255;
+                                    Red = (byte)pixelR;
 
-                                      //pixelG = ((Green / 255.0 - 0.5) * contrastT + 0.5) * 255;
-                                      //if (pixelG < 0)
-                                      //    pixelG = 0;
-                                      //if (pixelG > 255)
-                                      //    pixelG = 255;
-                                      //Green = (byte)pixelG;
+                                    //pixelG = ((Green / 255.0 - 0.5) * contrastT + 0.5) * 255;
+                                    //if (pixelG < 0)
+                                    //    pixelG = 0;
+                                    //if (pixelG > 255)
+                                    //    pixelG = 255;
+                                    //Green = (byte)pixelG;
 
-                                      //pixelB = ((Blue / 255.0 - 0.5) * contrastT + 0.5) * 255;
-                                      //if (pixelB < 0)
-                                      //    pixelB = 0;
-                                      //if (pixelB > 255)
-                                      //    pixelB = 255;
-                                      //Blue = (byte)pixelB;
-                                  }
-                                  #endregion
-                                  *CurP = Red;
-                                  *(CurP + 1) = Red;
-                                  *(CurP + 2) = Red;
+                                    //pixelB = ((Blue / 255.0 - 0.5) * contrastT + 0.5) * 255;
+                                    //if (pixelB < 0)
+                                    //    pixelB = 0;
+                                    //if (pixelB > 255)
+                                    //    pixelB = 255;
+                                    //Blue = (byte)pixelB;
+                                }
+                                #endregion
+                                *CurP = Red;
+                                *(CurP + 1) = Red;
+                                *(CurP + 2) = Red;
 
-                                  //*CurP = Blue;
-                                  //*(CurP + 1) = Green;
-                                  //*(CurP + 2) = Red;
+                                //*CurP = Blue;
+                                //*(CurP + 1) = Green;
+                                //*(CurP + 2) = Red;
 
-                                  CurP += 4;
+                                CurP += 4;
 
-                              }
-                          }
-                      });
+                            }
+                        }
+                    });
                 }
                 Bmp.UnlockBits(BmpData);
             }
@@ -2334,9 +2336,9 @@ namespace JetEazy.BasicSpace
         /// <param name="BmpB">第二张图</param>
         /// <param name="Value">差异范围</param>
         /// <param name="iArea">差异面积</param>
-        public static void SetBimap_A_B(Bitmap BmpA, Bitmap BmpB, int Value,ref int iArea)
+        public static void SetBimap_A_B(Bitmap BmpA, Bitmap BmpB, int Value, ref int iArea)
         {
-           int  iAreaTemp = 0;
+            int iAreaTemp = 0;
             if (BmpB.PixelFormat == PixelFormat.Format32bppArgb &&
                BmpA.PixelFormat == PixelFormat.Format32bppArgb)
             {
@@ -2410,7 +2412,7 @@ namespace JetEazy.BasicSpace
                 BmpB.UnlockBits(BmpDataB);
             }
         }
-        
+
         /// <summary>
         /// A-B
         /// </summary>
@@ -2429,7 +2431,7 @@ namespace JetEazy.BasicSpace
             if (BmpB.PixelFormat == PixelFormat.Format32bppArgb &&
                BmpA.PixelFormat == PixelFormat.Format32bppArgb)
             {
-                SetBimap_A_BFormat32(BmpA, BmpB,out bmpDifference, Value, ref iArea);
+                SetBimap_A_BFormat32(BmpA, BmpB, out bmpDifference, Value, ref iArea);
                 return;
             }
             if (BmpB.PixelFormat == PixelFormat.Format8bppIndexed &&
@@ -2471,7 +2473,7 @@ namespace JetEazy.BasicSpace
                             {
                                 PointA = (int)((float)*CurP);
                                 PointB = (int)((float)*CurPB);
-                                if (Math.Abs(PointA - PointB) > Value )
+                                if (Math.Abs(PointA - PointB) > Value)
                                 {
                                     iAreaTemp++;
                                     *CurP = 255;
@@ -2578,10 +2580,10 @@ namespace JetEazy.BasicSpace
                                 PointBItem = (int)((float)*CurPBItem);
 
                                 bool isMaxk = true;
-                               // if ( Math.Abs( PointB-PointA) > Value )
+                                // if ( Math.Abs( PointB-PointA) > Value )
                                 if (Math.Abs(PointAItem - PointBItem) > Value)
                                 {
-                                  //  if (!(PointAItem > 254 && PointBItem > 254))
+                                    //  if (!(PointAItem > 254 && PointBItem > 254))
                                     if (Math.Abs(PointA - PointB) > Value)
                                     {
                                         isMaxk = false;
@@ -2595,7 +2597,7 @@ namespace JetEazy.BasicSpace
                                         *(CurPC + 2) = 255;
                                     }
                                 }
-                               if(isMaxk)
+                                if (isMaxk)
                                 {
                                     *CurP = 0;
                                     *(CurP + 1) = 0;
@@ -2631,7 +2633,7 @@ namespace JetEazy.BasicSpace
         /// <param name="Value">差异范围</param>
         /// <param name="iArea">差异面积</param>
         /// <param name="iAreaFobackl">面积</param>
-        public static void SetBimap_A_B(Bitmap BmpA, Bitmap BmpB, Bitmap BmpAItem, Bitmap BmpBItem, out Bitmap bmpDifference, int Value, ref int iArea,ref int iAreaFobackl,int ideffBack=0)
+        public static void SetBimap_A_B(Bitmap BmpA, Bitmap BmpB, Bitmap BmpAItem, Bitmap BmpBItem, out Bitmap bmpDifference, int Value, ref int iArea, ref int iAreaFobackl, int ideffBack = 0)
         {
             if (BmpA.Size != BmpB.Size)
                 System.Windows.Forms.MessageBox.Show("两张图不一样大");
@@ -2669,7 +2671,7 @@ namespace JetEazy.BasicSpace
                     Parallel.ForEach(Partitioner.Create(0, BmpDataB.Height), (H) =>
                     {
 
-                        int X, Y, Width, Height, Stride , Stride2;// pixR = 0;
+                        int X, Y, Width, Height, Stride, Stride2;// pixR = 0;
                         int PointA, PointB, PointAItem, PointBItem;
                         byte* Scan0, CurP, Scan0B, CurPB, Scan0C, CurPC, Scan0Item, Scan0BItem, CurPItem, CurPBItem;
 
@@ -2698,16 +2700,16 @@ namespace JetEazy.BasicSpace
                                 PointAItem = (int)((float)*CurPItem);
                                 PointBItem = (int)((float)*CurPBItem);
 
-                                if (PointAItem < 100)
+                                if (PointAItem < 200)
                                     iFobakl++;
 
                                 bool isMaxk = true;
                                 // if ( Math.Abs( PointB-PointA) > Value )
-                                if (PointAItem <100 ||  PointBItem <100)
+                                if (PointAItem < 200 || PointBItem < 200)
                                 {
                                     //  if (!(PointAItem > 254 && PointBItem > 254))
-                                    int iValueTemp = (PointA - PointB) - ideffBack;
-                                    if (Math.Abs(iValueTemp) > Value) 
+                                    int iValueTemp = Math.Abs(PointA - PointB) - ideffBack;
+                                    if (Math.Abs(iValueTemp) > Value)
                                     {
                                         isMaxk = false;
                                         iAreaTemp++;
@@ -2838,7 +2840,7 @@ namespace JetEazy.BasicSpace
                             {
                                 PointA = (int)((float)*CurP);
                                 PointB = (int)((float)*CurPB);
-                                if (PointB  > 200)
+                                if (PointB > 200)
                                 {
                                     lAreaTemp++;
                                     lValue += PointA;
@@ -2849,7 +2851,7 @@ namespace JetEazy.BasicSpace
                         }
                     });
                 }
-               if (lValue != 0 && lAreaTemp != 0)  
+                if (lValue != 0 && lAreaTemp != 0)
                 {
                     int iback = (int)(lValue / lAreaTemp);
                     iBackColor = iback;
@@ -2867,7 +2869,7 @@ namespace JetEazy.BasicSpace
                 BmpB.UnlockBits(BmpDataB);
             }
         }
-        private static void SetBimap_A_BFormat8(Bitmap BmpA, Bitmap BmpB, ref int iBackColor,ref int iForeColor)
+        private static void SetBimap_A_BFormat8(Bitmap BmpA, Bitmap BmpB, ref int iBackColor, ref int iForeColor)
         {
             long lAreaTemp = 0, lValue = 0;
             long lAreaTemp2 = 0, lValue2 = 0;
@@ -3023,8 +3025,8 @@ namespace JetEazy.BasicSpace
             if (BmpB.PixelFormat == PixelFormat.Format32bppArgb &&
                 BmpA.PixelFormat == PixelFormat.Format32bppArgb)
             {
-            
-                   BitmapData BmpDataA = BmpA.LockBits(new Rectangle(0, 0, BmpA.Width, BmpA.Height), ImageLockMode.ReadOnly, BmpA.PixelFormat);
+
+                BitmapData BmpDataA = BmpA.LockBits(new Rectangle(0, 0, BmpA.Width, BmpA.Height), ImageLockMode.ReadOnly, BmpA.PixelFormat);
                 BitmapData BmpDataB = BmpB.LockBits(new Rectangle(0, 0, BmpB.Width, BmpB.Height), ImageLockMode.ReadOnly, BmpB.PixelFormat);
                 BitmapData BmpDataM = bmpMask.LockBits(new Rectangle(0, 0, bmpMask.Width, bmpMask.Height), ImageLockMode.ReadOnly, bmpMask.PixelFormat);
                 BitmapData BmpDataD = bmpDifference.LockBits(new Rectangle(0, 0, bmpDifference.Width, bmpDifference.Height), ImageLockMode.ReadOnly, bmpDifference.PixelFormat);
@@ -3035,7 +3037,7 @@ namespace JetEazy.BasicSpace
 
                         int X, Y, Width, Height, Stride;// pixR = 0;
                         int PointA, PointB, PointM;
-                        byte* Scan0, CurP, Scan0B, CurPB, CurM, ScanM,CurD, ScanD;
+                        byte* Scan0, CurP, Scan0B, CurPB, CurM, ScanM, CurD, ScanD;
 
                         //double pixelR = 0;
                         Width = BmpDataA.Width;
@@ -3067,7 +3069,7 @@ namespace JetEazy.BasicSpace
 
                                 if (PointM > 128)
                                 {
-                                    if (Math.Abs(PointA - PointB) > Value )
+                                    if (Math.Abs(PointA - PointB) > Value)
                                     {
                                         iAreaTemp++;
                                         *CurD = 255;
@@ -3109,6 +3111,100 @@ namespace JetEazy.BasicSpace
             }
         }
 
+        public static void SetBimap_A_BFormat32(Bitmap BmpA, Bitmap BmpB, Bitmap bmpMask, out Bitmap bmpDifference, ref int iArea)
+        {
+            bmpDifference = new Bitmap(BmpA.Width, BmpA.Height);
+            int iAreaTemp = 0;
+            if (BmpB.PixelFormat == PixelFormat.Format32bppArgb &&
+                BmpA.PixelFormat == PixelFormat.Format32bppArgb)
+            {
+
+                BitmapData BmpDataA = BmpA.LockBits(new Rectangle(0, 0, BmpA.Width, BmpA.Height), ImageLockMode.ReadOnly, BmpA.PixelFormat);
+                BitmapData BmpDataB = BmpB.LockBits(new Rectangle(0, 0, BmpB.Width, BmpB.Height), ImageLockMode.ReadOnly, BmpB.PixelFormat);
+                BitmapData BmpDataM = bmpMask.LockBits(new Rectangle(0, 0, bmpMask.Width, bmpMask.Height), ImageLockMode.ReadOnly, bmpMask.PixelFormat);
+                BitmapData BmpDataD = bmpDifference.LockBits(new Rectangle(0, 0, bmpDifference.Width, bmpDifference.Height), ImageLockMode.ReadOnly, bmpDifference.PixelFormat);
+                unsafe
+                {
+                    Parallel.ForEach(Partitioner.Create(0, BmpDataA.Height), (H) =>
+                    {
+
+                        int X, Y, Width, Height, Stride;// pixR = 0;
+                        int PointA, PointB, PointM;
+                        byte* Scan0, CurP, Scan0B, CurPB, CurM, ScanM, CurD, ScanD;
+
+                        //double pixelR = 0;
+                        Width = BmpDataA.Width;
+                        Height = BmpDataA.Height;
+                        Stride = BmpDataA.Stride;
+                        Scan0 = (byte*)BmpDataA.Scan0;
+                        Scan0B = (byte*)BmpDataB.Scan0;
+                        ScanD = (byte*)BmpDataD.Scan0;
+
+                        ScanM = (byte*)BmpDataM.Scan0;
+                        for (Y = H.Item1; Y < H.Item2; Y++)
+                        {
+                            CurP = Scan0 + Y * Stride;
+                            CurPB = Scan0B + Y * Stride;
+                            CurD = ScanD + Y * Stride;
+                            CurM = ScanM + Y * Stride;
+                            for (X = 0; X < Width; X++)
+                            {
+                                PointA = (CurP[0] * 19595 + CurP[1] * 38469 + CurP[2] * 7472) >> 16;
+                                PointB = (CurPB[0] * 19595 + CurPB[1] * 38469 + CurPB[2] * 7472) >> 16;
+                                PointM = (CurM[0] * 19595 + CurM[1] * 38469 + CurM[2] * 7472) >> 16;
+                                // Red = (byte)((*(CurP + 2) + *(CurP + 1) + *CurP) / 3);
+
+                                //   PointA = (int)((float)*CurP + (float)*(CurP + 1) + (float)*(CurP + 2))/3;
+                                //   PointB = (int)((float)*CurPB + (float)*(CurPB + 1) + (float)*(CurPB + 2));
+                                //PointA = (int)((float)*CurP);
+                                //PointB = (int)((float)*CurPB);
+                                // if (Math.Abs(PointA - PointB) < Value)
+
+                                if (PointM > 128)
+                                {
+                                    if (PointA - PointB < -128)
+                                    {
+                                        iAreaTemp++;
+                                        *CurD = 255;
+                                        *(CurD + 1) = 255;
+                                        *(CurD + 2) = 255;
+                                        *(CurD + 3) = 255;
+                                    }
+                                    else
+                                    {
+                                        *CurD = 0;
+                                        *(CurD + 1) = 0;
+                                        *(CurD + 2) = 0;
+                                        *(CurD + 3) = 255;
+
+                                    }
+                                }
+                                else
+                                {
+                                    *CurD = 0;
+                                    *(CurD + 1) = 0;
+                                    *(CurD + 2) = 0;
+                                    *(CurD + 3) = 255;
+
+                                }
+
+                                CurP += 4;
+                                CurPB += 4;
+                                CurD += 4;
+                                CurM += 4;
+                            }
+                        }
+                    });
+                }
+                iArea = iAreaTemp;
+                BmpA.UnlockBits(BmpDataA);
+                BmpB.UnlockBits(BmpDataB);
+                bmpMask.UnlockBits(BmpDataM);
+                bmpDifference.UnlockBits(BmpDataD);
+            }
+        }
+
+
         private static void SetBimap_A_BFormat32(Bitmap BmpA, Bitmap BmpB, out Bitmap bmpDifference, float Value, ref int iArea)
         {
             bmpDifference = new Bitmap(BmpA.Width, BmpA.Height);
@@ -3145,7 +3241,7 @@ namespace JetEazy.BasicSpace
                             {
                                 PointA = (CurP[0] * 19595 + CurP[1] * 38469 + CurP[2] * 7472) >> 16;
                                 PointB = (CurPB[0] * 19595 + CurPB[1] * 38469 + CurPB[2] * 7472) >> 16;
-                               
+
                                 if (Math.Abs(PointA - PointB) > Value / 2d)
                                 {
                                     iAreaTemp++;
@@ -3236,7 +3332,7 @@ namespace JetEazy.BasicSpace
 
                                 if (pointM2 > 128)
                                 {
-                                    if (pointM < 128 && Math.Abs(PointA - PointB) > (Value /1.5d))
+                                    if (pointM < 128 && Math.Abs(PointA - PointB) > (Value / 1.5d))
                                     {
                                         iAreaTemp++;
                                         *CurD = 255;
@@ -3244,7 +3340,7 @@ namespace JetEazy.BasicSpace
                                         *(CurD + 2) = 255;
                                         *(CurD + 3) = 255;
                                     }
-                                   else if (pointRM < 128 && Math.Abs(PointA - PointB) > Value )
+                                    else if (pointRM < 128 && Math.Abs(PointA - PointB) > Value)
                                     {
                                         iAreaTemp++;
                                         *CurD = 255;
@@ -3252,7 +3348,7 @@ namespace JetEazy.BasicSpace
                                         *(CurD + 2) = 255;
                                         *(CurD + 3) = 255;
                                     }
-                                    else 
+                                    else
                                     {
                                         *CurD = 0;
                                         *(CurD + 1) = 0;
@@ -3314,7 +3410,7 @@ namespace JetEazy.BasicSpace
 
                         int X, Y, Width, Height, Stride;// pixR = 0;
                         int PointA, PointB, pointP, pointP2, pointRM2, pointRM, pointM2;
-                        byte* Scan0, CurP, Scan0B, CurPB, CurD, ScanD,  ScanRM2, CurRM2, ScanRM, CurRM, CurPP2, ScanP2, CurPP, ScanP, CurM2, ScanM2;
+                        byte* Scan0, CurP, Scan0B, CurPB, CurD, ScanD, ScanRM2, CurRM2, ScanRM, CurRM, CurPP2, ScanP2, CurPP, ScanP, CurM2, ScanM2;
 
                         //double pixelR = 0;
                         Width = BmpDataA.Width;
@@ -3441,19 +3537,19 @@ namespace JetEazy.BasicSpace
             if (BmpB.PixelFormat == PixelFormat.Format32bppArgb &&
                BmpA.PixelFormat == PixelFormat.Format32bppArgb)
             {
-               // SetBimap_A_BFormat32(BmpA, BmpB, Value, ref iArea);
+                // SetBimap_A_BFormat32(BmpA, BmpB, Value, ref iArea);
                 return;
             }
-          else  if (BmpB.PixelFormat == PixelFormat.Format8bppIndexed &&
-                BmpA.PixelFormat == PixelFormat.Format8bppIndexed)
+            else if (BmpB.PixelFormat == PixelFormat.Format8bppIndexed &&
+                  BmpA.PixelFormat == PixelFormat.Format8bppIndexed)
             {
-             //   SetBimap_A_BFormat8(BmpA, BmpB, Value, ref iArea);
+                //   SetBimap_A_BFormat8(BmpA, BmpB, Value, ref iArea);
                 return;
             }
             else if (BmpB.PixelFormat == PixelFormat.Format8bppIndexed &&
               BmpA.PixelFormat == PixelFormat.Format24bppRgb)
             {
-                   SetBimap_A_B_Average24fo8(BmpA, BmpB, ref iAverage);
+                SetBimap_A_B_Average24fo8(BmpA, BmpB, ref iAverage);
                 return;
             }
             else if (BmpB.PixelFormat == PixelFormat.Format24bppRgb &&
@@ -3492,7 +3588,7 @@ namespace JetEazy.BasicSpace
                                 PointA = (int)((float)*CurP);
                                 PointB = (int)((float)*CurPB);
                                 // if (Math.Abs(PointA - PointB) < Value)
-                                if (PointB <10)
+                                if (PointB < 10)
                                 {
                                     iAreaTemp++;
                                     lValue += PointA;
@@ -3500,14 +3596,14 @@ namespace JetEazy.BasicSpace
                                     *(CurPB + 1) = 255;
                                     *(CurPB + 2) = 0;
                                 }
-                                
+
                                 CurP += 3;
                                 CurPB += 3;
                             }
                         }
                     });
                 }
-                iAverage =(int)(lValue/ iAreaTemp);
+                iAverage = (int)(lValue / iAreaTemp);
                 BmpA.UnlockBits(BmpDataA);
                 BmpB.UnlockBits(BmpDataB);
             }
@@ -3517,7 +3613,7 @@ namespace JetEazy.BasicSpace
         {
             int iAreaTemp = 0;
             long lValue = 0;
-          
+
             if (BmpB.PixelFormat == PixelFormat.Format8bppIndexed &&
                 BmpA.PixelFormat == PixelFormat.Format24bppRgb)
             {
@@ -3575,7 +3671,173 @@ namespace JetEazy.BasicSpace
                 BmpB.UnlockBits(BmpDataB);
             }
         }
-        public static void SetBimap8To24(Bitmap BmpA, Bitmap BmpB,ref  int iFousColor)
+
+        /// <summary>
+        /// A+B(白色叠加)
+        /// </summary>
+        /// <param name="BmpA"></param>
+        /// <param name="BmpB"></param>
+        /// <param name="bmpDifference"></param>
+        public static void SetBimap_A_And_BFormat32(Bitmap BmpA, Bitmap BmpB, out Bitmap bmpDifference)
+        {
+            bmpDifference = new Bitmap(BmpA.Width, BmpA.Height);
+            int iAreaTemp = 0;
+            if (BmpB.PixelFormat == PixelFormat.Format32bppArgb &&
+                BmpA.PixelFormat == PixelFormat.Format32bppArgb)
+            {
+
+                BitmapData BmpDataA = BmpA.LockBits(new Rectangle(0, 0, BmpA.Width, BmpA.Height), ImageLockMode.ReadOnly, BmpA.PixelFormat);
+                BitmapData BmpDataB = BmpB.LockBits(new Rectangle(0, 0, BmpB.Width, BmpB.Height), ImageLockMode.ReadOnly, BmpB.PixelFormat);
+                BitmapData BmpDataD = bmpDifference.LockBits(new Rectangle(0, 0, bmpDifference.Width, bmpDifference.Height), ImageLockMode.ReadOnly, bmpDifference.PixelFormat);
+                unsafe
+                {
+                    Parallel.ForEach(Partitioner.Create(0, BmpDataA.Height), (H) =>
+                    {
+
+                        int X, Y, Width, Height, Stride;// pixR = 0;
+                        int PointA, PointB, PointM;
+                        byte* Scan0, CurP, Scan0B, CurPB, CurM, ScanM, CurD, ScanD;
+
+                        //double pixelR = 0;
+                        Width = BmpDataA.Width;
+                        Height = BmpDataA.Height;
+                        Stride = BmpDataA.Stride;
+                        Scan0 = (byte*)BmpDataA.Scan0;
+                        Scan0B = (byte*)BmpDataB.Scan0;
+                        ScanD = (byte*)BmpDataD.Scan0;
+
+                        for (Y = H.Item1; Y < H.Item2; Y++)
+                        {
+                            CurP = Scan0 + Y * Stride;
+                            CurPB = Scan0B + Y * Stride;
+                            CurD = ScanD + Y * Stride;
+                            for (X = 0; X < Width; X++)
+                            {
+                                PointA = (CurP[0] * 19595 + CurP[1] * 38469 + CurP[2] * 7472) >> 16;
+                                PointB = (CurPB[0] * 19595 + CurPB[1] * 38469 + CurPB[2] * 7472) >> 16;
+                                // Red = (byte)((*(CurP + 2) + *(CurP + 1) + *CurP) / 3);
+
+                                //   PointA = (int)((float)*CurP + (float)*(CurP + 1) + (float)*(CurP + 2))/3;
+                                //   PointB = (int)((float)*CurPB + (float)*(CurPB + 1) + (float)*(CurPB + 2));
+                                //PointA = (int)((float)*CurP);
+                                //PointB = (int)((float)*CurPB);
+                                // if (Math.Abs(PointA - PointB) < Value)
+
+
+                                if (PointA > 128 || PointB > 128)
+                                {
+                                    iAreaTemp++;
+                                    *CurD = 255;
+                                    *(CurD + 1) = 255;
+                                    *(CurD + 2) = 255;
+                                    *(CurD + 3) = 255;
+                                }
+                                else
+                                {
+                                    *CurD = 0;
+                                    *(CurD + 1) = 0;
+                                    *(CurD + 2) = 0;
+                                    *(CurD + 3) = 255;
+
+                                }
+
+
+                                CurP += 4;
+                                CurPB += 4;
+                                CurD += 4;
+                            }
+                        }
+                    });
+                }
+                BmpA.UnlockBits(BmpDataA);
+                BmpB.UnlockBits(BmpDataB);
+                bmpDifference.UnlockBits(BmpDataD);
+            }
+        }
+
+        /// <summary>
+        /// A+B(黑色叠加)
+        /// </summary>
+        /// <param name="BmpA"></param>
+        /// <param name="BmpB"></param>
+        /// <param name="bmpDifference"></param>
+        public static void SetBimap_A_And_B_ToBlack_Format32(Bitmap BmpA, Bitmap BmpB, out Bitmap bmpDifference)
+        {
+            bmpDifference = new Bitmap(BmpA.Width, BmpA.Height);
+            int iAreaTemp = 0;
+            if (BmpB.PixelFormat == PixelFormat.Format32bppArgb &&
+                BmpA.PixelFormat == PixelFormat.Format32bppArgb)
+            {
+
+                BitmapData BmpDataA = BmpA.LockBits(new Rectangle(0, 0, BmpA.Width, BmpA.Height), ImageLockMode.ReadOnly, BmpA.PixelFormat);
+                BitmapData BmpDataB = BmpB.LockBits(new Rectangle(0, 0, BmpB.Width, BmpB.Height), ImageLockMode.ReadOnly, BmpB.PixelFormat);
+                BitmapData BmpDataD = bmpDifference.LockBits(new Rectangle(0, 0, bmpDifference.Width, bmpDifference.Height), ImageLockMode.ReadOnly, bmpDifference.PixelFormat);
+                unsafe
+                {
+                    Parallel.ForEach(Partitioner.Create(0, BmpDataA.Height), (H) =>
+                    {
+
+                        int X, Y, Width, Height, Stride;// pixR = 0;
+                        int PointA, PointB, PointM;
+                        byte* Scan0, CurP, Scan0B, CurPB, CurM, ScanM, CurD, ScanD;
+
+                        //double pixelR = 0;
+                        Width = BmpDataA.Width;
+                        Height = BmpDataA.Height;
+                        Stride = BmpDataA.Stride;
+                        Scan0 = (byte*)BmpDataA.Scan0;
+                        Scan0B = (byte*)BmpDataB.Scan0;
+                        ScanD = (byte*)BmpDataD.Scan0;
+
+                        for (Y = H.Item1; Y < H.Item2; Y++)
+                        {
+                            CurP = Scan0 + Y * Stride;
+                            CurPB = Scan0B + Y * Stride;
+                            CurD = ScanD + Y * Stride;
+                            for (X = 0; X < Width; X++)
+                            {
+                                PointA = (CurP[0] * 19595 + CurP[1] * 38469 + CurP[2] * 7472) >> 16;
+                                PointB = (CurPB[0] * 19595 + CurPB[1] * 38469 + CurPB[2] * 7472) >> 16;
+                                // Red = (byte)((*(CurP + 2) + *(CurP + 1) + *CurP) / 3);
+
+                                //   PointA = (int)((float)*CurP + (float)*(CurP + 1) + (float)*(CurP + 2))/3;
+                                //   PointB = (int)((float)*CurPB + (float)*(CurPB + 1) + (float)*(CurPB + 2));
+                                //PointA = (int)((float)*CurP);
+                                //PointB = (int)((float)*CurPB);
+                                // if (Math.Abs(PointA - PointB) < Value)
+
+
+                                if (PointA < 128 || PointB < 128)
+                                {
+                                    *CurD = 0;
+                                    *(CurD + 1) = 0;
+                                    *(CurD + 2) = 0;
+                                    *(CurD + 3) = 255;
+                                }
+                                else
+                                {
+                                    iAreaTemp++;
+                                    *CurD = 255;
+                                    *(CurD + 1) = 255;
+                                    *(CurD + 2) = 255;
+                                    *(CurD + 3) = 255;
+                                }
+
+
+                                CurP += 4;
+                                CurPB += 4;
+                                CurD += 4;
+                            }
+                        }
+                    });
+                }
+                BmpA.UnlockBits(BmpDataA);
+                BmpB.UnlockBits(BmpDataB);
+                bmpDifference.UnlockBits(BmpDataD);
+            }
+        }
+
+        public static void SetBimap8To24(Bitmap BmpA, Bitmap BmpB, ref int iFousColor)
         {
             long myFounsColor = 0, myFousCount = 0;
             if (BmpB.PixelFormat == PixelFormat.Format8bppIndexed &&
@@ -3649,13 +3911,186 @@ namespace JetEazy.BasicSpace
         }
 
 
+
+        public static void GetMask(Bitmap bmp, Bitmap bmpMask)
+        {
+
+            Rectangle rectbmp = new Rectangle(0, 0, bmp.Width, bmp.Height);
+            BitmapData bmpData = bmp.LockBits(rectbmp, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+            BitmapData bmpMaskData = bmpMask.LockBits(rectbmp, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+            IntPtr Scan0 = bmpData.Scan0;
+            IntPtr Scan2 = bmpMaskData.Scan0;
+            try
+            {
+                unsafe
+                {
+                    byte* scan0 = (byte*)(void*)Scan0;
+                    byte* pucPtr;
+                    byte* pucStart;
+
+
+                    byte* scan2 = (byte*)(void*)Scan2;
+                    byte* pucPtr2;
+                    byte* pucStart2;
+
+                    int xmin = rectbmp.X;
+                    int ymin = rectbmp.Y;
+                    int xmax = xmin + rectbmp.Width;
+                    int ymax = ymin + rectbmp.Height;
+
+                    int x = xmin;
+                    int y = ymin;
+                    int iStride = bmpData.Stride;
+                    int iStride2 = bmpMaskData.Stride;
+
+                    //float Ratio = 1f + (float)RatioValue / 100f;
+                    //float Ratio = (float)colorratio  / 100f;
+
+                    y = ymin;
+                    pucStart = scan0 + ((x - xmin) << 2) + (iStride * (y - ymin));
+                    pucStart2 = scan2 + ((x - xmin) << 2) + (iStride2 * (y - ymin));
+
+
+                    while (y < ymax)
+                    {
+                        x = xmin;
+                        pucPtr = pucStart;
+                        pucPtr2 = pucStart2;
+                        while (x < xmax)
+                        {
+                            int R = pucPtr[2];
+                            int G = pucPtr[1];
+                            int B = pucPtr[0];
+
+                            int R_Mask = pucPtr2[2];
+                            int G_Mask = pucPtr2[1];
+                            int B_Mask = pucPtr2[0];
+
+                            if (R > 200)
+                            {
+
+                                pucPtr2[2] = 255;
+                                pucPtr2[1] = 255;
+                                pucPtr2[0] = 255;
+                            }
+
+                            pucPtr += 4;
+                            pucPtr2 += 4;
+                            x++;
+                        }
+
+                        pucStart += iStride;
+                        pucStart2 += iStride2;
+                        y++;
+                    }
+
+                    bmp.UnlockBits(bmpData);
+                    bmpMask.UnlockBits(bmpMaskData);
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                JetEazy.LoggerClass.Instance.WriteException(ex);
+                bmp.UnlockBits(bmpData);
+                bmpMask.UnlockBits(bmpMaskData);
+
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="Bmp"></param>
+        /// <param name="Center">中心</param>
+        /// <param name="R">半径</param>
+        /// <param name="isBack">填内</param>
+        public static void SetMask(Bitmap Bmp, PointF Center, int iR, bool isBack, Color color)
+        {
+            if (Bmp.PixelFormat == PixelFormat.Format32bppArgb)
+            {
+                BitmapData BmpData = Bmp.LockBits(new Rectangle(0, 0, Bmp.Width, Bmp.Height), ImageLockMode.ReadOnly, Bmp.PixelFormat);
+                unsafe
+                {
+                    int R = Bmp.Width;
+                    if (R < Bmp.Height)
+                        R = Bmp.Height;
+                    R = R / 2;
+                    Point p1 = new Point(Bmp.Width / 2, Bmp.Height / 2);
+                    Parallel.ForEach(Partitioner.Create(0, BmpData.Height), (H) =>
+                    {
+
+                        int X, Y, Width, Height, Stride;
+                        byte Red;
+                        byte* Scan0, CurP;
+
+                        Width = BmpData.Width;
+                        Height = BmpData.Height;
+                        Stride = BmpData.Stride;
+                        Scan0 = (byte*)BmpData.Scan0;
+
+                        for (Y = H.Item1; Y < H.Item2; Y++)
+                        {
+                            CurP = Scan0 + Y * Stride;
+                            for (X = 0; X < Width; X++)
+                            {
+                                //   Red = (byte)((float)*(CurP) * 0.114f + (float)*(CurP + 1) * 0.587f + (float)*(CurP + 2) * 0.299f);
+                                //    Red = (byte)((*(CurP) * 19595 + *(CurP + 1) * 38469 + *(CurP + 2) * 7472) >> 16);
+                                PointF p2 = new PointF(X, Y);
+                                double JL = PointToPoint(Center, p2);
+
+
+                                if (iR > JL)
+                                {
+                                    //if (!isBack)
+                                    //{
+                                    //    *(CurP) = color.B;
+                                    //    *(CurP + 1) = color.G;
+                                    //    *(CurP + 2) = color.R;
+                                    //}
+
+                                }
+                                else
+                                {
+                                    if (!isBack)
+                                    {
+                                        *(CurP) = color.B;
+                                        *(CurP + 1) = color.G;
+                                        *(CurP + 2) = color.R;
+                                    }
+
+                                }
+
+                                CurP += 4;
+                            }
+                        }
+                    });
+                }
+                Bmp.UnlockBits(BmpData);
+            }
+        }
+
+
+        /// <summary>
+        /// 点到点间的距离
+        /// </summary>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <returns></returns>
+        static double PointToPoint(PointF p1, PointF p2)
+        {
+            double value = Math.Sqrt(Math.Abs(p1.X - p2.X) * Math.Abs(p1.X - p2.X) + Math.Abs(p1.Y - p2.Y) * Math.Abs(p1.Y - p2.Y));
+
+            return value;
+        }
+
         /// <summary>
         /// 把遮挡的图转换到源图上
         /// </summary>
         /// <param name="BmpA">第一张图</param>
         /// <param name="BmpMask">黑白Mask图</param>
         /// <param name="color">黑色部分要变成的颜色</param>
-        public static void SetMaskToStilts(Bitmap BmpA, Bitmap BmpMask,Color color)
+        public static void SetMaskToStilts(Bitmap BmpA, Bitmap BmpMask, Color color)
         {
             if (BmpMask.PixelFormat == PixelFormat.Format32bppArgb &&
                 BmpA.PixelFormat == PixelFormat.Format32bppArgb)
@@ -3688,10 +4123,10 @@ namespace JetEazy.BasicSpace
                                 //  gray = (pIn[0] * 19595 + pIn[1] * 38469 + pIn[2] * 7472) >> 16; 
                                 // Red = (byte)((*(CurP + 2) + *(CurP + 1) + *CurP) / 3);
 
-                              //  PointA = (int)((float)*CurP + (float)*(CurP + 1) + (float)*(CurP + 2));
+                                //  PointA = (int)((float)*CurP + (float)*(CurP + 1) + (float)*(CurP + 2));
                                 PointB = (int)((float)*CurPB + (float)*(CurPB + 1) + (float)*(CurPB + 2));
 
-                                if ( PointB <100)
+                                if (PointB < 100)
                                 {
                                     *CurP = color.G;
                                     *(CurP + 1) = color.B;
@@ -3710,6 +4145,55 @@ namespace JetEazy.BasicSpace
             }
         }
 
+        /// <summary>
+        /// 图黑白转换
+        /// </summary>
+        /// <param name="BmpA">图</param>
+        public static void SetToStilts(Bitmap BmpA)
+        {
+
+            if (BmpA.PixelFormat == PixelFormat.Format8bppIndexed)
+            {
+                BitmapData BmpDataA = BmpA.LockBits(new Rectangle(0, 0, BmpA.Width, BmpA.Height), ImageLockMode.ReadOnly, BmpA.PixelFormat);
+
+                unsafe
+                {
+                    Parallel.ForEach(Partitioner.Create(0, BmpDataA.Height), (H) =>
+                    {
+
+                        int X, Y, Width, Height, Stride;
+
+                        byte* Scan0, CurP;
+
+                        Width = BmpDataA.Width;
+                        Height = BmpDataA.Height;
+                        Stride = BmpDataA.Stride;
+                        Scan0 = (byte*)BmpDataA.Scan0;
+
+                        for (Y = H.Item1; Y < H.Item2; Y++)
+                        {
+                            CurP = Scan0 + Y * Stride;
+                            for (X = 0; X < Width; X++)
+                            {
+                                //   PointA = (int)((float)*CurP + (float)*(CurP + 1) + (float)*(CurP + 2));
+
+                                if (*CurP > 100)
+                                {
+                                    *CurP = 0;
+                                }
+                                else
+                                {
+                                    *CurP = 255;
+                                }
+
+                                CurP += 1;
+                            }
+                        }
+                    });
+                }
+                BmpA.UnlockBits(BmpDataA);
+            }
+        }
 
         /// <summary>
         /// 把遮挡的图转换到源图上
@@ -3719,7 +4203,7 @@ namespace JetEazy.BasicSpace
         /// <param name="MaskValue">影阴的值</param>
         /// <param name="BackValue">背景最大亮度值</param>
         /// <param name="color">阴影要变成的颜色</param>
-        public static void SetMaskToStilts(Bitmap BmpRunline, Bitmap BmpMask, int MaskValue,int BackValue,Color color)
+        public static void SetMaskToStilts(Bitmap BmpRunline, Bitmap BmpMask, int MaskValue, int BackValue, Color color)
         {
             if (BmpMask.PixelFormat == PixelFormat.Format32bppArgb &&
                 BmpRunline.PixelFormat == PixelFormat.Format32bppArgb)
@@ -3727,10 +4211,10 @@ namespace JetEazy.BasicSpace
                 BitmapData BmpDataA = BmpRunline.LockBits(new Rectangle(0, 0, BmpRunline.Width, BmpRunline.Height), ImageLockMode.ReadOnly, BmpRunline.PixelFormat);
                 BitmapData BmpDataB = BmpMask.LockBits(new Rectangle(0, 0, BmpMask.Width, BmpMask.Height), ImageLockMode.ReadOnly, BmpMask.PixelFormat);
 
-                int value= (BackValue + MaskValue) / 2;
+                int value = (BackValue + MaskValue) / 2;
                 unsafe
                 {
-                    
+
                     Parallel.ForEach(Partitioner.Create(0, BmpDataA.Height), (H) =>
                     {
 
@@ -3747,12 +4231,12 @@ namespace JetEazy.BasicSpace
                         Scan0B = (byte*)BmpDataB.Scan0;
                         for (Y = H.Item1; Y < H.Item2; Y++)
                         {
-                            CurP = Scan0 + Y * Stride ;
+                            CurP = Scan0 + Y * Stride;
                             CurPB = Scan0B + Y * StrideB;
                             for (X = 0; X < Width; X++)
                             {
                                 PointB = (CurPB[0] * 19595 + CurPB[1] * 38469 + CurPB[2] * 7472) >> 16;
-                            //    PointB = ((byte)*CurPB * 19595 + (byte)*(CurPB + 1) * 38469 + (byte)*(CurPB + 2) * 7472) >> 16; 
+                                //    PointB = ((byte)*CurPB * 19595 + (byte)*(CurPB + 1) * 38469 + (byte)*(CurPB + 2) * 7472) >> 16; 
                                 // Red = (byte)((*(CurP + 2) + *(CurP + 1) + *CurP) / 3);
                                 //PointB = (int)((float)*CurPB + (float)*(CurPB + 1) + (float)*(CurPB + 2));
 
@@ -3843,7 +4327,6 @@ namespace JetEazy.BasicSpace
                     }
 
                     pIn += dataIn.Stride - dataIn.Width * 3;
-
                     pOut += dataOut.Stride - dataOut.Width;
 
                 }
@@ -4759,6 +5242,132 @@ namespace JetEazy.BasicSpace
             // end for
         }
         /// <summary>
+        /// 腐蚀
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <returns></returns>
+        public static Bitmap Erosion(Bitmap bitmap)
+        {
+            Bitmap bmpabc = ApplyFilter(new AForge.Imaging.Filters.Erosion(), bitmap);
+
+
+
+            return bmpabc;
+        }
+        /// <summary>
+        /// 提取颜色通道
+        /// </summary>
+        /// <param name="bitmap">源图</param>
+        /// <param name="sValue">提取哪个通道(0,1,2,3)</param>
+        /// <returns></returns>
+        public static Bitmap ExtractChannel(Bitmap bitmap, short sValue)
+        {
+            //Bitmap bmpabc = ApplyFilter(new AForge.Imaging.Filters.ExtractChannel(sValue), bitmap);
+
+            Bitmap bmpabc = ApplyFilter(new AForge.Imaging.Filters.ExtractNormalizedRGBChannel(sValue), bitmap);
+
+            return bmpabc;
+        }
+        /// <summary>
+        /// 直方图均衡化
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <returns></returns>
+        public static Bitmap HistogramEqualization(Bitmap bitmap)
+        {
+            Bitmap bmpabc = ApplyFilter(new AForge.Imaging.Filters.HistogramEqualization(), bitmap);
+
+
+
+            return bmpabc;
+        }
+
+
+
+        /// <summary>
+        /// 膨胀
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <returns></returns>
+        public static Bitmap Dilatation(Bitmap bitmap)
+        {
+            Bitmap bmpabc = ApplyFilter(new AForge.Imaging.Filters.Dilatation(), bitmap);
+
+            return bmpabc;
+        }
+
+        /// <summary>
+        /// 模糊
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <returns></returns>
+        public static Bitmap Blur(Bitmap bitmap)
+        {
+            Bitmap bmpabc = ApplyFilter(new AForge.Imaging.Filters.Blur(), bitmap);
+
+            return bmpabc;
+        }
+
+        /// <summary>
+        /// 对比度拉伸
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <returns></returns>
+        public static Bitmap ContrastStretch(Bitmap bitmap)
+        {
+            Bitmap bmpabc = ApplyFilter(new AForge.Imaging.Filters.ContrastStretch(), bitmap);
+
+            return bmpabc;
+        }
+        /// <summary>
+        /// Threshold
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <returns></returns>
+        public static Bitmap AForgeThreshold(Bitmap bitmap, int value)
+        {
+            Bitmap bmpGray = ApplyFilter(new AForge.Imaging.Filters.Grayscale(0.2125d, 0.7154d, 0.0721d), bitmap);
+            Bitmap bmpabc = ApplyFilter(new AForge.Imaging.Filters.Threshold(value), bmpGray);
+
+            return bmpabc;
+        }
+        /// <summary>
+        /// 倒转
+        /// </summary>
+        /// <param name="bitmap"></param>
+        /// <returns></returns>
+        public static Bitmap Invert(Bitmap bitmap)
+        {
+            Bitmap bmpabc = ApplyFilter(new AForge.Imaging.Filters.Invert(), bitmap);
+
+            return bmpabc;
+        }
+        public static Bitmap ApplyFilter(AForge.Imaging.Filters.IFilter filter, Bitmap image)
+        {
+            if (filter is AForge.Imaging.Filters.IFilterInformation)
+            {
+                AForge.Imaging.Filters.IFilterInformation filterInfo = (AForge.Imaging.Filters.IFilterInformation)filter;
+
+                if (!filterInfo.FormatTranslations.ContainsKey(image.PixelFormat))
+                {
+                    //if (filterInfo.FormatTranslations.ContainsKey(PixelFormat.Format24bppRgb))
+                    //{
+                    //    MessageBox.Show("The selected image processing routine can be applied to color image only.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //}
+                    //else
+                    //{
+                    //    MessageBox.Show("The selected image processing routine can be applied to grayscale or binary image only.\n\nUse grayscale (and threshold filter if required) before.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //}
+                    //return;
+                }
+            }
+
+            // apply filter to the image
+            return filter.Apply(image);
+
+        }
+
+        /// <summary>
         /// 平移图像
         /// </summary>
         /// <param name="bm"></param>
@@ -5245,16 +5854,128 @@ namespace JetEazy.BasicSpace
         /// <param name="srcBmp">原始图像</param>  
         /// <param name="dstBmp">处理后图像</param>  
         /// <returns>直方图均值</returns>  
+        public static HistData BalanceToHisData(Bitmap srcBmp, ref Bitmap dstBmp, EnumThreshold myThreshold)
+        {
+
+            dstBmp = CreateGrayBitmap(srcBmp.Width, srcBmp.Height);
+            srcBmp = ConvertToGrayBitmap(srcBmp);
+
+            int[] HistGramTemp = new int[256];
+            GetHistGram(srcBmp, HistGramTemp);
+
+            int iThr = GetThreshold(myThreshold);
+            DoBinaryzation(srcBmp, ref dstBmp, iThr);
+
+            if (iThr < 1)
+            {
+                iThr = Balance(srcBmp, ref dstBmp, EnumThreshold.IsoData);
+            }
+            if (iThr < 0)
+                iThr = 0;
+            if (iThr > 255)
+                iThr = 255;
+
+            HistData histData = new HistData();
+            histData.Threshold = iThr;
+            histData.MaxThreshold = 0;
+            histData.MinThreshold = 0;
+            histData.HistGram = HistGramTemp;
+            for (int i = 0; i < HistGramTemp.Length; i++)
+            {
+                if (HistGramTemp[i] > 0)
+                {
+                    histData.MinMin = i;
+                    break;
+                }
+            }
+            for (int i = HistGramTemp.Length - 1; i >= 0; i--)
+            {
+                if (HistGramTemp[i] > 0)
+                {
+                    histData.MaxMax = i;
+                    break;
+                }
+            }
+            int iMax = 0, iMin = 0;
+            for (int i = 0; i < iThr; i++)
+            {
+                if (HistGramTemp[i] > iMin)
+                {
+                    iMin = HistGramTemp[i];
+                    histData.MinThreshold = i;
+
+                }
+            }
+            if (histData.MinThreshold < 1)
+                histData.MinThreshold = histData.MinMin;
+
+            for (int i = HistGramTemp.Length - 1; i >= iThr; i--)
+            {
+                int temp = HistGramTemp[i];
+                if (temp > iMax)
+                {
+                    iMax = HistGramTemp[i];
+                    histData.MaxThreshold = i;
+                    //          break;
+                }
+            }
+
+            if (histData.MaxThreshold < 1)
+                histData.MaxThreshold = histData.MaxMax;
+
+            histData.Max = 255;
+            for (int i = histData.MaxThreshold; i < HistGramTemp.Length; i++)
+            {
+                if (HistGramTemp[i] == 0)
+                {
+                    histData.Max = i - 1;
+                    break;
+                }
+            }
+
+            histData.Min = 0;
+            for (int i = histData.MinThreshold; i >= 0; i--)
+            {
+                if (HistGramTemp[i] == 0)
+                {
+                    histData.Min = i;
+                    break;
+                }
+            }
+
+            int imaxmin = int.MaxValue;
+            for (int i = histData.MinThreshold; i < histData.MaxThreshold; i++)
+            {
+                if (HistGramTemp[i] < imaxmin)
+                {
+                    imaxmin = HistGramTemp[i];
+                    histData.ThresholdToMaxMin = i;
+                    break;
+                }
+            }
+
+            // DrawHistGram(srcBmp, HistGram, iThr);
+            return histData;
+        }
+        /// <summary>  
+        /// 直方图均衡化 直方图均衡化就是对图像进行非线性拉伸，重新分配图像像素值，使一定灰度范围内的像素数量大致相同  
+        /// 增大对比度，从而达到图像增强的目的。是图像处理领域中利用图像直方图对对比度进行调整的方法  
+        /// </summary>  
+        /// <param name="srcBmp">原始图像</param>  
+        /// <param name="dstBmp">处理后图像</param>  
+        /// <returns>直方图均值</returns>  
         public static int Balance(Bitmap srcBmp, ref Bitmap dstBmp, EnumThreshold myThreshold)
         {
 
             dstBmp = CreateGrayBitmap(srcBmp.Width, srcBmp.Height);
             srcBmp = ConvertToGrayBitmap(srcBmp);
-            GetHistGram(srcBmp, HistGram);
 
-            int iThr = GetThreshold(myThreshold);
+            int[] HistGram2 = new int[256];
+            GetHistGram(srcBmp, HistGram2);
+
+            int iThr = GetThreshold(myThreshold, HistGram2);
             DoBinaryzation(srcBmp, ref dstBmp, iThr);
-           // DrawHistGram(srcBmp, HistGram, iThr);
+            // DrawHistGram(srcBmp, HistGram, iThr);
             return iThr;
         }
         /// <summary>  
@@ -5284,7 +6005,7 @@ namespace JetEazy.BasicSpace
         /// <param name="dstBmp">处理后图像</param>  
         /// <param name="dstBmp">背景亮度</param>  
         /// <returns>直方图均值</returns>  
-        public static int Balance(Bitmap srcBmp, ref Bitmap dstBmp,ref int iBackColor, EnumThreshold myThreshold)
+        public static int Balance(Bitmap srcBmp, ref Bitmap dstBmp, ref int iBackColor, EnumThreshold myThreshold)
         {
 
             dstBmp = CreateGrayBitmap(srcBmp.Width, srcBmp.Height);
@@ -5318,7 +6039,7 @@ namespace JetEazy.BasicSpace
             DoBinaryzation(srcBmp, ref dstBmp, iThr);
 
 
-            SetBimap_A_BFormat8(srcBmp, dstBmp, ref iBackColor,ref  iForeColor);
+            SetBimap_A_BFormat8(srcBmp, dstBmp, ref iBackColor, ref iForeColor);
             // DrawHistGram(srcBmp, HistGram, iThr);
             return iThr;
         }
@@ -5421,9 +6142,25 @@ namespace JetEazy.BasicSpace
         }
         public static myImageProcessor.EnumThreshold myOCRThreshold = EnumThreshold.Minimum;
         private static int[] HistGram = new int[256];
-        private static int[] HistGramS = new int[256];
+
+
+        public class HistData
+        {
+            public int Threshold { get; set; }
+            public int MaxThreshold { get; set; }
+            public int MinThreshold { get; set; }
+            public int MaxMax { get; set; }
+            public int MinMin { get; set; }
+            public int Max { get; set; }
+            public int Min { get; set; }
+
+            public int ThresholdToMaxMin { get; set; }
+
+            public int[] HistGram = new int[256];
+        }
         private static int GetThreshold(EnumThreshold myThreshold)
         {
+            int[] HistGramS = new int[256];
             switch (myThreshold)
             {
                 case EnumThreshold.Mean:// "灰度平均值":
@@ -5452,6 +6189,43 @@ namespace JetEazy.BasicSpace
                     return Threshold.GetShanbhagThreshold(HistGram);
                 case EnumThreshold.Yen:// "Yen法":
                     return Threshold.GetYenThreshold(HistGram);
+                default:
+                    break;
+            }
+            return -1;
+        }
+
+        private static int GetThreshold(EnumThreshold myThreshold, int[] HistGram2)
+        {
+            int[] HistGramS = new int[256];
+            switch (myThreshold)
+            {
+                case EnumThreshold.Mean:// "灰度平均值":
+                    return Threshold.GetMeanThreshold(HistGram2);
+                case EnumThreshold.HuangFuzzy:// "黄式模糊阈值":
+                    return Threshold.GetHuangFuzzyThreshold(HistGram2);
+                case EnumThreshold.Minimum:// "谷底最小值":
+                    return Threshold.GetMinimumThreshold(HistGram2, HistGramS);
+                case EnumThreshold.Intermodes:// "双峰平均值":
+                    return Threshold.GetIntermodesThreshold(HistGram2, HistGramS);
+                case EnumThreshold.PTile:// "百分比阈值":
+                    return Threshold.GetPTileThreshold(HistGram2);
+                case EnumThreshold.IterativeBest://"迭代阈值法":
+                    return Threshold.GetIterativeBestThreshold(HistGram2);
+                case EnumThreshold.OSTU:// "大津法":
+                    return Threshold.GetOSTUThreshold(HistGram2);
+                case EnumThreshold.MaxEntropy1D:// "一维最大熵":
+                    return Threshold.Get1DMaxEntropyThreshold(HistGram2);
+                case EnumThreshold.MomentPreserving:// "动能保持":
+                    return Threshold.GetMomentPreservingThreshold(HistGram2);
+                case EnumThreshold.KittlerMinError:// "Kittler最小错误":
+                    return Threshold.GetKittlerMinError(HistGram2);
+                case EnumThreshold.IsoData:// "ISODATA法":
+                    return Threshold.GetIsoDataThreshold(HistGram2);
+                case EnumThreshold.Shanbhag:// "Shanbhag法":
+                    return Threshold.GetShanbhagThreshold(HistGram2);
+                case EnumThreshold.Yen:// "Yen法":
+                    return Threshold.GetYenThreshold(HistGram2);
                 default:
                     break;
             }

@@ -48,7 +48,8 @@ namespace Allinone
         AUFIND = 0,
         AUMATCH = 1,
 
-        HIK_FIND = 2,
+        HIK_FASTFIND = 2,
+        HIK_HPFIND = 3,
     }
     public enum AlignModeEnum : int
     {
@@ -107,6 +108,16 @@ namespace Allinone
         SOLDERBALLCHECK = 4,
 
     }
+    public enum PadInspectMethodEnum : int
+    {
+        COUNT = 2,
+
+        NONE = -1,
+
+        PAD_SMALL = 0,
+        PAD_V1 = 1,
+
+    }
     public enum OCRMethodEnum : int
     {
         NONE = -1,
@@ -122,6 +133,27 @@ namespace Allinone
         /// </summary>
         CHICKLINE = 6,
         DATAMATRIXGRADE = 7,
+
+        //[Description("变量字符")]
+        /// <summary>
+        /// 变量字符
+        /// </summary>
+        VARICHARACTER = 8,
+        //[Description("年")]
+        /// <summary>
+        /// 年
+        /// </summary>
+        YEAR = 9,
+        //[Description("月")]
+        /// <summary>
+        /// 月
+        /// </summary>
+        MONTH = 10,
+        //[Description("周")]
+        /// <summary>
+        /// 周
+        /// </summary>
+        WEEK = 11,
     }
     public enum OCRSETEnum : int
     {
@@ -300,6 +332,17 @@ namespace Allinone
         [Description("AI模式")]
         CHIP_V8 = 6,
 
+        /// <summary>
+        /// 通用模式加强1
+        /// </summary>
+        [Description("通用模式加强1")]
+        CHIP_NORMAL_EX = 7,
+        /// <summary>
+        /// 通用模式(IPD)加强1
+        /// </summary>
+        [Description("通用模式(IPD)加强1"), Browsable(false)]
+        CHIP_NORMAL_IPD_EX = 8,
+
     }
 
     public enum AICategory : int
@@ -319,6 +362,11 @@ namespace Allinone
         /// </summary>
         [Description("Small")]
         Small = 2,
+        /// <summary>
+        /// Small模式
+        /// </summary>
+        [Description("BigKotor")]
+        BigKotor = 3,
     }
 
     public enum HeightMethodEnum : int
@@ -365,6 +413,7 @@ namespace Allinone
         QSMCSF,
         MEMTRIGGER,
         CCDTRIGGER,
+        CHANGERECIPE,
     }
 
     public enum OPLevelEnum
@@ -474,5 +523,41 @@ namespace Allinone
         IMAGE_JPEG = 2,
     }
 
+    public enum PMatchType : int
+    {
+        //[Description("高精度匹配")]
+        HPM = 0,
+        //[Description("快速匹配")]
+        FM = 1,
+    }
+
+    public enum PathPlan : int
+    {
+        /// <summary>
+        /// 顺序执行路径
+        /// </summary>
+        [Description("1-LeftRight-Order")]
+        p1 = 0,
+        /// <summary>
+        /// S型执行路径
+        /// </summary>
+        [Description("2-LeftRight-Type S")]
+        p2 = 1,
+        /// <summary>
+        /// 从右往左 从上往下
+        /// </summary>
+        [Description("3-UpDown-Order")]
+        p3 = 2,
+        /// <summary>
+        /// 从右往左 从下往上
+        /// </summary>
+        [Description("4-DownUp-Order")]
+        p4 = 3,
+        ///// <summary>
+        ///// 从右往左 S型执行路径
+        ///// </summary>
+        //[Description("4-UpDown-Type S")]
+        //p4 = 3,
+    }
 
 }

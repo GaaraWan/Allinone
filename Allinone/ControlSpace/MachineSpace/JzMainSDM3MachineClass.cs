@@ -538,9 +538,9 @@ namespace Allinone.ControlSpace.MachineSpace
             {
                 string[] strs = lightstr.Split(',');
 
-                if (strs.Length < 5)
+                if (strs.Length < 2)
                 {
-                    lightstr = "1,1,1,1,1";
+                    lightstr = "1,0";
                     strs = lightstr.Split(',');
                 }
 
@@ -703,7 +703,8 @@ namespace Allinone.ControlSpace.MachineSpace
             {
                 case RobotType.HCFA:
 
-                    mRobotHCFA.MoveTo(x, y, z);
+                    float c = PLCMOTIONCollection[3].READYPOSITION;
+                    mRobotHCFA.MoveTo(x, y, z, c);
 
                     break;
                 default:
@@ -752,7 +753,8 @@ namespace Allinone.ControlSpace.MachineSpace
             switch (mRobotType)
             {
                 case RobotType.HCFA:
-                    mRobotHCFA.MoveTo(x, y, z);
+                    float c = PLCMOTIONCollection[3].READYPOSITION;
+                    mRobotHCFA.MoveTo(x, y, z, c);
                     break;
                 case RobotType.NONE:
                     PLCMOTIONCollection[0].Go(x);

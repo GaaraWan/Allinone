@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
@@ -132,6 +133,11 @@ namespace JetEazy
         检查键盘膜,
         PADINSPECT,
         GLUEINSPECT,
+
+        LASER,
+        MONTH,
+        YEAR,
+        WEEK,
     }
 
     public enum CornerPositionEnum
@@ -322,6 +328,8 @@ namespace JetEazy
         CHECKLIVE,
         SHOWSETUP,
 
+        LANGUAGE,
+
     }
     public enum INIStatusEnum
     {
@@ -348,6 +356,8 @@ namespace JetEazy
         /// 测试页面训练
         /// </summary>
         TEST_PAGE_TRAIN,
+
+        CHECK_REPEATCODE_INSERT_SQL,
     }
 
     public enum RCPStatusEnum
@@ -425,11 +435,20 @@ namespace JetEazy
         /// 一键取像
         /// </summary>
         ACT_ONEKEYGETIMAGE,
+        /// <summary>
+        /// 手动切换测试参数
+        /// </summary>
+        ACT_MANUALCHANGERECIPE,
 
         /// <summary>
         /// 获取plc的mapping数据
         /// </summary>
         ACT_CIPMAPPING,
+
+        /// <summary>
+        /// 一键取像面阵
+        /// </summary>
+        ACT_ONEKEYGETIMAGEAREA,
     }
 
     public enum MotionEnum : int
@@ -583,6 +602,16 @@ namespace JetEazy
         /// 显示最后读到的条码信息
         /// </summary>
         SHOW_BARCODE_RESULT,
+
+        /// <summary>
+        /// 显示抽检流程单次的结果
+        /// </summary>
+        SHOW_QCRANDOM_RESULT,
+
+        /// <summary>
+        /// 切换参数
+        /// </summary>
+        CHANGERECIPE,
 
     }
     public enum RunStatusEnum
@@ -803,5 +832,38 @@ namespace JetEazy
         DISK_C = 1,
     }
 
+    /// <summary>
+    /// 半导体的移动测试显示的mapping类型
+    /// </summary>
+    public enum JetMappingType : int
+    {
+        /// <summary>
+        /// 无
+        /// </summary>
+        NONE = 0,
+        /// <summary>
+        /// 行列显示A
+        /// </summary>
+        MAPPING_A = 1,
+    }
+    /// <summary>
+    /// 方向移动
+    /// </summary>
+    public enum JetMoveType : int
+    {
+        MOVE_LEFT = 0,
+        MOVE_RIGHT = 1,
+        MOVE_UP = 2,
+        MOVE_DOWN = 3,
+    }
+    public enum FactoryName : int
+    {
+        [Description("全功能")]
+        NONE = 0,
+        [Description("大圭")]
+        DAGUI = 1,
+        [Description("东莞")]
+        DONGGUAN = 2,
+    }
 }
 

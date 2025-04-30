@@ -141,6 +141,8 @@ namespace Allinone.FormSpace
                 cbNow.SelectedIndex = 2;
 
             this.CenterToParent();
+
+            JetEazy.BasicSpace.LanguageExClass.Instance.EnumControls(this);
         }
         void btn_Click(object sender, EventArgs e)
         {

@@ -21,6 +21,10 @@ using JzASN.OPSpace;
 using Allinone.OPSpace.CPDSpace;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using static Allinone.UISpace.ALBUISpace.AllinoneAlbUI;
+using PdfSharp.Pdf;
+using PdfSharp.Drawing;
+using JetEazy.PlugSpace;
 
 namespace Allinone.OPSpace
 {
@@ -1010,8 +1014,48 @@ namespace Allinone.OPSpace
             //    i++;
             //}
         }
+        public void FillCompoundMoverAndBarcode(Mover mover, bool isshowbarcode = false)
+        {
+            mover.Clear();
 
-      
+            EnvClass env = GetEnv(0);
+            PageClass page = env.GetPageRun(0);
+
+            if (page == null)
+                return;
+
+            if (page.AnalyzeRootArray.Count() > 0)
+            {
+                page.AnalyzeRootArray[0].GetShowResultMover(mover, new PointF(0, 0), new SizeF(1, 1), 0, new Point(0, 0));
+                if (isshowbarcode)
+                {
+                    foreach (AnalyzeClass analyze in page.AnalyzeRootArray[0].BranchList)
+                    {
+                        if (analyze.IsCollectAllBarcodeStrOpen() == OCRMethodEnum.NONE)
+                            continue;
+
+                        Color showcolor = Color.Red;
+                        string _barcode = string.Empty;
+                        analyze.CollectAllBarcodeStr(ref _barcode);
+                        if (_barcode.Contains("[FAIL]"))
+                            showcolor = Color.Red;
+                        else
+                            showcolor = Color.Lime;
+                        JzRectEAG jzrect = new JzRectEAG(Color.FromArgb(0, Color.White), analyze.myDrawAnalyzeStrRectF);
+
+                        jzrect.Desc = _barcode;
+                        jzrect.TransparentForMover = true;
+                        jzrect.ShowMode = JzDisplay.ShowModeEnum.MAINSHOW;
+                        jzrect.MainShowPen = new Pen(showcolor, 1);
+                        jzrect.OffsetPoint = new Point(0, 0);
+                        jzrect.MappingToMovingObject(new PointF(0, 0), 1);
+
+                        mover.Add(jzrect);
+                    }
+                }
+            }
+        }
+
         public void RecodeRepoer()
         {
             bool isok = true;
@@ -1307,6 +1351,31 @@ namespace Allinone.OPSpace
                         case OptionEnum.MAIN_SDM3:
                         case OptionEnum.MAIN_SDM2:
                             SDM2Test();
+                            break;
+                        case OptionEnum.MAIN_X6:
+
+                            Light2Settings light2Settings = new Light2Settings();
+                            light2Settings.GetString(ENVList[0].GeneralLight);
+
+                            INI.IsCheckBarcodeOpen = light2Settings.IsCheckBarcodeOpen;
+                            //INI.IsOpenCheckRepeatCode = light2Settings.IsOpenCheckRepeatCode;
+                            //INI.IsOpenCheckCurLotRepeatCode = light2Settings.IsOpenCheckCurLotRepeatCode;
+
+                            switch(Universal.jetMappingType)
+                            {
+                                case JetMappingType.MAPPING_A:
+
+                                    ENVList[0].MappingA_Initialize();
+
+                                    break;
+                                default:
+
+                                    //int _count = ENVList[0].PageList.Count;
+                                    //CamActClass.Instance.SetStepCount(_count);
+
+                                    break;
+                            }
+
                             break;
                     }
                     break;
@@ -1608,12 +1677,12 @@ namespace Allinone.OPSpace
         }
         #endregion
 
-        public bool A09_RunRepeatCodeProcess(PageOPTypeEnum pageoptype)
+        public bool A09_RunRepeatCodeProcess(PageOPTypeEnum pageoptype, bool echeckCurLotRepeatCode)
         {
             bool isgood = true;
 
             EnvClass env = ENVList[EnvRunIndex];
-            isgood &= env.A09_RunRepeatCodeProcess(pageoptype);
+            isgood &= env.A09_RunRepeatCodeProcess(pageoptype, echeckCurLotRepeatCode);
 
             return isgood;
         }

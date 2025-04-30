@@ -108,10 +108,6 @@ namespace JzOCR.UISpace
 
         private void PicImageShow_Click(object sender, EventArgs e)
         {
-         
-
-           
-
             ParameterEventArgs ev = new ParameterEventArgs();
             ev.IsClick = true;
             ev.Message = OCRT.No.ToString();

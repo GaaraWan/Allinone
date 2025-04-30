@@ -21,6 +21,9 @@ using JetEazy.PlugSpace;
 using JetEazy.FormSpace;
 using System.IO;
 using JetEazy;
+using static Allinone.UISpace.ALBUISpace.AllinoneAlbUI;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Allinone.FormSpace
 {
@@ -52,6 +55,7 @@ namespace Allinone.FormSpace
 
         EnvClass ENVNow;
 
+        NumericUpDown numCompressedRatio;
         NumericUpDown numSimRatio;
         Button btnFindSimiliar;
         Button btnFindSimiliarCV;
@@ -135,6 +139,7 @@ namespace Allinone.FormSpace
             btnFindSimiliarCV = button14;
             btnFindSimiliarCV.Tag = TagEnum.FINDSIMILIAR2;
 
+            numCompressedRatio = numericUpDown1;
             numThreshold = numericUpDown4;
             numExtend = numericUpDown6;
             btnFindInside = button9;
@@ -174,7 +179,7 @@ namespace Allinone.FormSpace
                 BlockPara.FromingStr(dataStr);
             }
 
-            m_PG.SelectedObject = BlockPara;
+      
             btnGetSelectImageBlock.Click += BtnGetSelectImageBlock_Click;
             btnBlockAutoFind.Click += BtnBlockAutoFind_Click;
             btnSetSelectBlock.Click += BtnSetSelectBlock_Click;
@@ -219,6 +224,24 @@ namespace Allinone.FormSpace
                             btnAutoAlinameIndex.Visible = true;
                             btnOnekeyDelAllRegion.Visible = true;
 
+                            switch(Universal.FACTORYNAME)
+                            {
+                                case FactoryName.DAGUI:
+                                    btnAutoRectPosition.Visible = false;
+                                    btnAutoAlinameIndex.Visible = false;
+                                    btnOnekeyDelAllRegion.Visible = false;
+
+                                    //label2.Visible = false;
+                                    //numericUpDown1.Visible = false;
+                                    //label1.Visible = false;
+                                    //button14.Visible = false;
+
+
+                                    break;
+                                default:
+                                    break;
+                            }
+
                             //Analyze_PG_Default=new AnalyzeClass();
                             //Analyze_PG_Default.ALIGNPara.AlignMethod = AlignMethodEnum.AUFIND;
                             //Analyze_PG_Default.ALIGNPara.MTResolution = 0.044f;
@@ -239,6 +262,11 @@ namespace Allinone.FormSpace
                     }
                     break;
             }
+
+            //m_PG.SelectedObject = BlockPara;
+            JetEazy.BasicSpace.LanguageExClass.Instance.EnumControls(this);
+            m_PG.SelectedObject = _changeLanguageSettings();// BlockPara;
+            //_changeLanguageSettings();
         }
 
         //寻找相似 通过opencv寻找
@@ -251,7 +279,7 @@ namespace Allinone.FormSpace
                 if (USEROPTIONFRM.ShowDialog() == DialogResult.OK)
                 {
                     m_stopwatch.Restart();
-                    lblMessage.Text = "执行中...";
+                    lblMessage.Text = ToChangeLanguage("执行中...");
                     lblMessage.BackColor = Color.Yellow;
                     Application.DoEvents();
 
@@ -260,7 +288,7 @@ namespace Allinone.FormSpace
                     switch (Universal.PassOption)
                     {
                         case UserOptionEnum.ALL:
-                            PAGEUI.FindSimilarEx((float)numSimRatio.Value / 100f);
+                            PAGEUI.FindSimilarEx((float)numSimRatio.Value / 100f, (float)numCompressedRatio.Value / 100f);
                             switch (Universal.OPTION)
                             {
                                 case JetEazy.OptionEnum.MAIN_SERVICE:
@@ -271,35 +299,35 @@ namespace Allinone.FormSpace
                                 case OptionEnum.MAIN_SDM3:
                                     //全局寻找同层框
 
-                                    FindSimilarEx((float)numSimRatio.Value / 100f);
+                                    FindSimilarEx((float)numSimRatio.Value / 100f, (float)numCompressedRatio.Value / 100f);
 
                                     break;
                             }
 
                             break;
                         case UserOptionEnum.SIDE:
-                            PAGEUI.FindSimilarEx((float)numSimRatio.Value / 100f);
+                            PAGEUI.FindSimilarEx((float)numSimRatio.Value / 100f, (float)numCompressedRatio.Value / 100f);
                             break;
                     }
 
                     JzToolsClass.myShowCursor(1);
 
                     m_stopwatch.Stop();
-                    lblMessage.Text = "完成，耗时 " + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
+                    lblMessage.Text = ToChangeLanguage("完成耗时") + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
                     lblMessage.BackColor = Color.Green;
 
                 }
             }
             else
             {
-                MessageBox.Show("請選擇正確的檢測框。");
+                MessageBox.Show(ToChangeLanguage("請選擇正確的檢測框。"));
             }
         }
 
         private void BtnOnekeyDelAllRegion_Click(object sender, EventArgs e)
         {
 
-            if (MessageBox.Show("是否要清除所有区域框？", "提示", MessageBoxButtons.YesNo) != DialogResult.Yes)
+            if (MessageBox.Show(ToChangeLanguage("是否要清除所有区域框？"), "提示", MessageBoxButtons.YesNo) != DialogResult.Yes)
                 return;
 
             //if (PAGEUI.IsPageSelectCorrect())
@@ -308,7 +336,7 @@ namespace Allinone.FormSpace
                 if (USEROPTIONFRM.ShowDialog() == DialogResult.OK)
                 {
                     m_stopwatch.Restart();
-                    lblMessage.Text = "执行中...";
+                    lblMessage.Text = ToChangeLanguage("执行中...");
                     lblMessage.BackColor = Color.Yellow;
                     Application.DoEvents();
 
@@ -343,7 +371,7 @@ namespace Allinone.FormSpace
                     JzToolsClass.myShowCursor(1);
 
                     m_stopwatch.Stop();
-                    lblMessage.Text = "完成，耗时 " + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
+                    lblMessage.Text = ToChangeLanguage("完成耗时") + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
                     lblMessage.BackColor = Color.Green;
 
                 }
@@ -356,12 +384,12 @@ namespace Allinone.FormSpace
 
         private void BtnAutoAlinameIndex_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("是否要自动编号？", "提示", MessageBoxButtons.YesNo) != DialogResult.Yes)
+            if (MessageBox.Show(ToChangeLanguage("是否要自动编号？"), "提示", MessageBoxButtons.YesNo) != DialogResult.Yes)
                 return;
 
 
             m_stopwatch.Restart();
-            lblMessage.Text = "执行中...";
+            lblMessage.Text = ToChangeLanguage("执行中...");
             lblMessage.BackColor = Color.Yellow;
             Application.DoEvents();
 
@@ -372,7 +400,7 @@ namespace Allinone.FormSpace
             JzToolsClass.myShowCursor(1);
 
             m_stopwatch.Stop();
-            lblMessage.Text = "完成，耗时 " + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
+            lblMessage.Text = ToChangeLanguage("完成耗时") + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
             lblMessage.BackColor = Color.Green;
 
         }
@@ -382,7 +410,7 @@ namespace Allinone.FormSpace
             if (PAGEUI.IsPageSelectCorrect())
             {
                 m_stopwatch.Restart();
-                lblMessage.Text = "执行中...";
+                lblMessage.Text = ToChangeLanguage("执行中...");
                 lblMessage.BackColor = Color.Yellow;
                 Application.DoEvents();
 
@@ -409,12 +437,12 @@ namespace Allinone.FormSpace
                 JzToolsClass.myShowCursor(1);
 
                 m_stopwatch.Stop();
-                lblMessage.Text = "完成，耗时 " + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
+                lblMessage.Text = ToChangeLanguage("完成耗时") + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
                 lblMessage.BackColor = Color.Green;
             }
             else
             {
-                MessageBox.Show("請選擇正確的檢測框。");
+                MessageBox.Show(ToChangeLanguage("請選擇正確的檢測框。"));
             }
         }
 
@@ -646,7 +674,7 @@ namespace Allinone.FormSpace
         private void BtnSetSelectBlock_Click(object sender, EventArgs e)
         {
 
-            if (MessageBox.Show("是否要写回资料？", "提示", MessageBoxButtons.YesNo) != DialogResult.Yes)
+            if (MessageBox.Show(ToChangeLanguage("是否要写回资料？"), "提示", MessageBoxButtons.YesNo) != DialogResult.Yes)
                 return;
 
             AnalyzeClass analyze = PAGEUI.AnalyzeSelectNow;
@@ -1150,6 +1178,94 @@ namespace Allinone.FormSpace
 
         JzFindBlockPropertyGridClass BlockPara = new JzFindBlockPropertyGridClass();
 
+        private JzFindBlockPropertyGridClass _changeLanguageSettings()
+        {
+            string _collectDataStr = string.Empty;
+            //JzFindBlockPropertyGridClass BlockPara11 = new JzFindBlockPropertyGridClass();
+
+            foreach (System.Reflection.PropertyInfo prop in BlockPara.GetType().GetProperties())
+            {
+                string name = prop.Name;
+                if (prop.GetCustomAttribute<DisplayNameAttribute>() != null)
+                {
+                    string dispName = prop.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
+                    _collectDataStr += dispName + Environment.NewLine;
+                    if (name != "")
+                    {
+                        string strNewName = ToChangeLanguage(dispName);
+                        if (strNewName != dispName)
+                        {
+                            PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(BlockPara);
+                            Type displayType = typeof(DisplayNameAttribute);
+                            FieldInfo fieldInfo = displayType.GetField("_displayName", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                            if (fieldInfo != null)
+                            {
+                                fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+                            }
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                }
+
+                if (prop.GetCustomAttribute<DescriptionAttribute>() != null)
+                {
+                    string strDescription = prop.GetCustomAttribute<DescriptionAttribute>().Description;
+                    _collectDataStr += strDescription + Environment.NewLine;
+                    string strNewName = ToChangeLanguage(strDescription);
+                    if (strNewName != strDescription)
+                    {
+                        PropertyDescriptor descriptor = TypeDescriptor.GetProperties(BlockPara)[name];
+                        DescriptionAttribute attribute = descriptor.Attributes[typeof(DescriptionAttribute)] as DescriptionAttribute;
+                        FieldInfo field = attribute.GetType().GetField("description", BindingFlags.NonPublic | BindingFlags.Instance);
+                        field.SetValue(attribute, strNewName);
+
+                        //PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(BlockPara);
+                        //Type displayType = typeof(DescriptionAttribute);
+                        //FieldInfo fieldInfo = displayType.GetField("description", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                        //if (fieldInfo != null)
+                        //    fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+                    }
+                }
+
+                if (prop.GetCustomAttribute<CategoryAttribute>() != null)
+                {
+                    string strCategory = prop.GetCustomAttribute<CategoryAttribute>().Category;
+                    _collectDataStr += strCategory + Environment.NewLine;
+                    string strNewName = ToChangeLanguage(strCategory);
+                    if (strNewName != strCategory)
+                    {
+                        PropertyDescriptorCollection appSetingAttributes = TypeDescriptor.GetProperties(BlockPara);
+                        Type displayType = typeof(CategoryAttribute);
+                        FieldInfo fieldInfo = displayType.GetField("categoryValue", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.CreateInstance);
+                        if (fieldInfo != null)
+                            fieldInfo.SetValue(appSetingAttributes[name].Attributes[displayType], strNewName);
+                    }
+                }
+            }
+
+            //SaveData(_collectDataStr, "D:\\log.csv");
+
+            return BlockPara;
+        }
+        string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
+        }
+        //void SaveData(string DataStr, string FileName)
+        //{
+        //    StreamWriter Swr = new StreamWriter(FileName, true, Encoding.Default);
+
+        //    Swr.Write(DataStr);
+
+        //    Swr.Flush();
+        //    Swr.Close();
+        //}
+
         private void M_PG_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             switch (e.ChangedItem.Label)
@@ -1243,7 +1359,7 @@ namespace Allinone.FormSpace
                 if (USEROPTIONFRM.ShowDialog() == DialogResult.OK)
                 {
                     m_stopwatch.Restart();
-                    lblMessage.Text = "执行中...";
+                    lblMessage.Text = ToChangeLanguage("执行中...");
                     lblMessage.BackColor = Color.Yellow;
                     Application.DoEvents();
 
@@ -1348,14 +1464,14 @@ namespace Allinone.FormSpace
                     JzToolsClass.myShowCursor(1);
 
                     m_stopwatch.Stop();
-                    lblMessage.Text = "完成，耗时 " + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
+                    lblMessage.Text = ToChangeLanguage("完成耗时") + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
                     lblMessage.BackColor = Color.Green;
 
                 }
             }
             else
             {
-                MessageBox.Show("請選擇正確的檢測框。");
+                MessageBox.Show(ToChangeLanguage("請選擇正確的檢測框。"));
             }
         }
 
@@ -1394,7 +1510,7 @@ namespace Allinone.FormSpace
                 if (USEROPTIONFRM.ShowDialog() == DialogResult.OK)
                 {
                     m_stopwatch.Restart();
-                    lblMessage.Text = "执行中...";
+                    lblMessage.Text = ToChangeLanguage("执行中...");
                     lblMessage.BackColor = Color.Yellow;
                     Application.DoEvents();
 
@@ -1428,14 +1544,14 @@ namespace Allinone.FormSpace
                     JzToolsClass.myShowCursor(1);
 
                     m_stopwatch.Stop();
-                    lblMessage.Text = "完成，耗时 " + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
+                    lblMessage.Text = ToChangeLanguage("完成耗时") + m_stopwatch.ElapsedMilliseconds.ToString() + " ms";
                     lblMessage.BackColor = Color.Green;
 
                 }
             }
             else
             {
-                MessageBox.Show("請選擇正確的檢測框。");
+                MessageBox.Show(ToChangeLanguage("請選擇正確的檢測框。"));
             }
 
         }
@@ -1586,7 +1702,7 @@ namespace Allinone.FormSpace
 
             }
         }
-        public void FindSimilarEx(float tolerance)
+        public void FindSimilarEx(float tolerance,float eCompressed=0.5f)
         {
             //Get the Anallyze Data For Find
             //Bitmap bmpPageOrg = PAGEUI.PageNow.GetbmpORG((PageOPTypeEnum)PAGEUI.PageNow.PageOPTypeIndex);
@@ -1661,7 +1777,7 @@ namespace Allinone.FormSpace
                 OpencvMatchClass opencvMatch = new OpencvMatchClass();
                 //m_bmpPattern.Dispose();
                 //m_bmpPattern = bmpPageOrg.Clone(m_RectClone, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                Bitmap bitmap = opencvMatch.Recoganize(bitmaproots[page.No], bitmaps[page.No], DoffsetList, tolerance, 1);
+                Bitmap bitmap = opencvMatch.Recoganize(bitmaproots[page.No], bitmaps[page.No], DoffsetList, tolerance, eCompressed);
                 //bitmap.Save($"D:\\_tmp\\bmpMatched_{page.No}.png", System.Drawing.Imaging.ImageFormat.Png);
                 //AnalyzeSelectNow.IsTempSave = false;
                 bitmap.Dispose();
@@ -2207,7 +2323,9 @@ namespace Allinone.FormSpace
                             analyze.MEASUREPara.FromString(PAGEUI.AnalyzeSelectNow.MEASUREPara.ToString());
                             analyze.AOIPara.FromString(PAGEUI.AnalyzeSelectNow.AOIPara.ToString());
                             if (analyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
-                                 || analyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
+                                 || analyze.OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE
+                                  || analyze.OCRPara.OCRMethod == OCRMethodEnum.QRCODE
+                                 )
                             {
                             }
                             else
@@ -2314,11 +2432,11 @@ namespace Allinone.FormSpace
                         branchanalyze.ALIGNPara.AlignMethod = AlignMethodEnum.AUFIND;
                         branchanalyze.ALIGNPara.AlignMode = AlignModeEnum.AREA;
 
-                        branchanalyze.INSPECTIONPara.InspectionMethod = InspectionMethodEnum.PIXEL;
-                        branchanalyze.INSPECTIONPara.IBArea = 30;
-                        branchanalyze.INSPECTIONPara.IBCount = 10;
-                        branchanalyze.INSPECTIONPara.IBTolerance = 35;
-                        branchanalyze.INSPECTIONPara.InspectionAB = Inspection_A_B_Enum.ABPlus;
+                        branchanalyze.INSPECTIONPara.InspectionMethod = InspectionMethodEnum.Equalize;
+                        branchanalyze.INSPECTIONPara.IBArea = 50;
+                        branchanalyze.INSPECTIONPara.IBCount = 1000;
+                        branchanalyze.INSPECTIONPara.IBTolerance = 128;
+                        branchanalyze.INSPECTIONPara.InspectionAB = Inspection_A_B_Enum.Histogram;
                     }
 
                     branchanalyze.ParentNo = selectanalyze.No;

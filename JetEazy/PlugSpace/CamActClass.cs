@@ -13,6 +13,8 @@ namespace JetEazy.PlugSpace
         private int _stepCount = 1;
         private int _stepCurrent = 0;
         private Bitmap[] _bmps = new Bitmap[1];
+        private Bitmap[] _bmpsResult = new Bitmap[1];
+        public Bitmap bmpChangeRecipeTemp = new Bitmap(1, 1);
         private CamActClass()
         {
 
@@ -55,11 +57,13 @@ namespace JetEazy.PlugSpace
             ResetStepCurrent();
             _stepCount = stepcount;
             _bmps = new Bitmap[_stepCount];
+            _bmpsResult =new Bitmap[_stepCount];
 
             int i = 0;
             while (i < _stepCount)
             {
                 _bmps[i] = new Bitmap(1, 1);
+                _bmpsResult[i] = new Bitmap(1, 1);
                 i++;
             }
         }
@@ -90,8 +94,9 @@ namespace JetEazy.PlugSpace
             if (_bmps[index] == null)
                 _bmps[index] = new Bitmap(1, 1);
 
-            _bmps[index].Dispose();
+            _bmps[index]?.Dispose();
             _bmps[index] = new Bitmap(bmpinput);
+            //_bmps[index] = (Bitmap)bmpinput.Clone();
         }
         public Bitmap GetImage(int index)
         {
@@ -100,6 +105,35 @@ namespace JetEazy.PlugSpace
 
             return _bmps[index];
         }
+
+
+        public void SetResultImage(Bitmap bmpinput, int index)
+        {
+            if (bmpinput == null)
+                return;
+
+            if (_bmpsResult.Length == 0)
+                return;
+
+            if (index >= _bmpsResult.Length)
+                return;
+
+            if (_bmpsResult[index] == null)
+                _bmpsResult[index] = new Bitmap(1, 1);
+
+            _bmpsResult[index]?.Dispose();
+            _bmpsResult[index] = new Bitmap(bmpinput);
+            //_bmps[index] = (Bitmap)bmpinput.Clone();
+        }
+        public Bitmap GetResultImage(int index)
+        {
+            if (index >= _bmpsResult.Length)
+                return new Bitmap(1, 1);
+
+            return _bmpsResult[index];
+        }
+
+
 
     }
 }

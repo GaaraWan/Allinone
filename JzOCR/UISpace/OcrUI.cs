@@ -16,7 +16,8 @@ using MoveGraphLibrary;
 //调用DLL所需的命名空间
 using System.Runtime.InteropServices;
 using System.Diagnostics;
-
+using JetEazy;
+using OCRByPaddle;
 
 namespace JzOCR.UISpace
 {
@@ -81,6 +82,21 @@ namespace JzOCR.UISpace
             /// 上一步
             /// </summary>
             Return,
+
+            /// <summary>
+            /// 合并（连体字）
+            /// </summary>
+            LIANTIE,
+
+            /// <summary>
+            /// AI解码
+            /// </summary>
+            AiDecode,
+
+            /// <summary>
+            /// AI2解码
+            /// </summary>
+            Ai2Decode,
         }
 
        public DispUI SHOWDISP;
@@ -106,6 +122,8 @@ namespace JzOCR.UISpace
         CheckBox cbJetOCR;
         CheckBox cbNoParOCR;
         CheckBox cbDefect;
+        CheckBox cbML;
+        CheckBox cbImagePlus;
         NumericUpDown nudPoint;
         NumericUpDown nudArea;
         NumericUpDown nudColorDifference;
@@ -113,6 +131,8 @@ namespace JzOCR.UISpace
         NumericUpDown nudExcludeScore;
         NumericUpDown nudBright;
         NumericUpDown nudContrast;
+
+        TextBox tbSNTemp;
 
         /// <summary>
         /// 强制学习列表
@@ -138,6 +158,7 @@ namespace JzOCR.UISpace
         /// 取样
         /// </summary>
         Button btnGet;
+        Button btnLianTie;
         /// <summary>
         /// 硬取样
         /// </summary>
@@ -170,6 +191,9 @@ namespace JzOCR.UISpace
         /// 自动测试下一个图片
         /// </summary>
         Button btnAutoTest;
+
+        Button btnAiDecode;
+        Button btnAi2Decode;
         /// <summary>
         /// 自动测试用
         /// </summary>
@@ -217,10 +241,11 @@ namespace JzOCR.UISpace
             lstMethod = listBox1;
 
             btnTest = button1;
-
-            
+            btnAiDecode= button15;
+            btnAi2Decode = button16;
             btnDirectGet = button6;
             btnGet = button5;
+            btnLianTie = button14;
             btnGetRRR = button12;
             btnAddOne = button3;
             btnAddAll = button2;
@@ -230,8 +255,12 @@ namespace JzOCR.UISpace
             flpOnlineOCRItem = flowLayoutPanel1;
             flpOCRItem = flowLayoutPanel2;
             cbDefect = checkBox4;
+            cbML = checkBox2;
+            cbImagePlus = checkBox5;
 
-            SHOWDISP = dispUI1;
+            tbSNTemp = textBox1;
+
+            //SHOWDISP = dispUI1;
             METHODISP = dispUI2;
             ppgMethod = myPropertyGrid1;
 
@@ -239,13 +268,15 @@ namespace JzOCR.UISpace
             btnDelMethod.Tag = TagEnum.DELMETHOD;
             btnTest.Tag = TagEnum.TEST;
             btnDirectGet.Tag = TagEnum.DIRECTGET;
+            btnLianTie.Tag = TagEnum.LIANTIE;
             btnGet.Tag = TagEnum.GET;
             btnGetRRR.Tag = TagEnum.GETRRR;
             btnAddOne.Tag = TagEnum.ADDONE;
             btnAddAll.Tag = TagEnum.ADDALL;
             btnDelItem.Tag = TagEnum.DELITEM;
             btnDelALLItem.Tag = TagEnum.DELITEMALL;
-
+            btnAiDecode.Tag = TagEnum.AiDecode;
+            btnAi2Decode.Tag = TagEnum.Ai2Decode;
             btnNext = button7;
             btnNext.Tag = TagEnum.NEXT;
             btnAutoTest = button8;
@@ -256,20 +287,25 @@ namespace JzOCR.UISpace
             btnReturn.Click += btn_Click;
             btnNext.Click += btn_Click;
             btnAutoTest.Click += btn_Click;
-
+            btnAiDecode.Click += btn_Click;
             btnAddMethod.Click += btn_Click;
             btnDelMethod.Click += btn_Click;
             btnTest.Click += btn_Click;
             btnDirectGet.Click += btn_Click;
             btnGet.Click += btn_Click;
+            btnLianTie.Click+= btn_Click;
             btnGetRRR.Click += btn_Click;
             btnAddOne.Click += btn_Click;
             btnAddAll.Click += btn_Click;
             btnDelItem.Click += btn_Click;
             btnDelALLItem.Click += btn_Click;
+            btnAi2Decode.Click += btn_Click;
 
-            SHOWDISP.Initial();
-            SHOWDISP.SetDisplayType(DisplayTypeEnum.NORMAL);
+            init_Display();
+            update_Display();
+
+            //SHOWDISP.Initial();
+            //SHOWDISP.SetDisplayType(DisplayTypeEnum.NORMAL);
             METHODISP.Initial();
             METHODISP.SetDisplayType(DisplayTypeEnum.NORMAL);
 
@@ -298,6 +334,8 @@ namespace JzOCR.UISpace
             cbNoParOCR.CheckedChanged += CbNoParOCR_CheckedChanged; ;
             cbJetOCR.CheckedChanged += CbJetOCR_CheckedChanged;
             cbDefect.CheckedChanged += CbDefect_CheckedChanged;
+            cbML.CheckedChanged += CbML_CheckedChanged;
+            cbImagePlus.CheckedChanged += CbImagePlus_CheckedChanged;
             flowLayoutPanel2.MouseDoubleClick += FlowLayoutPanel2_MouseDoubleClick;
 
 
@@ -310,17 +348,36 @@ namespace JzOCR.UISpace
             //   KeyBoardhook.KeyUpEvent += KeyBoardhook_KeyUpEvent;
             ////   KeyBoardhook.KeyPressEvent += KeyBoardhook_KeyPressEvent;
             //   KeyBoardhook.Start();//安装键盘钩子
+
+            this.SizeChanged += OcrUI_SizeChanged;
             
             mytimer = new Timer();
             mytimer.Interval = 20;
             mytimer.Tick += new EventHandler(mytimer_Tick);
             mytimer.Start();
         }
-        
-        public void Initial(OCRClass ocr)
-        {
-            OCR = ocr;
 
+        private void OcrUI_SizeChanged(object sender, EventArgs e)
+        {
+            update_Display();
+        }
+
+        private void CbImagePlus_CheckedChanged(object sender, EventArgs e)
+        {
+            OCR.isImagePlus = cbImagePlus.Checked;
+        }
+
+        private void CbML_CheckedChanged(object sender, EventArgs e)
+        {
+           OCR.isML = cbML.Checked;
+        }
+        OCRCollectionClass OCRCollection;
+        OCRByPaddle.OCRByPaddle mOCRByPaddle;
+        public void Initial( OCRCollectionClass OCRC  , OCRByPaddle.OCRByPaddle Paddle)
+        {
+            OCR = OCRC.DataNow;
+            mOCRByPaddle= Paddle;
+            OCRCollection = OCRC;
 
             IsNeedToChange = false;
 
@@ -344,7 +401,9 @@ namespace JzOCR.UISpace
             nudExcludeScore.Value = (decimal)OCR.fExcludeScore;
             cbJetOCR.Checked = OCR.isJetOCR;
             cbNoParOCR.Checked = OCR.isNoParOCR;
+            cbImagePlus.Checked = OCR.isImagePlus;
             cbDefect.Checked = OCR.isDefect;
+            cbML.Checked = OCR.isML;
             nudArea.Value = OCR.iArea;
             nudPoint.Value = OCR.iPoint;
 
@@ -362,10 +421,21 @@ namespace JzOCR.UISpace
             btnNext.Visible = true;
             btnAutoTest.Visible = true;
             btnReturn.Visible = true;
-            strFileNameS = System.IO.Directory.GetFiles(@"D:\LOA\OCR\", "*.png");
+            string subPath = @"D:\LOA\OCR\";
+            if (!System.IO.Directory.Exists(subPath))
+                //创建pic文件夹
+                System.IO.Directory.CreateDirectory(subPath);
+            
+
+            strFileNameS = System.IO.Directory.GetFiles(subPath, "*.png");
 
             if (ISQSMC)
             {
+                subPath = "D://Jeteazy//OCR//";
+                if (!System.IO.Directory.Exists(subPath))
+                    //创建pic文件夹
+                    System.IO.Directory.CreateDirectory(subPath);
+
                 System.IO.FileStream fs = new System.IO.FileStream("D://Jeteazy//OCR//COLORTABLE.jdb", System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.None);
                 System.IO.StreamReader Srr = new System.IO.StreamReader(fs, Encoding.Default);
                 string DataStr = Srr.ReadToEnd().Replace(Environment.NewLine, "{");
@@ -539,6 +609,9 @@ namespace JzOCR.UISpace
                 case TagEnum.GET:
                     GETPar(false);
                     break;
+                case TagEnum.LIANTIE:
+                    LIANTIEPar(false);
+                    break;
                 case TagEnum.GETRRR:
                     GETPar(true);
                     break;
@@ -570,9 +643,14 @@ namespace JzOCR.UISpace
                     else
                         ISAUTOMATION = false;
                     break;
+                case TagEnum.AiDecode:
+                    TestAiOCR();
+                    break;
+                case TagEnum.Ai2Decode:
+                    TestAi2OCR();
+                    break;
             }
             SetEnable(true);
-
         }
 
         /// <summary>
@@ -698,14 +776,21 @@ namespace JzOCR.UISpace
 
                 OCR.OCROnlineItemList.Clear();
                 //     OCR.OCROnlineItemList = OCR.SplitToOCRTrain(ocrmethod.bmpMethod, ref BmpTemp);
+                if (tbSNTemp.Text == "")
+                    OCR.OCROnlineItemList = OCR.SplitToOCRTrainSet(ocrmethod.bmpMethod);
+                else
+                {
+                    Bitmap mybmpErr = new Bitmap(ocrmethod.bmpMethod);
+                    OCRItemClass[] oCRItems = new OCRItemClass[tbSNTemp.Text.Length];
+                    string strMess = OCR.OCRRUNLINEAURO(tbSNTemp.Text, ocrmethod.bmpMethod, ref mybmpErr, ref oCRItems);
 
-                OCR.OCROnlineItemList = OCR.SplitToOCRTrainSet(ocrmethod.bmpMethod);
+                    for (int i = 0; i < oCRItems.Length; i++)
+                        OCR.OCROnlineItemList.Add(oCRItems[i]);
+                } 
             }
             else
             {
                 BmpTemp = new Bitmap(bmpMyTest);
-               
-
                 OCR.OCROnlineItemList.Clear();
                // OCR.OCROnlineItemList = OCR.SplitToOCRTrain(bmpMyTest, ref BmpTemp);
 
@@ -720,6 +805,66 @@ namespace JzOCR.UISpace
             //METHODISP.ClearAll();
             //METHODISP.ReplaceDisplayImage(BmpTemp);
         }
+
+
+        /// <summary>
+        /// 拆分图片字符，并变成参数
+        /// </summary>
+        /// <param name="isRRR">是否强制</param>
+        void LIANTIEPar(bool isRRR)
+        {
+            float fScore = OCR.fExcludeScore;
+            if (isRRR)
+                OCR.fExcludeScore = 1;
+
+            Bitmap BmpTemp = null;
+            if (bmpMyTest == null)
+            {
+                OCRMethdClass ocrmethod;
+                if (lstMethod.SelectedIndex > -1 && lstMethod.SelectedIndex < OCR.OCRMethodList.Count)
+                    ocrmethod = OCR.OCRMethodList[lstMethod.SelectedIndex];
+                else
+                {
+                    if (MessageBox.Show("请选择列表中的一个参数后再继续……", "", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
+                        return;
+                    else
+                        return;
+                }
+
+                BmpTemp = new Bitmap(ocrmethod.GetBitmMap);
+
+                OCR.OCROnlineItemList.Clear();
+                //     OCR.OCROnlineItemList = OCR.SplitToOCRTrain(ocrmethod.bmpMethod, ref BmpTemp);
+                if (tbSNTemp.Text == "")
+                    OCR.OCROnlineItemList = OCR.SplitToOCRTrainLianTie(ocrmethod.bmpMethod);
+                else
+                {
+                    Bitmap mybmpErr = new Bitmap(ocrmethod.bmpMethod);
+                    OCRItemClass[] oCRItems = new OCRItemClass[OCR.OCRMethodList.Count];
+                    string strMess = OCR.OCRRUNLINEAURO(tbSNTemp.Text, ocrmethod.bmpMethod, ref mybmpErr, ref oCRItems);
+
+                    for (int i = 0; i < oCRItems.Length; i++)
+                        OCR.OCROnlineItemList.Add(oCRItems[i]);
+                }
+            }
+            else
+            {
+                BmpTemp = new Bitmap(bmpMyTest);
+                OCR.OCROnlineItemList.Clear();
+                // OCR.OCROnlineItemList = OCR.SplitToOCRTrain(bmpMyTest, ref BmpTemp);
+
+                OCR.OCROnlineItemList = OCR.SplitToOCRTrainLianTie(bmpMyTest);
+
+            }
+            if (isRRR)
+                OCR.fExcludeScore = fScore;
+
+            DisplayOCRPar();
+
+            //METHODISP.ClearAll();
+            //METHODISP.ReplaceDisplayImage(BmpTemp);
+        }
+
         /// <summary>
         /// 直接取图到参数中去
         /// </summary>
@@ -728,7 +873,8 @@ namespace JzOCR.UISpace
             OCR.OCROnlineItemList.Clear();
             Bitmap bmp = new Bitmap(1, 1);
             METHODISP.GenSearchImage(ref bmp);
-
+            if (OCR.isImagePlus)
+                bmp=OCR.ApplyFilter(new AForge.Imaging.Filters.ContrastStretch(), bmp);
             int ibackColor = 0;
             Bitmap bmpT = new Bitmap(bmp);
             int iThr = JetEazy.BasicSpace.myImageProcessor.Balance(bmpT, ref bmpT, ref ibackColor, JetEazy.BasicSpace.myImageProcessor.EnumThreshold.Intermodes);
@@ -774,6 +920,9 @@ namespace JzOCR.UISpace
                     isNext = false;
                 }
 
+                if (index < 0)
+                    index = 0;
+
                 int iCount = 0;
                 while (true)
                 {
@@ -785,22 +934,30 @@ namespace JzOCR.UISpace
                         bool isRun = false;
                         if (ISQSMC)
                         {
-                            string colorBace = System.IO.Path.GetFileNameWithoutExtension(strFile).Substring(8, 4);
-                            foreach (ColorMessage mysn in myColor)
+                       string[]  myColorTemp=     System.IO.Path.GetFileNameWithoutExtension(strFile).Split('_');
+
+                            string colorBace = myColorTemp[1];
+                            int indexC = colorBace.IndexOf('(');
+                            colorBace = colorBace.Substring(0, indexC);
+
+                            if (colorBace == OCR.Name)
                             {
-                                if (mysn.Name == OCR.Name)
-                                {
-                                    foreach (string str in mysn.mySnColorList)
-                                    {
-                                        if (colorBace == str)
-                                        {
-                                            isRun = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (isRun)
-                                    break;
+                                //foreach (ColorMessage mysn in myColor)
+                                //{
+                                //    if (mysn.Name == OCR.Name)
+                                //    {
+                                //        //foreach (string str in mysn.mySnColorList)
+                                //        //{
+                                //        //    if (colorBace == str)
+                                //        //    {
+                                isRun = true;
+                               //break;
+                                //        //    }
+                                //        //}
+                                //    }
+                                //    if (isRun)
+                                //        break;
+                                //}
                             }
                         }
                         else
@@ -845,8 +1002,6 @@ namespace JzOCR.UISpace
                 int iCount = 0;
                 while (true)
                 {
-                    
-
                     if (strFileNameS.Length > index)
                     {
                         if (index == -1)
@@ -856,22 +1011,31 @@ namespace JzOCR.UISpace
                         bool isRun = false;
                         if (ISQSMC)
                         {
-                            string colorBace = System.IO.Path.GetFileNameWithoutExtension(strFile) .Substring(8, 4);
-                            foreach (ColorMessage mysn in myColor)
+                            string[] myColorTemp = System.IO.Path.GetFileNameWithoutExtension(strFile).Split('_');
+
+                            string colorBace = myColorTemp[1];
+                            int indexC = colorBace.IndexOf('(');
+                            if (indexC > 0)
+                                colorBace = colorBace.Substring(0, indexC);
+
+                            if (colorBace == OCR.Name)
                             {
-                                if (mysn.Name == OCR.Name)
-                                {
-                                    foreach (string str in mysn.mySnColorList)
-                                    {
-                                        if (colorBace == str)
-                                        {
-                                            isRun = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (isRun)
-                                    break;
+                                //foreach (ColorMessage mysn in myColor)
+                                //{
+                                //    if (mysn.Name == OCR.Name)
+                                //    {
+                                //        //foreach (string str in mysn.mySnColorList)
+                                //        //{
+                                //        //    if (colorBace == str)
+                                //        //    {
+                                isRun = true;
+                                //           break;
+                                //        //    }
+                                //        //}
+                                //    }
+                                //    if (isRun)
+                                //        break;
+                                //}
                             }
                         }
                         else
@@ -889,7 +1053,12 @@ namespace JzOCR.UISpace
                         index++;
                     }
                     else
+                    {
+                        ISAUTOMATION = false;
                         index = 0;
+                        MessageBox.Show("已跑线完成,再次点击会从头开始重新跑线!");
+                        
+                    }
 
                     iCount++;
                     if (iCount > strFileNameS.Length)
@@ -921,19 +1090,89 @@ namespace JzOCR.UISpace
 
             Bitmap bmpErr = null;
             bool isResult=true ;
-            string strMess = OCR.OCRRUNLINE(BmpTemp,ref bmpErr,ref isResult);
+            string strMess = "";
+            if (tbSNTemp.Text == "")
+                strMess = OCR.OCRRUNLINE(BmpTemp, ref bmpErr, ref isResult);
+            else
+            {
+                OCRItemClass[] oCRItems = new OCRItemClass[OCR.OCRMethodList.Count];
+
+                strMess = OCR.OCRRUNLINE(tbSNTemp.Text, BmpTemp, out bmpErr, out oCRItems);
+             
+                if(strMess!= tbSNTemp.Text )
+                    strMess = OCR.OCRRUNLINEAURO(tbSNTemp.Text, BmpTemp, ref bmpErr, ref oCRItems);
+
+            }
 
             timer.Stop();
 
-            //  DisplayOCRPar();
-            //METHODISP.ClearAll();
-            //METHODISP.ReplaceDisplayImage(bmpErr);
-
-            //MessageBox.Show("OCR结果： " + strMess+"\t\n"+(isResult?"缺失":"" ), timer.ElapsedMilliseconds.ToString() + " ms");
-
             FormSpace.ShowResultForm show = new FormSpace.ShowResultForm(bmpErr, strMess, isResult);
             show.ShowDialog();
+        }
 
+        /// <summary>
+        /// 测试OCR
+        /// </summary>
+        void TestAiOCR()
+        {
+            OCRMethdClass ocrmethod;
+
+            if (lstMethod.SelectedIndex > -1 && lstMethod.SelectedIndex < OCR.OCRMethodList.Count)
+                ocrmethod = OCR.OCRMethodList[lstMethod.SelectedIndex];
+            else
+            {
+                if (MessageBox.Show("请选择列表中的一个参数后再继续……", "", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
+                    return;
+                else
+                    return;
+            }
+            System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+            timer.Start();
+
+            Bitmap BmpTemp = new Bitmap(ocrmethod.bmpMethod);
+
+            //Bitmap bmpErr = null;
+            bool isResult = true;
+            string strMess =OCRCollection.DecodePic(BmpTemp);
+
+            timer.Stop();
+
+            FormSpace.ShowResultForm show = new FormSpace.ShowResultForm(BmpTemp, strMess, isResult);
+            show.ShowDialog();
+
+            BmpTemp.Dispose();
+        }
+        /// <summary>
+        /// 测试OCR
+        /// </summary>
+        void TestAi2OCR()
+        {
+            OCRMethdClass ocrmethod;
+
+            if (lstMethod.SelectedIndex > -1 && lstMethod.SelectedIndex < OCR.OCRMethodList.Count)
+                ocrmethod = OCR.OCRMethodList[lstMethod.SelectedIndex];
+            else
+            {
+                if (MessageBox.Show("请选择列表中的一个参数后再继续……", "", MessageBoxButtons.OK, MessageBoxIcon.Error) == DialogResult.OK)
+                    return;
+                else
+                    return;
+            }
+            System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+            timer.Start();
+
+            Bitmap BmpTemp = new Bitmap(ocrmethod.bmpMethod);
+
+            //Bitmap bmpErr = null;
+            bool isResult = true;
+            string strMess = mOCRByPaddle.OCR(BmpTemp); 
+
+            timer.Stop();
+
+            FormSpace.ShowResultForm show = new FormSpace.ShowResultForm(BmpTemp, strMess, isResult);
+            show.ShowDialog();
+
+            BmpTemp.Dispose();
         }
 
         /// <summary>
@@ -941,52 +1180,62 @@ namespace JzOCR.UISpace
         /// </summary>
         void TestInOCR(string strFileName)
         {
-               
-                Bitmap BmpTemp = new Bitmap(strFileName);
-                string strName = System.IO.Path.GetFileNameWithoutExtension(strFileName);
-                strName = strName.Substring(0, 12);
 
-                if (bmpMyTest != null)
-                {
-                    bmpMyTest.Dispose();
-                    bmpMyTest = new Bitmap(BmpTemp);
-                }
-                else
-                    bmpMyTest = new Bitmap(BmpTemp);
+            Bitmap BmpTemp = new Bitmap(strFileName);
+            string strName = System.IO.Path.GetFileNameWithoutExtension(strFileName);
+            strName = strName.Substring(0, 10);
 
-                BmpTemp.Dispose();
+            if (bmpMyTest != null)
+            {
+                bmpMyTest.Dispose();
+                bmpMyTest = new Bitmap(BmpTemp);
+            }
+            else
+                bmpMyTest = new Bitmap(BmpTemp);
+
+            BmpTemp.Dispose();
 
 
-                System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
-                timer.Start();
-                Bitmap bmpErr = null;
-                bool isResult = true;
-                string strMess = OCR.OCRRUNLINE(strName,bmpMyTest, ref bmpErr, ref isResult);
-                timer.Stop();
+            System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+            timer.Start();
+            Bitmap bmpErr = null;
+            //    bool isResult = true;
+            //    string strMess = OCR.OCRRUNLINE(strName,bmpMyTest, ref bmpErr, ref isResult);
+            OCRItemClass[] ocritemlist = new JzOCR.OPSpace.OCRItemClass[strName.Length];
+
+
+            //string strMess  = OCRCollection.DecodePic(bmpMyTest);
+            //if (strMess != strName)
+            string strMess = OCR.OCRRUNLINE(strName, bmpMyTest, out bmpErr, out ocritemlist);
+            timer.Stop();
 
             if (strName != strMess)
                 ISAUTOMATION = false;
 
-            Bitmap bmpShow = new Bitmap(bmpMyTest.Width, bmpMyTest.Height + 100);
-                Graphics g = Graphics.FromImage(bmpShow);
-                g.FillRectangle(new SolidBrush(Color.White), new Rectangle(0, 0, bmpShow.Width, bmpShow.Height));
-                g.DrawImage(bmpMyTest, new Point(0, 0));
-                g.DrawString(strMess + " " + timer.ElapsedMilliseconds.ToString() + "ms", new Font("隶书", 30),
-                              Brushes.Red,
-                              new Point(0, bmpMyTest.Height));
-                g.DrawString(strName + " " + index, new Font("隶书", 30),
-                          Brushes.Blue,
-                          new Point(0, bmpMyTest.Height + 50));
-                g.Dispose();
+            Bitmap bmpShow = new Bitmap(bmpMyTest.Width + 50, bmpMyTest.Height + 100);
+            Graphics g = Graphics.FromImage(bmpShow);
+            g.FillRectangle(new SolidBrush(Color.White), new Rectangle(0, 0, bmpShow.Width, bmpShow.Height));
+            g.DrawImage(bmpMyTest, new Point(0, 0));
 
-               // SHOWDISP.ClearAll();
-                SHOWDISP.ReplaceDisplayImage(bmpShow);
 
-                METHODISP.ClearAll();
-                METHODISP.ReplaceDisplayImage(bmpErr);
+            g.DrawString(strMess + " " + timer.ElapsedMilliseconds.ToString() + "ms", new Font("隶书", 30),
+                          Brushes.Red,
+                          new Point(0, bmpMyTest.Height));
 
+            g.DrawString(strName + " " + index, new Font("隶书", 30),
+                      Brushes.Blue,
+                      new Point(0, bmpMyTest.Height + 50));
+
+            g.Dispose();
+
+            // SHOWDISP.ClearAll();
+            SHOWDISP.ReplaceDisplayImage(bmpShow);
+
+            METHODISP.ClearAll();
+            METHODISP.ReplaceDisplayImage(bmpErr);
+            if (bmpErr != null)
                 bmpErr.Dispose();
-                bmpShow.Dispose();
+            bmpShow.Dispose();
 
         }
         void AddMethod()
@@ -1111,6 +1360,7 @@ namespace JzOCR.UISpace
             btnAddMethod.Enabled = isenable;
             btnDelMethod.Enabled = (isenable && OCR.OCRMethodList.Count > 0);
             btnTest.Enabled = (isenable && OCR.OCRMethodList.Count > 0);
+            btnLianTie.Enabled = (isenable && OCR.OCRMethodList.Count > 0);
 
             btnDirectGet.Enabled = (isenable && OCR.OCRMethodList.Count > 0);
             btnGet.Enabled = (isenable && OCR.OCRMethodList.Count > 0);
@@ -1225,8 +1475,9 @@ namespace JzOCR.UISpace
         /// </summary>
         public void Restore()
         {
-            flpOCRItem.Location = new Point(607, 241);
-            flpOCRItem.Width = 216;
+            //flpOCRItem.Location = new Point(607, 241);
+            //flpOCRItem.Width = 216;
+
           //  gbPar.Visible = false;
            // lstMethod.Height = 544;
 
@@ -1319,6 +1570,18 @@ namespace JzOCR.UISpace
             METHODISP.SetMover(MethodMover);
             METHODISP.ReplaceDisplayImage(BmpTemp);
             return BmpTemp;
+        }
+
+        void init_Display()
+        {
+            SHOWDISP = dispUI1;
+            SHOWDISP.Initial();
+            SHOWDISP.SetDisplayType(DisplayTypeEnum.NORMAL);
+        }
+        void update_Display()
+        {
+            SHOWDISP.Refresh();
+            SHOWDISP.DefaultView();
         }
 
         public delegate void TriggerHandler(string opstatus);

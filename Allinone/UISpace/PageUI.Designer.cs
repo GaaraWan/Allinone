@@ -52,7 +52,7 @@
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(421, 28);
             this.label4.TabIndex = 45;
-            this.label4.Text = "F6:新增分支，F7:新增同層，F8:刪除，F9:複製，F10:新增框體，F11:刪除框體";
+            this.label4.Text = "F6:新增分支-F7:新增同層-F8:刪除-F9:複製-F10:新增框體-F11:刪除框體";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // checkBox1
@@ -81,9 +81,10 @@
             this.label11.ForeColor = System.Drawing.Color.Red;
             this.label11.Location = new System.Drawing.Point(917, 738);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(56, 16);
+            this.label11.Size = new System.Drawing.Size(55, 16);
             this.label11.TabIndex = 49;
             this.label11.Text = "位移大小";
+            this.label11.Visible = false;
             // 
             // numericUpDown2
             // 
@@ -108,6 +109,7 @@
             0,
             0,
             0});
+            this.numericUpDown2.Visible = false;
             // 
             // dispUI1
             // 

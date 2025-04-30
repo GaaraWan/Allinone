@@ -22,6 +22,8 @@ namespace Allinone.FormSpace
 
             lblName.Text = strName;
             this.Load += LoadingPARForm_Load;
+
+            JetEazy.BasicSpace.LanguageExClass.Instance.EnumControls(this);
         }
         public LoadingPARForm(string strName,string Msg)
         {

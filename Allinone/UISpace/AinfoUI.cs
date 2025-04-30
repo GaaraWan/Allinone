@@ -388,7 +388,8 @@ namespace Allinone.UISpace
                 cboShape.SelectedIndex = 0;
                 cboShape.Enabled = true;
 
-                ppgAnalyze.SelectedObject = AnalyzeNow.ASSEMBLE;
+                //ppgAnalyze.SelectedObject = AnalyzeNow.ASSEMBLE;
+                ppgAnalyze.SelectedObject = AnalyzeNow.ToLanguage();
 
                 //FillASNParaData();
             }
@@ -441,7 +442,7 @@ namespace Allinone.UISpace
 
         void ResetAnalyze()
         {
-            if (MessageBox.Show("是否要將選定的框都回復成預設參數設定?", "SYSTEM", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBox.Show(ToChangeLanguage("是否要將選定的框都回復成預設參數設定?"), "SYSTEM", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 OnChange("RESET", "");
                 FillDisplay();
@@ -483,6 +484,13 @@ namespace Allinone.UISpace
 
 
         //}
+
+        string ToChangeLanguage(string eText)
+        {
+            string retStr = eText;
+            retStr = LanguageExClass.Instance.GetLanguageText(eText);
+            return retStr;
+        }
 
         #endregion
 

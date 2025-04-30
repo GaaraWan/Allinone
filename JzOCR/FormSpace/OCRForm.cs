@@ -57,12 +57,16 @@ namespace JzOCR.FormSpace
         CCDCollectionClass CCDCollection;
         OCRCollectionClass OCRCollection;
 
+        OCRByPaddle.OCRByPaddle mOCRByPaddle;
+
         bool IsNeedToChange = false;
 
         OcrUI OCRUI;
         NumericUpDown numLight;
+        NumericUpDown numAdjContrast;
         Label lblModifyDateTime;
         OptionEnum OPTION = OptionEnum.R32;
+        bool isDebug = false;
 
         public static bool ISDEBUG = false;
         public OCRClass DataNow
@@ -72,7 +76,7 @@ namespace JzOCR.FormSpace
                 return OCRCollection.DataNow;
             }
         }
-        public OCRForm( )
+        public OCRForm(bool isNoCCD)
         {
             InitializeComponent();
 
@@ -83,19 +87,22 @@ namespace JzOCR.FormSpace
 
             OCRCollection.GotoIndex(0);
             Initial();
-            
+
 
             OCRUI.MyTest();
+            this.isDebug = isNoCCD;
 
+           
         }
 
-        public OCRForm(OCRCollectionClass ocrcollection,CCDCollectionClass ccdcollection, OptionEnum option= OptionEnum.R32)
+        public OCRForm(OCRCollectionClass ocrcollection, OCRByPaddle.OCRByPaddle Paddle ,CCDCollectionClass ccdcollection,bool isNoCCD, OptionEnum option= OptionEnum.R32)
         {
+            this.isDebug = isNoCCD;
             OPTION = option;
             InitializeComponent();
 
             CCDCollection = ccdcollection;
-
+            mOCRByPaddle = Paddle;
             iCCDCount = CCDCollection.GetCCDCount;
 
             OCRCollection = ocrcollection;
@@ -104,6 +111,17 @@ namespace JzOCR.FormSpace
             Initial();
             //iCCDCount = TransferFoOCR.TransferClass.GetCamerCount;
 
+            OCRUI.MyTest();
+
+            numAdjContrast.Value = (decimal)OCRCollection.AdjContrast;
+            numAdjContrast.ValueChanged += NumAdjContrast_ValueChanged;
+
+            JetEazy.BasicSpace.LanguageExClass.Instance.EnumControls(this);
+        }
+
+        private void NumAdjContrast_ValueChanged(object sender, EventArgs e)
+        {
+            OCRCollection.OnContrast((float)numAdjContrast.Value);
         }
 
         protected override void OnLoad(EventArgs e)
@@ -127,6 +145,7 @@ namespace JzOCR.FormSpace
             btnCancel = button6;
             btnLeave = button8;
             numLight = numericUpDown1;
+            numAdjContrast = numericUpDown2;
             btnReget = button1;
 
             btnAdd.Tag = TagEnum.ADD;
@@ -169,12 +188,14 @@ namespace JzOCR.FormSpace
             DBStatus = DBStatusEnum.NONE;
 
             numLight.ValueChanged += NumLight_ValueChanged;
+
+            //Universal.mLanguage.EnumControls(this);
         }
 
         private void NumLight_ValueChanged(object sender, EventArgs e)
         {
             int index =cboCamera .SelectedIndex;
-            CCDCollection.SetExposure((float)numLight.Value, index,true);
+            CCDCollection.SetExposureToSetOCR((float)numLight.Value, index, true);
         }
 
         void InitialOCRName()
@@ -229,7 +250,7 @@ namespace JzOCR.FormSpace
             FillDisplay();
 
             int index = cboOCRName.SelectedIndex;
-            CCDCollection.SetExposure((float)numLight.Value, index);
+    //        CCDCollection.SetExposure((float)numLight.Value, index);
         }
 
         void InitialCamera()
@@ -296,12 +317,30 @@ namespace JzOCR.FormSpace
                     //        CCDCollection.GetR9Image(cboCamera.SelectedIndex.ToString());
                     //        break;
                     //}
-                
-                    
-                    bmp = CCDCollection.GetBMP(cboCamera.SelectedIndex, true);
-                    if (bmp != null)
-                        OCRCollection.DataNow.bmpLast = bmp.Clone() as Bitmap;
-                    OCRUI.SHOWDISP.SetDisplayImage(bmp);
+                    if (isDebug)
+                    {
+                        OpenFileDialog dialog = new OpenFileDialog();
+                        dialog.Multiselect = true;//该值确定是否可以选择多个文件
+                        dialog.Title = "请选择文件";
+                        dialog.Filter = "png格式（*.png）|*.png|所有文件|*.*";
+                        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                        {
+                            string file = dialog.FileName;
+                            Bitmap bmp1 = new Bitmap(file);
+                            Bitmap bmpTemp = new Bitmap(bmp1);
+                            bmp1.Dispose();
+
+                            OCRUI.SHOWDISP.SetDisplayImage(bmpTemp);
+                        }
+                    }
+                    else
+                    {
+
+                        bmp = CCDCollection.GetBMP(cboCamera.SelectedIndex, true);
+                        if (bmp != null)
+                            OCRCollection.DataNow.bmpLast = bmp.Clone() as Bitmap;
+                        OCRUI.SHOWDISP.SetDisplayImage(bmp);
+                    }
                     break;
             }
 
@@ -433,7 +472,7 @@ namespace JzOCR.FormSpace
 
             lblModifyDateTime.Text = OCRCollection.DataNow.ToModifyString();
 
-            OCRUI.Initial(OCRCollection.DataNow);
+            OCRUI.Initial(OCRCollection,mOCRByPaddle);
             
             IsNeedToChange = true;
         }
