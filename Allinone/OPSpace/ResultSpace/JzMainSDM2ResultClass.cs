@@ -6,9 +6,11 @@ using JetEazy.BasicSpace;
 using JetEazy.ControlSpace;
 using JetEazy.FormSpace;
 using JetEazy.PlugSpace;
+using JetEazy.PlugSpace.BarcodeEx;
 using MoveGraphLibrary;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -49,6 +51,11 @@ namespace Allinone.OPSpace.ResultSpace
         bool IsGetImageStartOld = false;
         bool IsGetImageResetOld = false;
         bool IsGetTestStartOld = false;
+
+        /// <summary>
+        /// 整合最后资料的标志 用于卡掉通讯时使用
+        /// </summary>
+        bool IsCheckLastResultFile = false;
 
         public string ARTWORKNAME = "";
         public string MODELNAME = "";
@@ -187,6 +194,28 @@ namespace Allinone.OPSpace.ResultSpace
                         }
                     }
                 }
+                else if (INI.IsOpenCheckSensor2)
+                {
+                    MainsdLightSettings mainsdLight = new MainsdLightSettings();
+                    mainsdLight.GetString(albumwork.ENVList[0].GeneralLight);
+
+                    if (mainsdLight.PANNEL)
+                    {
+                        if (!MACHINE.PLCIO.IsSensor3)
+                        {
+                            _LOG_MSG_ERR("外同轴未安装 无法测试");
+                            return;
+                        }
+                    }
+                    else if (mainsdLight.BOTTOMLED)
+                    {
+                        if (MACHINE.PLCIO.IsSensor3)
+                        {
+                            _LOG_MSG_ERR("外同轴未放置正确位置 无法测试");
+                            return;
+                        }
+                    }
+                }
             }
 
             OnTrigger(ResultStatusEnum.CALSTART);
@@ -219,54 +248,57 @@ namespace Allinone.OPSpace.ResultSpace
         public override void Tick()
         {
             MainProcessTick();
-            if (m_IsUserStop)
+            if (!IsCheckLastResultFile)
             {
-                m_IsUserStop = false;
-                StopAllProcess();
-
-                _LOG_MSG($"用户按下停止按钮 ");
-            }
-            if (m_IsErrorRobot)
-            {
-                m_IsErrorRobot = false;
-                StopAllProcess();
-
-                _LOG_MSG_ERR($"报警中 {MACHINE.PLCIO.RobotErrorMessage}");
-            }
-            if (m_IsEMC)
-            {
-                m_IsEMC = false;
-                StopAllProcess();
-
-                _LOG_MSG_ERR("EMC 急停中");
-            }
-            if (m_IsALARM)
-            {
-                m_IsALARM = false;
-                StopAllProcess();
-
-                _LOG_MSG_ERR("ALARM 报警中");
-            }
-            if (m_IsReset)
-            {
-                _LOG_MSG("RESET 复位按下");
-                m_IsReset = false;
-                if (!MainProcess.IsOn && !m_OnekeyGetImageProcess.IsOn && !m_ResetProcess.IsOn && !MACHINE.PLCIO.IsEMC)
+                if (m_IsUserStop)
                 {
-                    _LOG_MSG("RESET 复位启动");
-                    if (!Universal.IsNoUseCCD)
-                        m_ResetProcess.Start();
+                    m_IsUserStop = false;
+                    StopAllProcess();
+
+                    _LOG_MSG($"用户按下停止按钮 ");
                 }
-            }
-            if (m_IsOneKey)
-            {
-                _LOG_MSG("ONEKEY 一键取像按下");
-                m_IsOneKey = false;
-                if (!MainProcess.IsOn && !m_OnekeyGetImageProcess.IsOn && !m_ResetProcess.IsOn && (Universal.IsNoUseCCD || !MACHINE.PLCIO.IsEMC))
+                if (m_IsErrorRobot)
                 {
-                    _LOG_MSG("ONEKEY 一键取像启动");
-                    //if (!Universal.IsNoUseCCD)
-                    m_OnekeyGetImageProcess.Start();
+                    m_IsErrorRobot = false;
+                    StopAllProcess();
+
+                    _LOG_MSG_ERR($"报警中 {MACHINE.PLCIO.RobotErrorMessage}");
+                }
+                if (m_IsEMC)
+                {
+                    m_IsEMC = false;
+                    StopAllProcess();
+
+                    _LOG_MSG_ERR("EMC 急停中");
+                }
+                if (m_IsALARM)
+                {
+                    m_IsALARM = false;
+                    StopAllProcess();
+
+                    _LOG_MSG_ERR("ALARM 报警中");
+                }
+                if (m_IsReset)
+                {
+                    _LOG_MSG("RESET 复位按下");
+                    m_IsReset = false;
+                    if (!MainProcess.IsOn && !m_OnekeyGetImageProcess.IsOn && !m_ResetProcess.IsOn && !MACHINE.PLCIO.IsEMC)
+                    {
+                        _LOG_MSG("RESET 复位启动");
+                        if (!Universal.IsNoUseCCD)
+                            m_ResetProcess.Start();
+                    }
+                }
+                if (m_IsOneKey)
+                {
+                    _LOG_MSG("ONEKEY 一键取像按下");
+                    m_IsOneKey = false;
+                    if (!MainProcess.IsOn && !m_OnekeyGetImageProcess.IsOn && !m_ResetProcess.IsOn && (Universal.IsNoUseCCD || !MACHINE.PLCIO.IsEMC))
+                    {
+                        _LOG_MSG("ONEKEY 一键取像启动");
+                        //if (!Universal.IsNoUseCCD)
+                        m_OnekeyGetImageProcess.Start();
+                    }
                 }
             }
         }
@@ -467,7 +499,7 @@ namespace Allinone.OPSpace.ResultSpace
 
                         //m_EnvNow = new EnvClass();
                         RunDataMappingCollection.Clear();
-
+                        IsCheckLastResultFile = false;
 
                         LogProcessSwitch = true;
                         LogProcessIDTimer(Process.ID, "流程开始");
@@ -696,34 +728,65 @@ namespace Allinone.OPSpace.ResultSpace
                                 bmpBarcode = new Bitmap(CCDCollection.GetBMP(0, false));
                                 Bitmap bmp2 = (Bitmap)bmpBarcode.Clone(m_JzBarcodeParaGridClass.RectF, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                                 //bmpBarcode.Save("D:\\xOffline_Barcode.bmp", ImageFormat.Bmp);
-                                AForge.Imaging.Filters.ContrastCorrection contrast = new AForge.Imaging.Filters.ContrastCorrection(m_JzBarcodeParaGridClass.nContrast);
-                                bmp2 = contrast.Apply(bmp2);
-                                AForge.Imaging.Filters.BrightnessCorrection brightness = new AForge.Imaging.Filters.BrightnessCorrection(m_JzBarcodeParaGridClass.nBrightness);
-                                bmp2 = brightness.Apply(bmp2);
 
-                                EzSegDMTX IxBarcode = new EzSegDMTX();
-                                IxBarcode.InputImage = bmp2;
-                                //if (m_UseAIFromPy)
-                                //    IxBarcode.SetEzSeg(model);
-                                int iret = IxBarcode.Run();
+                                int iret = 0;
                                 string barcodeStrResult = string.Empty;
-                                if (iret == 0)
-                                {
-                                    barcodeStrResult = "读取成功：" + IxBarcode.BarcodeStr + Environment.NewLine;
-                                    barcodeStrResult += "耗时：" + IxBarcode.ElapsedTime.ToString() + " ms";
+                                string _barcodeStrTemp = string.Empty;
 
-                                    Universal.CalTestPath = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\TESTCOLLECT\\{JzTimes.DateTimeSerialString}-{IxBarcode.BarcodeStr}";
+                                Mvd2DReaderClass mvd2DReader = new Mvd2DReaderClass();
+                                mvd2DReader.Run(bmp2, new RectangleF(0, 0, bmp2.Width, bmp2.Height));
+                                if (string.IsNullOrEmpty(mvd2DReader.xBarcodeStr))
+                                {
+                                    AForge.Imaging.Filters.ContrastCorrection contrast = new AForge.Imaging.Filters.ContrastCorrection(m_JzBarcodeParaGridClass.nContrast);
+                                    bmp2 = contrast.Apply(bmp2);
+                                    AForge.Imaging.Filters.BrightnessCorrection brightness = new AForge.Imaging.Filters.BrightnessCorrection(m_JzBarcodeParaGridClass.nBrightness);
+                                    bmp2 = brightness.Apply(bmp2);
+
+                                    EzSegDMTX IxBarcode = new EzSegDMTX();
+                                    IxBarcode.InputImage = bmp2;
+                                    //if (m_UseAIFromPy)
+                                    //    IxBarcode.SetEzSeg(model);
+                                    iret = IxBarcode.Run();
+
+                                    if (iret == 0)
+                                    {
+                                        _barcodeStrTemp = IxBarcode.BarcodeStr;
+
+                                        barcodeStrResult = "读取成功：" + IxBarcode.BarcodeStr + Environment.NewLine;
+                                        barcodeStrResult += "耗时：" + IxBarcode.ElapsedTime.ToString() + " ms";
+
+                                        //Universal.CalTestPath = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\TESTCOLLECT\\{JzTimes.DateTimeSerialString}-{IxBarcode.BarcodeStr}";
+                                    }
+                                    else
+                                        barcodeStrResult = "读取失败：错误码=" + iret.ToString();
                                 }
                                 else
-                                    barcodeStrResult = "读取失败：错误码=" + iret.ToString();
+                                {
+                                    _barcodeStrTemp = mvd2DReader.xBarcodeStr;
 
-                                Universal.CalTestBarcode = IxBarcode.BarcodeStr;
+                                    barcodeStrResult = $"读取成功：{_barcodeStrTemp}" + Environment.NewLine;
+                                    //barcodeStrResult += $"耗时：" + IxBarcode.ElapsedTime.ToString() + " ms";
+                                }
+
+                                if (!string.IsNullOrEmpty(_barcodeStrTemp))
+                                {
+                                    Universal.CalTestPath = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\TESTCOLLECT\\{JzTimes.DateTimeSerialString}-{_barcodeStrTemp}";
+                                
+                                }
+                                Universal.CalTestBarcode = _barcodeStrTemp;
                                 OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, Universal.CalTestBarcode);
+                                _LOG_MSG($"{Process.ID} {barcodeStrResult}");
 
                                 if (!Directory.Exists(Universal.CalTestPath))
                                     Directory.CreateDirectory(Universal.CalTestPath);
 
+
                                 bmp2.Dispose();
+                                if (mvd2DReader != null)
+                                {
+                                    mvd2DReader.Dispose();
+                                    mvd2DReader = null;
+                                }
 
                                 #endregion
 
@@ -1035,7 +1098,7 @@ namespace Allinone.OPSpace.ResultSpace
                         {
                             //Testms[3] = TestTimer.msDuriation;
                             TestTimer.Cut();
-
+                            IsCheckLastResultFile = true;
                             if (IsNoUseCCD)
                                 OnTrigger(ResultStatusEnum.COUNTSTART);
 
@@ -1130,6 +1193,7 @@ namespace Allinone.OPSpace.ResultSpace
                         LogProcessIDTimer(Process.ID, "==================");
                         LogProcessIDTimer(Process.ID, "==================");
                         GC.Collect();
+                        IsCheckLastResultFile = false;
                         break;
                 }
             }
@@ -2586,6 +2650,7 @@ namespace Allinone.OPSpace.ResultSpace
                                     dataMapping.ReportBinValue = 0;
                                     if (analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK
                                         || analyze.PADPara.PADMethod == PADMethodEnum.GLUECHECK_BlackEdge
+                                        || analyze.PADPara.PADMethod == PADMethodEnum.CHIPCHECKNOHAVE
                                         || analyze.PADPara.PADMethod == PADMethodEnum.QLE_CHECK)
                                     {
                                         if (string.IsNullOrEmpty(analyze.PADPara.DescStr))
@@ -3422,8 +3487,15 @@ namespace Allinone.OPSpace.ResultSpace
                             Directory.CreateDirectory(mainx6_picture_path);
                     }
 
+                    int[] _binCountForEveryOne = new int[6];
+                    for (int ix = 0; ix < 6; ix++)
+                    {
+                        _binCountForEveryOne[ix] = 0;
+                    }
+
                     foreach (DataMappingClass keyassign in BranchList)
                     {
+                        _binCountForEveryOne[keyassign.ReportBinValue]++;
                         switch(keyassign.ReportBinValue)
                         {
                             case 0://PASS
@@ -3479,7 +3551,36 @@ namespace Allinone.OPSpace.ResultSpace
                         myReportStr += strss + Environment.NewLine;
                     }
 
+                    //检测是不是无芯片个数超出比例范围
+                    #region 检测是不是无芯片个数超出比例范围
 
+                    if (IsPass)
+                    {
+                        MainsdLightSettings mainsdLight = new MainsdLightSettings();
+                        mainsdLight.GetString(AlbumWork.ENVList[0].GeneralLight);
+
+                        if (mainsdLight.bCheckNoHave)
+                        {
+                            float a = _binCountForEveryOne[5] * 1.0f / BranchList.Count;
+                            IsPass = a <= mainsdLight.CheckNoHaveRatio;
+
+                            if (!IsPass)
+                            {
+                                _LOG_MSG($"无芯片比例{a.ToString("0.00")}超过设定值{mainsdLight.CheckNoHaveRatio}，请查看！");
+                                Task task = new Task(() =>
+                                {
+                                    MessageForm m_MsgWarning = new MessageForm(true, $"无芯片比例{a.ToString("0.00")}超过设定值{mainsdLight.CheckNoHaveRatio}，请查看！");
+                                    m_MsgWarning.TopMost = true;
+                                    m_MsgWarning.ShowDialog();
+                                    m_MsgWarning.Close();
+                                    m_MsgWarning.Dispose();
+                                    m_MsgWarning = null;
+                                });
+                                task.Start();
+                            }
+                        }
+                    }
+                    #endregion
 
                     System.IO.StreamWriter streamWriter = new System.IO.StreamWriter(
                         myChipReportPath + "\\" + $"{JzTimes.DateTimeSerialString}-" + Universal.CalTestBarcode + $"{(IsPass ? "-P" : "-F")}" + ".csv");
@@ -3489,6 +3590,9 @@ namespace Allinone.OPSpace.ResultSpace
                     streamWriter = null;
 
                     OnTrigger(ResultStatusEnum.COUNT_MAPPING);//显示mapping数据
+
+                    //这边加入一个重连的机制 为了连上通讯
+                    MACHINE.PLCRetry();
 
                     if (IsPass)
                     {
@@ -3500,6 +3604,12 @@ namespace Allinone.OPSpace.ResultSpace
                     {
                         //PlayerFail.Play();
                         //OnTrigger(ResultStatusEnum.CALNG);
+
+                        if (ACCDB.DataNow.Name != "admin")
+                        {
+                            INI.CHIP_force_pass = false;
+                            INI.SaveSDM2Setup();
+                        }
 
                         if (INI.CHIP_force_pass)
                             MACHINE.PLCIO.Pass = false;

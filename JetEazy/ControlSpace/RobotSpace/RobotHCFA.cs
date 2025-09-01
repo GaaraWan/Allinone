@@ -50,6 +50,7 @@ namespace JetEazy.ControlSpace.RobotSpace
         protected int RetryCount = 0;
         protected int RetryIndex = 0;
         protected int Timeoutinms = 0;
+        protected bool IsUseThread = false;
 
         System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
         System.Threading.Thread m_Thread = null;
@@ -378,6 +379,7 @@ namespace JetEazy.ControlSpace.RobotSpace
 
             RetryCount = int.Parse(ReadINIValue("Other", "Retry", RetryCount.ToString(), eFilename));
             Timeoutinms = int.Parse(ReadINIValue("Other", "Timeout(ms)", Timeoutinms.ToString(), eFilename));
+            IsUseThread = ReadINIValue("Other", "IsUseThread", (IsUseThread ? "1" : "0"), eFilename) == "1";
 
             if (m_debug)
                 bOK = true;
@@ -389,21 +391,27 @@ namespace JetEazy.ControlSpace.RobotSpace
 
             if (bOK && !m_debug)
             {
-                //if (m_Thread == null)
-                //{
-                //    m_Running = true;
-                //    m_Thread = new System.Threading.Thread(new System.Threading.ThreadStart(_Scan));
-                //    m_Thread.Priority = System.Threading.ThreadPriority.Normal;
-                //    m_Thread.IsBackground = true;
-                //    m_Thread.Start();
-                //}
-                if(m_Timer == null)
+                if (IsUseThread)
                 {
-                    m_Running = true;
-                    m_Timer = new System.Windows.Forms.Timer();
-                    m_Timer.Interval = 10;
-                    m_Timer.Enabled = true;
-                    m_Timer.Tick += M_Timer_Tick;
+                    if (m_Thread == null)
+                    {
+                        m_Running = true;
+                        m_Thread = new System.Threading.Thread(new System.Threading.ThreadStart(_Scan));
+                        m_Thread.Priority = System.Threading.ThreadPriority.Normal;
+                        m_Thread.IsBackground = true;
+                        m_Thread.Start();
+                    }
+                }
+                else
+                {
+                    if (m_Timer == null)
+                    {
+                        m_Running = true;
+                        m_Timer = new System.Windows.Forms.Timer();
+                        m_Timer.Interval = 100;
+                        m_Timer.Enabled = true;
+                        m_Timer.Tick += M_Timer_Tick;
+                    }
                 }
             }
 
@@ -416,15 +424,25 @@ namespace JetEazy.ControlSpace.RobotSpace
                 bOK = true;
             else
             {
-                if(SerialCount == 0)
+                //if(handle == IntPtr.Zero)
+                try
                 {
                     handle = MFApi.Connection.connect(m_ip);
                     bOK = handle != IntPtr.Zero;
                 }
-                else
+                catch
                 {
-                    bOK = true;
+
                 }
+                //if(SerialCount == 0)
+                //{
+                //    handle = MFApi.Connection.connect(m_ip);
+                //    bOK = handle != IntPtr.Zero;
+                //}
+                //else
+                //{
+                //    bOK = true;
+                //}
             }
             return bOK;
         }

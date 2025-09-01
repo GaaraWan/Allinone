@@ -120,6 +120,60 @@ namespace Allinone.BasicSpace
                 return m_cipplcio.QcCurrentPos;
             }
         }
+        public string QcBoatID
+        {
+            get
+            {
+                if (m_compoletClass == null)
+                    return string.Empty;
+                if (m_cipplcio == null)
+                    return string.Empty;
+                return m_cipplcio.QcBotaID;
+            }
+        }
+        /// <summary>
+        /// 是否启用MAPPING测试
+        /// </summary>
+        public bool QcUseMap
+        {
+            get
+            {
+                if (m_compoletClass == null)
+                    return false;
+                if (m_cipplcio == null)
+                    return false;
+                return m_cipplcio.QcUseMap;
+            }
+        }
+        /// <summary>
+        /// Map需要QC检测 1-检测 2-不检测 5-空
+        /// </summary>
+        /// <returns>1-检测 2-不检测 5-空</returns>
+        public int QcMapNeed
+        {
+            get
+            {
+                if (m_compoletClass == null)
+                    return 1;
+                if (m_cipplcio == null)
+                    return 1;
+                return m_cipplcio.GetQcMap();
+            }
+        }
+        /// <summary>
+        /// 更新测试结果Map到plc
+        /// </summary>
+        /// <param name="mapResults">根据自定义的错误数组</param>
+        public void QcMapResult(int[] mapResults)
+        {
+            if (mapResults == null)
+                return;
+            if (m_compoletClass == null)
+                return;
+            if (m_cipplcio == null)
+                return;
+            m_cipplcio.iQcMapResult(mapResults);
+        }
 
     }
 }

@@ -255,7 +255,7 @@ namespace Allinone.UISpace.MSRUISpace
             stopwatch.Restart();
 
 
-            analyze.PADPara.GetDataIPD(bmpBitmap, true);
+            string retstr = analyze.PADPara.GetDataIPD(bmpBitmap, true);
 
             stopwatch.Stop();
             long ms = stopwatch.ElapsedMilliseconds;
@@ -274,9 +274,9 @@ namespace Allinone.UISpace.MSRUISpace
             //lblIPDMeanValue.Text = analyze.PADPara.jzsideanalyzeex.;
             //lblIPDThreshold.Text = analyze.PADPara.jzsideanalyzeex.thresholdstr;
 
-            lblIPDPassNG.Text = analyze.PADPara.sideAnalyze.PASSNG;
+            lblIPDPassNG.Text = retstr;// analyze.PADPara.sideAnalyze.PASSNG;
 
-            if (analyze.PADPara.sideAnalyze.PASSNG == "PASS")
+            if (retstr == "PASS")
             {
                 lblIPDPassNG.BackColor = Color.Lime;
             }

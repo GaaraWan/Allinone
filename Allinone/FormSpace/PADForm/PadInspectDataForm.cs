@@ -1,4 +1,6 @@
-﻿using Allinone.UISpace.MSRUISpace;
+﻿using Allinone.FormSpace.PADForm.PadInspect;
+using Allinone.UISpace;
+using Allinone.UISpace.MSRUISpace;
 using JetEazy.BasicSpace;
 using System;
 using System.Collections.Generic;
@@ -20,6 +22,8 @@ namespace Allinone.FormSpace.PADForm
 
         PadUI PADUI;
         IPDV1UI iPDV1UI;
+        PADG1UI pADG1UI;
+        PADG2UI pADG2UI;
 
         Button btnOK;
         Button btnCancel;
@@ -36,6 +40,8 @@ namespace Allinone.FormSpace.PADForm
             cboMeasureMethod = comboBox1;
             PADUI = padUI1;
             iPDV1UI = ipdV1UI1;
+            pADG1UI = padG1UI1;
+            pADG2UI = padG2UI1;
 
             btnOK = button4;
             btnCancel = button6;
@@ -69,6 +75,18 @@ namespace Allinone.FormSpace.PADForm
 
                     iPDV1UI.Initial(strs[1]);
                     iPDV1UI.Visible = true;
+
+                    break;
+                case PadInspectMethodEnum.PAD_G1:
+
+                    pADG1UI.Initial(strs[1]);
+                    pADG1UI.Visible = true;
+
+                    break;
+                case PadInspectMethodEnum.PAD_G2:
+
+                    pADG2UI.Initial(strs[1]);
+                    pADG2UI.Visible = true;
 
                     break;
 
@@ -109,6 +127,16 @@ namespace Allinone.FormSpace.PADForm
                     iPDV1UI.Visible = true;
 
                     break;
+                case PadInspectMethodEnum.PAD_G1:
+
+                    pADG1UI.Visible = true;
+
+                    break;
+                case PadInspectMethodEnum.PAD_G2:
+
+                    pADG2UI.Visible = true;
+
+                    break;
 
 
             }
@@ -119,7 +147,7 @@ namespace Allinone.FormSpace.PADForm
         {
             int i = -1;
 
-            while (i < (int)PadInspectMethodEnum.COUNT)
+            while (i < Enum.GetNames(typeof(PadInspectMethodEnum)).Length - 1)
             {
                 cboMeasureMethod.Items.Add(((PadInspectMethodEnum)i).ToString());
                 i++;
@@ -129,9 +157,16 @@ namespace Allinone.FormSpace.PADForm
         {
             PADUI.Visible = false;
             iPDV1UI.Visible = false;
+            pADG1UI.Visible = false;
+            pADG2UI.Visible = false;
 
-            PADUI.Location = new Point(9, 51);
-            iPDV1UI.Location = new Point(9, 51);
+            PADUI.Dock = DockStyle.Fill;
+            iPDV1UI.Dock = DockStyle.Fill;
+            pADG1UI.Dock = DockStyle.Fill;
+            pADG2UI.Dock = DockStyle.Fill;
+
+            //PADUI.Location = new Point(9, 51);
+            //iPDV1UI.Location = new Point(9, 51);
         }
 
         string GetReturnString()
@@ -148,10 +183,15 @@ namespace Allinone.FormSpace.PADForm
                 case PadInspectMethodEnum.PAD_V1:
                     retstr += iPDV1UI.GetDataValueString();
                     break;
+                case PadInspectMethodEnum.PAD_G1:
+                    retstr += pADG1UI.GetDataValueString();
+                    break;
+                case PadInspectMethodEnum.PAD_G2:
+                    retstr += pADG2UI.GetDataValueString();
+                    break;
             }
 
             return retstr;
         }
-
     }
 }

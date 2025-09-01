@@ -284,7 +284,7 @@ namespace JetEazy.ControlSpace.PLCSpace
         }
 
         #region CIPCompolet64
-        public void WriteVari(string eVari, string eValue)
+        public override void WriteVari(string eVari, string eValue)
         {
             if (IsSimulater)
                 return;
@@ -346,7 +346,7 @@ namespace JetEazy.ControlSpace.PLCSpace
                 return new Byte[1] { Convert.ToByte(obj) };
             }
         }
-        public string ReadVari(string eVari)
+        public override string ReadVari(string eVari)
         {
             string ret = string.Empty;
 

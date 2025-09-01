@@ -10,8 +10,10 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Modbus.Device;
 using Modbus.Message;
+using OMRON.Compolet.CIPCompolet64;
 
 namespace JetEazy.ControlSpace
 {
@@ -88,6 +90,11 @@ namespace JetEazy.ControlSpace
         }
         #endregion
 
+
+        public string TypeStr
+        {
+            get { return CommTypeStr; }
+        }
 
         public override bool Open(string FileName, bool issimulator)
         {

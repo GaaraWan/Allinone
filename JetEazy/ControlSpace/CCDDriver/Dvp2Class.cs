@@ -77,7 +77,7 @@ namespace JetEazy.ControlSpace.CCDDriver
                 status = DVPCamera.dvpGetExposureDescr(m_handle, ref expoDescr);
                 if (status == dvpStatus.DVP_STATUS_OK)
                 {
-                    if (fexposure >= expoDescr.fMax || fexposure <= expoDescr.fMin)
+                    if (fexposure > expoDescr.fMax || fexposure < expoDescr.fMin)
                         return;
 
                     //打开/关闭相机触发模式
@@ -95,7 +95,7 @@ namespace JetEazy.ControlSpace.CCDDriver
                 status = DVPCamera.dvpGetAnalogGainDescr(m_handle, ref expoDescr);
                 if (status == dvpStatus.DVP_STATUS_OK)
                 {
-                    if (fgain >= expoDescr.fMax || fgain <= expoDescr.fMin)
+                    if (fgain > expoDescr.fMax || fgain < expoDescr.fMin)
                         return;
 
                     //打开/关闭相机触发模式
@@ -264,10 +264,21 @@ namespace JetEazy.ControlSpace.CCDDriver
                             dvpCameraInfo dev_info = new dvpCameraInfo();
                             status = DVPCamera.dvpEnum((uint)_index, ref dev_info);
 
-                            //status = DVPCamera.dvpLoadConfig(m_handle, m_Dvp2ConfigPath + "\\DS" + m_SerialNumber + ".ini");
-                            status = DVPCamera.dvpLoadConfig(m_handle, m_Dvp2ConfigPath + "\\" + dev_info.FriendlyName + ".ini");
-                            if (status != dvpStatus.DVP_STATUS_OK)
-                                DVPCamera.dvpLoadDefault(m_handle);
+                            string file0 = $"{m_Dvp2ConfigPath}\\{dev_info.FriendlyName}.ini";
+                            string file1 = $"{m_Dvp2ConfigPath}\\{dev_info.SerialNumber}.ini";
+                            if (File.Exists(file0))
+                            {
+                                status = DVPCamera.dvpLoadConfig(m_handle, file0);
+                            }
+                            else if (File.Exists(file1))
+                            {
+                                status = DVPCamera.dvpLoadConfig(m_handle, file1);
+                            }
+
+                            ////status = DVPCamera.dvpLoadConfig(m_handle, m_Dvp2ConfigPath + "\\DS" + m_SerialNumber + ".ini");
+                            //status = DVPCamera.dvpLoadConfig(m_handle, m_Dvp2ConfigPath + "\\" + dev_info.FriendlyName + ".ini");
+                            //if (status != dvpStatus.DVP_STATUS_OK)
+                            //    DVPCamera.dvpLoadDefault(m_handle);
                         }
                         else
                         {

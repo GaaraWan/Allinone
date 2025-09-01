@@ -11,6 +11,7 @@ using JetEazy.BasicSpace;
 using JetEazy.PlugSpace;
 using System.Threading;
 using JetEazy.Interface;
+using JetEazy.DBSpace;
 
 namespace Allinone.OPSpace.ResultSpace
 {
@@ -229,6 +230,14 @@ namespace Allinone.OPSpace.ResultSpace
         public int DirsCount
         {
             get { return Dirs.Length; }
+        }
+
+        protected AccDBClass ACCDB
+        {
+            get
+            {
+                return Universal.ACCDB;
+            }
         }
 
         //Create by Gaara 2020/10/21

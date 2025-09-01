@@ -39,6 +39,12 @@ namespace Allinone.BasicSpace
         [Browsable(true)]
         public int nAreaMax { get; set; } = 1000000;
 
+        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [DisplayName("A04.长宽比例")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
+        [Browsable(true)]
+        public float nRatio { get; set; } = 30;
 
         const string cat0 = "01.切换参数设定";
 
@@ -59,7 +65,7 @@ namespace Allinone.BasicSpace
         public long CheckTime = 0;
         public Bitmap bmpOutput = new Bitmap(1, 1);
 
-        public int GetBottomCount(Bitmap ebmpInput,bool istrain=true)
+        public int GetBottomCount(Bitmap ebmpInput, bool istrain = true)
         {
             CheckTime = 0;
             int iret = -1;
@@ -108,7 +114,7 @@ namespace Allinone.BasicSpace
             float set_area_valueMax = nAreaMax;
             //float.TryParse(txtAreaMax.Text.Trim(), out set_area_valueMax);
 
-            float set_ratio_value = 30;
+            float set_ratio_value = nRatio;
             //float.TryParse(txtRatio.Text.Trim(), out set_ratio_value);
 
             int.TryParse("3", out penWidth);
@@ -135,26 +141,29 @@ namespace Allinone.BasicSpace
             // 定义 Y 值的波动范围阈值
             double thresholdx = 15;
 
-            // 按 Y 坐标排序
-            var sortedBoxes = boxes.OrderBy(b => b.Y).ToList();
-
-            // 获取最小的 Y 值（最下面一排的基准线）
-            //double minY = sortedBoxes.First().Y;
-            double minY = sortedBoxes.Last().Y;
-
-            // 筛选出 Y 值在 [minY, minY + threshold] 范围内的方框
-            var bottomRowBoxes = boxes.Where(b => b.Y >= minY - thresholdx && b.Y <= minY + thresholdx).ToList();
-
-            // 输出结果
-            Console.WriteLine("最下面一排的方框个数: " + bottomRowBoxes.Count);
-            Console.WriteLine("最下面一排的方框坐标:");
-            foreach (var box in bottomRowBoxes)
+            if (boxes.Count > 0)
             {
-                Console.WriteLine($"(X: {box.X}, Y: {box.Y})");
-                _collectIndex += $";{box.Index};";
+                // 按 Y 坐标排序
+                var sortedBoxes = boxes.OrderBy(b => b.Y).ToList();
+
+                // 获取最小的 Y 值（最下面一排的基准线）
+                //double minY = sortedBoxes.First().Y;
+                double minY = sortedBoxes.Last().Y;
+
+                // 筛选出 Y 值在 [minY, minY + threshold] 范围内的方框
+                var bottomRowBoxes = boxes.Where(b => b.Y >= minY - thresholdx && b.Y <= minY + thresholdx).ToList();
+
+                // 输出结果
+                Console.WriteLine("最下面一排的方框个数: " + bottomRowBoxes.Count);
+                Console.WriteLine("最下面一排的方框坐标:");
+                foreach (var box in bottomRowBoxes)
+                {
+                    Console.WriteLine($"(X: {box.X}, Y: {box.Y})");
+                    _collectIndex += $";{box.Index};";
+                }
+                Console.WriteLine(_collectIndex);
+                iret = bottomRowBoxes.Count;
             }
-            Console.WriteLine(_collectIndex);
-            iret = bottomRowBoxes.Count;
 
             if (istrain)
             {
@@ -279,6 +288,11 @@ namespace Allinone.BasicSpace
                 nAreaMin = int.Parse(parts[3]);
                 nAreaMax = int.Parse(parts[4]);
             }
+            if (parts.Length > 5)
+            {
+                if (!string.IsNullOrEmpty(parts[5]))
+                    nRatio = float.Parse(parts[5]);
+            }
         }
         public string ToParaString()
         {
@@ -289,6 +303,7 @@ namespace Allinone.BasicSpace
             str += nThresholdValue.ToString() + ",";
             str += nAreaMin.ToString() + ",";
             str += nAreaMax.ToString() + ",";
+            str += nRatio.ToString() + ",";
 
             return str;
         }

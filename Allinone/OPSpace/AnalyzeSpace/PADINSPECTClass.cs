@@ -22,6 +22,17 @@ using System.Windows.Shell;
 using System.Diagnostics;
 using Allinone.BasicSpace.MVD;
 using iTextSharp.text.html.simpleparser;
+using AForge.Imaging.Filters;
+using AForge.Imaging;
+using AForge.Math;
+using AForge.Controls;
+using static Allinone.OPSpace.AnalyzeSpace.PADINSPECTClass;
+using System.Runtime.InteropServices;
+using VisionDesigner;
+using Allinone.FormSpace.BasicPG;
+using MoveGraphLibrary;
+using WorldOfMoveableObjects;
+//using System.Windows;
 
 namespace Allinone.OPSpace.AnalyzeSpace
 {
@@ -45,6 +56,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public PADCalModeEnum PADCalMode { get; set; } = PADCalModeEnum.BlacktoBlack;
         public PADChipSize PADChipSizeMode { get; set; } = PADChipSize.CHIP_NORMAL;
         public AICategory PADAICategory { get; set; } = AICategory.Baseline;
+        public ChipSlotDir GlueChipSlotDir { get; set; } = ChipSlotDir.NONE;
+        /// <summary>
+        /// 芯片有无检测模式
+        /// </summary>
+        public ChipNoHave ChipNoHaveMode { get; set; } = ChipNoHave.NONE;
+        public string ChipNoHaveModeOpString { get; set; } = "";
+        /// <summary>
+        /// 无胶检测模式
+        /// </summary>
+        public ChipNoGlueMethod ChipNoGlueMode { get; set; } = ChipNoGlueMethod.NONE;
 
         IEzSeg m_Model = null;
 
@@ -98,6 +119,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public double GlueMaxRight { get; set; } = 0.9;
         public double GlueMinRight { get; set; } = 0.1;
 
+        public double GlueTopBottomOffset { get; set; } = 0.1;//银胶上下的偏移量
+        public double GlueLeftRightOffset{ get; set; } = 0.1;//银胶左右的偏移量
+
 
         public double GleWidthUpper { get; set; } = 10;
         public double GleWidthLower { get; set; } = 0;
@@ -110,8 +134,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
         #endregion
 
-        public double GlueMax { get; set; } = 180;
-        public double GlueMin { get; set; } = 6;
+        public double GlueMax { get; set; } = 1;//薄膜胶最大值
+        public double GlueMin { get; set; } = 0.1;//薄膜胶最小值
+
+
         public bool GlueCheck { get; set; } = true;
         public double NoGlueThresholdValue { get; set; } = 0.7;
         public double BloodFillValueRatio { get; set; } = 0.33;
@@ -147,11 +173,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
             set { m_PtfCenter = value; }
         }
 
-        JzMVDGrayPatMatchClass m_MvdGrayPatMatch = new JzMVDGrayPatMatchClass();
+        //JzMVDGrayPatMatchClass m_MvdGrayPatMatch = new JzMVDGrayPatMatchClass();
         JetEazy.BasicSpace.JzFindObjectClass m_JzFind = new JetEazy.BasicSpace.JzFindObjectClass();
         PADRegionClass m_PADRegion = new PADRegionClass();
-        bool m_IsSaveTemp = true;
+        bool m_IsSaveTemp = false;
         HistogramClass m_Histogram = new HistogramClass(2);
+        JzToolsClass m_Tools = new JzToolsClass();
+
+        JzMVDPatMatchClass mVDPatMatchClass = new JzMVDPatMatchClass();
+        public JzMVDPatMatchClass EzMVDPatMatchPADG2 = new JzMVDPatMatchClass();
+        public JzMVDBlobClass EzMVDBLOB = new JzMVDBlobClass();
 
         Bitmap imginput;
         Bitmap imgoutput;
@@ -206,7 +237,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             //0.025/0.022 = 1 mil/1 pixel
             Resolution_Mil = 0.0254 / INI.MAINSD_PAD_MIL_RESOLUTION;
-
+            m_IsSaveTemp = INI.IsDEBUGCHIP;
             ////胶水检测使用mm换算单位
             //switch (Universal.OPTION)
             //{
@@ -246,6 +277,37 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                     PADRegionFind(bmpPattern, PADGrayThreshold, true, out m_PADRegion);
 
+                    switch(ChipNoHaveMode)
+                    {
+                        case ChipNoHave.Normal:
+
+                            Rectangle _cropItem = m_PADRegion.RegionForEdgeRect;
+                            _cropItem.Inflate(10, 10);
+                            BoundRect(ref _cropItem, bmpPattern.Size);
+                            Bitmap bmpitemx = bmpPattern.Clone(_cropItem, PixelFormat.Format24bppRgb);
+                            checkNoHaveTrain(bmpitemx);
+                            bmpitemx.Dispose();
+
+                            break;
+                    }
+
+                    switch(PADMethod)
+                    {
+                        case PADMethodEnum.QLE_CHECK:
+
+                            switch (PadInspectMethod)
+                            {
+                                case PadInspectMethodEnum.PAD_G2:
+                                    RectangleF rectCrop = FindAxisAlignedBoundingRectangle(m_PADRegion.RegionPtFCornerQLE);
+                                    BoundRect(ref rectCrop, bmppattern.Size);
+                                    CheckYinJiaoIrregular(true, bmppattern, rectCrop);
+
+                                    break;
+                            }
+
+                            break;
+                    }
+
                     //m_MvdGrayPatMatch.bmpItem = new Bitmap(bmpPattern);//, new Size(bmpPattern.Width >> 1, bmpPattern.Height >> 1));
                     //m_MvdGrayPatMatch.HikTrainGray();
 
@@ -269,6 +331,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             switch (PADChipSizeMode)
                             {
                                 case PADChipSize.CHIP_V1:
+                                    //rect1.Inflate(2, 2);
                                     bitmap = new Bitmap(_getV1bmpInput(rect1));
                                     break;
                                 case PADChipSize.CHIP_V2:
@@ -297,6 +360,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                     {
                                         case PadInspectMethodEnum.PAD_V1:
                                         case PadInspectMethodEnum.PAD_SMALL:
+                                            checkOutGlue(bmppattern, out Bitmap bitmap1, true);
 
                                             //Bitmap _bmpnewIpd = new Bitmap(bitmap);
                                             GetDataIPD(bmppattern, true);
@@ -305,6 +369,14 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                             bitmap = new Bitmap(bmplist[3]);
 
                                             break;
+
+                                        case PadInspectMethodEnum.PAD_G1:
+
+                                            //画出内缩外扩的位置
+                                            bitmap = new Bitmap(_getNormalPADG1(rect1));
+
+                                            break;
+
                                         default:
                                             bitmap = new Bitmap(_getG1bmpInput(rect1));
                                             break;
@@ -312,7 +384,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                                     break;
                             }
+                            bmpPadFindOutput.Dispose();
                             bmpPadFindOutput = new Bitmap(bitmap);
+                            bitmap.Dispose();
                         }
                         catch
                         {
@@ -339,6 +413,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     bmpPadFindOutput = new Bitmap(bmppattern);
                     //bmpPadBolbOutput = new Bitmap(bmppattern);
 
+                    Rectangle rect1x = new Rectangle(m_PADRegion.RegionForEdgeRect.X,
+                                                                                   m_PADRegion.RegionForEdgeRect.Y,
+                                                                                   m_PADRegion.RegionForEdgeRect.Width,
+                                                                                   m_PADRegion.RegionForEdgeRect.Height);
+
                     PADRegionFind_BlackEdge(bmpPattern, PADGrayThreshold, true, out m_PADRegion);
 
                     if (GlueCheck)
@@ -357,7 +436,19 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                     break;
                                 case PADChipSize.CHIP_NORMAL:
                                 default:
-                                    bitmap = new Bitmap(blackNormal(m_PADRegion));
+
+                                    switch(PadInspectMethod)
+                                    {
+                                        case PadInspectMethodEnum.PAD_G1:
+
+                                            //画出内缩外扩的位置
+                                            bitmap = new Bitmap(_getNormalPADG1(rect1x));
+
+                                            break;
+                                        default:
+                                            bitmap = new Bitmap(blackNormal(m_PADRegion));
+                                            break;
+                                    }
                                     break;
                             }
                             bmpPadFindOutput.Dispose();
@@ -377,6 +468,21 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
                     }
 
+
+                    break;
+
+                case PADMethodEnum.CHIPCHECKNOHAVE:
+                    bmpPattern = new Bitmap(bmppattern);
+                    bmpMask = new Bitmap(bmpmask);
+                    bmpPadFindOutput = new Bitmap(bmppattern);
+
+                    PB10_ChipCheckNoHaveProcess(bmpPattern, true, ref bmpPadFindOutput);
+
+                    if (m_IsSaveTemp)
+                    {
+                        bmpPadFindOutput.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpPadFindOutput" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                        //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+                    }
 
                     break;
 
@@ -696,6 +802,1066 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //bmpMeasureOutput = new Bitmap(bmpinput);
             bmpMeasureOutput = (Bitmap)bmpinput.Clone();
 
+            if (PADMethod == PADMethodEnum.NONE)
+            {
+                bmpoutput.Dispose();
+                bmpoutput = new Bitmap(bmpinput);
+                IsPass = true;
+                return true;
+            }
+            p1 = new PointF(2710, 5.55f);
+            p2 = new PointF(4257, 7.55f);
+            lineClass_top = new LineClass(p1, p2);
+
+            p1 = new PointF(1180, 7.75f);
+            p2 = new PointF(4257, 5.55f);
+            lineClass_bottom = new LineClass(p1, p2);
+
+            p1 = new PointF(450, 5.55f);
+            p2 = new PointF(3250, 7.55f);
+            lineClass_left = new LineClass(p1, p2);
+
+            p1 = new PointF(1600, 7.55f);
+            p2 = new PointF(2850, 5.55f);
+            lineClass_right = new LineClass(p1, p2);
+
+            m_IsSaveTemp = INI.IsDEBUGCHIP;
+            bool isgood = true;
+
+            WorkStatusClass runstatus = new WorkStatusClass(AnanlyzeProcedureEnum.GLUEINSPECT);
+            string processstring = "Start " + RelateAnalyzeString + " PAD Inspection." + Environment.NewLine;
+            string errorstring = "";
+            string descstriing = "";
+            ReasonEnum reason = ReasonEnum.PASS;
+
+            bmpInput = new Bitmap(bmpinput);
+            bmpPadFindOutput = (Bitmap)bmpinput.Clone();
+
+            #region 先判断PAD的尺寸是否正确 和 正确定位到 及 判断PAD 区域里面的blob
+            //这里不需要自己自动找框了 用train的位置框
+            //PADRegionClass PADTempRegion = new PADRegionClass();
+
+            if (isgood)
+            {
+                #region 检测有无芯片
+
+                switch(ChipNoHaveMode)
+                {
+                    case ChipNoHave.Normal:
+
+                        Bitmap bmprunxxxx = new Bitmap(bmpinput);
+                        isgood = checkNoHaveRun(bmprunxxxx);
+                        bmprunxxxx.Dispose();
+
+                        if (!isgood)
+                        {
+                            isgood = false;
+                            processstring += "Error in FastPH" + RelateAnalyzeString + Environment.NewLine;
+                            errorstring += RelateAnalyzeString + Environment.NewLine;
+
+                            reason = ReasonEnum.PASS;
+                            descstriing = "无芯片";
+                        }
+                        break;
+                    case ChipNoHave.BlobCount:
+
+                        Rectangle _cropItem = m_PADRegion.RegionForEdgeRect;
+                        int iws = _cropItem.Width / 4;
+                        int ihs = _cropItem.Height / 4;
+                        _cropItem.Inflate(-iws, -ihs);
+                        BoundRect(ref _cropItem, bmpinput.Size);
+                        Bitmap bmpitemx = bmpinput.Clone(_cropItem, PixelFormat.Format24bppRgb);
+                        //int _thresholdv = 100;
+                        N2Class n2Class = new N2Class();
+                        n2Class.FromString(ChipNoHaveModeOpString);
+                        isgood = checkNoHaveRunBlobCount(bmpitemx, n2Class.ThresholdValue, n2Class.IsWhite, n2Class.Count);
+                        bmpitemx.Dispose();
+
+                        if (!isgood)
+                        {
+                            isgood = false;
+                            processstring += "Error in Blob" + RelateAnalyzeString + Environment.NewLine;
+                            errorstring += RelateAnalyzeString + Environment.NewLine;
+
+                            reason = ReasonEnum.PASS;
+                            descstriing = "无芯片";
+                        }
+
+                        break;
+                    default:
+                        break;
+                }
+
+                #endregion
+
+                #region 检测芯片上的溢胶
+                if (isgood)
+                {
+
+                    switch(PadInspectMethod)
+                    {
+                        case PadInspectMethodEnum.PAD_V1:
+                            //78ms
+                            PADRegionFindBlob(bmpInput, PADBlobGrayThreshold, m_PADRegion, ref bmpoutput, 0);
+                            break;
+                        default:
+                            //78ms
+                            PADRegionFindBlob(bmpInput, PADBlobGrayThreshold, m_PADRegion, ref bmpoutput);
+                            break;
+                    }
+
+                    if (m_BadArea > CheckDArea)
+                    {
+                        isgood = false;
+                        processstring += "Error in " + RelateAnalyzeString + " PAD AREA OVER area= " + " , " + m_BadArea.ToString() + " , " + CheckDArea.ToString() + Environment.NewLine;
+                        errorstring += RelateAnalyzeString + " PAD AREA OVER area= " + " , " + m_BadArea.ToString() + " , " + CheckDArea.ToString() + Environment.NewLine;
+
+                        reason = ReasonEnum.NG;
+                        descstriing = "晶片表面溢胶";
+                    }
+                    else if (m_BadWidth > CheckDWidth)
+                    {
+                        isgood = false;
+                        processstring += "Error in " + RelateAnalyzeString + " PAD WIDTH OVER WIDTH= " + " , " + m_BadWidth.ToString() + " , " + CheckDWidth.ToString() + Environment.NewLine;
+                        errorstring += RelateAnalyzeString + " PAD WIDTH OVER WIDTH= " + " , " + m_BadWidth.ToString() + " , " + CheckDWidth.ToString() + Environment.NewLine;
+
+                        reason = ReasonEnum.NG;
+                        descstriing = "晶片表面溢胶";
+                    }
+                    else if (m_BadHeight > CheckDHeight)
+                    {
+                        isgood = false;
+                        processstring += "Error in " + RelateAnalyzeString + " PAD HEIGHT OVER HEIGHT= " + " , " + m_BadHeight.ToString() + " , " + CheckDHeight.ToString() + Environment.NewLine;
+                        errorstring += RelateAnalyzeString + " PAD HEIGHT OVER HEIGHT= " + " , " + m_BadHeight.ToString() + " , " + CheckDHeight.ToString() + Environment.NewLine;
+
+                        reason = ReasonEnum.NG;
+                        descstriing = "晶片表面溢胶";
+                    }
+                }
+                #endregion
+
+                #region 判断四周有无胶水
+
+                if (isgood && FourSideNoGluePassValue > 0)
+                {
+                    //m_MvdGrayPatMatch.bmpFind = new Bitmap(bmpinput);//, new Size(bmpinput.Width >> 1, bmpinput.Height >> 1));
+                    //isgood = m_MvdGrayPatMatch.HikRunGray();
+
+                    //m_MvdGrayPatMatch.bmpFind.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpinput_Gray" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                    Bitmap bmpFourSide = new Bitmap(bmpinput);
+                    //Bitmap bmpFourSide = new Bitmap(bmpinput, new Size(bmpinput.Width >> 3, bmpinput.Height >> 3));
+                    //m_Histogram.GetHistogram(bmpFourSide, 100);
+                    int _mean = 0;// m_Histogram.MeanGrade;
+
+                    //截取芯片周围一部分 找到灰阶的最低值
+                    _mean = GetGrayMinValue(bmpFourSide);
+
+                    isgood = _mean < FourSideNoGluePassValue;
+
+                    if (!isgood)
+                    {
+                        if (m_IsSaveTemp)
+                            bmpFourSide.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + $"bmpinput_Gray{_mean}" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+                        bmpoutput.Dispose();
+                        bmpoutput = (Bitmap)bmpinput.Clone();
+
+                        descstriing = "无胶";
+                        reason = ReasonEnum.NG;
+
+                        //reason = ReasonEnum.PASS;
+                        //descstriing = "四周";
+                    }
+
+                    bmpFourSide.Dispose();
+                }
+
+                #endregion
+
+                #region 判断有无胶水  VICTOR模式
+                //56ms
+                if (isgood || (!isgood && descstriing == "晶片表面溢胶"))
+                {
+                    RectangleF _checkRectF = new RectangleF();
+                    JzToolsClass jzToolsClass = new JzToolsClass();
+                    double iwidthtmp = Math.Max(_checkRectF.Width, _checkRectF.Height);
+                    double iheighttmp = Math.Min(_checkRectF.Width, _checkRectF.Height);
+
+                    switch (ChipNoGlueMode)
+                    {
+                        case ChipNoGlueMethod.NoGlueNormal:
+
+                            #region NO GLUE NORMAL
+
+                            _checkRectF = checkNoHaveGlue(bmpInput);
+
+                            iwidthtmp = Math.Max(_checkRectF.Width, _checkRectF.Height);
+                            iheighttmp = Math.Min(_checkRectF.Width, _checkRectF.Height);
+
+                            if (!IsInRangeRatio(m_PADRegion.RegionWidth, iwidthtmp, OWidthRatio))
+                            {
+                                isgood = false;
+                                processstring += "Error in " + RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + _checkRectF.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+                                errorstring += RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + _checkRectF.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+                                descstriing = "无胶";
+                                reason = ReasonEnum.NG;
+
+                                bmpoutput.Dispose();
+                                //bmpoutput = (Bitmap)bmpinput.Clone();// new Bitmap(bmpinput);
+                                bmpoutput = new Bitmap(bmpinput);
+                                jzToolsClass.DrawRect(bmpoutput, _checkRectF, new Pen(Color.Red, 5));
+                                //if (INI.CHIP_NG_SHOW)
+                                //{
+                                //    bmpoutput.Dispose();
+                                //    bmpoutput = new Bitmap(bmpgray11);
+                                //}
+                            }
+                            else if (!IsInRangeRatio(m_PADRegion.RegionHeight, iheighttmp, OHeightRatio))
+                            {
+                                isgood = false;
+                                processstring += "Error in " + RelateAnalyzeString + " PAD HEIGHT OVER Ratio= " + OHeightRatio.ToString() + " , " + _checkRectF.Height.ToString() + " , " + m_PADRegion.RegionHeight.ToString() + Environment.NewLine;
+                                errorstring += RelateAnalyzeString + " PAD HEIGHT OVER Ratio= " + OHeightRatio.ToString() + " , " + _checkRectF.Height.ToString() + " , " + m_PADRegion.RegionHeight.ToString() + Environment.NewLine;
+                                descstriing = "无胶";
+                                reason = ReasonEnum.NG;
+
+                                bmpoutput.Dispose();
+                                //bmpoutput = (Bitmap)bmpinput.Clone();// new Bitmap(bmpinput);
+                                bmpoutput = new Bitmap(bmpinput);
+                                jzToolsClass.DrawRect(bmpoutput, _checkRectF, new Pen(Color.Red, 5));
+                                //jzToolsClass.DrawRect(bmpoutput, rect1pattrem, new Pen(Color.Red, 5));
+                                //if (INI.CHIP_NG_SHOW)
+                                //{
+                                //    bmpoutput.Dispose();
+                                //    bmpoutput = new Bitmap(bmpgray11);
+                                //}
+                            }
+
+                            #endregion
+
+                            break;
+                        case ChipNoGlueMethod.NoGlueV1:
+
+                            #region NO GLUE V1
+                            _checkRectF = checkNoHaveGlueV4(bmpInput);
+
+                            iwidthtmp = Math.Max(_checkRectF.Width, _checkRectF.Height);
+                            iheighttmp = Math.Min(_checkRectF.Width, _checkRectF.Height);
+
+                            if (!(IsInRangeRatio(m_PADRegion.RegionWidth, iwidthtmp, OWidthRatio)
+                                && 
+                                IsInRangeRatio(m_PADRegion.RegionHeight, iheighttmp, OHeightRatio)))
+                            {
+                                isgood = false;
+                                processstring += "Error in " + RelateAnalyzeString + " PAD WH OVER ";// + OWidthRatio.ToString() + " , " + _checkRectF.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+                                errorstring += RelateAnalyzeString + " PAD WH OVER ";// + OWidthRatio.ToString() + " , " + _checkRectF.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+                                descstriing = "无胶";
+                                reason = ReasonEnum.NG;
+
+                                bmpoutput.Dispose();
+                                bmpoutput = new Bitmap(bmpinput);
+                                jzToolsClass.DrawRect(bmpoutput, _checkRectF, new Pen(Color.Red, 5));
+                            }
+                            #endregion
+
+                            break;
+                        case ChipNoGlueMethod.NONE:
+                        default:
+                            break;
+                    }
+                    
+                }
+
+                #endregion
+
+                #region 用来检测碰到锡球的算法
+                if (isgood || descstriing == "晶片表面溢胶")
+                {
+                    if (ChipGleCheck)
+                    {
+                        isgood = checkOutGlue(bmpInput, out Bitmap bitmapResult);
+                        //if (ChipGleCheck)
+                        //    isgood = PADRegionCheckSize(bmpInput, PADBlobGrayThreshold, PADTempRegion, ref bmpoutput) == 0;
+                        if (!isgood)
+                        {
+                            isgood = false;
+                            processstring += "Error in " + RelateAnalyzeString + " Glue OVER " + Environment.NewLine;
+                            errorstring += RelateAnalyzeString + " Glue OVER " + Environment.NewLine;
+
+                            bmpoutput.Dispose();
+                            bmpoutput = new Bitmap(bitmapResult);
+
+                            reason = ReasonEnum.NG;
+                            descstriing = "胶水异常";
+                        }
+                    }
+                }
+                #endregion
+
+               
+            }
+
+            #endregion
+
+            if (!isgood)
+            {
+                if (m_IsSaveTemp)
+                {
+                    bmpPadFindOutput.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "PadFind" + (false ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                    
+                    bmpoutput.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpfindblob" + (false ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+                }
+            }
+
+            #region 胶水宽度判断
+            glues = null;
+            if (isgood && GlueCheck || (!isgood && descstriing == "晶片表面溢胶" && GlueCheck))
+            {
+
+                glues = new GlueRegionClass[(int)BorderTypeEnum.COUNT];
+                PointF[] pts = null;
+                PointF[] ptsIN = null;
+
+                imginput = (Bitmap)bmpinput.Clone();
+                imgmask = new Bitmap(bmpinput.Width, bmpinput.Height);
+
+                Rectangle rect1 = new Rectangle(m_PADRegion.RegionForEdgeRect.X,
+                                                                       m_PADRegion.RegionForEdgeRect.Y,
+                                                                       m_PADRegion.RegionForEdgeRect.Width,
+                                                                       m_PADRegion.RegionForEdgeRect.Height);
+                rect1.Inflate(2, 2);
+
+
+
+                Rectangle rect = new Rectangle(m_PADRegion.RegionForEdgeRect.X,
+                                                                       m_PADRegion.RegionForEdgeRect.Y,
+                                                                       m_PADRegion.RegionForEdgeRect.Width,
+                                                                       m_PADRegion.RegionForEdgeRect.Height);
+
+
+                Bitmap bitmap = (Bitmap)bmpInput.Clone();// new Bitmap(bmpInput);
+                Bitmap bitmap0 = (Bitmap)bmpInput.Clone();//new Bitmap(bmpInput);
+                if (m_IsSaveTemp)
+                {
+                    bitmap0.Save(Universal.CalTestPath + "\\" + _CalPageIndex() + RelateAnalyzeString + "bmpTrainCollect" + ".png",
+                       System.Drawing.Imaging.ImageFormat.Png);
+                    bitmap0.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bitmap0" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                   
+                }
+
+                int isize = _from_bmpinputSize_to_iSized(imginput);
+                switch (PADChipSizeMode)
+                {
+                    case PADChipSize.CHIP_V1:
+                        bitmap = (Bitmap)_getV1bmpInput(rect1).Clone();
+                        break;
+                    case PADChipSize.CHIP_V5:
+                        break;
+                    case PADChipSize.CHIP_NORMAL_EX:
+                        break;
+                    case PADChipSize.CHIP_NORMAL:
+                    default:
+                        //bitmap = new Bitmap(_getG1bmpInput(rect1));
+                        switch (PadInspectMethod)
+                        {
+                            case PadInspectMethodEnum.PAD_SMALL:
+                            case PadInspectMethodEnum.PAD_V1:
+                            case PadInspectMethodEnum.PAD_G1:
+                                break;
+                            default:
+                                bitmap = (Bitmap)_getG1bmpInput(rect1).Clone();
+                                break;
+                        }
+                        break;
+                }
+
+                //这里是寻找点的起点位置
+                //rect.Inflate(-5, -5);
+                rect.Inflate(-(int)(CalExtendX * Resolution_Mil), -(int)(CalExtendY * Resolution_Mil));
+                //BoundRect(ref rect, bitmap.Size);
+                if (m_IsSaveTemp)
+                {
+                    bitmap.Save("D:\\testtest\\" + RelateAnalyzeString + "imginputorg" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                }
+
+                int i = 0;
+                int j = 0;
+
+                //多线程计算4条边
+                switch (PADChipSizeMode)
+                {
+                    case PADChipSize.CHIP_V8:
+
+                        #region 原始的通用做法
+
+                        if (m_IsSaveTemp)
+                        {
+                            m_PADRegion.bmpThreshold.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpThreshold" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                            //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+                        }
+                        borderLineRun = new BorderLineRunClass[4];
+                        //int isize = _from_bmpinputSize_to_iSized(imginput);
+                        i = 0;
+                        while (i < (int)BorderTypeEnum.COUNT)
+                        {
+
+                            borderLineRun[i] = new BorderLineRunClass();
+                            borderLineRun[i].bmp0 = (Bitmap)bitmap.Clone();// new Bitmap(bitmap);
+
+                            switch (PADAICategory)
+                            {
+                                case AICategory.Median:
+                                case AICategory.Small:
+                                    //case AICategory.BigKotor:
+                                    isize = 0;
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            borderLineRun[i].bmp1 = new Bitmap(m_PADRegion.bmpThreshold,
+                                                                                                    Resize(m_PADRegion.bmpThreshold.Size, isize));
+
+                            RectangleF rectSize = ResizeWithLocation2(rect, isize);
+
+                            //(Bitmap)PADTempRegion.bmpThreshold.Clone();// new Bitmap(PADTempRegion.bmpThreshold);
+                            borderLineRun[i].rect0 =
+                                new Rectangle((int)rectSize.X, (int)rectSize.Y, (int)rectSize.Width, (int)rectSize.Height);
+                            //new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+                            borderLineRun[i].Border = (BorderTypeEnum)i;
+                            borderLineRun[i].index = i;
+
+                            i++;
+                        }
+
+                        //foreach (BorderLineRunClass item in borderLineRun)
+                        //{
+                        //    switch (PADAICategory)
+                        //    {
+                        //        case AICategory.Median:
+                        //        case AICategory.Small:
+                        //        case AICategory.BigKotor:
+                        //            _get_border_pointf_v8_1_blackBigtor(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index], -isize);
+                        //            break;
+                        //        default:
+                        //            _get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index], -isize);
+                        //            break;
+                        //    }
+                        //}
+                        Parallel.ForEach(borderLineRun, item =>
+                        {
+                            switch (PADAICategory)
+                            {
+                                //case AICategory.Median:
+                                //case AICategory.Small:
+                                //case AICategory.BigKotor:
+                                //    _get_border_pointf_v8_1_blackBigtor(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index], -isize);
+                                //    break;
+                                default:
+                                    _get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index], -isize);
+                                    break;
+                            }
+
+                            //_get_border_pointf_v8_1(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index], isize);
+                        });
+
+                        i = 0;
+                        while (i < (int)BorderTypeEnum.COUNT)
+                        {
+
+                            //borderLineRun[i] = new BorderLineRunClass();
+                            borderLineRun[i].bmp0.Dispose();
+                            borderLineRun[i].bmp1.Dispose();
+
+                            i++;
+                        }
+                        GC.Collect();
+
+                        //if (INI.chipUseAI)
+                        //    _get_border_pointf_v8_1(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
+                        //else
+                        //    _get_border_pointf_v6_1(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
+
+                        #endregion
+
+                        break;
+
+                   
+                    case PADChipSize.CHIP_NORMAL_EX:
+
+                        #region 原始的通用做法
+
+                        borderLineRun = new BorderLineRunClass[4];
+                        i = 0;
+                        while (i < (int)BorderTypeEnum.COUNT)
+                        {
+
+                            borderLineRun[i] = new BorderLineRunClass();
+                            borderLineRun[i].bmp0 = (Bitmap)bitmap.Clone();// new Bitmap(bitmap);
+                            borderLineRun[i].bmp1 = (Bitmap)m_PADRegion.bmpThreshold.Clone();//  new Bitmap(PADTempRegion.bmpThreshold);
+                            borderLineRun[i].rect0 = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+                            borderLineRun[i].Border = (BorderTypeEnum)i;
+                            borderLineRun[i].index = i;
+
+                            i++;
+                        }
+
+                        Parallel.ForEach(borderLineRun, item =>
+                        {
+                            _get_border_pointf_NormalEx(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index]);
+
+                        });
+
+                        i = 0;
+                        while (i < (int)BorderTypeEnum.COUNT)
+                        {
+
+                            //borderLineRun[i] = new BorderLineRunClass();
+                            borderLineRun[i].bmp0.Dispose();
+                            borderLineRun[i].bmp1.Dispose();
+
+                            i++;
+                        }
+                        GC.Collect();
+
+                        //_get_border_pointf_v3(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
+
+                        #endregion
+
+                        break;
+                    case PADChipSize.CHIP_V1:
+
+                        #region 原始的通用做法
+
+                        borderLineRun = new BorderLineRunClass[4];
+                        i = 0;
+                        while (i < (int)BorderTypeEnum.COUNT)
+                        {
+
+                            borderLineRun[i] = new BorderLineRunClass();
+                            borderLineRun[i].bmp0 = (Bitmap)bitmap.Clone();// new Bitmap(bitmap);
+                            borderLineRun[i].bmp1 = (Bitmap)m_PADRegion.bmpThreshold.Clone();//  new Bitmap(PADTempRegion.bmpThreshold);
+                            borderLineRun[i].rect0 = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+                            borderLineRun[i].Border = (BorderTypeEnum)i;
+                            borderLineRun[i].index = i;
+
+                            i++;
+                        }
+
+                        Parallel.ForEach(borderLineRun, item =>
+                        {
+                            _get_border_pointf_v1_antu(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index]);
+
+                        });
+
+                        i = 0;
+                        while (i < (int)BorderTypeEnum.COUNT)
+                        {
+
+                            //borderLineRun[i] = new BorderLineRunClass();
+                            borderLineRun[i].bmp0.Dispose();
+                            borderLineRun[i].bmp1.Dispose();
+
+                            i++;
+                        }
+                        GC.Collect();
+
+                        //_get_border_pointf_v3(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
+
+                        #endregion
+
+                        break;
+                    case PADChipSize.CHIP_NORMAL:
+                    default:
+                        switch (PadInspectMethod)
+                        {
+                            case PadInspectMethodEnum.PAD_SMALL:
+
+                                #region VICTOR_PAD_SMALL
+
+                                Bitmap bmpin0 = new Bitmap(bitmap);
+                                Bitmap bmpout0 = new Bitmap(bitmap);
+
+                                GetDataHXIn(bmpin0);
+                                GetDataHX(bmpout0);
+
+                                bmpin0.Dispose();
+                                bmpout0.Dispose();
+
+                                i = 0;
+                                while (i < (int)SIDEEmnum.COUNT)
+                                {
+                                    switch ((SIDEEmnum)i)
+                                    {
+                                        case SIDEEmnum.TOP:
+                                            JzFourSideCal(out glues[(int)BorderTypeEnum.TOP], sideAnalyzeIN.SIDEData[i], sideAnalyze.SIDEData[i]);
+                                            break;
+                                        case SIDEEmnum.BOTTOM:
+                                            JzFourSideCal(out glues[(int)BorderTypeEnum.BOTTOM], sideAnalyzeIN.SIDEData[i], sideAnalyze.SIDEData[i]);
+                                            break;
+                                        case SIDEEmnum.LEFT:
+                                            JzFourSideCal(out glues[(int)BorderTypeEnum.LEFT], sideAnalyzeIN.SIDEData[i], sideAnalyze.SIDEData[i]);
+                                            break;
+                                        case SIDEEmnum.RIGHT:
+                                            JzFourSideCal(out glues[(int)BorderTypeEnum.RIGHT], sideAnalyzeIN.SIDEData[i], sideAnalyze.SIDEData[i]);
+                                            break;
+                                    }
+
+                                    i++;
+                                }
+
+                                #endregion
+
+                                break;
+                            case PadInspectMethodEnum.PAD_V1:
+
+                                #region VICTOR_PAD_V1
+
+                                Bitmap _bmpnewIpd = new Bitmap(bitmap);
+                                //填充中间的芯片位置
+                                Graphics _gPADV1 = Graphics.FromImage(_bmpnewIpd);
+                                _gPADV1.FillPolygon(Brushes.White, m_PADRegion.GetConner(-0.5f));
+                                //_gPADV1.FillPolygon(Brushes.White, m_PADRegion.RegionPtFCorner);
+                                //_gPADV1.FillPolygon(Brushes.White, m_PADRegion.RegionPtFCornerORG);
+                                _gPADV1.Dispose();
+
+                                if (m_IsSaveTemp)
+                                {
+                                    _bmpnewIpd.Save("D:\\testtest\\" + RelateAnalyzeString + "_padv1_org" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                                }
+
+                                GetDataIPD(_bmpnewIpd, false);
+                                _bmpnewIpd.Dispose();
+
+                                i = 0;
+                                while (i < (int)SIDEEmnum.COUNT)
+                                {
+                                    switch ((SIDEEmnum)i)
+                                    {
+                                        case SIDEEmnum.TOP:
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.TOP], jzsideanalyzeex, SIDEEmnum.TOP, GlueChipSlotDir == ChipSlotDir.SlotTop);
+                                            break;
+                                        case SIDEEmnum.BOTTOM:
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.BOTTOM], jzsideanalyzeex, SIDEEmnum.BOTTOM, GlueChipSlotDir == ChipSlotDir.SlotBottom);
+                                            break;
+                                        case SIDEEmnum.LEFT:
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.LEFT], jzsideanalyzeex, SIDEEmnum.LEFT, GlueChipSlotDir == ChipSlotDir.SlotLeft);
+                                            break;
+                                        case SIDEEmnum.RIGHT:
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.RIGHT], jzsideanalyzeex, SIDEEmnum.RIGHT, GlueChipSlotDir == ChipSlotDir.SlotRight);
+                                            break;
+                                    }
+
+                                    i++;
+                                }
+
+                                #endregion
+
+                                break;
+
+                            case PadInspectMethodEnum.PAD_G1:
+
+                                #region 寻找间距的做法
+
+                                borderLineRun = new BorderLineRunClass[4];
+                                i = 0;
+                                while (i < (int)BorderTypeEnum.COUNT)
+                                {
+
+                                    borderLineRun[i] = new BorderLineRunClass();
+                                    borderLineRun[i].bmp0 = (Bitmap)bitmap.Clone();// new Bitmap(bitmap);
+                                    borderLineRun[i].bmp1 = (Bitmap)bitmap.Clone();
+                                    //borderLineRun[i].bmp1 = (Bitmap)PADTempRegion.bmpThreshold.Clone();//  new Bitmap(PADTempRegion.bmpThreshold);
+                                    borderLineRun[i].rect0 = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+                                    borderLineRun[i].Border = (BorderTypeEnum)i;
+                                    borderLineRun[i].index = i;
+
+                                    borderLineRun[i].rectORG = new Rectangle(m_PADRegion.RegionForEdgeRect.X,
+                                                                       m_PADRegion.RegionForEdgeRect.Y,
+                                                                       m_PADRegion.RegionForEdgeRect.Width,
+                                                                       m_PADRegion.RegionForEdgeRect.Height);
+                                    borderLineRun[i].padG1 = new PADG1Class();
+                                    borderLineRun[i].padG1.FromString(PADINSPECTOPString);
+
+                                    i++;
+                                }
+
+                                //这里写间距的算法
+
+                                Parallel.ForEach(borderLineRun, item =>
+                                {
+                                    _get_border_pointf_PADG1(item.bmp0,
+                                        item.bmp1,
+                                        item.rect0,
+                                        item.rectORG,
+                                        item.padG1,
+                                        item.Border,
+                                        out glues[item.index]);
+
+                                });
+
+                                //foreach (var item in borderLineRun)
+                                //{
+                                //    _get_border_pointf_PADG1(item.bmp0,
+                                //        item.bmp1,
+                                //        item.rect0,
+                                //        item.rectORG,
+                                //        item.padG1,
+                                //        item.Border,
+                                //        out glues[item.index]);
+                                //}
+
+                                i = 0;
+                                while (i < (int)BorderTypeEnum.COUNT)
+                                {
+
+                                    //borderLineRun[i] = new BorderLineRunClass();
+                                    borderLineRun[i].bmp0.Dispose();
+                                    borderLineRun[i].bmp1.Dispose();
+
+                                    i++;
+                                }
+                                GC.Collect();
+
+                                //_bmpnewIpd.Dispose();
+
+                                #endregion
+
+                                break;
+
+                            default:
+
+                                #region 原始的通用做法
+
+                                borderLineRun = new BorderLineRunClass[4];
+                                i = 0;
+                                while (i < (int)BorderTypeEnum.COUNT)
+                                {
+
+                                    borderLineRun[i] = new BorderLineRunClass();
+                                    borderLineRun[i].bmp0 = (Bitmap)bitmap.Clone();// new Bitmap(bitmap);
+                                    borderLineRun[i].bmp1 = (Bitmap)m_PADRegion.bmpThreshold.Clone();//  new Bitmap(PADTempRegion.bmpThreshold);
+                                    borderLineRun[i].rect0 = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+                                    borderLineRun[i].Border = (BorderTypeEnum)i;
+                                    borderLineRun[i].index = i;
+
+                                    i++;
+                                }
+
+                                Parallel.ForEach(borderLineRun, item =>
+                                {
+                                    _get_border_pointf_v3(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index]);
+
+                                });
+
+                                i = 0;
+                                while (i < (int)BorderTypeEnum.COUNT)
+                                {
+
+                                    //borderLineRun[i] = new BorderLineRunClass();
+                                    borderLineRun[i].bmp0.Dispose();
+                                    borderLineRun[i].bmp1.Dispose();
+
+                                    i++;
+                                }
+                                GC.Collect();
+
+                                //_get_border_pointf_v3(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
+
+                                #endregion
+
+                                break;
+                        }
+
+                        break;
+                }
+
+
+                Bitmap bmpglueout = new Bitmap(bmpoutput);
+                //Bitmap bmpglueout = new Bitmap(bmpinput);//BAK
+                Graphics g = Graphics.FromImage(bmpglueout);
+                bool m_ischeckgluepass = true;
+                string ngstr = string.Empty;
+                string measureStr = string.Empty;
+
+                double GlueTmpMax = 0;// GlueMax * Resolution_Mil;
+                double GlueTmpMin = 0;// GlueMin * Resolution_Mil;
+
+                double GlueSlotTmpMax = GlueMax / INI.MAINSD_PAD_MIL_RESOLUTION;
+                double GlueSlotTmpMin = GlueMin / INI.MAINSD_PAD_MIL_RESOLUTION;
+
+                i = 0;
+                while (i < (int)BorderTypeEnum.COUNT)
+                {
+                    switch ((BorderTypeEnum)i)
+                    {
+                        case BorderTypeEnum.LEFT:
+                            GlueTmpMax = GlueMaxLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMin = GlueMinLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            break;
+                        case BorderTypeEnum.TOP:
+                            GlueTmpMax = GlueMaxTop / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMin = GlueMinTop / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            break;
+                        case BorderTypeEnum.RIGHT:
+                            GlueTmpMax = GlueMaxRight / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMin = GlueMinRight / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            break;
+                        case BorderTypeEnum.BOTTOM:
+                            GlueTmpMax = GlueMaxBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMin = GlueMinBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            break;
+                    }
+                    Random random = new Random();
+                    random.Next(0, 100);
+                    double rd_0609 = random.Next(0, 100) * 0.00001;
+
+                    double min = glues[i].LengthMin * INI.MAINSD_PAD_MIL_RESOLUTION- rd_0609;
+                    double max = glues[i].LengthMax * INI.MAINSD_PAD_MIL_RESOLUTION- rd_0609;
+
+                    double minSlot = glues[i].LengthSlotMin * INI.MAINSD_PAD_MIL_RESOLUTION- rd_0609;
+                    double maxSlot = glues[i].LengthSlotMax * INI.MAINSD_PAD_MIL_RESOLUTION- rd_0609;
+                    bool isSlotPass = true;
+
+                    string format = "0.0000";
+
+                    switch ((BorderTypeEnum)i)
+                    {
+                        case BorderTypeEnum.LEFT:
+                            measureStr += "左";// + Environment.NewLine;
+                            measureStr += "[min:" + min.ToString(format) + " mm]";
+                            measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
+
+                            if (GlueChipSlotDir == ChipSlotDir.SlotLeft)
+                            {
+                                measureStr += "薄膜胶";// + Environment.NewLine;
+                                measureStr += "[min:" + minSlot.ToString(format) + " mm]";
+                                measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
+
+                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            }
+
+                            break;
+                        case BorderTypeEnum.RIGHT:
+                            measureStr += "右";// + Environment.NewLine;
+                            measureStr += "[min:" + min.ToString(format) + " mm]";
+                            measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
+
+                            if (GlueChipSlotDir == ChipSlotDir.SlotRight)
+                            {
+                                measureStr += "薄膜胶";// + Environment.NewLine;
+                                measureStr += "[min:" + minSlot.ToString(format) + " mm]";
+                                measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
+
+                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            }
+
+                            break;
+                        case BorderTypeEnum.TOP:
+                            measureStr += "上";// + Environment.NewLine;
+                            measureStr += "[min:" + min.ToString(format) + " mm]";
+                            measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
+
+                            if (GlueChipSlotDir == ChipSlotDir.SlotTop)
+                            {
+                                measureStr += "薄膜胶";// + Environment.NewLine;
+                                measureStr += "[min:" + minSlot.ToString(format) + " mm]";
+                                measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
+
+                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            }
+
+                            break;
+                        case BorderTypeEnum.BOTTOM:
+                            measureStr += "下";// + Environment.NewLine;
+                            measureStr += "[min:" + min.ToString(format) + " mm]";
+                            measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
+
+                            if (GlueChipSlotDir == ChipSlotDir.SlotBottom)
+                            {
+                                measureStr += "薄膜胶";// + Environment.NewLine;
+                                measureStr += "[min:" + minSlot.ToString(format) + " mm]";
+                                measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
+
+                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            }
+
+                            break;
+                    }
+
+                    if (glues[i].LengthMax > (GlueTmpMax) || glues[i].LengthMin < (GlueTmpMin))
+                    {
+                        m_ischeckgluepass = false;
+
+                        switch ((BorderTypeEnum)i)
+                        {
+                            case BorderTypeEnum.LEFT:
+                                ngstr += "左";
+                                ngstr += "[min:" + min.ToString(format) + " mm]";
+                                ngstr += "[max:" + max.ToString(format) + " mm]";
+                                break;
+                            case BorderTypeEnum.RIGHT:
+                                ngstr += "右";
+                                ngstr += "[min:" + min.ToString(format) + " mm]";
+                                ngstr += "[max:" + max.ToString(format) + " mm]";
+                                break;
+                            case BorderTypeEnum.TOP:
+                                ngstr += "上";
+                                ngstr += "[min:" + min.ToString(format) + " mm]";
+                                ngstr += "[max:" + max.ToString(format) + " mm]";
+                                break;
+                            case BorderTypeEnum.BOTTOM:
+                                ngstr += "下";
+                                ngstr += "[min:" + min.ToString(format) + " mm]";
+                                ngstr += "[max:" + max.ToString(format) + " mm]";
+                                break;
+                        }
+                    }
+
+                    if (GlueChipSlotDir != ChipSlotDir.NONE && !isSlotPass)
+                    {
+                        m_ischeckgluepass = false;
+
+                        ngstr += "薄膜胶";// + Environment.NewLine;
+                        ngstr += "[min:" + minSlot.ToString(format) + " mm]";
+                        ngstr += "[max:" + maxSlot.ToString(format) + " mm]";
+                    }
+
+                    i++;
+                }
+
+                //填写数据的区域
+                RectangleF _rectF = new RectangleF(0, 0, 1100, 290);
+                _rectF = new RectangleF(0, 0, 1100, 40);
+                //g.FillRectangle(Brushes.Black, _rectF);
+                int linewidth = LineWidth;
+                int fontsize = FontSize;
+
+                //画图 及 显示比对图
+                i = 0;
+                int drawIndex = 0;
+                while (drawIndex < (int)BorderTypeEnum.COUNT)
+                //Parallel.For(0, (int)BorderTypeEnum.COUNT, (drawIndex) =>
+                {
+                    if (m_ischeckgluepass)
+                    {
+                        g.DrawLines(new Pen(INI.chipPassColor, linewidth), glues[drawIndex].GetPointF());
+                        g.DrawLines(new Pen(INI.chipPassColor, linewidth), glues[drawIndex].GetPointFIN());
+                        g.DrawString(measureStr, new Font("宋体", fontsize), new SolidBrush(INI.chipPassColor), 2, 2);
+                        //g.DrawString(measureStr, new Font("宋体", 22), Brushes.Lime, _rectF);
+                        //g.DrawPolygon(new Pen(INI.chipPassColor, linewidth), m_PADRegion.GetConner());
+                        switch (PADChipSizeMode)
+                        {
+                            case PADChipSize.CHIP_NORMAL:
+                                switch (PadInspectMethod)
+                                {
+                                    case PadInspectMethodEnum.PAD_V1:
+                                        if (GlueChipSlotDir != ChipSlotDir.NONE)
+                                            g.DrawLines(new Pen(INI.chipPassColor, linewidth), glues[drawIndex].GetPointFIN2());
+                                        break;
+                                }
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        g.DrawLines(new Pen(Color.Red, linewidth), glues[drawIndex].GetPointF());
+                        g.DrawLines(new Pen(Color.Red, linewidth), glues[drawIndex].GetPointFIN());
+                        g.DrawString(measureStr, new Font("宋体", fontsize), Brushes.Red, 2, 2);
+                        //g.DrawString(measureStr, new Font("宋体", 22), Brushes.Red, _rectF);
+                        //g.DrawPolygon(new Pen(Color.Red, linewidth), m_PADRegion.GetConner());
+                        switch (PADChipSizeMode)
+                        {
+                            case PADChipSize.CHIP_NORMAL:
+                                switch (PadInspectMethod)
+                                {
+                                    case PadInspectMethodEnum.PAD_V1:
+                                        if (GlueChipSlotDir != ChipSlotDir.NONE)
+                                            g.DrawLines(new Pen(Color.Red, linewidth), glues[drawIndex].GetPointFIN2());
+                                        break;
+                                }
+                                break;
+                        }
+                    }
+
+                    drawIndex++;
+                }
+                //);
+
+                if (m_IsSaveTemp)
+                {
+                    //g.DrawRectangle(new Pen(Color.Red), rect);
+
+                    bmpglueout.Save(Universal.CalTestPath + "\\" + _CalPageIndex() + RelateAnalyzeString + "bmpInputout" + ".png",
+                        System.Drawing.Imaging.ImageFormat.Png);
+
+                    bmpglueout.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpInputout" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+                }
+                bmpoutput = (Bitmap)bmpglueout.Clone();// new Bitmap(bmpglueout);
+                g.Dispose();
+                bmpglueout.Dispose();
+
+                if (!m_ischeckgluepass)
+                {
+                    isgood = false;
+                    processstring += "Error in " + RelateAnalyzeString + " Glue OVER " + Environment.NewLine;
+                    errorstring += RelateAnalyzeString + " Glue OVER " + Environment.NewLine;
+
+                    reason = ReasonEnum.NG;
+                    descstriing = "胶水异常" + ngstr;
+                }
+                m_RunDataOK = true;
+            }
+
+            #endregion
+
+            runstatus.SetWorkStatus(bmpPattern,
+                                                   bmpInput,
+                                                   bmpoutput,
+                                                   reason,
+                                                   errorstring,
+                                                   processstring,
+                                                   PassInfo,
+                                                   descstriing);
+
+            RunStatusCollection.Add(runstatus);
+            IsPass = isgood;
+            m_DescStr = descstriing;
+            if (INI.CHIP_forceALIGNRUN_pass)
+            {
+                if (descstriing == "无芯片")
+                    isgood = true;
+            }
+
+            if (descstriing == "四周")
+            {
+                isgood = true;
+                IsPass = isgood;
+                m_DescStr = string.Empty;
+            }
+                
+            bmpMeasureOutput.Dispose();
+            bmpMeasureOutput = new Bitmap(bmpoutput);
+
+            bmpInput.Dispose();
+
+            return isgood;
+        }
+
+        #region BAK_20250517
+#if BAK_20250517
+
+public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
+        {
+            //0.025/0.022 = 1 mil/1 pixel
+            Resolution_Mil = 0.0254 / INI.MAINSD_PAD_MIL_RESOLUTION;
+            m_DescStr = string.Empty;
+
+            bmpMeasureOutput.Dispose();
+            //bmpMeasureOutput = new Bitmap(bmpinput);
+            bmpMeasureOutput = (Bitmap)bmpinput.Clone();
+
             ////胶水检测使用mm换算单位
             //switch (Universal.OPTION)
             //{
@@ -899,19 +2065,19 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //166ms
                 PADRegionFind(bmpInput, PADGrayThreshold, false, out PADTempRegion);
 
-                if (!IsInRangeRatio(PADTempRegion.RegionArea, m_PADRegion.RegionArea, OAreaRatio))
-                {
-                    isgood = false;
-                    processstring += "Error in " + RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
-                    errorstring += RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
+                //if (!IsInRangeRatio(PADTempRegion.RegionArea, m_PADRegion.RegionArea, OAreaRatio))
+                //{
+                //    isgood = false;
+                //    processstring += "Error in " + RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
+                //    errorstring += RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
 
-                    //reason = ReasonEnum.NG;
-                    //descstriing = "尺寸面积超标";
+                //    //reason = ReasonEnum.NG;
+                //    //descstriing = "尺寸面积超标";
 
-                    reason = ReasonEnum.PASS;
-                    descstriing = "无芯片";
-                }
-                else if (!IsInRangeRatio(PADTempRegion.RegionWidth, m_PADRegion.RegionWidth, OWidthRatio))
+                //    reason = ReasonEnum.PASS;
+                //    descstriing = "无芯片";
+                //}
+                if (!IsInRangeRatio(PADTempRegion.RegionWidth, m_PADRegion.RegionWidth, OWidthRatio))
                 {
                     isgood = false;
                     processstring += "Error in " + RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + PADTempRegion.RegionWidth.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
@@ -975,9 +2141,36 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     int isizeDispening = _from_bmpinputSize_to_iSized(bmpinput);
 
                     Bitmap bmpsize = new Bitmap(bmpinput, Resize(bmpinput.Size, isizeDispening));
-                    AForge.Imaging.Filters.HistogramEqualization histogramEqualization11 =
-                        new AForge.Imaging.Filters.HistogramEqualization();
-                    Bitmap bmphistogramEqualization11 = histogramEqualization11.Apply(bmpsize);
+                    //AForge.Imaging.Filters.HistogramEqualization histogramEqualization11 =
+                    //    new AForge.Imaging.Filters.HistogramEqualization();
+                    //Bitmap bmphistogramEqualization11 = histogramEqualization11.Apply(bmpsize);
+
+                    //AForge.Imaging.Filters.ContrastStretch contrastStretch = new AForge.Imaging.Filters.ContrastStretch();
+                    //bmphistogramEqualization11 = contrastStretch.Apply(bmphistogramEqualization11);
+
+                    Bitmap bmphistogramEqualization11 = new Bitmap(bmpsize);
+                    switch (PadInspectMethod)
+                    {
+                        case PadInspectMethodEnum.PAD_V1:
+                            bmphistogramEqualization11 = filterVictor002(bmphistogramEqualization11, NoGlueThresholdValue);
+                            break;
+                        default:
+                            filterORG001(bmphistogramEqualization11);
+                            //bmphistogramEqualization11 = FloodFill(bmphistogramEqualization11, new Point(bmphistogramEqualization11.Width / 2, bmphistogramEqualization11.Height / 2),
+                            //                                                    Color.White, (int)(255 * NoGlueThresholdValue));
+
+                            //AForge.Imaging.Filters.Grayscale grayscale11 =
+                            //    new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+                            //bmphistogramEqualization11 = grayscale11.Apply(bmphistogramEqualization11);
+                            break;
+                    }
+
+                    if (m_IsSaveTemp)
+                    {
+                        bmphistogramEqualization11.Save("D:\\testtest\\" + _CalPageIndex() +
+                            RelateAnalyzeString + "NoDispensingOrg" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+                    }
 
                     bmphistogramEqualization11 = FloodFill(bmphistogramEqualization11, new Point(bmphistogramEqualization11.Width / 2, bmphistogramEqualization11.Height / 2),
                                                                         Color.White, (int)(255 * NoGlueThresholdValue));
@@ -1680,16 +2873,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                     switch ((SIDEEmnum)i)
                                     {
                                         case SIDEEmnum.TOP:
-                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.TOP], jzsideanalyzeex, SIDEEmnum.TOP);
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.TOP], jzsideanalyzeex, SIDEEmnum.TOP, GlueChipSlotDir == ChipSlotDir.SlotTop);
                                             break;
                                         case SIDEEmnum.BOTTOM:
-                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.BOTTOM], jzsideanalyzeex, SIDEEmnum.BOTTOM);
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.BOTTOM], jzsideanalyzeex, SIDEEmnum.BOTTOM, GlueChipSlotDir == ChipSlotDir.SlotBottom);
                                             break;
                                         case SIDEEmnum.LEFT:
-                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.LEFT], jzsideanalyzeex, SIDEEmnum.LEFT);
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.LEFT], jzsideanalyzeex, SIDEEmnum.LEFT, GlueChipSlotDir == ChipSlotDir.SlotLeft);
                                             break;
                                         case SIDEEmnum.RIGHT:
-                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.RIGHT], jzsideanalyzeex, SIDEEmnum.RIGHT);
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.RIGHT], jzsideanalyzeex, SIDEEmnum.RIGHT, GlueChipSlotDir == ChipSlotDir.SlotRight);
                                             break;
                                     }
 
@@ -1802,7 +2995,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         (lrmax - glues[(int)BorderTypeEnum.RIGHT].LengthMax) * 0.83;// + GetRandom(-0.01, 0.01);
                 }
 
-
+                double GlueSlotTmpMax = GlueMax / INI.MAINSD_PAD_MIL_RESOLUTION;
+                double GlueSlotTmpMin = GlueMin / INI.MAINSD_PAD_MIL_RESOLUTION;
 
                 i = 0;
                 while (i < (int)BorderTypeEnum.COUNT)
@@ -1831,26 +3025,78 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     double min = glues[i].LengthMin * INI.MAINSD_PAD_MIL_RESOLUTION;
                     double max = glues[i].LengthMax * INI.MAINSD_PAD_MIL_RESOLUTION;
 
+                    double minSlot = glues[i].LengthSlotMin * INI.MAINSD_PAD_MIL_RESOLUTION;
+                    double maxSlot = glues[i].LengthSlotMax * INI.MAINSD_PAD_MIL_RESOLUTION;
+                    bool isSlotPass = true;
+
                     //ngstr += ((BorderTypeEnum)i).ToString() + "_NG,";
 
                     switch ((BorderTypeEnum)i)
                     {
                         case BorderTypeEnum.LEFT:
                             measureStr += "左";// + Environment.NewLine;
+                            measureStr += "[min:" + min.ToString("0.000000") + " mm]";
+                            measureStr += "[max:" + max.ToString("0.000000") + " mm]" + Environment.NewLine;
+
+                            if (GlueChipSlotDir == ChipSlotDir.SlotLeft)
+                            {
+                                measureStr += "薄膜胶";// + Environment.NewLine;
+                                measureStr += "[min:" + minSlot.ToString("0.000000") + " mm]";
+                                measureStr += "[max:" + maxSlot.ToString("0.000000") + " mm]" + Environment.NewLine;
+
+                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            }
+
                             break;
                         case BorderTypeEnum.RIGHT:
                             measureStr += "右";// + Environment.NewLine;
+                            measureStr += "[min:" + min.ToString("0.000000") + " mm]";
+                            measureStr += "[max:" + max.ToString("0.000000") + " mm]" + Environment.NewLine;
+
+                            if (GlueChipSlotDir == ChipSlotDir.SlotRight)
+                            {
+                                measureStr += "薄膜胶";// + Environment.NewLine;
+                                measureStr += "[min:" + minSlot.ToString("0.000000") + " mm]";
+                                measureStr += "[max:" + maxSlot.ToString("0.000000") + " mm]" + Environment.NewLine;
+
+                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            }
+
                             break;
                         case BorderTypeEnum.TOP:
                             measureStr += "上";// + Environment.NewLine;
+                            measureStr += "[min:" + min.ToString("0.000000") + " mm]";
+                            measureStr += "[max:" + max.ToString("0.000000") + " mm]" + Environment.NewLine;
+
+                            if (GlueChipSlotDir == ChipSlotDir.SlotTop)
+                            {
+                                measureStr += "薄膜胶";// + Environment.NewLine;
+                                measureStr += "[min:" + minSlot.ToString("0.000000") + " mm]";
+                                measureStr += "[max:" + maxSlot.ToString("0.000000") + " mm]" + Environment.NewLine;
+
+                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            }
+
                             break;
                         case BorderTypeEnum.BOTTOM:
                             measureStr += "下";// + Environment.NewLine;
+                            measureStr += "[min:" + min.ToString("0.000000") + " mm]";
+                            measureStr += "[max:" + max.ToString("0.000000") + " mm]" + Environment.NewLine;
+
+                            if (GlueChipSlotDir == ChipSlotDir.SlotBottom)
+                            {
+                                measureStr += "薄膜胶";// + Environment.NewLine;
+                                measureStr += "[min:" + minSlot.ToString("0.000000") + " mm]";
+                                measureStr += "[max:" + maxSlot.ToString("0.000000") + " mm]" + Environment.NewLine;
+
+                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            }
+
                             break;
                     }
 
-                    measureStr += "[min:" + min.ToString("0.000000") + " mm]";
-                    measureStr += "[max:" + max.ToString("0.000000") + " mm]" + Environment.NewLine;
+                    //measureStr += "[min:" + min.ToString("0.000000") + " mm]";
+                    //measureStr += "[max:" + max.ToString("0.000000") + " mm]" + Environment.NewLine;
 
                     if (glues[i].LengthMax > (GlueTmpMax) || glues[i].LengthMin < (GlueTmpMin))
                     {
@@ -1860,21 +3106,48 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         {
                             case BorderTypeEnum.LEFT:
                                 ngstr += "左";
+                                ngstr += "[min:" + min.ToString("0.000000") + " mm]";
+                                ngstr += "[max:" + max.ToString("0.000000") + " mm]";
                                 break;
                             case BorderTypeEnum.RIGHT:
                                 ngstr += "右";
+                                ngstr += "[min:" + min.ToString("0.000000") + " mm]";
+                                ngstr += "[max:" + max.ToString("0.000000") + " mm]";
                                 break;
                             case BorderTypeEnum.TOP:
                                 ngstr += "上";
+                                ngstr += "[min:" + min.ToString("0.000000") + " mm]";
+                                ngstr += "[max:" + max.ToString("0.000000") + " mm]";
                                 break;
                             case BorderTypeEnum.BOTTOM:
                                 ngstr += "下";
+                                ngstr += "[min:" + min.ToString("0.000000") + " mm]";
+                                ngstr += "[max:" + max.ToString("0.000000") + " mm]";
                                 break;
                         }
-
-                        ngstr += "[min:" + min.ToString("0.000000") + " mm]";
-                        ngstr += "[max:" + max.ToString("0.000000") + " mm]";
                     }
+
+                    if (GlueChipSlotDir != ChipSlotDir.NONE && !isSlotPass)
+                    {
+                        m_ischeckgluepass = false;
+
+                        ngstr += "薄膜胶";// + Environment.NewLine;
+                        ngstr += "[min:" + minSlot.ToString("0.000000") + " mm]";
+                        ngstr += "[max:" + maxSlot.ToString("0.000000") + " mm]";
+                    }
+
+                    //switch (GlueChipSlotDir)
+                    //{
+                    //    case ChipSlotDir.SlotLeft:
+                    //        break;
+                    //    case ChipSlotDir.SlotRight:
+                    //        break;
+                    //    case ChipSlotDir.SlotTop:
+                    //        break;
+                    //    case ChipSlotDir.SlotBottom:
+                    //        break;
+                    //}
+
 
                     i++;
                 }
@@ -1892,35 +3165,48 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 while (drawIndex < (int)BorderTypeEnum.COUNT)
                 //Parallel.For(0, (int)BorderTypeEnum.COUNT, (drawIndex) =>
                 {
-                    switch ((BorderTypeEnum)drawIndex)
-                    {
-                        case BorderTypeEnum.LEFT:
-                            GlueTmpMax = GlueMaxLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            break;
-                        case BorderTypeEnum.TOP:
-                            GlueTmpMax = GlueMaxTop / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinTop / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            break;
-                        case BorderTypeEnum.RIGHT:
-                            GlueTmpMax = GlueMaxRight / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinRight / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            break;
-                        case BorderTypeEnum.BOTTOM:
-                            GlueTmpMax = GlueMaxBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            break;
-                    }
+                    //switch ((BorderTypeEnum)drawIndex)
+                    //{
+                    //    case BorderTypeEnum.LEFT:
+                    //        GlueTmpMax = GlueMaxLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        GlueTmpMin = GlueMinLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        break;
+                    //    case BorderTypeEnum.TOP:
+                    //        GlueTmpMax = GlueMaxTop / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        GlueTmpMin = GlueMinTop / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        break;
+                    //    case BorderTypeEnum.RIGHT:
+                    //        GlueTmpMax = GlueMaxRight / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        GlueTmpMin = GlueMinRight / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        break;
+                    //    case BorderTypeEnum.BOTTOM:
+                    //        GlueTmpMax = GlueMaxBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        GlueTmpMin = GlueMinBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        break;
+                    //}
 
                     //pts = glues[drawIndex].GetPointF();
                     //ptsIN = glues[drawIndex].GetPointFIN();
 
                     if (m_ischeckgluepass)
                     {
-                        g.DrawLines(new Pen(Color.Lime, linewidth), glues[drawIndex].GetPointF());
-                        g.DrawLines(new Pen(Color.Lime, linewidth), glues[drawIndex].GetPointFIN());
-                        g.DrawString(measureStr, new Font("宋体", fontsize), Brushes.Lime, 2, 2);
+                        g.DrawLines(new Pen(INI.chipPassColor, linewidth), glues[drawIndex].GetPointF());
+                        g.DrawLines(new Pen(INI.chipPassColor, linewidth), glues[drawIndex].GetPointFIN());
+                        g.DrawString(measureStr, new Font("宋体", fontsize), new SolidBrush(INI.chipPassColor), 2, 2);
                         //g.DrawString(measureStr, new Font("宋体", 22), Brushes.Lime, _rectF);
+
+                        switch (PADChipSizeMode)
+                        {
+                            case PADChipSize.CHIP_NORMAL:
+                                switch (PadInspectMethod)
+                                {
+                                    case PadInspectMethodEnum.PAD_V1:
+                                        if (GlueChipSlotDir != ChipSlotDir.NONE)
+                                            g.DrawLines(new Pen(INI.chipPassColor, linewidth), glues[drawIndex].GetPointFIN2());
+                                        break;
+                                }
+                                break;
+                        }
                     }
                     else
                     {
@@ -1928,6 +3214,19 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         g.DrawLines(new Pen(Color.Red, linewidth), glues[drawIndex].GetPointFIN());
                         g.DrawString(measureStr, new Font("宋体", fontsize), Brushes.Red, 2, 2);
                         //g.DrawString(measureStr, new Font("宋体", 22), Brushes.Red, _rectF);
+
+                        switch (PADChipSizeMode)
+                        {
+                            case PADChipSize.CHIP_NORMAL:
+                                switch (PadInspectMethod)
+                                {
+                                    case PadInspectMethodEnum.PAD_V1:
+                                        if (GlueChipSlotDir != ChipSlotDir.NONE)
+                                            g.DrawLines(new Pen(Color.Red, linewidth), glues[drawIndex].GetPointFIN2());
+                                        break;
+                                }
+                                break;
+                        }
                     }
 
                     drawIndex++;
@@ -2002,6 +3301,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             return isgood;
         }
+
+
+#endif
+        #endregion
+
         public bool PB10_GlueInspectionProcess_BlackEdge(Bitmap bmpinput, ref Bitmap bmpoutput)
         {
             //0.025/0.022 = 1 mil/1 pixel
@@ -2042,7 +3346,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //60ms
             if (isgood)
             {
-                int isized = 10;
+                //int isized = 10;
+                int isized = _from_bmpinputSize_to_iSized(bmpInput);
+                if (isized == 0)
+                    isized = 1;
                 PointF fillCenterPointF = new PointF(0, 0);
                 Bitmap bmpsize = PADTempRegion.GetChipGlue(-isized, out fillCenterPointF);//  new Bitmap(bmpinput, Resize(bmpinput.Size, -isized));
                 AForge.Imaging.Filters.HistogramEqualization histogramEqualization11 =
@@ -2064,7 +3371,14 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 AForge.Imaging.Filters.ExtractBiggestBlob extractBiggestBlob11 =
                     new AForge.Imaging.Filters.ExtractBiggestBlob();
-                bmphistogramEqualization11 = extractBiggestBlob11.Apply(bmphistogramEqualization11);
+                try
+                {
+                    bmphistogramEqualization11 = extractBiggestBlob11.Apply(bmphistogramEqualization11);
+                }
+                catch
+                {
+
+                }
 
                 if (m_IsSaveTemp)
                 {
@@ -2253,14 +3567,14 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
 
                 Bitmap bitmap = (Bitmap)bmpInput.Clone();// new Bitmap(bmpInput);
-                Bitmap bitmap0 = (Bitmap)bmpInput.Clone();//new Bitmap(bmpInput);
+                //Bitmap bitmap0 = (Bitmap)bmpInput.Clone();//new Bitmap(bmpInput);
                 if (m_IsSaveTemp)
                 {
-                    bitmap0.Save(Universal.CalTestPath + "\\" + _CalPageIndex() + RelateAnalyzeString + "bmpTrainCollect" + ".png",
+                    bitmap.Save(Universal.CalTestPath + "\\" + _CalPageIndex() + RelateAnalyzeString + "bmpTrainCollect" + ".png",
                        System.Drawing.Imaging.ImageFormat.Png);
 
 
-                    bitmap0.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bitmap0" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                    bitmap.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bitmap" + ".png", System.Drawing.Imaging.ImageFormat.Png);
                     //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
                 }
                 int sized = _from_bmpinputSize_to_iSized(imginput);
@@ -2272,53 +3586,28 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         break;
                     case PADChipSize.CHIP_NORMAL:
                     default:
-                        //bitmap = (Bitmap)blackNormal(PADTempRegion, 1).Clone();
 
-                        Bitmap bmptempxxx = new Bitmap(blackNormal(PADTempRegion));
-                        //bitmap = new Bitmap(blackNormal(PADTempRegion));
-                        bitmap = new Bitmap(bmptempxxx, new Size(bmptempxxx.Width * 5, bmptempxxx.Height * 5));
-                        bmptempxxx.Dispose();
+                        switch(PadInspectMethod)
+                        {
+                            case PadInspectMethodEnum.PAD_G1:
+                                break;
+                            default:
+                                //bitmap = (Bitmap)blackNormal(PADTempRegion, 1).Clone();
+
+                                Bitmap bmptempxxx = new Bitmap(blackNormal(PADTempRegion, -sized));
+                                //bitmap = new Bitmap(blackNormal(PADTempRegion));
+                                bitmap = new Bitmap(bmptempxxx, new Size(bmptempxxx.Width * -sized, bmptempxxx.Height * -sized));
+                                bmptempxxx.Dispose();
+                                break;
+                        }
+                         
                         break;
                 }
 
                 //这里是寻找点的起点位置
                 //rect.Inflate(-5, -5);
                 rect.Inflate(-(int)(CalExtendX * Resolution_Mil), -(int)(CalExtendY * Resolution_Mil));
-                //rect.Inflate(-(int)(150 * Resolution_Mil), -(int)(150 * Resolution_Mil));
-
-                //if (m_IsSaveTemp)
-                //{
-                //    bitmap.Save("D:\\testtest\\" + RelateAnalyzeString + "imginputorg" + ".png", System.Drawing.Imaging.ImageFormat.Png);
-                //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
-                //}
-
-                //Rectangle rectin = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
-                ////rectin.Inflate(5, 5);
-                //int minin = (int)(GlueMin * Resolution_Mil);
-                //rectin.Inflate(minin, minin);
-                ////g.DrawRectangle(new Pen(Color.Blue), rectin);
-
-                //Rectangle rectout = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
-                ////rectout.Inflate(5, 5);
-                //int minout = (int)(GlueMax * Resolution_Mil);
-                //rectout.Inflate(minout, minout);
-                ////g.DrawRectangle(new Pen(Color.Yellow), rectout);
-
-
-                switch (PADChipSizeMode)
-                {
-                    case PADChipSize.CHIP_V8:
-                        //RectangleF rectangleFxxx = ResizeWithLocation2(rectout, -2);
-                        //gx.DrawRectangle(new Pen(Color.Yellow), rectangleFxxx.X, rectangleFxxx.Y,
-                        //    rectangleFxxx.Width, rectangleFxxx.Height);
-                        break;
-                    default:
-                        //Graphics gx = Graphics.FromImage(bitmap);
-                        //gx.DrawRectangle(new Pen(Color.Yellow), rectout);
-                        //gx.Dispose();
-                        break;
-                }
-
+                
                 int i = 0;
                 int j = 0;
 
@@ -2431,43 +3720,125 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     case PADChipSize.CHIP_NORMAL:
                     default:
 
-                        //SetDilatation3x3(ref PADTempRegion.bmpThreshold, 2);
-                        //SetErosion3x3(ref PADTempRegion.bmpThreshold, 2);
-
-                        borderLineRun = new BorderLineRunClass[4];
-                        i = 0;
-                        while (i < (int)BorderTypeEnum.COUNT)
+                        switch(PadInspectMethod)
                         {
+                            case PadInspectMethodEnum.PAD_G1:
 
-                            borderLineRun[i] = new BorderLineRunClass();
-                            borderLineRun[i].bmp0 = (Bitmap)bitmap.Clone();// new Bitmap(bitmap);
-                            borderLineRun[i].bmp1 = (Bitmap)PADTempRegion.bmpThreshold.Clone();//  new Bitmap(PADTempRegion.bmpThreshold);
-                            borderLineRun[i].rect0 = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
-                            borderLineRun[i].Border = (BorderTypeEnum)i;
-                            borderLineRun[i].index = i;
+                                #region 寻找间距的做法
 
-                            i++;
+                                borderLineRun = new BorderLineRunClass[4];
+                                i = 0;
+                                while (i < (int)BorderTypeEnum.COUNT)
+                                {
+
+                                    borderLineRun[i] = new BorderLineRunClass();
+                                    borderLineRun[i].bmp0 = (Bitmap)bitmap.Clone();// new Bitmap(bitmap);
+                                    borderLineRun[i].bmp1 = (Bitmap)bitmap.Clone();
+                                    //borderLineRun[i].bmp1 = (Bitmap)PADTempRegion.bmpThreshold.Clone();//  new Bitmap(PADTempRegion.bmpThreshold);
+                                    borderLineRun[i].rect0 = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+                                    borderLineRun[i].Border = (BorderTypeEnum)i;
+                                    borderLineRun[i].index = i;
+
+                                    borderLineRun[i].rectORG = new Rectangle(PADTempRegion.RegionForEdgeRect.X,
+                                                                       PADTempRegion.RegionForEdgeRect.Y,
+                                                                       PADTempRegion.RegionForEdgeRect.Width,
+                                                                       PADTempRegion.RegionForEdgeRect.Height);
+                                    borderLineRun[i].padG1 = new PADG1Class();
+                                    borderLineRun[i].padG1.FromString(PADINSPECTOPString);
+
+                                    i++;
+                                }
+
+                                //这里写间距的算法
+
+                                Parallel.ForEach(borderLineRun, item =>
+                                {
+                                    _get_border_pointf_PADG1(item.bmp0,
+                                        item.bmp1,
+                                        item.rect0,
+                                        item.rectORG,
+                                        item.padG1,
+                                        item.Border,
+                                        out glues[item.index]);
+
+                                });
+
+                                //foreach (var item in borderLineRun)
+                                //{
+                                //    _get_border_pointf_PADG1(item.bmp0,
+                                //        item.bmp1,
+                                //        item.rect0,
+                                //        item.rectORG,
+                                //        item.padG1,
+                                //        item.Border,
+                                //        out glues[item.index]);
+                                //}
+
+                                i = 0;
+                                while (i < (int)BorderTypeEnum.COUNT)
+                                {
+
+                                    //borderLineRun[i] = new BorderLineRunClass();
+                                    borderLineRun[i].bmp0.Dispose();
+                                    borderLineRun[i].bmp1.Dispose();
+
+                                    i++;
+                                }
+                                GC.Collect();
+
+                                //_bmpnewIpd.Dispose();
+
+                                #endregion
+
+                                break;
+                            default:
+
+                                #region 原始的做法
+
+                                //SetDilatation3x3(ref PADTempRegion.bmpThreshold, 2);
+                                //SetErosion3x3(ref PADTempRegion.bmpThreshold, 2);
+
+                                borderLineRun = new BorderLineRunClass[4];
+                                i = 0;
+                                while (i < (int)BorderTypeEnum.COUNT)
+                                {
+
+                                    borderLineRun[i] = new BorderLineRunClass();
+                                    borderLineRun[i].bmp0 = (Bitmap)bitmap.Clone();// new Bitmap(bitmap);
+                                    borderLineRun[i].bmp1 = (Bitmap)PADTempRegion.bmpThreshold.Clone();//  new Bitmap(PADTempRegion.bmpThreshold);
+                                    borderLineRun[i].rect0 = new Rectangle(rect.X, rect.Y, rect.Width, rect.Height);
+                                    borderLineRun[i].Border = (BorderTypeEnum)i;
+                                    borderLineRun[i].index = i;
+
+                                    i++;
+                                }
+
+                                Parallel.ForEach(borderLineRun, item =>
+                                {
+                                    _get_border_pointf_v3(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index]);
+
+                                });
+
+                                i = 0;
+                                while (i < (int)BorderTypeEnum.COUNT)
+                                {
+
+                                    //borderLineRun[i] = new BorderLineRunClass();
+                                    borderLineRun[i].bmp0.Dispose();
+                                    borderLineRun[i].bmp1.Dispose();
+
+                                    i++;
+                                }
+                                GC.Collect();
+
+                                //_get_border_pointf_v3(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
+
+                                #endregion
+
+                                break;
                         }
 
-                        Parallel.ForEach(borderLineRun, item =>
-                        {
-                            _get_border_pointf_v3(item.bmp0, item.bmp1, item.rect0, item.Border, out glues[item.index]);
-
-                        });
-
-                        i = 0;
-                        while (i < (int)BorderTypeEnum.COUNT)
-                        {
-
-                            //borderLineRun[i] = new BorderLineRunClass();
-                            borderLineRun[i].bmp0.Dispose();
-                            borderLineRun[i].bmp1.Dispose();
-
-                            i++;
-                        }
-                        GC.Collect();
-
-                        //_get_border_pointf_v3(bitmap, PADTempRegion.bmpThreshold, rect, (BorderTypeEnum)i, out glues[i]);
+                        
                         break;
                 }
 
@@ -2481,23 +3852,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 double GlueTmpMax = 0;// GlueMax * Resolution_Mil;
                 double GlueTmpMin = 0;// GlueMin * Resolution_Mil;
 
+                #region 整合数据及画图
 
                 if (INI.CHIP_CAL_MODE == 2)
                 {
-                    ////上下
-                    //double tbmin = (glues[(int)BorderTypeEnum.TOP].LengthMin + glues[(int)BorderTypeEnum.BOTTOM].LengthMax) / 2;
-                    //double tbmax = (glues[(int)BorderTypeEnum.TOP].LengthMax + glues[(int)BorderTypeEnum.BOTTOM].LengthMin) / 2;
-                    //glues[(int)BorderTypeEnum.TOP].LengthMin = Math.Min(tbmin, tbmax);
-                    //glues[(int)BorderTypeEnum.BOTTOM].LengthMin = Math.Min(tbmin, tbmax);
-                    //glues[(int)BorderTypeEnum.TOP].LengthMax = Math.Max(tbmin, tbmax);
-                    //glues[(int)BorderTypeEnum.BOTTOM].LengthMax = Math.Max(tbmin, tbmax);
-                    ////左右
-                    //double lrmin = (glues[(int)BorderTypeEnum.LEFT].LengthMin + glues[(int)BorderTypeEnum.RIGHT].LengthMax) / 2;
-                    //double lrmax = (glues[(int)BorderTypeEnum.LEFT].LengthMax + glues[(int)BorderTypeEnum.RIGHT].LengthMin) / 2;
-                    //glues[(int)BorderTypeEnum.LEFT].LengthMin = Math.Min(lrmin, lrmax);
-                    //glues[(int)BorderTypeEnum.RIGHT].LengthMin = Math.Min(lrmin, lrmax);
-                    //glues[(int)BorderTypeEnum.LEFT].LengthMax = Math.Max(lrmin, lrmax);
-                    //glues[(int)BorderTypeEnum.RIGHT].LengthMax = Math.Max(lrmin, lrmax);
 
                     //上下
                     double tbmin = (glues[(int)BorderTypeEnum.TOP].LengthMin + glues[(int)BorderTypeEnum.BOTTOM].LengthMin) / 2;
@@ -2522,8 +3880,6 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     glues[(int)BorderTypeEnum.RIGHT].LengthMax = glues[(int)BorderTypeEnum.RIGHT].LengthMax +
                         (lrmax - glues[(int)BorderTypeEnum.RIGHT].LengthMax) * 0.83;// + GetRandom(-0.01, 0.01);
                 }
-
-
 
                 i = 0;
                 while (i < (int)BorderTypeEnum.COUNT)
@@ -2657,7 +4013,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 if (m_IsSaveTemp)
                 {
-                    g.DrawRectangle(new Pen(Color.Red), rect);
+                    //g.DrawRectangle(new Pen(Color.Red), rect);
                     //g.DrawRectangle(new Pen(Color.Blue), rectin);
                     //g.DrawRectangle(new Pen(Color.Yellow), rectout);
 
@@ -2668,6 +4024,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
                 }
                 //bmpglueout.Save("D:\\testtest\\" + RelateAnalyzeString + "bmpInputout" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                #endregion
 
                 bmpoutput = (Bitmap)bmpglueout.Clone();// new Bitmap(bmpglueout);
                 g.Dispose();
@@ -2933,19 +4290,73 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //166ms
                 PADRegionFind(bmpInput, PADGrayThreshold, false, out PADTempRegion);
 
-                if (!IsInRangeRatio(PADTempRegion.RegionArea, m_PADRegion.RegionArea, OAreaRatio))
+                #region 检测有无芯片
+
+                switch (ChipNoHaveMode)
                 {
-                    isgood = false;
-                    processstring += "Error in " + RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
-                    errorstring += RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
+                    case ChipNoHave.Normal:
 
-                    //reason = ReasonEnum.NG;
-                    //descstriing = "尺寸面积超标";
+                        Bitmap bmprunxxxx = new Bitmap(bmpinput);
+                        isgood = checkNoHaveRun(bmprunxxxx);
+                        bmprunxxxx.Dispose();
 
-                    reason = ReasonEnum.NG;
-                    descstriing = "无胶";
+                        if (!isgood)
+                        {
+                            isgood = false;
+                            processstring += "Error in FastPH" + RelateAnalyzeString + Environment.NewLine;
+                            errorstring += RelateAnalyzeString + Environment.NewLine;
+
+                            reason = ReasonEnum.PASS;
+                            descstriing = "无芯片";
+                        }
+                        break;
+                    case ChipNoHave.BlobCount:
+
+                        Rectangle _cropItem = PADTempRegion.RegionForEdgeRect;
+                        int iws = _cropItem.Width / 4;
+                        int ihs = _cropItem.Height / 4;
+                        _cropItem.Inflate(-iws, -ihs);
+                        BoundRect(ref _cropItem, bmpinput.Size);
+                        Bitmap bmpitemx = bmpinput.Clone(_cropItem, PixelFormat.Format24bppRgb);
+                        //int _thresholdv = 100;
+                        N2Class n2Class = new N2Class();
+                        n2Class.FromString(ChipNoHaveModeOpString);
+                        isgood = checkNoHaveRunBlobCount(bmpitemx, n2Class.ThresholdValue, n2Class.IsWhite, n2Class.Count);
+                        bmpitemx.Dispose();
+
+                        if (!isgood)
+                        {
+                            isgood = false;
+                            processstring += "Error in Blob" + RelateAnalyzeString + Environment.NewLine;
+                            errorstring += RelateAnalyzeString + Environment.NewLine;
+
+                            reason = ReasonEnum.PASS;
+                            descstriing = "无芯片";
+                        }
+
+                        break;
+                    default:
+                        break;
                 }
-                else if (!IsInRangeRatio(PADTempRegion.RegionWidth, m_PADRegion.RegionWidth, OWidthRatio))
+
+                #endregion
+
+                //if (!IsInRangeRatio(PADTempRegion.RegionArea, m_PADRegion.RegionArea, OAreaRatio))
+                //{
+                //    isgood = false;
+                //    processstring += "Error in " + RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
+                //    errorstring += RelateAnalyzeString + " PAD AREA OVER Ratio= " + OAreaRatio.ToString() + " , " + PADTempRegion.RegionArea.ToString() + " , " + m_PADRegion.RegionArea.ToString() + Environment.NewLine;
+
+                //    //reason = ReasonEnum.NG;
+                //    //descstriing = "尺寸面积超标";
+
+                //    reason = ReasonEnum.NG;
+                //    descstriing = "无胶";
+                //}
+
+                #region 判断有无胶
+
+                if (!IsInRangeRatio(PADTempRegion.RegionWidth, m_PADRegion.RegionWidth, OWidthRatio))
                 {
                     isgood = false;
                     processstring += "Error in " + RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + PADTempRegion.RegionWidth.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
@@ -2969,6 +4380,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     reason = ReasonEnum.NG;
                     descstriing = "无胶";
                 }
+
+                #endregion
+
+
+                #region 判断银胶大面积异形
 
                 if (isgood)
                 {
@@ -3000,9 +4416,39 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         descstriing = "胶水异常胶水宽度不合格";
                     }
                 }
+
+                #endregion
+
                 bmpoutput.Dispose();
                 //bmpoutput = new Bitmap(bmpPadFindOutput);
                 bmpoutput = (Bitmap)bmpPadFindOutput.Clone(new Rectangle(0, 0, bmpPadFindOutput.Width, bmpPadFindOutput.Height), PixelFormat.Format24bppRgb);
+
+
+                #region 判断银胶胶型正常内部异常的胶水
+
+                if (isgood)
+                {
+                    switch(PadInspectMethod)
+                    {
+                        case PadInspectMethodEnum.PAD_G2:
+
+                            //定位看异常
+                            isgood = CheckYinJiaoIrregular(false, bmpInput, new RectangleF(0, 0, 1, 1));
+                            if (!isgood)
+                            {
+                                isgood = false;
+                                processstring += "Error in " + RelateAnalyzeString + " Irregular" + Environment.NewLine;
+                                errorstring += RelateAnalyzeString + " Irregular" + Environment.NewLine;
+
+                                reason = ReasonEnum.NG;
+                                descstriing = "胶水异常表面异物或凹陷Irr";
+                            }
+
+                            break;
+                    }
+                }
+
+                #endregion
 
                 //if (!IsInRangeRatio(PADTempRegion.RegionArea, m_PADRegion.RegionArea, OAreaRatio))
                 //{
@@ -3081,6 +4527,12 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             //画出银胶到四边的距离
             Graphics _gGle = Graphics.FromImage(bmpoutput);
+            if(descstriing.Contains("异物或凹陷Irr"))
+            {
+                RectangleF rectCrop = FindAxisAlignedBoundingRectangle(m_PADRegion.RegionPtFCornerQLE);
+                BoundRect(ref rectCrop, bmpPattern.Size);
+                _gGle.DrawImage(bmpPadBolbOutput, rectCrop);
+            }
 
             List<PointF> list_corner_org_points = PADTempRegion.RegionPtFCornerORG.ToList();
             list_corner_org_points = SortCornersClockwise(list_corner_org_points);
@@ -3189,6 +4641,20 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 if (bok)
                     measuredStr += "胶水异常下边距";
 
+                double topbottomoffset = (glues[(int)BorderTypeEnum.TOP].LengthMax - glues[(int)BorderTypeEnum.BOTTOM].LengthMax) / 2;
+                bok = (topbottomoffset < -GlueTopBottomOffset) || (topbottomoffset > GlueTopBottomOffset);
+                cush = (!bok ? Color.Lime : Color.Red);
+                _gGle.DrawString($"上-下边距偏移量:{Math.Round(topbottomoffset, 6)}mm", new Font("宋体", FontSize), new SolidBrush(cush), 5, FontSize * 5 + 50);
+                if (bok)
+                    measuredStr += "胶水异常上下边距偏移量";
+
+                double leftrightoffset = (glues[(int)BorderTypeEnum.LEFT].LengthMax - glues[(int)BorderTypeEnum.RIGHT].LengthMax) / 2;
+                bok = (leftrightoffset < -GlueLeftRightOffset) || (leftrightoffset > GlueLeftRightOffset);
+                cush = (!bok ? Color.Lime : Color.Red);
+                _gGle.DrawString($"左-右边距偏移量:{Math.Round(leftrightoffset, 6)}mm", new Font("宋体", FontSize), new SolidBrush(cush), 5, FontSize * 6 + 55);
+                if (bok)
+                    measuredStr += "胶水异常左右边距偏移量";
+
                 RunDataOK = true;
 
                 if (!string.IsNullOrEmpty(measuredStr))
@@ -3204,7 +4670,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
             #endregion
 
-            _gGle.DrawPolygon(new Pen(Color.Blue, LineWidth), PADTempRegion.RegionPtFCornerORG);
+            _gGle.DrawPolygon(new Pen(Color.Yellow, LineWidth), PADTempRegion.RegionPtFCornerORG);
             _gGle.DrawPolygon(new Pen(Color.Blue, LineWidth), PADTempRegion.RegionPtFCornerQLE);
             _gGle.DrawRectangle(new Pen(Color.Lime, LineWidth), PADTempRegion.QleMaxRect);
 
@@ -3243,6 +4709,117 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             bmpMeasureOutput.Dispose();
             bmpMeasureOutput = new Bitmap(bmpoutput);
+
+            bmpInput.Dispose();
+
+            return isgood;
+        }
+        public bool PB10_ChipCheckNoHaveProcess(Bitmap bmpinput, bool istrain, ref Bitmap bmpoutput)
+        {
+            //0.025/0.022 = 1 mil/1 pixel
+            Resolution_Mil = 0.0254 / INI.MAINSD_PAD_MIL_RESOLUTION;
+            m_DescStr = string.Empty;
+
+            //bmpMeasureOutput.Dispose();
+            ////bmpMeasureOutput = new Bitmap(bmpinput);
+            //bmpMeasureOutput = (Bitmap)bmpinput.Clone();
+
+            if (PADMethod == PADMethodEnum.NONE)
+            {
+                bmpoutput.Dispose();
+                bmpoutput = new Bitmap(bmpinput);
+                IsPass = true;
+                return true;
+            }
+
+            m_IsSaveTemp = INI.IsDEBUGCHIP;
+            bool isgood = true;
+
+            WorkStatusClass runstatus = new WorkStatusClass(AnanlyzeProcedureEnum.GLUEINSPECT);
+            string processstring = "Start " + RelateAnalyzeString + " PAD Inspection." + Environment.NewLine;
+            string errorstring = "";
+            string descstriing = "";
+            ReasonEnum reason = ReasonEnum.PASS;
+
+            bmpInput = new Bitmap(bmpinput, bmpinput.Width >> 2, bmpinput.Height >> 2);
+
+            //bmpPadFindOutput = new Bitmap(bmpinput);
+            //bmpPadBolbOutput = new Bitmap(bmpinput);
+            //bmpPadFindOutput = (Bitmap)bmpinput.Clone();
+            //bmpPadBolbOutput = (Bitmap)bmpinput.Clone();
+
+            bmpoutput.Dispose();
+            bmpoutput = new Bitmap(bmpinput);
+
+            #region 直接判断有没有芯片
+
+            JzMVDIntensityMeasureClass jzMVDIntensityMeasureClass = new JzMVDIntensityMeasureClass();
+            float meanLum = jzMVDIntensityMeasureClass.Run(bmpInput);
+            isgood = meanLum > PADGrayThreshold;//小于此值代表无芯片
+            if (!isgood)
+            {
+                isgood = false;
+                processstring += $"Error 均值 {meanLum}   " + RelateAnalyzeString + Environment.NewLine;
+                errorstring += RelateAnalyzeString + Environment.NewLine;
+
+                reason = ReasonEnum.PASS;
+                descstriing = "无芯片";
+            }
+            else
+            {
+                processstring += $"均值 {meanLum}    " + RelateAnalyzeString + Environment.NewLine;
+                errorstring += RelateAnalyzeString + Environment.NewLine;
+                reason = ReasonEnum.PASS;
+                descstriing = "";
+            }
+
+            string msg = string.Empty;
+            Graphics graphics = Graphics.FromImage(bmpoutput);
+            if (isgood)
+            {
+                if (istrain)
+                {
+                    msg = $"测量数值 {meanLum} 大于 中心灰阶值 {PADGrayThreshold} 有芯片";
+                    graphics.DrawString(msg, new Font("宋体", 25), Brushes.Lime, new PointF(5, 25));
+                }
+            }
+            else
+            {
+                msg = $"测量数值 {meanLum} 小于 中心灰阶值 {PADGrayThreshold} 无芯片";
+                graphics.DrawString(msg, new Font("宋体", 25), Brushes.Red, new PointF(5, 25));
+            }
+
+            graphics.Dispose();
+
+            #endregion
+
+
+            runstatus.SetWorkStatus(bmpPattern,
+                                                   bmpInput,
+                                                   bmpoutput,
+                                                   reason,
+                                                   errorstring,
+                                                   processstring,
+                                                   PassInfo,
+                                                   descstriing);
+
+            if (istrain)
+                TrainStatusCollection.Add(runstatus);
+            else
+                RunStatusCollection.Add(runstatus);
+            IsPass = isgood;
+            m_DescStr = descstriing;
+
+            bmpMeasureOutput.Dispose();
+            bmpMeasureOutput = new Bitmap(bmpoutput);
+
+            //if (m_IsSaveTemp)
+            //{
+            //    bmpoutput.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "CheckNoHave" + (false ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+
+            //    //bmp.Save("D:\\testtest\\" + RelateAnalyzeString + "PadFind" + (eIsTrain ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            //}
 
             bmpInput.Dispose();
 
@@ -4052,6 +5629,1640 @@ namespace Allinone.OPSpace.AnalyzeSpace
          */
         #endregion
 
+        public int GetGrayMinValue(Bitmap ebmpinput)
+        {
+            //Bitmap bmpFourSide = new Bitmap(ebmpinput);
+            //截取芯片周围一部分 找到灰阶的最低值
+            int min = m_PADRegion.GetGrayMin(ebmpinput);
+
+            //bmpFourSide.Dispose();
+            return min;
+        }
+
+
+        bool checkNoHaveTrain(Bitmap bmptrain)
+        {
+            if (m_IsSaveTemp)
+            {
+                bmptrain.Save("D:\\testtest\\" + RelateAnalyzeString + "bmpHPItemTrain" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+            mVDPatMatchClass.bmpItem = bmptrain;
+            return mVDPatMatchClass.Train();
+        }
+        public bool checkNoHaveRun(Bitmap bmprun)
+        {
+            if (m_IsSaveTemp)
+            {
+                bmprun.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpHPItemRun" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+            N1Class n1Class = new N1Class();
+            n1Class.FromString(ChipNoHaveModeOpString);
+            mVDPatMatchClass.MTRotation = n1Class.Rotation;
+            mVDPatMatchClass.MTTolerance = n1Class.Tolerance;
+            mVDPatMatchClass.bmpFind = bmprun;
+            return mVDPatMatchClass.Run();
+        }
+        /// <summary>
+        /// 判断有无芯片 通过数blob个数
+        /// </summary>
+        /// <param name="bmprun">输入图片</param>
+        /// <param name="eThreshold">二值化阈值</param>
+        /// <param name="eWhite">找白斑</param>
+        /// <param name="eBlobCountSetup">设定的个数</param>
+        /// <returns></returns>
+        public bool checkNoHaveRunBlobCount(Bitmap bmprun, int eThreshold = 128, bool eWhite = true,int eBlobCountSetup=15)
+        {
+            bool bret = false;
+
+            VisionDesigner.ImageBinary.CImageBinaryTool cImageBinaryToolObj = null;
+            VisionDesigner.BlobFind.CBlobFindTool cBlobFindToolObj = null;
+
+            if (cImageBinaryToolObj == null)
+                cImageBinaryToolObj = new VisionDesigner.ImageBinary.CImageBinaryTool();
+            if (cBlobFindToolObj == null)
+                cBlobFindToolObj = new VisionDesigner.BlobFind.CBlobFindTool();
+
+            AForge.Imaging.Filters.Grayscale grayscale = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+            Bitmap bmp24 = grayscale.Apply(bmprun);
+            VisionDesigner.CMvdImage cInputImg2 = BitmapToCMvdImage(bmp24);
+            if (cInputImg2.PixelFormat != MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08)
+            {
+                //当前程序仅支持mono8。因此像素格会转换.
+                cInputImg2.ConvertImagePixelFormat(MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08);
+            }
+            //cInputImg2.InitImage("InputTest2.bmp");
+
+            //cInputImg2.SaveImage($"D:\\Data\\cInputImg2run_{DateTime.Now.ToString("yyyyMMddHHmmssfff")}.bmp", MVD_FILE_FORMAT.MVD_FILE_BMP);
+
+            bmp24.Dispose();
+            grayscale = null;
+
+            //二值化
+            cImageBinaryToolObj.InputImage = cInputImg2;// BitmapToCMvdImage(ebmpInput);
+            cImageBinaryToolObj.ROI = null;
+            cImageBinaryToolObj.SetRunParam("LowThreshold", eThreshold.ToString());
+            //cImageArithmeticToolObj.SetRunParam("HighThreshold", BlobHighThreshold.ToString());
+            cImageBinaryToolObj.Run();
+
+            //blob
+            cBlobFindToolObj.InputImage = cImageBinaryToolObj.Result.OutputImage;
+            //cBlobFindToolObj.RegionImage = BitmapToCMvdImage(eBmpMask);
+
+            if (m_IsSaveTemp)
+            {
+                cInputImg2.SaveImage("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + $"bmpBlobItemRun0" + ".png", MVD_FILE_FORMAT.MVD_FILE_JPEG);
+                cImageBinaryToolObj.Result.OutputImage.SaveImage("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + $"bmpBlobItemRun1" + ".png", MVD_FILE_FORMAT.MVD_FILE_JPEG);
+
+            }
+
+            cBlobFindToolObj.ROI = null;
+            if (eWhite)
+                cBlobFindToolObj.SetRunParam("Polarity", "BrightObject");
+            else
+                cBlobFindToolObj.SetRunParam("Polarity", "DarkObject");
+            cBlobFindToolObj.BasicParam.ShowBlobImageStatus = true;
+            cBlobFindToolObj.Run();
+            VisionDesigner.BlobFind.CBlobFindResult cBlobFindRes = cBlobFindToolObj.Result;
+            
+            //找到的blob个数 小于 设定值 代表有芯片
+            bret = cBlobFindToolObj.Result.BlobInfo.Count < eBlobCountSetup;
+
+            if (m_IsSaveTemp)
+            {
+                cBlobFindRes.BlobImage.SaveImage("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + $"bmpBlobItemRun[{cBlobFindToolObj.Result.BlobInfo.Count}]" + ".png", MVD_FILE_FORMAT.MVD_FILE_JPEG);
+            }
+
+            cImageBinaryToolObj.Dispose();
+            cBlobFindToolObj.Dispose();
+
+            cImageBinaryToolObj = null;
+            cBlobFindToolObj = null;
+
+
+            return bret;
+        }
+        private CMvdImage BitmapToCMvdImage(Bitmap bmpInputImg)
+        {
+            CMvdImage cMvdImage = new CMvdImage();
+            System.Drawing.Imaging.PixelFormat bitPixelFormat = bmpInputImg.PixelFormat;
+            BitmapData bmData = bmpInputImg.LockBits(new Rectangle(0, 0, bmpInputImg.Width, bmpInputImg.Height), ImageLockMode.ReadOnly, bitPixelFormat);//锁定
+
+            if (bitPixelFormat == System.Drawing.Imaging.PixelFormat.Format8bppIndexed)
+            {
+                Int32 bitmapDataSize = bmData.Stride * bmData.Height;//bitmap图像缓存长度
+                int offset = bmData.Stride - bmData.Width;
+                Int32 ImageBaseDataSize = bmData.Width * bmData.Height;//imageBaseData_V2图像真正的缓存长度
+                byte[] _BitImageBufferBytes = new byte[bitmapDataSize];
+                byte[] _ImageBaseDataBufferBytes = new byte[ImageBaseDataSize];
+                Marshal.Copy(bmData.Scan0, _BitImageBufferBytes, 0, bitmapDataSize);
+                int bitmapIndex = 0;
+                int ImageBaseDataIndex = 0;
+                for (int i = 0; i < bmData.Height; i++)
+                {
+                    for (int j = 0; j < bmData.Width; j++)
+                    {
+                        _ImageBaseDataBufferBytes[ImageBaseDataIndex++] = _BitImageBufferBytes[bitmapIndex++];
+                    }
+                    bitmapIndex += offset;
+                }
+                MVD_IMAGE_DATA_INFO stImageData = new MVD_IMAGE_DATA_INFO();
+                stImageData.stDataChannel[0].nRowStep = (uint)bmData.Width;
+                stImageData.stDataChannel[0].nLen = (uint)ImageBaseDataSize;
+                stImageData.stDataChannel[0].nSize = (uint)ImageBaseDataSize;
+                stImageData.stDataChannel[0].arrDataBytes = _ImageBaseDataBufferBytes;
+                cMvdImage.InitImage((uint)bmData.Width, (uint)bmData.Height, MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08, stImageData);
+            }
+            else if (bitPixelFormat == System.Drawing.Imaging.PixelFormat.Format24bppRgb)
+            {
+                Int32 bitmapDataSize = bmData.Stride * bmData.Height;//bitmap图像缓存长度
+                int offset = bmData.Stride - bmData.Width * 3;
+                Int32 ImageBaseDataSize = bmData.Width * bmData.Height * 3;//imageBaseData_V2图像真正的缓存长度
+                byte[] _BitImageBufferBytes = new byte[bitmapDataSize];
+                byte[] _ImageBaseDataBufferBytes = new byte[ImageBaseDataSize];
+                Marshal.Copy(bmData.Scan0, _BitImageBufferBytes, 0, bitmapDataSize);
+                int bitmapIndex = 0;
+                int ImageBaseDataIndex = 0;
+                for (int i = 0; i < bmData.Height; i++)
+                {
+                    for (int j = 0; j < bmData.Width; j++)
+                    {
+                        _ImageBaseDataBufferBytes[ImageBaseDataIndex++] = _BitImageBufferBytes[bitmapIndex + 2];
+                        _ImageBaseDataBufferBytes[ImageBaseDataIndex++] = _BitImageBufferBytes[bitmapIndex + 1];
+                        _ImageBaseDataBufferBytes[ImageBaseDataIndex++] = _BitImageBufferBytes[bitmapIndex];
+                        bitmapIndex += 3;
+                    }
+                    bitmapIndex += offset;
+                }
+                MVD_IMAGE_DATA_INFO stImageData = new MVD_IMAGE_DATA_INFO();
+                stImageData.stDataChannel[0].nRowStep = (uint)bmData.Width * 3;
+                stImageData.stDataChannel[0].nLen = (uint)ImageBaseDataSize;
+                stImageData.stDataChannel[0].nSize = (uint)ImageBaseDataSize;
+                stImageData.stDataChannel[0].arrDataBytes = _ImageBaseDataBufferBytes;
+                cMvdImage.InitImage((uint)bmData.Width, (uint)bmData.Height, MVD_PIXEL_FORMAT.MVD_PIXEL_RGB_RGB24_C3, stImageData);
+            }
+            bmpInputImg.UnlockBits(bmData);  // 解除锁定
+            return cMvdImage;
+        }
+
+
+        #region 银胶检测异形的方法
+
+        public RectangleF FindAxisAlignedBoundingRectangle(PointF[] points)
+        {
+            if (points == null || points.Length != 4)
+                throw new ArgumentException("Exactly four points are required.");
+
+            float minX = points.Min(p => p.X);
+            float maxX = points.Max(p => p.X);
+            float minY = points.Min(p => p.Y);
+            float maxY = points.Max(p => p.Y);
+
+            PointF bottomLeft = new PointF(minX, minY);
+            PointF topRight = new PointF(maxX, maxY);
+
+            return new RectangleF(
+                bottomLeft.X,
+                bottomLeft.Y,
+                Math.Abs(topRight.X - bottomLeft.X),
+                Math.Abs(topRight.Y - bottomLeft.Y));
+        }
+
+        public bool CheckYinJiaoIrregular(bool bTrain, Bitmap bmpInput, RectangleF eRect)
+        {
+            bool bret = false;
+
+            PADG2Class pADG2Class = new PADG2Class();
+            pADG2Class.FromString(PADINSPECTOPString);
+
+            if (bTrain)
+            {
+                EzMVDPatMatchPADG2.bmpItem = (Bitmap)bmpInput.Clone(eRect, bmpInput.PixelFormat);
+                bret = EzMVDPatMatchPADG2.Train();
+
+                pADG2Class.bmpRun.Dispose();
+                pADG2Class.bmpRun = (Bitmap)bmpInput.Clone(eRect, bmpInput.PixelFormat);
+
+                RectangleF rectCrop = FindAxisAlignedBoundingRectangle(m_PADRegion.RegionPtFCornerQLE);
+                BoundRect(ref rectCrop, bmpPattern.Size);
+                pADG2Class.bmpMask.Dispose();
+                pADG2Class.bmpMask = (Bitmap)bmpPattern.Clone(rectCrop, bmpInput.PixelFormat);
+
+                if (pADG2Class.myMover.Count > 0)
+                {
+                    using (Graphics gfx = Graphics.FromImage(pADG2Class.bmpMask))
+                    {
+                        gfx.Clear(Color.White);
+                        foreach (var geof in iterAllGeoFigures(pADG2Class.myMover, false))
+                        {
+                            if (geof != null)
+                            {
+                                //geof.PenWidth = 5;
+                                //geof.FontSize = 100;
+                                //geof.MainShowPen.Width = 5;
+                                geof.DrawMask(gfx, new PointF(0, 0), 0, null, new SolidBrush(Color.Black), new Size(1, 1));
+                                //geof.MainShowPen.Width = 1;
+                                //geof.PenWidth = PenWidth;
+                                //geof.FontSize = FontSize;
+                            }
+                        }
+                    }
+                }
+
+
+            }
+            else
+            {
+
+                EzMVDPatMatchPADG2.MTRotation = pADG2Class.Rotation;
+                EzMVDPatMatchPADG2.MTTolerance = pADG2Class.Tolerance;
+                EzMVDPatMatchPADG2.bmpFind = bmpInput;
+                bret = EzMVDPatMatchPADG2.Run();
+                if (bret)
+                {
+                    pADG2Class.bmpRun.Dispose();
+                    pADG2Class.bmpRun = (Bitmap)bmpInput.Clone(EzMVDPatMatchPADG2.xFindLastRect, bmpInput.PixelFormat);
+
+                    RectangleF rectCrop = FindAxisAlignedBoundingRectangle(m_PADRegion.RegionPtFCornerQLE);
+                    BoundRect(ref rectCrop, bmpPattern.Size);
+                    pADG2Class.bmpMask.Dispose();
+                    pADG2Class.bmpMask = (Bitmap)bmpPattern.Clone(rectCrop, bmpInput.PixelFormat);
+
+                    if (pADG2Class.myMover.Count > 0)
+                    {
+                        using (Graphics gfx = Graphics.FromImage(pADG2Class.bmpMask))
+                        {
+                            gfx.Clear(Color.White);
+                            foreach (var geof in iterAllGeoFigures(pADG2Class.myMover, false))
+                            {
+                                if (geof != null)
+                                {
+                                    //geof.PenWidth = 5;
+                                    //geof.FontSize = 100;
+                                    //geof.MainShowPen.Width = 5;
+                                    geof.DrawMask(gfx, new PointF(0, 0), 0, null, new SolidBrush(Color.Black), new Size(1, 1));
+                                    //geof.MainShowPen.Width = 1;
+                                    //geof.PenWidth = PenWidth;
+                                    //geof.FontSize = FontSize;
+                                }
+                            }
+                        }
+                    }
+                }
+                //else
+                //{
+                //    RectangleF rectCrop = FindAxisAlignedBoundingRectangle(m_PADRegion.RegionPtFCornerQLE);
+                //    BoundRect(ref rectCrop, bmpInput.Size);
+                //    pADG2Class.bmpRun.Dispose();
+                //    pADG2Class.bmpRun = (Bitmap)bmpInput.Clone(rectCrop, bmpInput.PixelFormat);
+                //}
+
+                if (m_IsSaveTemp)
+                {
+                    pADG2Class.bmpRun.Save("D:\\testtest\\" + RelateAnalyzeString + $"bmpIrregualr_{(bTrain ? "Train" : "Run")}" + ".png",
+                        System.Drawing.Imaging.ImageFormat.Png);
+                }
+            }
+
+            #region 找blob
+            if (bret)
+            {
+                using (Bitmap bmprun = get8bitbmp(pADG2Class.bmpRun))
+                {
+                    using (Bitmap bmpmask = get8bitbmp(pADG2Class.bmpMask))
+                    {
+                        if (m_IsSaveTemp)
+                        {
+                            bmpmask.Save("D:\\testtest\\" + RelateAnalyzeString + $"bmpIrregualrMask_{(bTrain ? "Train" : "Run")}" + ".png",
+                                System.Drawing.Imaging.ImageFormat.Png);
+                            bmprun.Save("D:\\testtest\\" + RelateAnalyzeString + $"bmpIrregualrRun_{(bTrain ? "Train" : "Run")}" + ".png",
+                             System.Drawing.Imaging.ImageFormat.Png);
+                        }
+
+                        EzMVDBLOB.ThresholdValue = pADG2Class.ThresholdValue;
+                        EzMVDBLOB.IsWhite = pADG2Class.IsWhite;
+                        EzMVDBLOB.blobMin = pADG2Class.blobMin;
+                        EzMVDBLOB.blobMax = pADG2Class.blobMax;
+                        bret = EzMVDBLOB.Run(bmprun, bmpmask);
+
+                        if (bTrain)
+                        {
+                            bmpPadBolbOutput?.Dispose();
+                            bmpPadBolbOutput = new Bitmap(bmprun);
+                        }
+                        else
+                        {
+                            if (!bret)
+                            {
+                                if (EzMVDBLOB.NGBounds.Count > 0)
+                                {
+                                    bmpPadBolbOutput?.Dispose();
+                                    bmpPadBolbOutput = new Bitmap(bmprun);
+
+                                    Graphics graphics = Graphics.FromImage(bmpPadBolbOutput);
+                                    graphics.DrawRectangles(new Pen(Color.Red, 3), EzMVDBLOB.NGBounds.ToArray());
+                                    graphics.Dispose();
+
+                                    if (m_IsSaveTemp)
+                                    {
+                                        bmpPadBolbOutput.Save("D:\\testtest\\" + RelateAnalyzeString + $"bmpIrregualrResult_{(bTrain ? "Train" : "Run")}" + ".png",
+                                            System.Drawing.Imaging.ImageFormat.Png);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                bmpPadBolbOutput?.Dispose();
+                                bmpPadBolbOutput = new Bitmap(bmprun);
+                            }
+                        }
+                    }
+                }
+            }
+
+            #endregion
+
+            return bret;
+        }
+
+        Bitmap get8bitbmp(Bitmap ebmp)
+        {
+            using (Bitmap bigBmp = new Bitmap(ebmp))
+            {
+                var pixelFormat = bigBmp.PixelFormat;
+                if (pixelFormat == PixelFormat.Format32bppArgb)
+                {
+                    var bmp = Convert32bppTo8bpp(bigBmp);
+                    return bmp;
+                }
+                else if (pixelFormat == PixelFormat.Format24bppRgb)
+                {
+                    var bmp = Convert24bppTo8bpp(bigBmp);
+                    return bmp;
+
+                }
+                else if (pixelFormat == PixelFormat.Format8bppIndexed)
+                {
+                    return (Bitmap)bigBmp.Clone();
+                }
+                else
+                {
+                    throw new Exception("加载图片格式不支持！");
+                }
+            }
+        }
+
+        Bitmap Convert32bppTo8bpp(Bitmap original)
+        {
+            // 创建一个新的8bpp位图
+            Bitmap newBitmap = new Bitmap(original.Width, original.Height, PixelFormat.Format8bppIndexed);
+
+            // 设置调色板（这里使用灰度调色板）
+            ColorPalette palette = newBitmap.Palette;
+            for (int i = 0; i < 256; i++)
+            {
+                palette.Entries[i] = Color.FromArgb(i, i, i);
+            }
+            newBitmap.Palette = palette;
+
+            // 锁定位图数据
+            BitmapData originalData = original.LockBits(
+                new Rectangle(0, 0, original.Width, original.Height),
+                ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+
+            BitmapData newData = newBitmap.LockBits(
+                new Rectangle(0, 0, newBitmap.Width, newBitmap.Height),
+                ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
+
+            // 转换像素数据
+            unsafe
+            {
+                byte* originalPtr = (byte*)originalData.Scan0;
+                byte* newPtr = (byte*)newData.Scan0;
+
+                for (int y = 0; y < original.Height; y++)
+                {
+                    for (int x = 0; x < original.Width; x++)
+                    {
+                        // 获取32bpp像素值
+                        byte b = originalPtr[y * originalData.Stride + x * 4];
+                        byte g = originalPtr[y * originalData.Stride + x * 4 + 1];
+                        byte r = originalPtr[y * originalData.Stride + x * 4 + 2];
+                        byte a = originalPtr[y * originalData.Stride + x * 4 + 3];
+
+                        // 转换为灰度值（8bpp）
+                        byte gray = (byte)((r * 0.299 + g * 0.587 + b * 0.114) * (a / 255.0));
+
+                        // 写入8bpp位图
+                        newPtr[y * newData.Stride + x] = gray;
+                    }
+                }
+            }
+
+            // 解锁位图
+            original.UnlockBits(originalData);
+            newBitmap.UnlockBits(newData);
+
+            return newBitmap;
+        }
+        Bitmap Convert24bppTo8bpp(Bitmap original)
+        {
+            //if (original.PixelFormat != PixelFormat.Format24bppRgb)
+            //    throw new ArgumentException("源图像必须是24位位图");
+
+            // 创建新的8位位图
+            Bitmap newBitmap = new Bitmap(original.Width, original.Height, PixelFormat.Format8bppIndexed);
+
+            // 设置灰度调色板
+            ColorPalette palette = newBitmap.Palette;
+            for (int i = 0; i < 256; i++)
+            {
+                palette.Entries[i] = Color.FromArgb(i, i, i);
+            }
+            newBitmap.Palette = palette;
+
+            // 锁定位图数据进行操作
+            BitmapData originalData = original.LockBits(
+                new Rectangle(0, 0, original.Width, original.Height),
+                ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+
+            BitmapData newData = newBitmap.LockBits(
+                new Rectangle(0, 0, newBitmap.Width, newBitmap.Height),
+                ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
+
+            unsafe
+            {
+                byte* originalPtr = (byte*)originalData.Scan0;
+                byte* newPtr = (byte*)newData.Scan0;
+
+                for (int y = 0; y < original.Height; y++)
+                {
+                    for (int x = 0; x < original.Width; x++)
+                    {
+                        // 获取24bpp像素值
+                        byte b = originalPtr[y * originalData.Stride + x * 3];
+                        byte g = originalPtr[y * originalData.Stride + x * 3 + 1];
+                        byte r = originalPtr[y * originalData.Stride + x * 3 + 2];
+
+                        // 转换为灰度值（8bpp）
+                        byte gray = (byte)(r * 0.299 + g * 0.587 + b * 0.114);
+
+                        // 写入8bpp位图
+                        newPtr[y * newData.Stride + x] = gray;
+                    }
+                }
+            }
+
+            // 解锁位图
+            original.UnlockBits(originalData);
+            newBitmap.UnlockBits(newData);
+
+            return newBitmap;
+        }
+
+        #region PRIVATE_ITERATION_FUNCTIONS
+        /// <summary>
+        /// 迭代尋訪 指定 JzMover 與 JzStaticMover 內所有的 GeoFigure
+        /// </summary>
+        IEnumerable<GeoFigure> iterAllGeoFigures(Mover mover, bool reverse = false)
+        {
+            foreach (var geo in iterGeoFigures(mover, reverse))
+                yield return geo;
+            //foreach (var geo in iterGeoFigures(mover, reverse))
+            //    yield return geo;
+        }
+        /// <summary>
+        /// 迭代尋訪 指定 Mover 內所有的 GeoFigure
+        /// </summary>
+        IEnumerable<GeoFigure> iterGeoFigures(Mover mover, bool reverse = false)
+        {
+            if (mover != null)
+            {
+                if (reverse)
+                {
+                    for (int i = mover.Count - 1; i >= 0; i--)
+                        if (mover[i].Source is GeoFigure geof)
+                            yield return geof;
+                        else
+                            yield return null;
+                }
+                else
+                {
+                    for (int i = 0, N = mover.Count; i < N; i++)
+                        if (mover[i].Source is GeoFigure geof)
+                            yield return geof;
+                        else
+                            yield return null;
+                }
+            }
+        }
+        #endregion
+
+        #endregion
+
+
+        void filterORG001(Bitmap ebmpinput)
+        {
+            AForge.Imaging.Filters.HistogramEqualization histogramEqualization11 =
+                        new AForge.Imaging.Filters.HistogramEqualization();
+            ebmpinput = histogramEqualization11.Apply(ebmpinput);
+        }
+        void filterVictor001(Bitmap ebmpinput)
+        {
+            ExtractChannel extract = new ExtractChannel();
+            extract.Channel = 1;
+            ebmpinput = extract.Apply(ebmpinput);
+
+            //AForge.Imaging.Filters.HistogramEqualization histogramEqualization11 =
+            //            new AForge.Imaging.Filters.HistogramEqualization();
+            //ebmpinput = histogramEqualization11.Apply(ebmpinput);
+
+            ContrastStretch contrastStretch = new ContrastStretch();
+            ebmpinput = contrastStretch.Apply(ebmpinput);
+
+            Erosion erosion = new Erosion();
+            int i = 0;
+            while (i < 3)
+            {
+                ebmpinput = erosion.Apply(ebmpinput);
+                i++;
+            }
+        }
+        Bitmap filterVictor002(Bitmap ebmpinput, double ratio)
+        {
+            ExtractChannel extract = new ExtractChannel();
+            extract.Channel = 1;
+            ebmpinput = extract.Apply(ebmpinput);
+
+            //AForge.Controls.Histogram histogram = new AForge.Controls.Histogram();
+
+
+            //JzHistogramClass jzHistogram = new JzHistogramClass(1);
+            //JzHistogramResult jzhresult = new JzHistogramResult();
+
+            Bitmap bb = ebmpinput.Clone(new Rectangle(0, 0, ebmpinput.Width, ebmpinput.Height), PixelFormat.Format8bppIndexed);
+            ImageStatistics imageStatistics = new ImageStatistics(bb);
+            AForge.Math.Histogram activeHistogram = imageStatistics.Gray;
+            //int[] histogramdata = new int[256];
+            //jzHistogram.GetHistogramData(bb,
+            //        new Rectangle(0, 0, bb.Width, bb.Height),
+            //        histogramdata);
+
+            //GetHistogramData(histogramdata, jzhresult);
+
+            int _thresholdvalue = (int)((activeHistogram.Median - activeHistogram.Min) * 2 / 3 + activeHistogram.Min);
+            _thresholdvalue = (int)((activeHistogram.Median - activeHistogram.Min) * ratio + activeHistogram.Min);
+            AForge.Imaging.Filters.Threshold threshold = new AForge.Imaging.Filters.Threshold(_thresholdvalue);
+            ebmpinput = threshold.Apply(ebmpinput);
+
+            bb.Dispose();
+            //ebmpinput.Save("D:\\LOA\\11.png");
+            return ebmpinput;
+        }
+
+
+        bool checkOutGlueBAK1(Bitmap eInput, bool istrain = false)
+        {
+            //return checkOutGlueV2(eInput, istrain);
+
+            bool ret = true;
+
+            if (!string.IsNullOrEmpty(PADINSPECTOPString))
+            {
+                string[] strs = PADINSPECTOPString.Split(',');
+                if (strs.Length > 5)
+                {
+                    GetRGB = short.Parse(strs[0]);
+                    numThresholdRatio = int.Parse(strs[1]);
+                    numObjectFilterRatio = int.Parse(strs[2]);
+                    numEDCount = int.Parse(strs[3]);
+                    numShortenRatio = int.Parse(strs[4]);
+                    txtBangBangRectStr = strs[5];
+                }
+                if (strs.Length > 8)
+                {
+                    numBangBangOffsetVal = int.Parse(strs[6]);
+                    txtNeverOutsideRect = strs[7];
+                    cboIPDMethod = int.Parse(strs[8]);
+                }
+            }
+
+            if (m_IsSaveTemp)
+            {
+                eInput.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue_input" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+            }
+
+            Bitmap ebmpinput = new Bitmap(eInput);
+            Bitmap ebmpinputDraw = new Bitmap(eInput);
+
+            //填充
+            Graphics graphics = Graphics.FromImage(ebmpinput);
+            graphics.FillRectangles(Brushes.White, new RectangleF[] { StringtoRect(txtNeverOutsideRect) });
+            graphics.Dispose();
+
+            //抽取绿色
+            ExtractChannel extract = new ExtractChannel();
+            extract.Channel = 1;
+            ebmpinput = extract.Apply(ebmpinput);
+            //local
+            BradleyLocalThresholding bradleyLocalThresholding = new BradleyLocalThresholding();
+            ebmpinput = bradleyLocalThresholding.Apply(ebmpinput);
+
+            //反向
+            Invert invert = new Invert();
+            ebmpinput = invert.Apply(ebmpinput);
+
+            if (m_IsSaveTemp)
+            {
+                ebmpinput.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue_org_" + (istrain ? "_train" : "_run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+            }
+
+            //找球的blob 记录起来
+            BlobCounter blobCounter = new BlobCounter();
+            blobCounter.ProcessImage(ebmpinput);
+            Blob[] blobs = blobCounter.GetObjectsInformation();
+            List<Rectangle> rectangles = new List<Rectangle>();
+            int filterArea = 150;
+            Graphics graphicsXX = Graphics.FromImage(ebmpinputDraw);
+            if (istrain)
+            {
+                if (blobs.Length > 0)
+                {
+                    foreach (Blob bb in blobs)
+                    {
+                        if (bb.Area > filterArea)
+                        {
+                            BallBlobClass ballBlob = new BallBlobClass();
+                            ballBlob.rect = bb.Rectangle;
+                            ballBlob.area = bb.Area;
+                            m_PADRegion.ballBlobClasses.Add(ballBlob);
+
+                            rectangles.Add(bb.Rectangle);
+                        }
+                    }
+                }
+            }
+            else
+            {
+
+                List<Rectangle> rectanglesIN = new List<Rectangle>();
+                foreach (BallBlobClass ballBlobClass in m_PADRegion.ballBlobClasses)
+                {
+                    rectanglesIN.Add(ballBlobClass.rect);
+                }
+                graphicsXX.DrawRectangles(new Pen(Color.Yellow, 3), rectanglesIN.ToArray());
+                if (blobs.Length > 0)
+                {
+                    foreach (Blob bb in blobs)
+                    {
+                        if (bb.Area > filterArea)
+                        {
+                            //BallBlobClass ballBlob = new BallBlobClass();
+                            //ballBlob.rect = bb.Rectangle;
+                            //ballBlob.area = bb.Area;
+                            //m_PADRegion.ballBlobClasses.Add(ballBlob);
+
+                            rectangles.Add(bb.Rectangle);
+                        }
+                    }
+                }
+            }
+            graphicsXX.DrawRectangles(new Pen(Color.Red, 3), rectangles.ToArray());
+            graphicsXX.Dispose();
+
+            if (m_IsSaveTemp)
+            {
+                ebmpinputDraw.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue" + (istrain ? "_train" : "_run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+            }
+
+            return ret;
+        }
+        bool checkOutGlueBAK2(Bitmap eInput, out Bitmap bmpResult, bool istrain = false)
+        {
+            bool ret = true;
+
+            if (!string.IsNullOrEmpty(PADINSPECTOPString))
+            {
+                string[] strs = PADINSPECTOPString.Split(',');
+                if (strs.Length > 5)
+                {
+                    GetRGB = short.Parse(strs[0]);
+                    numThresholdRatio = int.Parse(strs[1]);
+                    numObjectFilterRatio = int.Parse(strs[2]);
+                    numEDCount = int.Parse(strs[3]);
+                    numShortenRatio = int.Parse(strs[4]);
+                    txtBangBangRectStr = strs[5];
+                }
+                if (strs.Length > 8)
+                {
+                    numBangBangOffsetVal = int.Parse(strs[6]);
+                    txtNeverOutsideRect = strs[7];
+                    cboIPDMethod = int.Parse(strs[8]);
+                }
+            }
+
+            if (m_IsSaveTemp)
+            {
+                eInput.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue_input" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            Bitmap ebmpinput = new Bitmap(eInput);
+            bmpResult = new Bitmap(eInput);
+
+            //抽取绿色
+            ExtractChannel extract = new ExtractChannel();
+            extract.Channel = 1;
+            ebmpinput = extract.Apply(ebmpinput);
+
+            Mean mean = new Mean();
+            ebmpinput = mean.Apply(ebmpinput);
+            //local
+            BradleyLocalThresholding bradleyLocalThresholding = new BradleyLocalThresholding();
+            ebmpinput = bradleyLocalThresholding.Apply(ebmpinput);
+
+
+            Bitmap bmpGR = new Bitmap(ebmpinput);
+            //填充
+            Graphics graphics = Graphics.FromImage(bmpGR);
+            graphics.FillRectangles(Brushes.White, new RectangleF[] { StringtoRect(txtNeverOutsideRect) });
+            graphics.Dispose();
+
+            //Grayscale grayscale = new Grayscale(0.299, 0.587, 0.114);
+            bmpGR = extract.Apply(bmpGR);
+
+            //反向
+            Invert invert = new Invert();
+            bmpGR = invert.Apply(bmpGR);
+
+            if (m_IsSaveTemp)
+            {
+                bmpGR.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue_org_" + (istrain ? "_train" : "_run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+            }
+
+            //找球的blob 记录起来
+            BlobCounter blobCounter = new BlobCounter();
+            blobCounter.ProcessImage(bmpGR);
+            Blob[] blobs = blobCounter.GetObjectsInformation();
+            List<Rectangle> rectangles = new List<Rectangle>();
+            int filterArea = 150;
+            Graphics graphicsXX = Graphics.FromImage(bmpResult);
+            if (istrain)
+            {
+                if (blobs.Length > 0)
+                {
+                    foreach (Blob bb in blobs)
+                    {
+                        if (bb.Area > filterArea)
+                        {
+                            BallBlobClass ballBlob = new BallBlobClass();
+                            ballBlob.rect = bb.Rectangle;
+                            ballBlob.area = bb.Area;
+                            m_PADRegion.ballBlobClasses.Add(ballBlob);
+
+                            rectangles.Add(bb.Rectangle);
+                        }
+                    }
+                }
+            }
+            else
+            {
+
+                List<Rectangle> rectanglesIN = new List<Rectangle>();
+                foreach (BallBlobClass ballBlobClass in m_PADRegion.ballBlobClasses)
+                {
+                    rectanglesIN.Add(ballBlobClass.rect);
+                }
+                if (rectanglesIN.Count > 0)
+                    graphicsXX.DrawRectangles(new Pen(Color.Yellow, 3), rectanglesIN.ToArray());
+                if (blobs.Length > 0)
+                {
+                    foreach (Blob bb in blobs)
+                    {
+                        if (bb.Area > filterArea)
+                        {
+                            //BallBlobClass ballBlob = new BallBlobClass();
+                            //ballBlob.rect = bb.Rectangle;
+                            //ballBlob.area = bb.Area;
+                            //m_PADRegion.ballBlobClasses.Add(ballBlob);
+
+                            rectangles.Add(bb.Rectangle);
+                            int _count = 0;
+                            foreach (BallBlobClass ballBlobClass in m_PADRegion.ballBlobClasses)
+                            {
+                                if (bb.Rectangle.IntersectsWith(ballBlobClass.rect))
+                                {
+                                    _count++;
+                                }
+                            }
+                            if (_count >= 2)
+                            {
+                                ret = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                //ret = rectangles.Count == m_PADRegion.ballBlobClasses.Count;
+
+            }
+            if (rectangles.Count > 0)
+                graphicsXX.DrawRectangles(new Pen(Color.Red, 3), rectangles.ToArray());
+            graphicsXX.Dispose();
+
+            if (m_IsSaveTemp)
+            {
+                bmpResult.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue" + (istrain ? "_train" : "_run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+            }
+
+            bmpGR.Dispose();
+            //eInput.Dispose();
+
+            return ret;
+        }
+        bool checkOutGlue(Bitmap eInput, out Bitmap bmpResult, bool istrain = false)
+        {
+            bool ret = true;
+
+            if (!string.IsNullOrEmpty(PADINSPECTOPString))
+            {
+                string[] strs = PADINSPECTOPString.Split(',');
+                if (strs.Length > 5)
+                {
+                    GetRGB = short.Parse(strs[0]);
+                    numThresholdRatio = int.Parse(strs[1]);
+                    numObjectFilterRatio = int.Parse(strs[2]);
+                    numEDCount = int.Parse(strs[3]);
+                    numShortenRatio = int.Parse(strs[4]);
+                    txtBangBangRectStr = strs[5];
+                }
+                if (strs.Length > 8)
+                {
+                    numBangBangOffsetVal = int.Parse(strs[6]);
+                    txtNeverOutsideRect = strs[7];
+                    cboIPDMethod = int.Parse(strs[8]);
+                }
+            }
+
+            if (m_IsSaveTemp)
+            {
+                eInput.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue_input" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            Bitmap _bmp000 = new Bitmap(eInput);
+            Bitmap _bmp001 = new Bitmap(eInput);
+            bmpResult = new Bitmap(eInput);
+
+            //抽取绿色
+            ExtractChannel extract = new ExtractChannel();
+            extract.Channel = 1;
+            _bmp000 = extract.Apply(_bmp000);
+
+            CannyEdgeDetector detector = new CannyEdgeDetector(10, 50);
+            _bmp000 = detector.Apply(_bmp000);
+
+            SISThreshold sISThreshold = new SISThreshold();
+            _bmp000 = sISThreshold.Apply(_bmp000);
+
+            _bmp001 = extract.Apply(_bmp001);
+            HistogramEqualization histogramEqualization = new HistogramEqualization();
+            _bmp001 = histogramEqualization.Apply(_bmp001);
+
+            Add add = new Add(_bmp000);
+            _bmp001 = add.Apply(_bmp001);
+
+            //local
+            BradleyLocalThresholding bradleyLocalThresholding = new BradleyLocalThresholding();
+            _bmp001 = bradleyLocalThresholding.Apply(_bmp001);
+
+
+            Bitmap bmpGR = new Bitmap(_bmp001);
+            //填充
+            Graphics graphics = Graphics.FromImage(bmpGR);
+            graphics.FillRectangles(Brushes.White, new RectangleF[] { StringtoRect(txtNeverOutsideRect) });
+            graphics.Dispose();
+
+            //Grayscale grayscale = new Grayscale(0.299, 0.587, 0.114);
+            bmpGR = extract.Apply(bmpGR);
+
+            //反向
+            Invert invert = new Invert();
+            bmpGR = invert.Apply(bmpGR);
+
+            if (m_IsSaveTemp)
+            {
+                bmpGR.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue_org_" + (istrain ? "_train" : "_run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+            }
+
+            //找球的blob 记录起来
+            BlobCounter blobCounter = new BlobCounter();
+            blobCounter.ProcessImage(bmpGR);
+            Blob[] blobs = blobCounter.GetObjectsInformation();
+            List<Rectangle> rectangles = new List<Rectangle>();
+            int filterArea = 150;
+            Graphics graphicsXX = Graphics.FromImage(bmpResult);
+            if (istrain)
+            {
+                if (blobs.Length > 0)
+                {
+                    foreach (Blob bb in blobs)
+                    {
+                        if (bb.Area > filterArea)
+                        {
+                            BallBlobClass ballBlob = new BallBlobClass();
+                            ballBlob.rect = bb.Rectangle;
+                            ballBlob.area = bb.Area;
+                            m_PADRegion.ballBlobClasses.Add(ballBlob);
+
+                            rectangles.Add(bb.Rectangle);
+                        }
+                    }
+                }
+            }
+            else
+            {
+
+                List<Rectangle> rectanglesIN = new List<Rectangle>();
+                foreach (BallBlobClass ballBlobClass in m_PADRegion.ballBlobClasses)
+                {
+                    rectanglesIN.Add(ballBlobClass.rect);
+                }
+                if (rectanglesIN.Count > 0)
+                    graphicsXX.DrawRectangles(new Pen(Color.Yellow, 3), rectanglesIN.ToArray());
+                if (blobs.Length > 0)
+                {
+                    foreach (Blob bb in blobs)
+                    {
+                        if (bb.Area > filterArea)
+                        {
+                            //BallBlobClass ballBlob = new BallBlobClass();
+                            //ballBlob.rect = bb.Rectangle;
+                            //ballBlob.area = bb.Area;
+                            //m_PADRegion.ballBlobClasses.Add(ballBlob);
+
+                            rectangles.Add(bb.Rectangle);
+                            int _count = 0;
+                            foreach (BallBlobClass ballBlobClass in m_PADRegion.ballBlobClasses)
+                            {
+                                if (bb.Rectangle.IntersectsWith(ballBlobClass.rect))
+                                {
+                                    _count++;
+                                }
+                            }
+                            if (_count >= 2)
+                            {
+                                ret = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                //ret = rectangles.Count == m_PADRegion.ballBlobClasses.Count;
+
+            }
+            if (rectangles.Count > 0)
+                graphicsXX.DrawRectangles(new Pen(Color.Red, 3), rectangles.ToArray());
+            graphicsXX.Dispose();
+
+            if (m_IsSaveTemp)
+            {
+                bmpResult.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue" + (istrain ? "_train" : "_run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+            }
+
+            bmpGR.Dispose();
+            //eInput.Dispose();
+
+            return ret;
+        }
+        bool checkOutGlueE1(Bitmap eInput, out Bitmap bmpResult, bool istrain = false)
+        {
+            bool ret = true;
+
+            if (!string.IsNullOrEmpty(PADINSPECTOPString))
+            {
+                string[] strs = PADINSPECTOPString.Split(',');
+                if (strs.Length > 5)
+                {
+                    GetRGB = short.Parse(strs[0]);
+                    numThresholdRatio = int.Parse(strs[1]);
+                    numObjectFilterRatio = int.Parse(strs[2]);
+                    numEDCount = int.Parse(strs[3]);
+                    numShortenRatio = int.Parse(strs[4]);
+                    txtBangBangRectStr = strs[5];
+                }
+                if (strs.Length > 8)
+                {
+                    numBangBangOffsetVal = int.Parse(strs[6]);
+                    txtNeverOutsideRect = strs[7];
+                    cboIPDMethod = int.Parse(strs[8]);
+                }
+            }
+
+            if (m_IsSaveTemp)
+            {
+                eInput.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue_input" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            Bitmap ebmpinput = new Bitmap(eInput);
+            bmpResult = new Bitmap(eInput);
+
+            //抽取绿色
+            ExtractChannel extract = new ExtractChannel();
+            extract.Channel = 1;
+            ebmpinput = extract.Apply(ebmpinput);
+
+            //Mean mean = new Mean();
+            //ebmpinput = mean.Apply(ebmpinput);
+            //local
+            //BradleyLocalThresholding bradleyLocalThresholding = new BradleyLocalThresholding();
+            //ebmpinput = bradleyLocalThresholding.Apply(ebmpinput);
+
+
+            Bitmap bmpGR = new Bitmap(ebmpinput);
+            //外围加框
+            Graphics graphics = Graphics.FromImage(bmpGR);
+            //graphics.FillRectangles(Brushes.White, new RectangleF[] { StringtoRect(txtNeverOutsideRect) });
+            graphics.DrawRectangles(new Pen(Color.White, 2), new RectangleF[] { new RectangleF(0, 0, bmpGR.Width, bmpGR.Height) });
+            graphics.Dispose();
+
+            //Grayscale grayscale = new Grayscale(0.299, 0.587, 0.114);
+            bmpGR = extract.Apply(bmpGR);
+
+            //local
+            BradleyLocalThresholding bradleyLocalThresholding = new BradleyLocalThresholding();
+            bmpGR = bradleyLocalThresholding.Apply(bmpGR);
+
+            //反向
+            Invert invert = new Invert();
+            bmpGR = invert.Apply(bmpGR);
+
+            Bitmap bmpGR1 = new Bitmap(bmpGR);
+            //填充
+            Graphics graphics1 = Graphics.FromImage(bmpGR1);
+            graphics1.FillRectangles(Brushes.Black, new RectangleF[] { StringtoRect(txtNeverOutsideRect) });
+            graphics1.Dispose();
+
+            if (m_IsSaveTemp)
+            {
+                bmpGR1.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue_org_" + (istrain ? "_train" : "_run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+            }
+
+            bmpGR1 = extract.Apply(bmpGR1);
+
+            //找球的blob 记录起来
+            BlobCounter blobCounter = new BlobCounter();
+            blobCounter.ProcessImage(bmpGR1);
+            Blob[] blobs = blobCounter.GetObjectsInformation();
+            List<Rectangle> rectangles = new List<Rectangle>();
+            int filterArea = 150;
+            Graphics graphicsXX = Graphics.FromImage(bmpResult);
+            if (istrain)
+            {
+                if (blobs.Length > 0)
+                {
+                    foreach (Blob bb in blobs)
+                    {
+                        if (bb.Area > filterArea)
+                        {
+                            BallBlobClass ballBlob = new BallBlobClass();
+                            ballBlob.rect = bb.Rectangle;
+                            ballBlob.area = bb.Area;
+                            m_PADRegion.ballBlobClasses.Add(ballBlob);
+
+                            rectangles.Add(bb.Rectangle);
+                        }
+                    }
+                }
+            }
+            else
+            {
+
+                List<Rectangle> rectanglesIN = new List<Rectangle>();
+                foreach (BallBlobClass ballBlobClass in m_PADRegion.ballBlobClasses)
+                {
+                    rectanglesIN.Add(ballBlobClass.rect);
+                }
+                graphicsXX.DrawRectangles(new Pen(Color.Yellow, 3), rectanglesIN.ToArray());
+                if (blobs.Length > 0)
+                {
+                    foreach (Blob bb in blobs)
+                    {
+                        if (bb.Area > filterArea)
+                        {
+                            //BallBlobClass ballBlob = new BallBlobClass();
+                            //ballBlob.rect = bb.Rectangle;
+                            //ballBlob.area = bb.Area;
+                            //m_PADRegion.ballBlobClasses.Add(ballBlob);
+
+                            rectangles.Add(bb.Rectangle);
+                            int _count = 0;
+                            foreach (BallBlobClass ballBlobClass in m_PADRegion.ballBlobClasses)
+                            {
+                                if (bb.Rectangle.IntersectsWith(ballBlobClass.rect))
+                                {
+                                    _count++;
+                                }
+                            }
+                            if (_count >= 2)
+                            {
+                                ret = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                //ret = rectangles.Count == m_PADRegion.ballBlobClasses.Count;
+
+            }
+            graphicsXX.DrawRectangles(new Pen(Color.Red, 3), rectangles.ToArray());
+            graphicsXX.Dispose();
+
+            if (m_IsSaveTemp)
+            {
+                bmpResult.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "outCheckGlue" + (istrain ? "_train" : "_run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+
+            }
+
+            bmpGR.Dispose();
+            //eInput.Dispose();
+
+            return ret;
+        }
+        RectangleF checkNoHaveGlue(Bitmap eInput)
+        {
+            //Rectangle rectangleRet = new Rectangle();
+
+            Bitmap bmpinput = eInput.Clone(new Rectangle(0, 0, eInput.Width, eInput.Height), PixelFormat.Format24bppRgb);
+
+            int isizeDispening = _from_bmpinputSize_to_iSized(bmpinput);
+            Bitmap bmpsize = new Bitmap(bmpinput, Resize(bmpinput.Size, isizeDispening));
+            Bitmap bmphistogramEqualization11 = new Bitmap(bmpsize);
+
+            filterORG001(bmphistogramEqualization11);
+            if (m_IsSaveTemp)
+            {
+                bmphistogramEqualization11.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingOrg" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            bmphistogramEqualization11 = FloodFill(bmphistogramEqualization11,
+                                                                new Point(bmphistogramEqualization11.Width / 2, bmphistogramEqualization11.Height / 2),
+                                                                Color.White, (int)(255 * NoGlueThresholdValue));
+
+            AForge.Imaging.Filters.Grayscale grayscale11 =
+                new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+            bmphistogramEqualization11 = grayscale11.Apply(bmphistogramEqualization11);
+
+            AForge.Imaging.Filters.ExtractBiggestBlob extractBiggestBlob11 =
+                new AForge.Imaging.Filters.ExtractBiggestBlob();
+            bmphistogramEqualization11 = extractBiggestBlob11.Apply(bmphistogramEqualization11);
+
+            if (m_IsSaveTemp)
+            {
+                bmphistogramEqualization11.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensing" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            Rectangle rectangletemp = new Rectangle(extractBiggestBlob11.BlobPosition.X,
+                                                                       extractBiggestBlob11.BlobPosition.Y,
+                                                                       bmphistogramEqualization11.Width,
+                                                                       bmphistogramEqualization11.Height);
+
+            RectangleF rectangletemp2 = ResizeWithLocation2(rectangletemp, -isizeDispening);
+
+            bmphistogramEqualization11.Dispose();
+            return rectangletemp2;
+        }
+        RectangleF checkNoHaveGlueV1(Bitmap eInput)
+        {
+            //Rectangle rectangleRet = new Rectangle();
+
+            Bitmap bmpinput = eInput.Clone(new Rectangle(0, 0, eInput.Width, eInput.Height), PixelFormat.Format24bppRgb);
+
+            int isizeDispening = _from_bmpinputSize_to_iSized(bmpinput);
+            Bitmap bmpsize = new Bitmap(bmpinput, Resize(bmpinput.Size, isizeDispening));
+            Bitmap bmpFilter = new Bitmap(bmpsize);
+
+            if (m_IsSaveTemp)
+            {
+                bmpFilter.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingOrg" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            ExtractChannel extract = new ExtractChannel();
+            extract.Channel = 1;
+            bmpFilter = extract.Apply(bmpFilter);
+
+            Sharpen sharpen = new Sharpen();
+            bmpFilter = sharpen.Apply(bmpFilter);
+
+            DifferenceEdgeDetector differenceEdgeDetector = new DifferenceEdgeDetector();
+            bmpFilter = differenceEdgeDetector.Apply(bmpFilter);
+
+            SISThreshold sISThreshold = new SISThreshold();
+            bmpFilter = sISThreshold.Apply(bmpFilter);
+
+            ExtractBiggestBlob extractBiggestBlob = new ExtractBiggestBlob();
+            bmpFilter = extractBiggestBlob.Apply(bmpFilter);
+
+            if (m_IsSaveTemp)
+            {
+                bmpFilter.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingFiter" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            Rectangle rectangletemp = new Rectangle(extractBiggestBlob.BlobPosition.X,
+                                                                       extractBiggestBlob.BlobPosition.Y,
+                                                                       bmpFilter.Width,
+                                                                       bmpFilter.Height);
+
+            RectangleF rectangletemp2 = ResizeWithLocation2(rectangletemp, -isizeDispening);
+
+            bmpFilter.Dispose();
+            bmpsize.Dispose();
+            bmpinput.Dispose();
+            return rectangletemp2;
+        }
+        RectangleF checkNoHaveGlueV2(Bitmap eInput)
+        {
+            //Rectangle rectangleRet = new Rectangle();
+
+            if (!string.IsNullOrEmpty(PADINSPECTOPString))
+            {
+                string[] strs = PADINSPECTOPString.Split(',');
+                if (strs.Length > 5)
+                {
+                    GetRGB = short.Parse(strs[0]);
+                    numThresholdRatio = int.Parse(strs[1]);
+                    numObjectFilterRatio = int.Parse(strs[2]);
+                    numEDCount = int.Parse(strs[3]);
+                    numShortenRatio = int.Parse(strs[4]);
+                    txtBangBangRectStr = strs[5];
+                }
+                if (strs.Length > 8)
+                {
+                    numBangBangOffsetVal = int.Parse(strs[6]);
+                    txtNeverOutsideRect = strs[7];
+                    cboIPDMethod = int.Parse(strs[8]);
+                }
+            }
+
+            Rectangle _crop = StringtoRect(txtNeverOutsideRect);
+            //Bitmap bmpinput = eInput.Clone(new Rectangle(0, 0, eInput.Width, eInput.Height), PixelFormat.Format24bppRgb);
+            Bitmap bmpinput = eInput.Clone(_crop, PixelFormat.Format24bppRgb);
+
+            int isizeDispening = _from_bmpinputSize_to_iSized(bmpinput);
+            Bitmap bmpsize = new Bitmap(bmpinput, Resize(bmpinput.Size, isizeDispening));
+            Bitmap bmpFilter = new Bitmap(bmpsize);
+
+            //m_Tools.DrawRect(bmpFilter, SimpleRect(bmpFilter.Size), new Pen(Color.Black, 3));
+
+            if (m_IsSaveTemp)
+            {
+                bmpFilter.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingOrg" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            ExtractChannel extract = new ExtractChannel();
+            extract.Channel = 1;
+            bmpFilter = extract.Apply(bmpFilter);
+
+            //Sharpen sharpen = new Sharpen();
+            //bmpFilter = sharpen.Apply(bmpFilter);
+
+            //CannyEdgeDetector cannyEdgeDetector = new CannyEdgeDetector();
+            //bmpFilter = cannyEdgeDetector.Apply(bmpFilter);
+
+            //DifferenceEdgeDetector differenceEdgeDetector = new DifferenceEdgeDetector();
+            //bmpFilter = differenceEdgeDetector.Apply(bmpFilter);
+
+            Blur blur = new Blur();
+            bmpFilter = blur.Apply(bmpFilter);
+
+            SISThreshold sISThreshold = new SISThreshold();
+            bmpFilter = sISThreshold.Apply(bmpFilter);
+
+            //Closing closing = new Closing();
+            //bmpFilter = closing.Apply(bmpFilter);
+
+            Dilatation3x3 dilatation3X3 = new Dilatation3x3();
+            Erosion3x3 erosion3X3 = new Erosion3x3();
+
+            //bmpFilter = dilatation3X3.Apply(bmpFilter);
+            //bmpFilter = dilatation3X3.Apply(bmpFilter);
+            //bmpFilter = dilatation3X3.Apply(bmpFilter);
+            //bmpFilter = erosion3X3.Apply(bmpFilter);
+            //bmpFilter = erosion3X3.Apply(bmpFilter);
+            //bmpFilter = erosion3X3.Apply(bmpFilter);
+
+            int i = 0;
+            while (i < 1)
+            {
+                bmpFilter = erosion3X3.Apply(bmpFilter);
+                bmpFilter = dilatation3X3.Apply(bmpFilter);
+
+                i++;
+            }
+
+            //找球的blob 记录起来
+            BlobCounter blobCounter = new BlobCounter();
+            blobCounter.ProcessImage(bmpFilter);
+            Blob[] blobs = blobCounter.GetObjectsInformation();
+
+            //ExtractBiggestBlob extractBiggestBlob = new ExtractBiggestBlob();
+            //bmpFilter = extractBiggestBlob.Apply(bmpFilter);
+
+            //List<Rectangle> rectangles = new List<Rectangle>();
+
+            Rectangle rectangle = new Rectangle();
+            foreach (Blob b in blobs)
+            {
+                if (b.Area < 30)
+                    continue;
+                //if (b.Rectangle.Width > m_PADRegion.RegionWidth * 1 / 3 || b.Rectangle.Height > m_PADRegion.RegionHeight * 1 / 3)
+                {
+                    //if (m_PADRegion.ConnerRectF.IntersectsWith(b.Rectangle))
+                        rectangle = MergeTwoRects(rectangle, b.Rectangle);
+                }
+            }
+
+
+            if (m_IsSaveTemp)
+            {
+                bmpFilter.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingFiter" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            Rectangle rectangletemp = new Rectangle(rectangle.X,
+                                                                       rectangle.Y,
+                                                                       rectangle.Width,
+                                                                       rectangle.Height);
+
+            RectangleF rectangletemp2 = ResizeWithLocation2(rectangletemp, -isizeDispening);
+            rectangletemp2.X += _crop.X;
+            rectangletemp2.Y += _crop.Y;
+
+            Bitmap bb = new Bitmap(eInput);
+            //Graphics graphics = Graphics.FromImage(bmpFilter);
+
+            m_Tools.DrawRect(bb, rectangletemp2, new Pen(Color.Red, 3));
+            if (m_IsSaveTemp)
+            {
+                bb.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingFiter_bb" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            bmpFilter.Dispose();
+            bmpsize.Dispose();
+            bmpinput.Dispose();
+            bb.Dispose();
+            return rectangletemp2;
+        }
+        RectangleF checkNoHaveGlueV3(Bitmap eInput)
+        {
+            Bitmap bmpinput = new Bitmap(eInput);// eInput.Clone(new Rectangle(0, 0, eInput.Width, eInput.Height), PixelFormat.Format24bppRgb);
+            
+            int isizeDispening = _from_bmpinputSize_to_iSized(bmpinput);
+            Bitmap bmpsize = new Bitmap(bmpinput, Resize(bmpinput.Size, isizeDispening));
+            Bitmap bmpFilter = new Bitmap(bmpsize);
+
+            //m_Tools.DrawRect(bmpFilter, SimpleRect(bmpFilter.Size), new Pen(Color.Black, 3));
+
+            if (m_IsSaveTemp)
+            {
+                bmpFilter.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingOrg" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            ExtractChannel extract = new ExtractChannel();
+            extract.Channel = 1;
+            bmpFilter = extract.Apply(bmpFilter);
+
+            Blur blur = new Blur();
+            bmpFilter = blur.Apply(bmpFilter);
+
+            SISThreshold sISThreshold = new SISThreshold();
+            bmpFilter = sISThreshold.Apply(bmpFilter);
+
+            Dilatation3x3 dilatation3X3 = new Dilatation3x3();
+            Erosion3x3 erosion3X3 = new Erosion3x3();
+
+            int i = 0;
+            while (i < 1)
+            {
+                bmpFilter = erosion3X3.Apply(bmpFilter);
+                bmpFilter = dilatation3X3.Apply(bmpFilter);
+
+                i++;
+            }
+
+            //找球的blob 记录起来
+            BlobCounter blobCounter = new BlobCounter();
+            blobCounter.ProcessImage(bmpFilter);
+            Blob[] blobs = blobCounter.GetObjectsInformation();
+
+            //ExtractBiggestBlob extractBiggestBlob = new ExtractBiggestBlob();
+            //bmpFilter = extractBiggestBlob.Apply(bmpFilter);
+
+            //List<Rectangle> rectangles = new List<Rectangle>();
+
+            Rectangle rectangle = new Rectangle();
+            foreach (Blob b in blobs)
+            {
+                if (b.Area < 30)
+                    continue;
+                if (b.Rectangle.Width > m_PADRegion.RegionWidth * 1 / 3 || b.Rectangle.Height > m_PADRegion.RegionHeight * 1 / 3)
+                {
+                    if (m_PADRegion.ConnerRectF.IntersectsWith(b.Rectangle))
+                        rectangle = MergeTwoRects(rectangle, b.Rectangle);
+                }
+            }
+
+            if (m_IsSaveTemp)
+            {
+                bmpFilter.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingFiter" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            Rectangle rectangletemp = new Rectangle(rectangle.X,
+                                                                       rectangle.Y,
+                                                                       rectangle.Width,
+                                                                       rectangle.Height);
+
+            RectangleF rectangletemp2 = ResizeWithLocation2(rectangletemp, -isizeDispening);
+
+
+            Bitmap bb = new Bitmap(eInput);
+            //Graphics graphics = Graphics.FromImage(bmpFilter);
+
+            m_Tools.DrawRect(bb, rectangletemp2, new Pen(Color.Red, 3));
+            if (m_IsSaveTemp)
+            {
+                bb.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingFiter_bb" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            bmpFilter.Dispose();
+            bmpsize.Dispose();
+            bmpinput.Dispose();
+            bb.Dispose();
+            return rectangletemp2;
+        }
+        RectangleF checkNoHaveGlueV4(Bitmap eInput)
+        {
+            Bitmap bmpinput = new Bitmap(eInput);// eInput.Clone(new Rectangle(0, 0, eInput.Width, eInput.Height), PixelFormat.Format24bppRgb);
+
+            int isizeDispening = _from_bmpinputSize_to_iSized(bmpinput);
+            Bitmap bmpsize = new Bitmap(bmpinput, Resize(bmpinput.Size, isizeDispening));
+            Bitmap bmpFilter = new Bitmap(bmpsize);
+
+            //m_Tools.DrawRect(bmpFilter, SimpleRect(bmpFilter.Size), new Pen(Color.Black, 3));
+
+            if (m_IsSaveTemp)
+            {
+                bmpFilter.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingOrg" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            ImageStatistics stat = new ImageStatistics(bmpFilter);
+            AForge.Math.Histogram activeHistogram = stat.Green;
+
+            Bitmap bmpMean = m_PADRegion.GetFillMean(bmpFilter, (int)activeHistogram.Mean);
+
+            ExtractChannel extract = new ExtractChannel();
+            extract.Channel = 1;
+            bmpFilter = extract.Apply(bmpMean);
+
+            SISThreshold sISThreshold = new SISThreshold();
+            bmpFilter = sISThreshold.Apply(bmpFilter);
+
+            bmpFilter = FloodFill(bmpFilter,
+                new Point(bmpFilter.Width / 2, bmpFilter.Height / 2),
+                Color.White, 200);
+
+
+            //找球的blob 记录起来
+            BlobCounter blobCounter = new BlobCounter();
+            blobCounter.ProcessImage(bmpFilter);
+            Blob[] blobs = blobCounter.GetObjectsInformation();
+
+            Rectangle rectangle = new Rectangle();
+            foreach (Blob b in blobs)
+            {
+                if (b.Area < 30)
+                    continue;
+                if (b.Rectangle.Width > m_PADRegion.RegionWidth * 1 / 3 || b.Rectangle.Height > m_PADRegion.RegionHeight * 1 / 3)
+                {
+                    if (m_PADRegion.ConnerRectF.IntersectsWith(b.Rectangle))
+                        rectangle = MergeTwoRects(rectangle, b.Rectangle);
+                }
+            }
+
+            if (m_IsSaveTemp)
+            {
+                bmpFilter.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingFiter" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            Rectangle rectangletemp = new Rectangle(rectangle.X,
+                                                                       rectangle.Y,
+                                                                       rectangle.Width,
+                                                                       rectangle.Height);
+
+            RectangleF rectangletemp2 = ResizeWithLocation2(rectangletemp, -isizeDispening);
+
+
+            Bitmap bb = new Bitmap(eInput);
+            //Graphics graphics = Graphics.FromImage(bmpFilter);
+
+            m_Tools.DrawRect(bb, rectangletemp2, new Pen(Color.Red, 3));
+            if (m_IsSaveTemp)
+            {
+                bb.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingFiter_bb" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            bmpFilter.Dispose();
+            bmpsize.Dispose();
+            bmpinput.Dispose();
+            bb.Dispose();
+            return rectangletemp2;
+        }
+        public void GetHistogramData(int[] histogramdata, JzHistogramResult jzhresult)
+        {
+            int num = histogramdata.Length;
+            int max = 0;
+            int min = num;
+            long total = 0L;
+            for (int i = 0; i < num; i++)
+            {
+                if (histogramdata[i] != 0)
+                {
+                    if (i > max)
+                    {
+                        max = i;
+                    }
+
+                    if (i < min)
+                    {
+                        min = i;
+                    }
+
+                    total += histogramdata[i];
+                }
+            }
+
+            jzhresult.min = min;
+            jzhresult.max = max;
+            jzhresult.count = num;
+            jzhresult.total = total;
+
+            jzhresult.mean = Statistics.Mean(histogramdata);
+            jzhresult.stddev = Statistics.StdDev(histogramdata, jzhresult.mean);
+            jzhresult.median = Statistics.Median(histogramdata);
+            jzhresult.mode = Statistics.Mode(histogramdata);
+
+        }
+
+        Rectangle MergeTwoRects(Rectangle rect1, Rectangle rect2)
+        {
+            Rectangle rect = new Rectangle();
+
+            if (rect1.Width == 0)
+                return rect2;
+            if (rect2.Width == 0)
+                return rect1;
+
+            rect.X = Math.Min(rect1.X, rect2.X);
+            rect.Y = Math.Min(rect1.Y, rect2.Y);
+
+            rect.Width = Math.Max(rect1.X + rect1.Width, rect2.X + rect2.Width) - rect.X;
+            rect.Height = Math.Max(rect1.Y + rect1.Height, rect2.Y + rect2.Height) - rect.Y;
+
+            return rect;
+        }
+
         public void GetSideMaxMinValue(BorderTypeEnum eborder, out double eMax, out double eMin)
         {
             eMax = 0;// double.MinValue;
@@ -4116,7 +7327,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             glue.Run();
         }
-        public void JzFourSideCalV1(out GlueRegionClass glue, JzSideAnalyzeEXClass eSide, SIDEEmnum sIDE)
+        public void JzFourSideCalV1(out GlueRegionClass glue, JzSideAnalyzeEXClass eSide, SIDEEmnum sIDE, bool isCheckSlot = false)
         {
             glue = new GlueRegionClass();
             glue.Reset();
@@ -4125,12 +7336,20 @@ namespace Allinone.OPSpace.AnalyzeSpace
             {
                 glue.AddPtIN(point);
             }
-            foreach (Point point in eSide.sidedataexs[(int)sIDE].GetPoints(-1))
+            foreach (Point point in eSide.sidedataexs[(int)sIDE].GetPoints(1))
             {
                 glue.AddPt(point);
             }
-
             glue.Run();
+            if (isCheckSlot)
+            {
+                foreach (Point point in eSide.sidedataexs[(int)sIDE].GetPoints(3))
+                {
+                    glue.AddPtIN2(point);//记录薄膜胶的点位
+                }
+                glue.RunSlot();
+            }
+
         }
 
         private int blobFindPADRegion(Bitmap ebmpInput, int eThresholdValue, out double owidth, out double oheight, out double oarea)
@@ -4292,35 +7511,12 @@ namespace Allinone.OPSpace.AnalyzeSpace
             JetBlob jetBlob = new JetBlob();
             jetBlob.Labeling(grayimage, JConnexity.Connexity4, (ChipFindWhite ? JBlobLayer.WhiteLayer : JBlobLayer.BlackLayer));
             int icount = jetBlob.BlobCount;
-            //if (m_IsSaveTemp)
-
-            //OutPADRegion.bmpThreshold = new Bitmap(bmp);
-
-            //switch (PADChipSizeMode)
-            //{
-            //    case PADChipSize.CHIP_NORMAL:
-
-            //        AForge.Imaging.Filters.Grayscale grayscale = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
-            //        Bitmap bitmap1 = grayscale.Apply(bmp);
-
-            //        AForge.Imaging.Filters.Threshold threshold = new AForge.Imaging.Filters.Threshold(irange);
-            //        Bitmap bitmap2 = threshold.Apply(bitmap1);
-
-            //        OutPADRegion.bmpThreshold.Dispose();
-            //        OutPADRegion.bmpThreshold = new Bitmap(bitmap2);
-
-            //        bitmap1.Dispose();
-            //        bitmap2.Dispose();
-            //        break;
-            //}
-
-
 
             //找到最大面积
             for (int i = 0; i < icount; i++)
             {
                 int iArea = JetBlobFeature.ComputeIntegerFeature(jetBlob, i, JBlobIntFeature.Area);
-                if (iArea > 5000)
+                if (iArea > 1000)
                 {
                     if (iMAX > iArea)
                         continue;
@@ -4358,6 +7554,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 }
 
                 RectangleF myRectF = SimpleRectF(ptCenter, (float)iWidth / 2, (float)iHeight / 2);
+                OutPADRegion.ConnerRectF = myRectF;
+                OutPADRegion.ConnerAngle = jetrect.fAngle;
 
                 //原来的外框
                 //转换矩形的四个角
@@ -4378,6 +7576,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 // mil 計算
 
+                myRectF.Inflate(-(float)(0.5 * Resolution_Mil), -(float)(0.5 * Resolution_Mil));//强制内缩一个MIL
                 myRectF.Inflate(-(float)(ExtendX * Resolution_Mil), -(float)(ExtendY * Resolution_Mil));
 
                 // pixel 計算
@@ -4467,7 +7666,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             bmpQLE.Save("D:\\testtest\\" + RelateAnalyzeString + "GLEFind1X" + (eIsTrain ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
                             //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
 
-                            //bmp.Save("D:\\testtest\\" + RelateAnalyzeString + "PadFind" + (eIsTrain ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                            bmp.Save("D:\\testtest\\" + RelateAnalyzeString + "GlePadFind" + (eIsTrain ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
                         }
 
                         bmpQLE.Dispose();
@@ -4481,18 +7680,6 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 g.Dispose();
             }
-            //bmp.Save("D:\\LOA\\bmp2.bmp");
-            //g.Dispose();
-            //bmp.Save(Application.StartupPath + "\\result.bmp");
-
-            //if (m_IsSaveTemp && !eIsTrain)
-            //{
-            //    bmp.Save("D:\\testtest\\" + RelateAnalyzeString + "PadFind" + (eIsTrain ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
-            //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
-
-            //    //bmp.Save("D:\\testtest\\" + RelateAnalyzeString + "PadFind" + (eIsTrain ? "_Train" : "_Run") + ".png", System.Drawing.Imaging.ImageFormat.Png);
-            //}
-
             return 0;
         }
         private int PADRegionFind_BlackEdge(Bitmap ebmpInput, int eThresholdValue, bool eIsTrain, out PADRegionClass OutPADRegion)
@@ -4624,78 +7811,6 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     i++;
                 }
 
-                //List<string> checkListStr1 = new List<string>();
-                ////找到X坐标的最左和最右
-                //int j = 0;
-                //foreach (PointF ptf in pointFs)
-                //{
-                //    checkListStr1.Add($"{ptf.X.ToString()},{j.ToString()}");
-                //    j++;
-                //}
-                //checkListStr1.Sort((item1, item2) =>
-                //{ return float.Parse(item1.Split(',')[0]) >= float.Parse(item2.Split(',')[0]) ? 1 : -1; });
-                ////checkListStr1.Sort();
-                ////float ileftx = float.Parse(checkListStr1[0].Split(',')[0]);
-                ////float irightx = float.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[0]);
-
-                //PointF ptfleft = pointFs[int.Parse(checkListStr1[0].Split(',')[1])];
-                //PointF ptfright = pointFs[int.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[1])];
-
-                //checkListStr1.Clear();
-                ////找到Y坐标的最上和最下
-                //j = 0;
-                //foreach (PointF ptf in pointFs)
-                //{
-                //    checkListStr1.Add($"{ptf.Y.ToString()},{j.ToString()}");
-                //    j++;
-                //}
-                //checkListStr1.Sort((item1, item2) =>
-                //{ return float.Parse(item1.Split(',')[0]) >= float.Parse(item2.Split(',')[0]) ? 1 : -1; });
-                ////checkListStr1.Sort();
-                ////float itopy = float.Parse(checkListStr1[0].Split(',')[0]);
-                ////float ibottomy = float.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[0]);
-
-                //PointF ptftop = pointFs[int.Parse(checkListStr1[0].Split(',')[1])];
-                //PointF ptfbottom = pointFs[int.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[1])];
-
-                //double _angle = GetP1P2Angle(ptfleft, ptftop);
-                //OutPADRegion.Isleftoverright = !ChipDirlevel;// Math.Abs(_angle) < 45;
-                //PointF[] _myPointFs1 = _getEdgeConcor(jRotatedRectangleF.fAngle,
-                //                                                                   ptfleft, ptfright, ptftop, ptfbottom, BlackOffsetX, BlackOffsetY, OutPADRegion.Isleftoverright);
-
-                //checkListStr1.Clear();
-                //j = 0;
-                //foreach (PointF ptf in _myPointFs1)
-                //{
-                //    checkListStr1.Add($"{ptf.X.ToString()},{j.ToString()}");
-                //    j++;
-                //}
-                //checkListStr1.Sort((item1, item2) =>
-                //{ return float.Parse(item1.Split(',')[0]) >= float.Parse(item2.Split(',')[0]) ? 1 : -1; });
-                ////checkListStr1.Sort();
-                ////float ileftx = float.Parse(checkListStr1[0].Split(',')[0]);
-                ////float irightx = float.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[0]);
-
-                //float iLeft = _myPointFs1[int.Parse(checkListStr1[0].Split(',')[1])].X;
-                //float iRight = _myPointFs1[int.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[1])].X;
-
-                //checkListStr1.Clear();
-                ////找到Y坐标的最上和最下
-                //j = 0;
-                //foreach (PointF ptf in _myPointFs1)
-                //{
-                //    checkListStr1.Add($"{ptf.Y.ToString()},{j.ToString()}");
-                //    j++;
-                //}
-                //checkListStr1.Sort((item1, item2) =>
-                //{ return float.Parse(item1.Split(',')[0]) >= float.Parse(item2.Split(',')[0]) ? 1 : -1; });
-                ////checkListStr1.Sort();
-                ////float itopy = float.Parse(checkListStr1[0].Split(',')[0]);
-                ////float ibottomy = float.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[0]);
-
-                //float itop = _myPointFs1[int.Parse(checkListStr1[0].Split(',')[1])].Y;
-                //float iBottom = _myPointFs1[int.Parse(checkListStr1[checkListStr1.Count - 1].Split(',')[1])].Y;
-
                 Rectangle recttt = JzToolsClass.CvBoundingRect(pointFs);
 
                 int d1 = (int)(BlackCalExtendX * Resolution_Mil);
@@ -4718,6 +7833,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
 
                 OutPADRegion.RegionForEdgeRect = new Rectangle(recttt.X, recttt.Y, recttt.Width, recttt.Height);
+
+                OutPADRegion.ConnerRectF = new Rectangle(recttt.X, recttt.Y, recttt.Width, recttt.Height);
+                OutPADRegion.ConnerAngle = -_angle;
 
                 //PointF[] pointFs1 = new PointF[4];
                 //pointFs1[0] = new PointF(OutPADRegion.RegionForEdgeRect.X, OutPADRegion.RegionForEdgeRect.Y);
@@ -4761,7 +7879,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 bmpdrawUse2.Dispose();
 
                 //OutPADRegion.SetPointFORG(pointFs1, jRotatedRectangleF.fAngle);
-                OutPADRegion.SetPointFORG(pointFs2, 0);
+                OutPADRegion.SetPointFORG(pointFs2, -_angle);
             }
 
             return 0;
@@ -5203,7 +8321,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             bool bNG = false;
             Graphics g = Graphics.FromImage(bmpdraw);
             string msg = "标准长度:" + CheckDWidth.ToString() + ",标准宽度:" + CheckDHeight.ToString() + ",标准面积:" + CheckDArea.ToString() + Environment.NewLine;
-            g.DrawString(msg, new Font("宋体", 18), Brushes.Black, 5, 5);
+            //g.DrawString(msg, new Font("宋体", 18), Brushes.Black, 5, 5);
 
             if (blobs.Length > 0)
             {
@@ -5267,7 +8385,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         list.Add(rectangleF);
                         if (errorindex <= 5)
                         {
-                            g.DrawString($"w:{m_BadWidth.ToString("0.00")},h:{m_BadHeight.ToString("0.00")},a:{m_BadArea.ToString("0.00")}",
+                            g.DrawString($"w:{_widthx.ToString("0.00")},h:{_heightx.ToString("0.00")},a:{_areax.ToString("0.00")}",
                                 new Font("宋体", 10),
                                 Brushes.Red,
                                 new PointF(rectangleF.Location.X, rectangleF.Location.Y - 15));
@@ -5402,7 +8520,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             bool bNG = false;
             Graphics g = Graphics.FromImage(bmpdraw);
             string msg = "标准长度:" + CheckDWidth.ToString() + ",标准宽度:" + CheckDHeight.ToString() + ",标准面积:" + CheckDArea.ToString() + Environment.NewLine;
-            g.DrawString(msg, new Font("宋体", 22), Brushes.Lime, 5, 5);
+            //g.DrawString(msg, new Font("宋体", 22), Brushes.Lime, 5, 5);
 
             if (blobs.Length > 0)
             {
@@ -8198,6 +11316,258 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             bmpGlueOrg.Dispose();
         }
+        private void _get_border_pointf_v1_antu(Bitmap ebmpInput, Bitmap ebmpInput0, Rectangle eRect, BorderTypeEnum borderType, out GlueRegionClass glueRegion)
+        {
+            glueRegion = new GlueRegionClass();
+            glueRegion.Reset();
+
+            //int iwidth = 60;
+            int iheight = 3;
+            Bitmap bmpGlueOrg = (Bitmap)ebmpInput.Clone();// new Bitmap(ebmpInput);
+            Bitmap bmpGlueOrg0 = (Bitmap)ebmpInput0.Clone();//new Bitmap(ebmpInput0);
+            Rectangle m_rect_org = new Rectangle(eRect.X, eRect.Y, eRect.Width, eRect.Height);
+            //m_rect_org.Inflate(-iwidth, -iwidth);
+
+            int j = 0;
+            PointF pointF0 = new PointF();
+            PointF pointF1 = new PointF();
+            PointF pointF1tmp = new PointF();
+            double[] m_distance = new double[10];
+            int m_samplinggap = 137;
+            m_samplinggap = 37;
+
+            int _minsize = Math.Min(eRect.Width, eRect.Height);
+            if (_minsize >= 1500)
+                m_samplinggap = 137;
+            else if (_minsize >= 800)
+                m_samplinggap = 37;
+            else
+                m_samplinggap = 11;
+
+            double maxv = -1000;
+            double minv = 1000;
+            int iyoffset = (int)(m_samplinggap / 1.5);
+
+            //DataHistogramClass dataHistogram = new DataHistogramClass(15000, 2);
+            //dataHistogram.Reset();
+
+            switch (borderType)
+            {
+                case BorderTypeEnum.LEFT:
+                case BorderTypeEnum.RIGHT:
+                    m_distance = new double[m_rect_org.Height / m_samplinggap];
+                    break;
+                case BorderTypeEnum.TOP:
+                case BorderTypeEnum.BOTTOM:
+                    m_distance = new double[m_rect_org.Width / m_samplinggap];
+                    break;
+            }
+
+            j = 0;
+            while (j < m_distance.Length)
+            {
+                Rectangle rect0 = new Rectangle(0, m_rect_org.Y + j * m_samplinggap, eRect.X, iheight);
+
+                switch (borderType)
+                {
+                    case BorderTypeEnum.LEFT:
+                        rect0 = new Rectangle(0, m_rect_org.Y + j * m_samplinggap + iyoffset, eRect.X, iheight);
+                        break;
+                    case BorderTypeEnum.RIGHT:
+                        rect0 = new Rectangle(m_rect_org.Right, m_rect_org.Y + j * m_samplinggap + iyoffset, ebmpInput.Width - eRect.Right, iheight);
+                        break;
+                    case BorderTypeEnum.TOP:
+                        rect0 = new Rectangle(m_rect_org.X + j * m_samplinggap + iyoffset, 0, iheight, eRect.Y);
+                        break;
+                    case BorderTypeEnum.BOTTOM:
+                        rect0 = new Rectangle(m_rect_org.X + j * m_samplinggap + iyoffset, m_rect_org.Bottom, iheight, ebmpInput.Height - eRect.Bottom);
+                        break;
+                }
+
+                Bitmap bitmap0 = bmpGlueOrg0.Clone(rect0, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                Bitmap bitmap = bmpGlueOrg.Clone(rect0, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+                //AForge.Imaging.Filters.Grayscale grayscale = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+                //Bitmap bitmap1 = grayscale.Apply(bitmap0);
+
+                //AForge.Imaging.Filters.OtsuThreshold otsu = new AForge.Imaging.Filters.OtsuThreshold();
+                //Bitmap bitmap2 = otsu.Apply(bitmap1);
+
+                //Bitmap bitmap3 = otsu.Apply(bitmap2);
+                //bitmap1.Dispose();
+                //bitmap2.Dispose();
+
+                JzFindObjectClass jzfind = new JzFindObjectClass();
+
+                bool bOK = true;
+
+                switch (borderType)
+                {
+                    case BorderTypeEnum.LEFT:
+                        //pointF0 = jzfind.GetBoraderPoint(bitmap, true, true);
+                        pointF0 = jzfind.GetBoraderPointv2(bitmap0, true, true, Color.FromArgb(0, 0, 0), true);
+                        pointF1 = jzfind.GetBoraderPointv2(bitmap, true, true, Color.FromArgb(255, 255, 255));
+
+                        //if (pointF0.X >= rect0.Width - 1 || pointF1.X >= rect0.Width - 1)
+                        //    bOK = false;
+
+                        if (pointF1.X >= rect0.Width - 1 || pointF1.X <= 1)
+                        {
+                            pointF1 = new PointF(pointF1tmp.X, pointF1tmp.Y);
+                        }
+                        else
+                        {
+                            pointF1tmp = new PointF(pointF1.X, pointF1.Y);
+                        }
+
+                        break;
+                    case BorderTypeEnum.RIGHT:
+                        //pointF0 = jzfind.GetBoraderPoint(bitmap, true, false);
+                        pointF0 = jzfind.GetBoraderPointv2(bitmap0, true, false, Color.FromArgb(0, 0, 0), true);
+                        pointF1 = jzfind.GetBoraderPointv2(bitmap, true, false, Color.FromArgb(255, 255, 255));
+
+                        //if (pointF0.X <= 0 || pointF1.X <= 0)
+                        //    bOK = false;
+
+                        if (pointF1.X >= rect0.Width - 1 || pointF1.X <= 1)
+                        {
+                            pointF1 = new PointF(pointF1tmp.X, pointF1tmp.Y);
+                        }
+                        else
+                        {
+                            pointF1tmp = new PointF(pointF1.X, pointF1.Y);
+                        }
+                        break;
+                    case BorderTypeEnum.TOP:
+                        //pointF0 = jzfind.GetBoraderPoint(bitmap, false, true);
+                        pointF0 = jzfind.GetBoraderPointv2(bitmap0, false, true, Color.FromArgb(0, 0, 0), true);
+                        pointF1 = jzfind.GetBoraderPointv2(bitmap, false, true, Color.FromArgb(255, 255, 255));
+
+                        //if (pointF0.Y >= rect0.Height - 1 || pointF1.Y >= rect0.Height - 1)
+                        //    bOK = false;
+
+                        if (pointF1.Y >= rect0.Height - 1 || pointF1.Y <= 1)
+                        {
+                            pointF1 = new PointF(pointF1tmp.X, pointF1tmp.Y);
+                        }
+                        else
+                        {
+                            pointF1tmp = new PointF(pointF1.X, pointF1.Y);
+                        }
+                        break;
+                    case BorderTypeEnum.BOTTOM:
+                        //pointF0 = jzfind.GetBoraderPoint(bitmap, false, false);
+                        pointF0 = jzfind.GetBoraderPointv2(bitmap0, false, false, Color.FromArgb(0, 0, 0), true);
+                        pointF1 = jzfind.GetBoraderPointv2(bitmap, false, false, Color.FromArgb(255, 255, 255));
+                        //pointF1 = jzfind.GetBoraderPointv2(bitmap, false, false, Color.FromArgb(0, 0, 0), true);
+
+                        //if (pointF0.Y <= 0 || pointF1.Y <= 0)
+                        //    bOK = false;
+
+                        if (pointF1.Y >= rect0.Height - 1 || pointF1.Y <= 1)
+                        {
+                            pointF1 = new PointF(pointF1tmp.X, pointF1tmp.Y);
+                        }
+                        else
+                        {
+                            pointF1tmp = new PointF(pointF1.X, pointF1.Y);
+                        }
+                        break;
+                }
+                if (INI.CHIP_CAL_MODE == 1)
+                {
+                    switch (borderType)
+                    {
+                        case BorderTypeEnum.LEFT:
+                            if (m_PtfCenter.Y >= 450)
+                                pointF0.X += lineClass_left.GetPtFromX(m_PtfCenter.X).Y;
+                            break;
+                        case BorderTypeEnum.RIGHT:
+                            //if (m_PtfCenter.Y <= 3250)
+                            //    pointF0.X -= lineClass_right.GetPtFromX(m_PtfCenter.X).Y;
+                            pointF0.X -= 4.3f;
+                            break;
+                        case BorderTypeEnum.TOP:
+                            if (m_PtfCenter.Y >= 1400)
+                                pointF0.Y += lineClass_top.GetPtFromX(m_PtfCenter.Y).Y;
+                            break;
+                        case BorderTypeEnum.BOTTOM:
+                            if (m_PtfCenter.Y <= 4000)
+                                pointF0.Y -= lineClass_bottom.GetPtFromX(m_PtfCenter.Y).Y;
+                            break;
+                    }
+                }
+
+                //switch (PADCalMode)
+                //{
+                //    case PADCalModeEnum.BlackLast:
+
+                //        break;
+                //    default:
+                //        switch (borderType)
+                //        {
+                //            case BorderTypeEnum.LEFT:
+                //                pointF0 = jzfind.GetBoraderPoint(bitmap, true, true);
+                //                pointF1 = jzfind.GetBoraderPoint(bitmap, true, true, true);
+                //                break;
+                //            case BorderTypeEnum.RIGHT:
+                //                pointF0 = jzfind.GetBoraderPoint(bitmap, true, false);
+                //                pointF1 = jzfind.GetBoraderPoint(bitmap, true, false, true);
+                //                break;
+                //            case BorderTypeEnum.TOP:
+                //                pointF0 = jzfind.GetBoraderPoint(bitmap, false, true);
+                //                pointF1 = jzfind.GetBoraderPoint(bitmap, false, true, true);
+                //                break;
+                //            case BorderTypeEnum.BOTTOM:
+                //                pointF0 = jzfind.GetBoraderPoint(bitmap, false, false);
+                //                pointF1 = jzfind.GetBoraderPoint(bitmap, false, false, true);
+                //                break;
+                //        }
+                //        break;
+                //}
+
+
+                //if (pointF0.X > 0 && pointF0.Y > 0 && pointF1.X > 0 && pointF1.Y > 0)
+                if (bOK)
+                {
+                    m_distance[j] = GetPointLength(pointF0, pointF1);
+
+                    //dataHistogram.Add((int)m_distance[j]);
+
+                    maxv = Math.Max(maxv, m_distance[j]);
+                    minv = Math.Min(minv, m_distance[j]);
+
+                    pointF0.X += rect0.X;
+                    pointF0.Y += rect0.Y;
+
+                    pointF1.X += rect0.X;
+                    pointF1.Y += rect0.Y;
+
+                    glueRegion.AddPt(pointF0);//内芯片的点
+                    glueRegion.AddPtIN(pointF1);//外围胶的点
+                }
+
+                //if (m_IsSaveTemp)
+                //{
+                //    bitmap.Save("D:\\testtest\\x\\" + RelateAnalyzeString + borderType.ToString() + "bmpInput_" + j.ToString() + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+                //}
+
+                j++;
+
+                bitmap.Dispose();
+            }
+
+            //dataHistogram.Complete();
+
+            //glueRegion.LengthMax = dataHistogram.MaxGrade;
+            //glueRegion.LengthMin = dataHistogram.MinGrade;
+
+            glueRegion.LengthMax = maxv;
+            glueRegion.LengthMin = minv;
+
+            bmpGlueOrg.Dispose();
+        }
 
         private void _get_border_pointf_NormalEx(Bitmap ebmpInput, Bitmap ebmpInput0, Rectangle eRect, BorderTypeEnum borderType, out GlueRegionClass glueRegion)
         {
@@ -8430,8 +11800,277 @@ namespace Allinone.OPSpace.AnalyzeSpace
             bmpGlueOrg.Dispose();
         }
 
+
+        private void _get_border_pointf_PADG1(Bitmap ebmpInput, 
+            Bitmap ebmpInput0, 
+            Rectangle eRect,
+            Rectangle eRectORG,
+            PADG1Class ePADG1,
+            BorderTypeEnum borderType, 
+            out GlueRegionClass glueRegion)
+        {
+            glueRegion = new GlueRegionClass();
+            glueRegion.Reset();
+
+            //int iwidth = 60;
+            int iheight = 3;
+            Bitmap bmpGlueOrg = (Bitmap)ebmpInput.Clone();// new Bitmap(ebmpInput);
+            //Bitmap bmpGlueOrg0 = (Bitmap)ebmpInput0.Clone();//new Bitmap(ebmpInput0);
+            Rectangle m_rect_org = new Rectangle(eRect.X, eRect.Y, eRect.Width, eRect.Height);
+            //m_rect_org.Inflate(-iwidth, -iwidth);
+
+            //原始的尺寸 扩大 之后的限流外围
+            Rectangle m_rect_last = new Rectangle(eRectORG.X, eRectORG.Y, eRectORG.Width, eRectORG.Height);
+            m_rect_last.Inflate(ePADG1.FindX, ePADG1.FindY);
+
+            Rectangle m_rect_before = new Rectangle(eRectORG.X, eRectORG.Y, eRectORG.Width, eRectORG.Height);
+            m_rect_before.Inflate(-ePADG1.FindInX, -ePADG1.FindInY);
+
+            int j = 0;
+            PointF pointF0 = new PointF();
+            PointF pointF1 = new PointF();
+            PointF pointF1tmp = new PointF();
+            double[] m_distance = new double[10];
+            int m_samplinggap = 137;
+            m_samplinggap = 37;
+
+            int _minsize = Math.Min(eRect.Width, eRect.Height);
+            if (_minsize >= 1500)
+                m_samplinggap = 137;
+            else if (_minsize >= 800)
+                m_samplinggap = 37;
+            else
+                m_samplinggap = 11;
+
+            double maxv = -1000;
+            double minv = 1000;
+            int iyoffset = (int)(m_samplinggap / 1.5);
+
+            //DataHistogramClass dataHistogram = new DataHistogramClass(15000, 2);
+            //dataHistogram.Reset();
+
+            switch (borderType)
+            {
+                case BorderTypeEnum.LEFT:
+                case BorderTypeEnum.RIGHT:
+                    m_distance = new double[m_rect_org.Height / m_samplinggap];
+                    break;
+                case BorderTypeEnum.TOP:
+                case BorderTypeEnum.BOTTOM:
+                    m_distance = new double[m_rect_org.Width / m_samplinggap];
+                    break;
+            }
+
+
+            JzMVDEdgeWidthClass jzMVDEdgeWidthClass = new JzMVDEdgeWidthClass();
+            jzMVDEdgeWidthClass.HalfKernelSize = ePADG1.HalfKernelSize;
+            jzMVDEdgeWidthClass.ContrastTH = ePADG1.ContrastTH;
+
+            //Bitmap bitmap = bmpGlueOrg.Clone(new Rectangle(0, 0, bmpGlueOrg.Width, bmpGlueOrg.Height),
+            //        System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+            //jzMVDEdgeWidthClass.Run(bitmap);
+
+            AForge.Imaging.Filters.Grayscale grayscale = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+            Bitmap bmp24 = grayscale.Apply(bmpGlueOrg);
+            VisionDesigner.CMvdImage cInputImg2 = BitmapToCMvdImage(bmp24);
+            if (cInputImg2.PixelFormat != MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08)
+            {
+                //当前程序仅支持mono8。因此像素格会转换.
+                cInputImg2.ConvertImagePixelFormat(MVD_PIXEL_FORMAT.MVD_PIXEL_MONO_08);
+            }
+            //cInputImg2.InitImage("InputTest2.bmp");
+
+            //cInputImg2.SaveImage($"D:\\Data\\cInputImg2run_{DateTime.Now.ToString("yyyyMMddHHmmssfff")}.bmp", MVD_FILE_FORMAT.MVD_FILE_BMP);
+
+            //if (m_IsSaveTemp)
+            //{
+            //    //g.DrawRectangle(new Pen(Color.Red), rect);
+            //    cInputImg2.SaveImage("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "cInputImg2run" + ".png",
+            //        MVD_FILE_FORMAT.MVD_FILE_PNG);
+            //    //bmpglueout.Save(Universal.CalTestPath + "\\" + _CalPageIndex() + RelateAnalyzeString + "bmpInputout" + ".png",
+            //    //    System.Drawing.Imaging.ImageFormat.Png);
+
+            //    //bmpglueout.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpInputout" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            //    ////bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+            //}
+
+            bmp24.Dispose();
+            grayscale = null;
+            jzMVDEdgeWidthClass.SetImage(cInputImg2);
+
+            j = 0;
+            while (j < m_distance.Length)
+            {
+                Rectangle rect0 = new Rectangle(0, m_rect_org.Y + j * m_samplinggap, eRect.X, iheight);
+
+                switch (borderType)
+                {
+                    case BorderTypeEnum.LEFT:
+                        rect0 = new Rectangle(m_rect_last.X, m_rect_org.Y + j * m_samplinggap + iyoffset, m_rect_before.X - m_rect_last.X, iheight);
+                        break;
+                    case BorderTypeEnum.RIGHT:
+                        rect0 = new Rectangle(m_rect_before.Right, m_rect_org.Y + j * m_samplinggap + iyoffset, m_rect_last.Right - m_rect_before.Right, iheight);
+                        break;
+                    case BorderTypeEnum.TOP:
+                        rect0 = new Rectangle(m_rect_org.X + j * m_samplinggap + iyoffset, m_rect_last.Y, iheight, m_rect_before.Y - m_rect_last.Y);
+                        break;
+                    case BorderTypeEnum.BOTTOM:
+                        rect0 = new Rectangle(m_rect_org.X + j * m_samplinggap + iyoffset, m_rect_before.Bottom, iheight, m_rect_last.Bottom - m_rect_before.Bottom);
+                        break;
+                }
+
+                //Bitmap bitmap0 = bmpGlueOrg0.Clone(rect0, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                //Bitmap bitmap = bmpGlueOrg.Clone(rect0, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                //Bitmap bitmap = bmpGlueOrg.Clone(new Rectangle(0,0, bmpGlueOrg.Width, bmpGlueOrg.Height), 
+                //    System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
+                //JzFindObjectClass jzfind = new JzFindObjectClass();
+
+                bool bOK = true;
+                //bool bchk = true;
+
+                switch (borderType)
+                {
+                    case BorderTypeEnum.LEFT:
+                        jzMVDEdgeWidthClass.FindOrient = false;
+                        //bOK = jzMVDEdgeWidthClass.Run(bitmap, rect0);
+                        break;
+                    case BorderTypeEnum.RIGHT:
+                        jzMVDEdgeWidthClass.FindOrient = false;
+                        //bOK = jzMVDEdgeWidthClass.Run(bitmap, rect0);
+                        break;
+                    case BorderTypeEnum.TOP:
+                        jzMVDEdgeWidthClass.FindOrient = true;
+                        //bOK = jzMVDEdgeWidthClass.Run(bitmap, rect0);
+                        break;
+                    case BorderTypeEnum.BOTTOM:
+                        jzMVDEdgeWidthClass.FindOrient = true;
+                        //bOK = jzMVDEdgeWidthClass.Run(bitmap, rect0);
+                        break;
+                }
+                bOK = jzMVDEdgeWidthClass.Run3(rect0);
+                if (bOK)
+                {
+                    pointF0 = new PointF(jzMVDEdgeWidthClass.p0ret.X, jzMVDEdgeWidthClass.p0ret.Y);
+                    pointF1 = new PointF(jzMVDEdgeWidthClass.p1ret.X, jzMVDEdgeWidthClass.p1ret.Y);
+                }
+                else
+                {
+
+                    pointF0 = new PointF(rect0.X, rect0.Y);
+                    pointF1 = new PointF(rect0.X, rect0.Y);
+                    //switch (borderType)
+                    //{
+                    //    case BorderTypeEnum.LEFT:
+                    //        pointF0 = new PointF(m_rect_last.X, rect0.Y);
+                    //        pointF1 = new PointF(m_rect_last.X, rect0.Y);
+                    //        break;
+                    //    case BorderTypeEnum.RIGHT:
+                    //        jzMVDEdgeWidthClass.FindOrient = false;
+                    //        //bOK = jzMVDEdgeWidthClass.Run(bitmap, rect0);
+                    //        break;
+                    //    case BorderTypeEnum.TOP:
+                    //        jzMVDEdgeWidthClass.FindOrient = true;
+                    //        //bOK = jzMVDEdgeWidthClass.Run(bitmap, rect0);
+                    //        break;
+                    //    case BorderTypeEnum.BOTTOM:
+                    //        jzMVDEdgeWidthClass.FindOrient = true;
+                    //        //bOK = jzMVDEdgeWidthClass.Run(bitmap, rect0);
+                    //        break;
+                    //}
+                }
+
+                //if (pointF0.X > 0 && pointF0.Y > 0 && pointF1.X > 0 && pointF1.Y > 0)
+                if (bOK)
+                {
+                    //pointF0 = new PointF(jzMVDEdgeWidthClass.p0ret.X, jzMVDEdgeWidthClass.p0ret.Y);
+                    //pointF1 = new PointF(jzMVDEdgeWidthClass.p1ret.X, jzMVDEdgeWidthClass.p1ret.Y);
+
+                    m_distance[j] = GetPointLength(pointF0, pointF1);
+
+                    maxv = Math.Max(maxv, m_distance[j]);
+                    minv = Math.Min(minv, m_distance[j]);
+
+                    //pointF0.X += rect0.X;
+                    //pointF0.Y += rect0.Y;
+
+                    //pointF1.X += rect0.X;
+                    //pointF1.Y += rect0.Y;
+
+                    glueRegion.AddPt(pointF0);//内芯片的点
+                    glueRegion.AddPtIN(pointF1);//外围胶的点
+                }
+
+                //if (m_IsSaveTemp)
+                //{
+                //    bitmap.Save("D:\\testtest\\x\\" + RelateAnalyzeString + borderType.ToString() + "bmpInput_" + j.ToString() + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+                //}
+
+                j++;
+
+                
+            }
+
+            glueRegion.LengthMax = maxv;
+            glueRegion.LengthMin = minv;
+
+            //bitmap.Dispose();
+            bmpGlueOrg.Dispose();
+        }
+
+
         public class PADRegionClass
         {
+            HistogramClass m_Histogram = new HistogramClass(2);
+
+            public RectangleF ConnerRectF = new RectangleF(0, 0, 100, 100);
+            public double ConnerAngle = 0;
+            public PointF[] GetConner(float inflantValue = 0)
+            {
+                RectangleF tempRectFx = ConnerRectF;
+                if (inflantValue != 0)
+                    tempRectFx.Inflate(inflantValue, inflantValue);
+                PointF[] _myPointFs = RectFToPointF(tempRectFx, -ConnerAngle);
+                return _myPointFs;
+            }
+
+            public int GetGrayMin(Bitmap ebmpInput)
+            {
+                Bitmap _bmpnewIpd = new Bitmap(ebmpInput);
+                Bitmap _bmpnewIpdmask = new Bitmap(ebmpInput);
+                //填充中间的芯片位置
+                Graphics _gPADV1 = Graphics.FromImage(_bmpnewIpdmask);
+                _gPADV1.Clear(Color.Black);
+                _gPADV1.FillPolygon(Brushes.White, GetConner(3.5f));
+                //_gPADV1.FillPolygon(Brushes.White, m_PADRegion.RegionPtFCorner);
+                //_gPADV1.FillPolygon(Brushes.White, m_PADRegion.RegionPtFCornerORG);
+                _gPADV1.Dispose();
+                m_Histogram.GetHistogram(_bmpnewIpd, _bmpnewIpdmask, true);
+                //m_Histogram.GetHistogram(_bmpnewIpd, 200);
+                int _min = m_Histogram.MeanGrade;
+
+                return _min;
+            }
+            public Bitmap GetFillMean(Bitmap ebmpInput,int eMean)
+            {
+                Bitmap _bmpnewIpd = new Bitmap(ebmpInput);
+                //填充中间的芯片位置
+                Graphics _gPADV1 = Graphics.FromImage(_bmpnewIpd);
+                //_gPADV1.Clear(Color.Black);
+                Brush brush = new SolidBrush(Color.FromArgb(eMean, eMean, eMean));
+                _gPADV1.FillPolygon(brush, GetConner(0.5f));
+                //_gPADV1.FillPolygon(Brushes.White, m_PADRegion.RegionPtFCorner);
+                //_gPADV1.FillPolygon(Brushes.White, m_PADRegion.RegionPtFCornerORG);
+                _gPADV1.Dispose();
+                //m_Histogram.GetHistogram(_bmpnewIpd, _bmpnewIpdmask, true);
+                //m_Histogram.GetHistogram(_bmpnewIpd, 200);
+                //int _min = m_Histogram.MeanGrade;
+
+                return _bmpnewIpd;
+            }
+
             public double RegionWidthReal { get; set; } = 10;
             public double RegionHeightReal { get; set; } = 10;
             public double RegionAreaReal { get; set; } = 100;
@@ -8462,10 +12101,13 @@ namespace Allinone.OPSpace.AnalyzeSpace
             public Bitmap bmpChipForWetherGlue = new Bitmap(1, 1);
             public bool Isleftoverright { get; set; } = false;
             public List<PointF[]> listPointF = new List<PointF[]>();
+            public List<BallBlobClass> ballBlobClasses = new List<BallBlobClass>();
 
             public Bitmap GetChipGlue(int fSized, out PointF oCenterPointF)
             {
                 Size size = new Size(bmpChipForWetherGlue.Width, bmpChipForWetherGlue.Height);
+                if (fSized == 0)
+                    fSized = 1;
                 if (fSized > 0)
                 {
                     oCenterPointF = new PointF((float)jRotatedRectangleF2.fCX * fSized,
@@ -8484,6 +12126,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             public void Reset()
             {
+                ballBlobClasses.Clear();
                 listPointF.Clear();
                 Isleftoverright = false;
 
@@ -8598,20 +12241,73 @@ namespace Allinone.OPSpace.AnalyzeSpace
             {
                 return Math.Sqrt((double)Math.Pow((P1.X - P2.X), 2) + Math.Pow((P1.Y - P2.Y), 2));
             }
+
+            PointF[] RectFToPointF(RectangleF xRectF, double xAngle)
+            {
+                PointF[] ptFs = new PointF[4];
+
+                PointF ptCenter = GetRectFCenter(xRectF);
+                ptFs[0] = xRectF.Location;
+                ptFs[1] = new PointF(xRectF.Location.X, xRectF.Bottom);
+                ptFs[2] = new PointF(xRectF.Right, xRectF.Bottom);
+                ptFs[3] = new PointF(xRectF.Right, xRectF.Location.Y);
+
+                ptFs[0] = PointRotate(ptCenter, ptFs[0], xAngle);
+                ptFs[1] = PointRotate(ptCenter, ptFs[1], xAngle);
+                ptFs[2] = PointRotate(ptCenter, ptFs[2], xAngle);
+                ptFs[3] = PointRotate(ptCenter, ptFs[3], xAngle);
+
+                return ptFs;
+            }
+            public PointF GetRectFCenter(RectangleF RectF)
+            {
+                return new PointF(RectF.X + (RectF.Width / 2), RectF.Y + (RectF.Height / 2));
+            }
+            private PointF PointRotate(PointF center, PointF p1, double angle)
+            {
+                PointF tmp = new PointF();
+                double angleHude = angle * Math.PI / 180;/*角度变成弧度*/
+                double x1 = (p1.X - center.X) * Math.Cos(angleHude) + (p1.Y - center.Y) * Math.Sin(angleHude) + center.X;
+                double y1 = -(p1.X - center.X) * Math.Sin(angleHude) + (p1.Y - center.Y) * Math.Cos(angleHude) + center.Y;
+                tmp.X = (float)x1;
+                tmp.Y = (float)y1;
+                return tmp;
+            }
         }
 
         public class GlueRegionClass
         {
             public double LengthMax { get; set; } = 0;
             public double LengthMin { get; set; } = 0;
+
+            public double LengthSlotMax { get; set; } = 0;
+            public double LengthSlotMin { get; set; } = 0;
+
             private PointF[] LengthPointFs = new PointF[4];
             private PointF[] LengthPointFsIN = new PointF[4];
+
+            private PointF[] LengthPointFsIN2 = new PointF[4];
+
+            /// <summary>
+            /// 最外层
+            /// </summary>
             private List<PointF> LengthPointFsList = new List<PointF>();
+            /// <summary>
+            /// 最内层
+            /// </summary>
             private List<PointF> LengthPointFsListIN = new List<PointF>();
+
+            /// <summary>
+            /// IPD的实体胶
+            /// </summary>
+            private List<PointF> LengthPointFsListIN2 = new List<PointF>();
             public void Reset()
             {
                 LengthMax = 0;
                 LengthMin = 0;
+
+                LengthSlotMax = 0;
+                LengthSlotMin = 0;
 
                 LengthPointFs[0] = new PointF(0, 10);
                 LengthPointFs[1] = new PointF(10, 10);
@@ -8623,8 +12319,14 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 LengthPointFsIN[2] = new PointF(10, 0);
                 LengthPointFsIN[3] = new PointF(0, 0);
 
+                LengthPointFsIN2[0] = new PointF(0, 10);
+                LengthPointFsIN2[1] = new PointF(10, 10);
+                LengthPointFsIN2[2] = new PointF(10, 0);
+                LengthPointFsIN2[3] = new PointF(0, 0);
+
                 LengthPointFsList.Clear();
                 LengthPointFsListIN.Clear();
+                LengthPointFsListIN2.Clear();
             }
             public void AddPt(PointF ept)
             {
@@ -8684,6 +12386,35 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             }
 
+            public void AddPtIN2(PointF ept)
+            {
+                LengthPointFsListIN2.Add(ept);
+            }
+            public PointF[] GetPointFIN2()
+            {
+                if (LengthPointFsListIN2.Count >= 4)
+                {
+                    LengthPointFsIN2 = new PointF[LengthPointFsListIN2.Count];
+                    int i = 0;
+                    foreach (PointF p in LengthPointFsListIN2)
+                    {
+                        LengthPointFsIN2[i] = p;
+                        i++;
+                    }
+                }
+                else
+                {
+                    LengthPointFsIN2 = new PointF[4];
+                    LengthPointFsIN2[0] = new PointF(0, 10);
+                    LengthPointFsIN2[1] = new PointF(10, 10);
+                    LengthPointFsIN2[2] = new PointF(10, 0);
+                    LengthPointFsIN2[3] = new PointF(0, 0);
+                }
+
+                return LengthPointFsIN2;
+
+            }
+
             public double GetMinMM()
             {
                 double a = 0.0254 / INI.MAINSD_PAD_MIL_RESOLUTION;
@@ -8719,6 +12450,26 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 return Math.Sqrt((double)Math.Pow((P1.X - P2.X), 2) + Math.Pow((P1.Y - P2.Y), 2));
             }
 
+            public void RunSlot()
+            {
+                double maxv = -1000;
+                double minv = 1000;
+
+                int i = 0;
+                while (i < LengthPointFsListIN2.Count)
+                {
+                    double dis = GetPointLength(LengthPointFsListIN2[i], LengthPointFsList[i]);
+                    maxv = Math.Max(maxv, dis);
+                    minv = Math.Min(minv, dis);
+
+                    i++;
+                }
+
+                LengthSlotMax = maxv;
+                LengthSlotMin = minv;
+
+            }
+
         }
         public class BorderLineRunClass
         {
@@ -8728,6 +12479,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
             public Rectangle rect0;
             public BorderTypeEnum Border;
 
+            public Rectangle rectORG;
+            public PADG1Class padG1;
+
+        }
+        public class BallBlobClass
+        {
+            //public int w = 0;
+            //public int h = 0;
+            public int area = 0;
+            public Rectangle rect = new Rectangle();
         }
 
 
@@ -8799,6 +12560,13 @@ namespace Allinone.OPSpace.AnalyzeSpace
             str += (GLEFindWhite ? "1" : "0") + Universal.SeperateCharB;
 
             str += FourSideNoGluePassValue.ToString() + Universal.SeperateCharB;
+            str += ((int)GlueChipSlotDir).ToString() + Universal.SeperateCharB;     //0
+
+            str += GlueTopBottomOffset.ToString() + Universal.SeperateCharB;
+            str += GlueLeftRightOffset.ToString() + Universal.SeperateCharB;
+            str += ((int)ChipNoGlueMode).ToString() + Universal.SeperateCharB;     //0
+            str += ((int)ChipNoHaveMode).ToString() + Universal.SeperateCharB;     //0
+            str += ChipNoHaveModeOpString.ToString() + Universal.SeperateCharB;
 
             str += "";
 
@@ -8937,6 +12705,32 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     if (bOK)
                         FourSideNoGluePassValue = iresult;
                 }
+                if (strs.Length > 50)
+                {
+                    if (!string.IsNullOrEmpty(strs[50]))
+                        GlueChipSlotDir = (ChipSlotDir)int.Parse(strs[50]);
+                }
+                if (strs.Length > 52)
+                {
+                    if (!string.IsNullOrEmpty(strs[51]))
+                        GlueTopBottomOffset = double.Parse(strs[51]);
+                    if (!string.IsNullOrEmpty(strs[52]))
+                        GlueLeftRightOffset = double.Parse(strs[52]);
+                }
+                if (strs.Length > 54)
+                {
+                    if (string.IsNullOrEmpty(strs[53]))
+                        strs[53] = "0";
+                    ChipNoGlueMode = (ChipNoGlueMethod)int.Parse(strs[53]);
+                    if (string.IsNullOrEmpty(strs[54]))
+                        strs[54] = "0";
+                    ChipNoHaveMode = (ChipNoHave)int.Parse(strs[54]);
+                }
+                if (strs.Length > 55)
+                {
+                    ChipNoHaveModeOpString = strs[55];
+                }
+
             }
         }
         public void Reset()
@@ -8953,8 +12747,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             CheckDHeight = 15;
             ExtendX = 5;
             ExtendY = 5;
-            GlueMax = 120;
-            GlueMin = 128;
+            GlueMax = 1;
+            GlueMin = 0.6;
             GlueCheck = true;
             PADThresholdMode = PADThresholdEnum.Threshold;
             NoGlueThresholdValue = 0.7;
@@ -8964,9 +12758,12 @@ namespace Allinone.OPSpace.AnalyzeSpace
             CalExtendY = 66;
             BloodFillValueRatio = 0.33;
             PADAICategory = AICategory.Baseline;
-
+            GlueChipSlotDir = ChipSlotDir.NONE;
             GlueMaxTop = 0.6;
             GlueMinTop = 0.1;
+
+            GlueTopBottomOffset = 0.1;
+            GlueLeftRightOffset = 0.1;
 
             GlueMaxBottom = 0.6;
             GlueMinBottom = 0.1;
@@ -9001,9 +12798,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
             PadInspectMethod = PadInspectMethodEnum.NONE;
             PADINSPECTOPString = "";
 
+
             ChipFindWhite = true;
             GLEFindWhite = false;
             FourSideNoGluePassValue = 0;
+
+            ChipNoGlueMode = ChipNoGlueMethod.NONE;
+            ChipNoHaveMode = ChipNoHave.NONE;
+            ChipNoHaveModeOpString = "";
+
         }
         public void FromPropertyChange(string changeitemstring, string valuestring)
         {
@@ -9069,6 +12872,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 case "PADCalMode":
                     PADCalMode = (PADCalModeEnum)Enum.Parse(typeof(PADCalModeEnum), valuestring, true);
                     break;
+                case "ChipNoGlueMode":
+                    ChipNoGlueMode = (ChipNoGlueMethod)Enum.Parse(typeof(ChipNoGlueMethod), valuestring, true);
+                    break;
+                case "ChipNoHaveMode":
+                    ChipNoHaveMode = (ChipNoHave)Enum.Parse(typeof(ChipNoHave), valuestring, true);
+                    break;
+                case "GlueChipSlotDir":
+                    GlueChipSlotDir = (ChipSlotDir)Enum.Parse(typeof(ChipSlotDir), valuestring, true);
+                    break;
                 case "PADChipSizeMode":
                     PADChipSizeMode = (PADChipSize)Enum.Parse(typeof(PADChipSize), valuestring, true);
                     break;
@@ -9083,6 +12895,13 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     break;
                 case "BloodFillValueRatio":
                     BloodFillValueRatio = double.Parse(valuestring);
+                    break;
+
+                case "GlueTopBottomOffset":
+                    GlueTopBottomOffset = double.Parse(valuestring);
+                    break;
+                case "GlueLeftRightOffset":
+                    GlueLeftRightOffset = double.Parse(valuestring);
                     break;
 
                 case "GlueMaxTop":
@@ -9166,6 +12985,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     PADINSPECTOPString = valuestring.Split('#')[1];
                     PadInspectMethod = (PadInspectMethodEnum)Enum.Parse(typeof(PadInspectMethodEnum), valuestring.Split('#')[0], true);
                     break;
+                case "ChipNoHaveModeOpString":
+                    ChipNoHaveModeOpString = valuestring.Split('#')[1];
+                    ChipNoHaveMode = (ChipNoHave)Enum.Parse(typeof(ChipNoHave), valuestring.Split('#')[0], true);
+                    break;
             }
         }
 
@@ -9175,6 +12998,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 || PADMethod == PADMethodEnum.GLUECHECK
                 || PADMethod == PADMethodEnum.GLUECHECK_BlackEdge
                 || PADMethod == PADMethodEnum.PLACODE_CHECK
+                               || PADMethod == PADMethodEnum.CHIPCHECKNOHAVE
                 || PADMethod == PADMethodEnum.QLE_CHECK)
             {
                 TrainStatusCollection.Clear();
@@ -9189,6 +13013,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             RunStatusCollection.Clear();
 
             RunDataOK = false;//复位数据
+            //DescStr = "";
             DescStr = "无芯片";
             QLERunDataStr = string.Empty;
 
@@ -9355,6 +13180,60 @@ namespace Allinone.OPSpace.AnalyzeSpace
         #region TOOLS
 
         private Bitmap _getV1bmpInput(Rectangle rect1)
+        {
+            Bitmap bmp000 = new Bitmap(imginput);
+
+            Graphics gPrepared = Graphics.FromImage(bmp000);
+            PointF[] xxx = m_PADRegion.GetConner(5);
+            gPrepared.FillPolygon(Brushes.Black, xxx);
+            gPrepared.Dispose();
+
+            //if (m_IsSaveTemp)
+            //{
+            //    bmp000.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "imginput1" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+            //}
+
+            //抽取绿色
+            ExtractChannel extract = new ExtractChannel();
+            extract.Channel = 1;
+            bmp000 = extract.Apply(bmp000);
+
+            AForge.Imaging.Filters.ContrastStretch contrastStretch = new AForge.Imaging.Filters.ContrastStretch();
+            bmp000 = contrastStretch.Apply(bmp000);
+
+            Blur blur = new Blur();
+            bmp000 = blur.Apply(bmp000);
+
+            AForge.Imaging.Filters.SISThreshold sISThreshold = new AForge.Imaging.Filters.SISThreshold();
+            bmp000 = sISThreshold.Apply(bmp000);
+
+            Invert invert = new Invert();
+            bmp000 = invert.Apply(bmp000);
+
+            BlobsFiltering blobsFiltering = new BlobsFiltering();
+            blobsFiltering.MinWidth = bmp000.Width / 3;
+            blobsFiltering.MinHeight = bmp000.Height / 3;
+            blobsFiltering.CoupledSizeFiltering = true;
+            bmp000 = blobsFiltering.Apply(bmp000);
+
+
+            //Bitmap bmp001 = new Bitmap(bmp000);
+            //gPrepared = Graphics.FromImage(bmp001);
+            //xxx = m_PADRegion.GetConner(0);
+            //gPrepared.FillPolygon(Brushes.Black, xxx);
+            //gPrepared.Dispose();
+
+            //bmp000 = invert.Apply(bmp000);
+
+            //if (m_IsSaveTemp)
+            //{
+            //    bmp001.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "imginput" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+            //}
+            return bmp000;
+        }
+        private Bitmap _getV1_1bmpInput(Rectangle rect1)
         {
             Graphics gPrepared = Graphics.FromImage(imgmask);
             gPrepared.Clear(Color.White);
@@ -10004,6 +13883,39 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             PointF pointF = pADRegionClass.GetTopEdgeCenter(isized, 0, 5);
             Point point = new Point((int)pointF.X, (int)pointF.Y);
+
+            #region 增加准确找到胶水位置 进行油漆桶填充
+
+            Rectangle blackRegion = new Rectangle(point.X - 5, 0, 10, point.Y - 1);
+            //截取一小块找blob
+            Bitmap bmpCheckBlackRegion = (Bitmap)img.Clone(blackRegion, img.PixelFormat);
+
+            //if (m_IsSaveTemp)
+            //{
+            //    bmpCheckBlackRegion.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpCheckBlackRegion0" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+            //}
+
+            m_JzFind.SetThreshold(bmpCheckBlackRegion, 0, histogramClass.MinGrade * 2, 0);
+
+            //if (m_IsSaveTemp)
+            //{
+            //    bmpCheckBlackRegion.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpCheckBlackRegion1" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+            //}
+
+            m_JzFind.AH_FindBlob(bmpCheckBlackRegion, false);
+            //m_JzFind.SortByArea();
+            if (m_JzFind.FoundList.Count > 0)
+            {
+                Point point1 = GetRectCenter(m_JzFind.rectMaxRect);
+                point = new Point(point1.X + blackRegion.X, point1.Y + blackRegion.Y);
+            }
+
+            bmpCheckBlackRegion.Dispose();
+            #endregion
+
+
             Bitmap bmpfloodfill = (Bitmap)img.Clone();
 
             bmpfloodfill = FloodFill(img, point, Color.FromArgb(0, 255, 0),
@@ -10046,28 +13958,91 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
             return _bmpNormal;
         }
+        private Bitmap _getNormalPADG1(Rectangle eRectORG)
+        {
+
+            Bitmap _bmpNormal = new Bitmap(imginput);
+
+            PADG1Class ePADG1 = new PADG1Class();
+            ePADG1.FromString(PADINSPECTOPString);
+            //原始的尺寸 扩大 之后的限流外围
+            Rectangle m_rect_last = new Rectangle(eRectORG.X, eRectORG.Y, eRectORG.Width, eRectORG.Height);
+            m_rect_last.Inflate(ePADG1.FindX, ePADG1.FindY);
+
+            Rectangle m_rect_before = new Rectangle(eRectORG.X, eRectORG.Y, eRectORG.Width, eRectORG.Height);
+            m_rect_before.Inflate(-ePADG1.FindInX, -ePADG1.FindInY);
+
+            Graphics gPrepared = Graphics.FromImage(_bmpNormal);
+            //gPrepared.Clear(Color.White);
+            //gPrepared.FillPolygon(Brushes.Black, PADTempRegion.RegionPtFCornerORG);
+            //gPrepared.FillRectangle(Brushes.Black, m_rect_before);
+            gPrepared.DrawRectangle(new Pen(Color.Blue, 3f), m_rect_before);
+            gPrepared.DrawRectangle(new Pen(Color.Red, 3f), m_rect_last);
+            gPrepared.Dispose();
+
+            if (m_IsSaveTemp)
+            {
+                _bmpNormal.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpff" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+            return _bmpNormal;
+        }
 
         private Bitmap _getG1bmpInput(Rectangle rect1)
         {
             //rect1.Inflate(2, 2);
 
-            Graphics gPrepared = Graphics.FromImage(imgmask);
-            gPrepared.Clear(Color.White);
-            //gPrepared.FillPolygon(Brushes.Black, PADTempRegion.RegionPtFCornerORG);
-            gPrepared.FillRectangle(Brushes.Black, rect1);
-            gPrepared.Dispose();
+            //Bitmap bmpRect0 = new Bitmap(imginput);
+            //Graphics gPrepared = Graphics.FromImage(bmpRect0);
+            //gPrepared.DrawRectangle(new Pen(Color.Lime, 3), rect1);
+            ////gPrepared.Clear(Color.White);
+            ////gPrepared.FillPolygon(Brushes.Black, PADTempRegion.RegionPtFCornerORG);
+            ////gPrepared.FillRectangle(Brushes.Black, rect1);
+            //gPrepared.Dispose();
+            //if (m_IsSaveTemp)
+            //{
+            //    bmpRect0.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpRect0" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            //    //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+            //}
+            //bmpRect0.Dispose();
+
 
             //Bitmap bmpfloodfill = (Bitmap)imginput.Clone();// new Bitmap(imginput);
             Bitmap bmphistogram = new Bitmap(imginput, Resize(imginput.Size, -5));
             HistogramClass histogramClass = new HistogramClass(2);
             histogramClass.GetHistogram(bmphistogram);
-
+            bmphistogram.Dispose();
             //int fillthresholdvalue = (int)(255 * (1 - NoGlueThresholdValue));
             //fillthresholdvalue = histogramClass.MinGrade;
             //m_JzFind.GetMaskedImage(imginput, imgmask, Color.White, Color.FromArgb(fillthresholdvalue, fillthresholdvalue, fillthresholdvalue), false);
 
             Point point = new Point((rect1.Right - rect1.X) / 2, (rect1.Bottom - rect1.Y) / 2);
             point = new Point((rect1.Right - rect1.X) / 2, rect1.Y - 5);
+
+            #region 增加准确找到胶水位置 进行油漆桶填充
+
+            Rectangle blackRegion = new Rectangle(point.X - 10, 0, 20, rect1.Y - 5);
+            //截取一小块找blob
+            Bitmap bmpCheckBlackRegion = (Bitmap)imginput.Clone(blackRegion, imginput.PixelFormat);
+            m_JzFind.SetThreshold(bmpCheckBlackRegion, 0, histogramClass.MinGrade, 0);
+
+            if (m_IsSaveTemp)
+            {
+                bmpCheckBlackRegion.Save("D:\\testtest\\" + _CalPageIndex() + RelateAnalyzeString + "bmpCheckBlackRegion" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                //bmpMask.Save("D:\\testtest\\imgpattern.png", System.Drawing.Imaging.ImageFormat.Png);
+            }
+
+            m_JzFind.AH_FindBlob(bmpCheckBlackRegion, false);
+            //m_JzFind.SortByArea();
+            if (m_JzFind.FoundList.Count > 0)
+            {
+                Point point1 = GetRectCenter(m_JzFind.rectMaxRect);
+                point = new Point(point1.X + blackRegion.X, point1.Y + blackRegion.Y);
+            }
+
+            bmpCheckBlackRegion.Dispose();
+            #endregion
+
+
             Bitmap bmpfloodfill = (Bitmap)imginput.Clone();// new Bitmap(imginput);
             //JzFindObjectClass jzFindObjectClass = new JzFindObjectClass();
             //jzFindObjectClass.FindGrayscale(bmpfloodfill, point, Color.FromArgb(0, 255, 0), (int)(histogramClass.MinGrade * BloodFillValueRatio));
@@ -10709,6 +14684,21 @@ namespace Allinone.OPSpace.AnalyzeSpace
             return Math.Max(Math.Min(Value, Max), Min);
 
         }
+        public void BoundRect(ref RectangleF InnerRect, Size BoundSize)
+        {
+            InnerRect.X = Math.Min(Math.Max(InnerRect.X, 0), (BoundSize.Width - InnerRect.Width < 0 ? 0 : BoundSize.Width - InnerRect.Width));
+            InnerRect.Y = Math.Min(Math.Max(InnerRect.Y, 0), (BoundSize.Height - InnerRect.Height < 0 ? 0 : BoundSize.Height - InnerRect.Height));
+
+            if (BoundSize.Width <= InnerRect.X + InnerRect.Width)
+                InnerRect.Width = BoundValue(InnerRect.Width, BoundSize.Width - InnerRect.X, 1);
+            if (BoundSize.Height <= InnerRect.Height + InnerRect.Height)
+                InnerRect.Height = BoundValue(InnerRect.Height, BoundSize.Height - InnerRect.Y, 1);
+        }
+        public float BoundValue(float Value, float Max, float Min)
+        {
+            return Math.Max(Math.Min(Value, Max), Min);
+
+        }
         #endregion
 
         #region 排序四边型的角点
@@ -10948,8 +14938,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
        public JzSideAnalyzeEXClass jzsideanalyzeex = new JzSideAnalyzeEXClass();
         public List<Bitmap> bmplist = new List<Bitmap>();
 
-        public void GetDataIPD(Bitmap bmp,bool istrain)
+        public string GetDataIPD(Bitmap bmp, bool istrain)
         {
+            string passStr = "PASS";
+
             //IsNeedChange = false;
 
             //pbx1.Image = null;
@@ -10994,13 +14986,13 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //JzSideAnalyzeEXClass jzsideanalyzeex1 = new JzSideAnalyzeEXClass();
 
             Clearbmplist(bmplist);
-            //if (istrain)
+            if (istrain)
                 jzsideanalyzeex.Train(jzpara, bmp, bmplist);
 
             Stopwatch stopwatch = Stopwatch.StartNew();
             stopwatch.Restart();
 
-            jzsideanalyzeex.Run(bmp, bmplist);
+            passStr = jzsideanalyzeex.Run(bmp, bmplist);
 
             stopwatch.Stop();
             long ms = stopwatch.ElapsedMilliseconds;
@@ -11060,6 +15052,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //}
 
             //pbx22.Image = sideAnalyze.bmpSecond;
+
+            return passStr;
         }
 
         public void Clearbmplist(List<Bitmap> bmplist)

@@ -179,6 +179,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Common\MVDImage.Net.dll</HintPath>
     </Reference>
+    <Reference Include="MVDImageBinary.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=c8e52e37b57a53fa, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDImageBinary.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MVDImageMorph.NET, Version=4.2.1.4, Culture=neutral, PublicKeyToken=d60fc2b505bf3a6c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDImageMorph.NET.dll</HintPath>
+    </Reference>
     <Reference Include="MVDShape.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=a59215ef735587a6, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Common\MVDShape.Net.dll</HintPath>
@@ -308,6 +316,7 @@
     <Compile Include="ControlSpace\MotoCanSpace\UsbCan.cs" />
     <Compile Include="ControlSpace\PLCAddressClass.cs" />
     <Compile Include="ControlSpace\PLCAlarmsClass.cs" />
+    <Compile Include="ControlSpace\PLCSpace\CipClass.cs" />
     <Compile Include="ControlSpace\PLCSpace\CipCompoletClass.cs" />
     <Compile Include="ControlSpace\PLCSpace\FatekClass.cs" />
     <Compile Include="ControlSpace\PLCSpace\LightControlClass.cs" />
@@ -399,6 +408,7 @@
     <Compile Include="LoggerClass.cs" />
     <Compile Include="PlugSpace\BarcodeEx\Barcode2D_Halcon.cs" />
     <Compile Include="PlugSpace\BarcodeEx\BarcodeAll_MVD.cs" />
+    <Compile Include="PlugSpace\BarcodeEx\Mvd2DReaderClass.cs" />
     <Compile Include="PlugSpace\CamActClass.cs" />
     <Compile Include="PlugSpace\EnvAnalyzePostionSettings.cs" />
     <Compile Include="PlugSpace\EzJCETShopfloor.cs" />

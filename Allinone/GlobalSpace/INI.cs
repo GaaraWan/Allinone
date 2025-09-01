@@ -160,8 +160,8 @@ namespace Allinone
 
             if (retStr == "")
                 retStr = defaultvaluestring;
-            else
-                retStr = retStr.Split('/')[0]; //把說明排除掉
+            //else
+            //    retStr = retStr.Split('/')[0]; //把說明排除掉
 
             return retStr;
 
@@ -449,6 +449,10 @@ namespace Allinone
         /// 开启判断sensor
         /// </summary>
         public static bool IsOpenCheckSensor = false;
+        public static bool IsOpenCheckSensor2 = false;
+
+        public static DateTime xClearDataTime1 { get; set; } = DateTime.Now;
+        public static DateTime xClearDataTime2 { get; set; } = DateTime.Now;
 
         public static float CamLinescanStartPos = -7;
         public static float CamLinescanEndPos = 270;
@@ -472,6 +476,8 @@ namespace Allinone
         public static int AI_Port = 9001;
 
         public static SaveImageFormat chipSaveImageFormat = SaveImageFormat.IMAGE_JPEG;
+
+        public static Color chipPassColor = Color.Lime;
 
 
         public static int ChkArea = 1000000;
@@ -628,6 +634,8 @@ namespace Allinone
 
             ISSFCOLOR = ReadINIValue("Basic Control", INIEnum.ISSFCOLOR.ToString(), "0", INIFILE) == "1";
 
+            chipPassColor = Color.FromArgb(int.Parse(ReadINIValue("Basic Control", "chipPassColor", chipPassColor.ToArgb().ToString(), INIFILE)));
+            
 
             CHECKPAGE = new bool[100];
             for (int i = 0; i < CHECKPAGE.Length; i++)
@@ -773,9 +781,13 @@ namespace Allinone
             CHIP_ISSMOOTHEN = ReadINIValue("MainSD Control", "CHIP_ISSMOOTHEN", (CHIP_ISSMOOTHEN ? "1" : "0"), INIFILE) == "1";
 
             IsOpenCheckSensor = ReadINIValue("MainSD Control", "IsOpenCheckSensor", (IsOpenCheckSensor ? "1" : "0"), INIFILE) == "1";
+            IsOpenCheckSensor2 = ReadINIValue("MainSD Control", "IsOpenCheckSensor2", (IsOpenCheckSensor2 ? "1" : "0"), INIFILE) == "1";
 
             IsOpenRecipeDataRecord = ReadINIValue("Basic Control", "IsOpenRecipeDataRecord", (IsOpenRecipeDataRecord ? "1" : "0"), INIFILE) == "1";
             DataRecordName = ReadINIValue("Basic Control", "DataRecordName", DataRecordName, INIFILE);
+
+            xClearDataTime1 = DateTime.Parse(ReadINIValue("Basic Control", "xClearDataTime1", xClearDataTime1.ToString(), INIFILE));
+            xClearDataTime2 = DateTime.Parse(ReadINIValue("Basic Control", "xClearDataTime2", xClearDataTime2.ToString(), INIFILE));
 
             //chipTestAllCount = int.Parse(ReadINIValue("Basic Control", "chipTestAllCount", "0", INIFILE));
             //chipTestPassCount = int.Parse(ReadINIValue("Basic Control", "chipTestPassCount", "0", INIFILE));
@@ -949,6 +961,9 @@ namespace Allinone
 
             WriteINIValue("Basic Control", INIEnum.CHECKSNERRORCODE.ToString(), CHECKSNERRORCODE, INIFILE);
             WriteINIValue("Basic Control", "chipSaveImageFormat", ((int)chipSaveImageFormat).ToString(), INIFILE);
+
+            WriteINIValue("Basic Control", "chipPassColor", chipPassColor.ToArgb().ToString(), INIFILE);
+
             //Write [DFLY Control] Parameters
 
             WriteINIValue("DFLY Control", INIEnum.CAMERALOCATION.ToString(), CAMERALOCATION, INIFILE);
@@ -1006,7 +1021,7 @@ namespace Allinone
             WriteINIValue("MainSD Control", "CHIP_ISSMOOTHEN", (CHIP_ISSMOOTHEN ? "1" : "0"), INIFILE);
 
             WriteINIValue("MainSD Control", "IsOpenCheckSensor", (IsOpenCheckSensor ? "1" : "0"), INIFILE);
-
+            WriteINIValue("MainSD Control", "IsOpenCheckSensor2", (IsOpenCheckSensor2 ? "1" : "0"), INIFILE);
             WriteINIValue("Basic Control", "IsOpenRecipeDataRecord", (IsOpenRecipeDataRecord ? "1" : "0"), INIFILE);
             //WriteINIValue("Basic Control", "chipTestAllCount", chipTestAllCount.ToString(), INIFILE);
             //WriteINIValue("Basic Control", "chipTestPassCount", chipTestPassCount.ToString(), INIFILE);
@@ -1017,6 +1032,9 @@ namespace Allinone
             //WriteINIValue("Basic Control", "chipN3Count", chipN3Count.ToString(), INIFILE);
             //WriteINIValue("Basic Control", "chipN4Count", chipN4Count.ToString(), INIFILE);
             //WriteINIValue("Basic Control", "chipN5Count", chipN5Count.ToString(), INIFILE);
+
+            WriteINIValue("Basic Control", "xClearDataTime1", xClearDataTime1.ToString(), INIFILE);
+            WriteINIValue("Basic Control", "xClearDataTime2", xClearDataTime2.ToString(), INIFILE);
 
             WriteINIValue("Basic Control", "chipUseAI", (chipUseAI ? "1" : "0"), INIFILE);
 
@@ -1109,6 +1127,10 @@ namespace Allinone
         public static void SaveSDM5Setup()
         {
             WriteINIValue("Basic Control", "SDM5FindCount", SDM5FindCount, INIFILE);
+        }
+        public static void SaveSDM2Setup()
+        {
+            WriteINIValue("MainSD Control", "CHIP_force_pass", (CHIP_force_pass ? "1" : "0"), INIFILE);
         }
 
         public static string DATA_ROOT

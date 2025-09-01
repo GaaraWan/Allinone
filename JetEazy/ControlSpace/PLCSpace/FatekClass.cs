@@ -24,6 +24,11 @@ namespace JetEazy.ControlSpace
         JzTimes PLCDuriationTime = new JzTimes();
         public int msDuriation = 0;
 
+        public string TypeStr
+        {
+            get { return CommTypeStr; }
+        }
+
         protected override void COMPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
         {
             try

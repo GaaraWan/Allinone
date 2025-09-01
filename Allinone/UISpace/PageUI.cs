@@ -1063,11 +1063,14 @@ namespace Allinone.UISpace
             if (AnalyzeSelectNow != null)
             {
                 AnalyzeSelectNow.A02_CreateTrainRequirement(PageNow.GetbmpORG((PageOPTypeEnum)PageNow.PageOPTypeIndex), new PointF(0, 0));
-                Bitmap bmpFourSide = new Bitmap(AnalyzeSelectNow.bmpPATTERN,
-                    new Size(AnalyzeSelectNow.bmpPATTERN.Width >> 3, AnalyzeSelectNow.bmpPATTERN.Height >> 3));
-                m_Histogram.GetHistogram(bmpFourSide, 100);
-                int _mean = m_Histogram.MeanGrade;
-                CHECKFRM = new CheckForm($"平均值：{_mean}");
+                //Bitmap bmpFourSide = new Bitmap(AnalyzeSelectNow.bmpPATTERN,
+                //    new Size(AnalyzeSelectNow.bmpPATTERN.Width >> 3, AnalyzeSelectNow.bmpPATTERN.Height >> 3));
+                //m_Histogram.GetHistogram(bmpFourSide, 100);
+                int _mean = 0;// m_Histogram.MeanGrade;
+
+                _mean = AnalyzeSelectNow.PADPara.GetGrayMinValue(AnalyzeSelectNow.bmpPATTERN);
+
+                CHECKFRM = new CheckForm($"芯片周边灰阶值：{_mean}");
                 CHECKFRM.Show();
             }
         }

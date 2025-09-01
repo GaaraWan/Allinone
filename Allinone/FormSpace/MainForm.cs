@@ -41,6 +41,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms.Automation;
 using FreeImageAPI;
+using Allinone.ControlSpace.MachineSpace;
 //using System.Windows.Media;
 
 namespace Allinone.FormSpace
@@ -1139,6 +1140,15 @@ namespace Allinone.FormSpace
 
                                                 if (bOK)
                                                 {
+                                                    switch (Universal.FACTORYNAME)
+                                                    {
+                                                        case FactoryName.RIYUEXING:
+
+                                                            ((ControlSpace.MachineSpace.JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.RecipeName = tcpdata.RecipeName;
+
+                                                            break;
+                                                    }
+
 
                                                     //获取LOT号 来自于handler的参数+LOT
                                                     JzMainSDPositionParas.Report_LOT = tcpdata.LotName;
@@ -3451,7 +3461,8 @@ namespace Allinone.FormSpace
                     string[] RemoveIndexStr = JzToolsClass.PassingString.Split(',');
 
                     foreach (string str in RemoveIndexStr)
-                        RCPDB.Delete(RCPDB.FindIndex(int.Parse(str)));
+                        if (!string.IsNullOrEmpty(str))
+                            RCPDB.Delete(RCPDB.FindIndex(int.Parse(str)));
                 }
 
                 AlbumCollection.Del(RCPDB);
@@ -3972,6 +3983,12 @@ namespace Allinone.FormSpace
                                 case OptionEnum.MAIN_SDM2:
                                 case OptionEnum.MAIN_X6:
 
+                                    if (ACCDB.DataNow.Name != "admin")
+                                    {
+                                        INI.CHIP_force_pass = false;
+                                        INI.SaveSDM2Setup();
+                                    }
+
                                     ESSUI.RunWatchTime = INI.AutoLogoutTime;
 
                                     break;
@@ -4292,6 +4309,95 @@ namespace Allinone.FormSpace
 
                                                             CamActClass.Instance.SetStepCount(_qccount);
                                                         }
+                                                    }
+
+                                                    switch(Allinone.Universal.FACTORYNAME)
+                                                    {
+                                                        case FactoryName.RIYUEXING:
+
+                                                            //plc中读取 mapping 信息
+
+                                                            try
+                                                            {
+                                                                int _row = ((JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.QcXTotal;
+                                                                int _col = ((JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.QcYTotal;
+                                                                int _qccount = ((JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.QcNum;
+
+                                                                CommonLogClass.Instance.Log2($"[AUTOSTART]PLC 行:{_row}列:{_col}拍摄次数{_qccount}");
+
+                                                                string _map = ((JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.QcMap;
+                                                                CommonLogClass.Instance.Log2($"[AUTOSTART]map={_map}");
+
+                                                                #region 解析数据
+
+                                                                bool[] _qcbypass = null;
+                                                                //int _row = ddrow;// (int)bytes[35] * 255 * 255 * 255 + (int)bytes[34] * 255 * 255 + (int)bytes[33] * 255 + (int)bytes[32];
+                                                                //int _col = ddcol;// (int)bytes[39] * 255 * 255 * 255 + (int)bytes[38] * 255 * 255 + (int)bytes[37] * 255 + (int)bytes[36];
+                                                                int irowcol = _row * _col;
+
+                                                                //1是正常打印的需要检测
+                                                                //0是没有打印不用检测
+                                                                //X是打印了异常内容比如打了个或其他标志
+
+                                                                string[] vs = _map.Split(';');
+                                                                List<string> vs2 = new List<string>();
+                                                                vs2.Clear();
+                                                                for (int i = 0; i < vs.Length; i++)
+                                                                {
+                                                                    if (!string.IsNullOrEmpty(vs[i]))
+                                                                    {
+                                                                        string[] vs1 = vs[i].Split(' ');
+                                                                        foreach (string s in vs1)
+                                                                        {
+                                                                            if (!string.IsNullOrEmpty(s))
+                                                                            {
+                                                                                vs2.Add(s);
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                if (vs2.Count == irowcol)
+                                                                {
+                                                                    _qcbypass = new bool[irowcol];
+                                                                    int i = 0;
+                                                                    while (i < irowcol)
+                                                                    {
+                                                                        _qcbypass[i] = vs2[i] != "1";
+                                                                        i++;
+                                                                    }
+                                                                }
+
+                                                                if (_qcbypass != null)
+                                                                {
+                                                                    RUNUI.SetByPass(_qcbypass, ref m_tcp_dataCheck);
+                                                                    CommonLogClass.Instance.Log2($"[AUTOSTART]{m_tcp_dataCheck}");
+                                                                }
+
+                                                                #endregion
+
+                                                                //bool[] _maps = ((JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.QcMap;
+                                                                //if (_maps != null)
+                                                                //{
+                                                                //    RUNUI.SetByPass(_maps, ref m_tcp_dataCheck);
+
+                                                                //    StringBuilder sb = new StringBuilder();
+                                                                //    for (int i = 0; i < _maps.Length; i++)
+                                                                //    {
+                                                                //        sb.Append(_maps[i] ? "0" : "1");
+                                                                //    }
+                                                                //    CommonLogClass.Instance.Log2($"[AUTOSTART]{m_tcp_dataCheck}");
+                                                                //    CommonLogClass.Instance.Log2($"[AUTOSTART]{sb.ToString()}");
+
+                                                                //}
+                                                            }
+                                                            catch (Exception ex)
+                                                            {
+                                                                CommonLogClass.Instance.Log2($"[AUTOSTART]{ex.StackTrace}");
+                                                                CommonLogClass.Instance.Log2($"[AUTOSTART]{ex.Message}");
+                                                            }
+
+                                                            break;
                                                     }
 
                                                     //不要執行包含在固定參數的參數
@@ -4709,43 +4815,93 @@ namespace Allinone.FormSpace
 
                                     if (INI.IsCollectStripPictures)
                                     {
-                                        if (!ispass)
+                                        switch(Universal.FACTORYNAME)
                                         {
-                                            Task task = new Task(() =>
-                                            {
-                                                try
+                                            case FactoryName.DONGGUAN:
+
+                                                //if (!ispass)
                                                 {
-                                                    this.Invoke(new Action(() =>
+                                                    Task task = new Task(() =>
                                                     {
-                                                        Bitmap _showResultBmp = (Bitmap)DISPUI.GetScreen()?.Clone();
-                                                        string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
-                                                        _imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                                        try
+                                                        {
+                                                            this.Invoke(new Action(() =>
+                                                            {
+                                                                Bitmap _showResultBmp = (Bitmap)DISPUI.GetScreen()?.Clone();
+                                                                string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                                                _imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
 
-                                                        if (!System.IO.Directory.Exists(_imagePath + "\\000"))
-                                                            System.IO.Directory.CreateDirectory(_imagePath + "\\000");
+                                                                if (!System.IO.Directory.Exists(_imagePath + "\\000"))
+                                                                    System.IO.Directory.CreateDirectory(_imagePath + "\\000");
 
-                                                        _showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
-                                                                                                System.Drawing.Imaging.ImageFormat.Jpeg);
+                                                                _showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
+                                                                                                        System.Drawing.Imaging.ImageFormat.Jpeg);
 
-                                                        _showResultBmp.Dispose();
-                                                    }));
+                                                                _showResultBmp.Dispose();
+                                                            }));
+                                                        }
+                                                        catch (Exception ex)
+                                                        {
+                                                            JetEazy.LoggerClass.Instance.WriteException(ex);
+                                                        }
+                                                    });
+                                                    task.Start();
+
+                                                    //string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                                    //_imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+
+                                                    //if (!System.IO.Directory.Exists(_imagePath + "\\000"))
+                                                    //    System.IO.Directory.CreateDirectory(_imagePath + "\\000");
+
+                                                    //_showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
+                                                    //                                        System.Drawing.Imaging.ImageFormat.Jpeg);
                                                 }
-                                                catch (Exception ex)
+
+                                                break;
+                                            default:
+
+                                                if (!ispass)
                                                 {
-                                                    JetEazy.LoggerClass.Instance.WriteException(ex);
+                                                    Task task = new Task(() =>
+                                                    {
+                                                        try
+                                                        {
+                                                            this.Invoke(new Action(() =>
+                                                            {
+                                                                Bitmap _showResultBmp = (Bitmap)DISPUI.GetScreen()?.Clone();
+                                                                string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                                                _imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+
+                                                                if (!System.IO.Directory.Exists(_imagePath + "\\000"))
+                                                                    System.IO.Directory.CreateDirectory(_imagePath + "\\000");
+
+                                                                _showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
+                                                                                                        System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                                                                _showResultBmp.Dispose();
+                                                            }));
+                                                        }
+                                                        catch (Exception ex)
+                                                        {
+                                                            JetEazy.LoggerClass.Instance.WriteException(ex);
+                                                        }
+                                                    });
+                                                    task.Start();
+
+                                                    //string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                                    //_imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+
+                                                    //if (!System.IO.Directory.Exists(_imagePath + "\\000"))
+                                                    //    System.IO.Directory.CreateDirectory(_imagePath + "\\000");
+
+                                                    //_showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
+                                                    //                                        System.Drawing.Imaging.ImageFormat.Jpeg);
                                                 }
-                                            });
-                                            task.Start();
 
-                                            //string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
-                                            //_imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
-
-                                            //if (!System.IO.Directory.Exists(_imagePath + "\\000"))
-                                            //    System.IO.Directory.CreateDirectory(_imagePath + "\\000");
-
-                                            //_showResultBmp.Save(_imagePath + "\\000\\Result" + ".jpg",
-                                            //                                        System.Drawing.Imaging.ImageFormat.Jpeg);
+                                                break;
                                         }
+
+                                        
                                     }
 
                                     break;
@@ -4929,6 +5085,9 @@ namespace Allinone.FormSpace
                                     else
                                     {
                                         string _mapping_path = @"D:\COLLECT_MAPPING\" + JzTimes.DateSerialString;
+                                        _mapping_path = $"{INI.DATA_ROOT}\\{INI.DataRecordName}\\COLLECT_MAPPING";
+                                        //_mapping_path = Universal.MainX6_Picture_Path + "\\" + $"{JzTimes.DateTimeSerialString}-{Universal.CalTestBarcode}";
+
                                         if (!System.IO.Directory.Exists(_mapping_path))
                                             System.IO.Directory.CreateDirectory(_mapping_path);
 
@@ -5507,7 +5666,7 @@ namespace Allinone.FormSpace
             switch (Universal.OPTION)
             {
                 case OptionEnum.MAIN_SDM2:
-
+                case OptionEnum.MAIN_SDM3:
                     //设定相机的亮度 和 增益
                     foreach (EnvClass env in album.ENVList)
                     {
@@ -5519,8 +5678,6 @@ namespace Allinone.FormSpace
                     }
 
                     break;
-
-                case OptionEnum.MAIN_SDM3:
                 case OptionEnum.MAIN_SD:
                 case OptionEnum.MAIN_X6:
                 case OptionEnum.MAIN_SDM1:
@@ -5739,12 +5896,14 @@ namespace Allinone.FormSpace
                     _isready = !_isready;
                     ((ControlSpace.MachineSpace.JzMainSDM2MachineClass)MACHINECollection.MACHINE).PLCIO.Ready = _isready;
 
+                    _LOG_MSG($"操作者{ACCDB.DataNow.Name} {(_isready ? "Ready On" : "Ready Off")}");
+
                     break;
                 case RunStatusEnum.SDM2_BYPASS:
 
                     ((ControlSpace.MachineSpace.JzMainSDM2MachineClass)MACHINECollection.MACHINE).PLCIO.Pass = false;
 
-
+                    _LOG_MSG($"操作者{ACCDB.DataNow.Name} 复判通过");
                     break;
 
                 case RunStatusEnum.SDM3_READY:
@@ -7734,7 +7893,11 @@ namespace Allinone.FormSpace
         string m_RecordFileName = DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".txt";
         private void _recoredDataSevenPoint()
         {
-            if (DateTime.Now.ToString("HHmmss") == "043000" && !m_WriteToRecordRunning)
+            TimeSpan t1 = JzToolsClass.TimeDifference(DateTime.Now, INI.xClearDataTime1);
+            TimeSpan t2 = JzToolsClass.TimeDifference(DateTime.Now, INI.xClearDataTime2);
+
+            //if (DateTime.Now.ToString("HHmmss") == "043000" && !m_WriteToRecordRunning)
+            if ((DateTime.Now.ToString("HHmm") == INI.xClearDataTime1.ToString("HHmm") && Math.Abs(t1.Seconds) < 35) && !m_WriteToRecordRunning)
             {
                 m_WriteToRecordRunning = true;
                 m_RecordFileName = DateTime.Now.ToString("yyyyMMdd-HH") + ".txt";
@@ -7753,7 +7916,8 @@ namespace Allinone.FormSpace
                     ESSUI.ClearFail();
                 }
             }
-            else if (DateTime.Now.ToString("HHmmss") == "163000" && !m_WriteToRecordRunning)
+            //else if (DateTime.Now.ToString("HHmmss") == "163000" && !m_WriteToRecordRunning)
+            else if ((DateTime.Now.ToString("HHmm") == INI.xClearDataTime2.ToString("HHmm") && Math.Abs(t2.Seconds) < 35) && !m_WriteToRecordRunning)
             {
                 m_WriteToRecordRunning = true;
 
@@ -7840,7 +8004,10 @@ namespace Allinone.FormSpace
             task.Start();
             //isPass = !isPass;
         }
-
+        private void _LOG_MSG(string eMsg)
+        {
+            CommonLogClass.Instance.LogMessage(eMsg);
+        }
         string ToChangeLanguage(string eText)
         {
             string retStr = eText;

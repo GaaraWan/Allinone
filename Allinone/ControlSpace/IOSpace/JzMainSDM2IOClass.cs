@@ -12,7 +12,7 @@ namespace Allinone.ControlSpace.IOSpace
 {
     public enum MainSDM2AddressEnum : int
     {
-        COUNT = 21,
+        COUNT = 22,
 
         ADR_ISSTART = 0,
         ADR_ISEMC = 1,
@@ -53,7 +53,7 @@ namespace Allinone.ControlSpace.IOSpace
 
         ADR_ISSENSOR1 = 19,
         ADR_ISSENSOR2 = 20,
-
+        ADR_ISSENSOR3 = 21,
     }
     public class JzMainSDM2IOClass : GeoIOClass
     {
@@ -83,6 +83,7 @@ namespace Allinone.ControlSpace.IOSpace
             ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISSENSOR1] = new FATEKAddressClass(ReadINIValue("Status Address", MainSDM2AddressEnum.ADR_ISSENSOR1.ToString(), "", INIFILE));
 
             ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISSENSOR2] = new FATEKAddressClass(ReadINIValue("Status Address", MainSDM2AddressEnum.ADR_ISSENSOR2.ToString(), "", INIFILE));
+            ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISSENSOR3] = new FATEKAddressClass(ReadINIValue("Status Address", MainSDM2AddressEnum.ADR_ISSENSOR3.ToString(), "", INIFILE));
 
 
 
@@ -250,6 +251,27 @@ namespace Allinone.ControlSpace.IOSpace
             get
             {
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISSENSOR2];
+
+                switch (robotType1)
+                {
+                    case RobotType.HCFA:
+                        if (string.IsNullOrEmpty(address.Address0))
+                            return false;
+                        return robotHCFA.GetDI(int.Parse(address.Address0));
+                        break;
+                }
+
+                //if (Ready)
+                //    return PLC[address.SiteNo].IOData.GetBit(address.Address1);
+
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+        }
+        public bool IsSensor3
+        {
+            get
+            {
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainSDM2AddressEnum.ADR_ISSENSOR3];
 
                 switch (robotType1)
                 {

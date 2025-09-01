@@ -18,6 +18,8 @@ using Allinone.FormSpace.Motor;
 using System.Diagnostics;
 using EzSegClientLib;
 using System.IO;
+using JetEazy.FormSpace;
+using JetEazy.DBSpace;
 
 namespace Allinone.UISpace.CTRLUISpace
 {
@@ -48,6 +50,8 @@ namespace Allinone.UISpace.CTRLUISpace
             ROBOT_CTRL,
 
             MOTIONENABLE,
+
+            ROBOT_RESET,
         }
 
 
@@ -59,6 +63,14 @@ namespace Allinone.UISpace.CTRLUISpace
         VersionEnum VERSION = VersionEnum.ALLINONE;
         OptionEnum OPTION = OptionEnum.MAIN;
         JzMainSDM2MachineClass MACHINE;
+
+        AccDBClass ACCDB
+        {
+            get
+            {
+                return Universal.ACCDB;
+            }
+        }
 
         JzMainSDM2IOClass PLCIO
         {
@@ -101,6 +113,7 @@ namespace Allinone.UISpace.CTRLUISpace
         Button btnWriteJJS;
         Button btnAbsMove;
         Button btnRobot;
+        Button btnRobotReset;
 
         JzTimes myJzTimer = new JzTimes();
 
@@ -145,6 +158,7 @@ namespace Allinone.UISpace.CTRLUISpace
             btnWriteJJS = button5;
             btnAbsMove = button6;
             btnRobot = button7;
+            btnRobotReset = button9;
 
             lblTopLight.Tag = TagEnum.TOPLIGHT;
             lblFrontLight.Tag = TagEnum.FRONTLIGHT;
@@ -164,6 +178,7 @@ namespace Allinone.UISpace.CTRLUISpace
             btnAbsMove.Tag = TagEnum.ABSMOVE;
             btnRobot.Tag = TagEnum.ROBOT_CTRL;
             lblrobotmotionenable.Tag = TagEnum.MOTIONENABLE;
+            btnRobotReset.Tag = TagEnum.ROBOT_RESET;
 
             lblAIMsg.Tag = TagEnum.lblAIModelChange;
 
@@ -186,6 +201,8 @@ namespace Allinone.UISpace.CTRLUISpace
             btnWriteJJS.Click += Btn_Click;
             btnAbsMove.Click += Btn_Click;
             btnRobot.Click += Btn_Click;
+
+            btnRobotReset.Click += Btn_Click;
 
             btnReady.Visible = false;
             btnOnekeyGetImage.Visible = false;
@@ -250,6 +267,24 @@ namespace Allinone.UISpace.CTRLUISpace
             CommonLogClass.Instance.LogMessage("SDM1_CTRL[BTN]:" + KEYS.ToString());
             switch (KEYS)
             {
+                case TagEnum.ROBOT_RESET:
+
+                    MessageForm _msgQuestionFormx2 = new MessageForm(true, "是否需要复位机械臂到待机位置？");
+                    if (_msgQuestionFormx2.ShowDialog() == DialogResult.Yes)
+                    {
+                        Task taskRobot = new Task(() =>
+                        {
+                            MACHINE.GoReadyPosition();
+                            System.Threading.Thread.Sleep(300);
+                            MACHINE.PLCIO.RobotAbs = true;//执行Ready位置
+                        });
+                        taskRobot.Start();
+                    }
+
+                    _msgQuestionFormx2.Close();
+                    _msgQuestionFormx2.Dispose();
+
+                    break;
                 case TagEnum.ABSMOVE:
 
                     Task task = new Task(() =>
@@ -565,8 +600,17 @@ namespace Allinone.UISpace.CTRLUISpace
 
             this.BackColor = (isenable ? SystemColors.Control : Color.DarkGray);
             //tpnlCover.Visible = false;
-            //groupBox2.Enabled = isenable;
+            groupBox2.Enabled = isenable;
             //axisMotionUI1.Enabled = isenable;
+
+            label3.Enabled = isenable;
+            label4.Enabled = isenable;
+            label5.Enabled = isenable;
+            label6.Enabled = isenable;
+            richTextBox1.Enabled = isenable;
+
+            button9.Enabled = ACCDB.DataNow.AllowUseShopFloor;
+
         }
         public void Tick()
         {
@@ -611,13 +655,13 @@ namespace Allinone.UISpace.CTRLUISpace
 
             MACHINE.Tick();
 
-            Color bkColor = Color.Black;// Control.DefaultBackColor;
+            Color bkColor = Control.DefaultBackColor;
 
             lblIsReset.BackColor = (PLCIO.IsRESET ? Color.Green : bkColor);
             lblIsStart.BackColor = (PLCIO.IsStart ? Color.Green : bkColor);
             lblIsEMC.BackColor = (PLCIO.IsEMC ? Color.Green : bkColor);
             lblTopLight.BackColor = (PLCIO.TopLight ? Color.Green : bkColor);
-            lblFrontLight.BackColor = (PLCIO.CoaxialLight ? Color.Green : Color.Black);
+            lblFrontLight.BackColor = (PLCIO.CoaxialLight ? Color.Green : bkColor);
             //lblBackLight.BackColor = (PLCIO.BackLight ? Color.Green : Color.Black);
             btnAbsMove.BackColor = (PLCIO.RobotAbs ? Color.Green : Color.FromArgb(192, 255, 192));
             lblReady.BackColor = (PLCIO.Ready ? Color.Green : bkColor);

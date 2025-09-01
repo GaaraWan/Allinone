@@ -97,7 +97,7 @@ namespace Allinone.BasicSpace.MeasureD
         [TypeConverter(typeof(JzEnumConverter))]
         public BlobFun chkBlobsFun { get; set; } = BlobFun.V1;
 
-        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [CategoryAttribute(cat1), DescriptionAttribute("前后重合面积占原来面积的比例 小于此值则研磨不均匀")]
         [DisplayName("2.PIN重合比例")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
@@ -108,18 +108,31 @@ namespace Allinone.BasicSpace.MeasureD
         [DisplayName("3.PIN面积比例")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
-        [Browsable(true)]
-        public double checkAreaResultRatio { get; set; } = 70;
-
-        [CategoryAttribute(cat1), DescriptionAttribute("")]
-        [DisplayName("5.PIN最大颗面积比例")]
+        [Browsable(false)]
+        public double checkAreaResultRatio { get; set; } = 60;
+        [CategoryAttribute(cat1), DescriptionAttribute("测试宽度与原始宽度的比例 小于此值则研磨不均匀")]
+        [DisplayName("3A.PIN宽度比例")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
+        [Browsable(true)]
+        public double checkWidthResultRatio { get; set; } = 60;
+        [CategoryAttribute(cat1), DescriptionAttribute("测试高度与原始高度的比例 小于此值则研磨不均匀")]
+        [DisplayName("3B.PIN高度比例")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
+        [Browsable(true)]
+        public double checkHeightResultRatio { get; set; } = 60;
+
+
+        [CategoryAttribute(cat1), DescriptionAttribute("前后最大面积之差 大于此值则研磨不均匀")]
+        [DisplayName("5.PIN最大颗面积")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 99999999)]
         [Browsable(true)]
         public double checkAreaMaxResultRatio { get; set; } = 30;
 
         [CategoryAttribute(cat1), DescriptionAttribute("")]
-        [DisplayName("4.是否判断最大颗的比例")]
+        [DisplayName("4.是否判断最大颗的面积")]
         //[TypeConverter(typeof(NumericUpDownTypeConverter))]
         //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
         [Browsable(true)]
@@ -154,6 +167,11 @@ namespace Allinone.BasicSpace.MeasureD
                 ischeckMaxRatio = parts[11] == "1";
                 checkAreaMaxResultRatio = double.Parse(parts[12]);
             }
+            if (parts.Length > 14)
+            {
+                checkWidthResultRatio = double.Parse(parts[13]);
+                checkHeightResultRatio = double.Parse(parts[14]);
+            }
         }
         public string ToParaString()
         {
@@ -173,6 +191,8 @@ namespace Allinone.BasicSpace.MeasureD
             str += ((int)chkBlobsFun).ToString() + ",";
             str += (ischeckMaxRatio ? "1" : "0") + ",";
             str += checkAreaMaxResultRatio.ToString() + ",";
+            str += checkWidthResultRatio.ToString() + ",";
+            str += checkHeightResultRatio.ToString() + ",";
 
             return str;
         }
@@ -220,6 +240,7 @@ namespace Allinone.BasicSpace.MeasureD
         {
             bool ret = false;
             string str = "";
+            string errTypeStr = string.Empty;
             //mblobParaPropertyGrid.MaxFound = new FoundClass();
             //mblobParaPropertyGrid.MaxFoundRun = new FoundClass();
             if (istrain)
@@ -360,24 +381,60 @@ namespace Allinone.BasicSpace.MeasureD
 
                                     gg.DrawString(((float)dAreaRatio).ToString("0.00"), new Font("宋体", 11), new SolidBrush(Color.Red), foundorg.rect.Location);
 
+                                    errTypeStr = $"重合错误";
                                     strErr += $"PIN研磨不均匀";
                                 }
                                 else
                                 {
-                                    // abs(org-run)/org
-                                    double dc = Math.Abs(foundorg.Area - foundrun.Area) * 1.0 / foundorg.Area * 1.0;
-                                    //dc = foundrun.Area / foundorg.Area;
-                                    if (dc > mblobParaPropertyGrid.checkAreaResultRatio * 0.01)
+                                    //原来的面积比例方式
+                                    //// abs(org-run)/org
+                                    //double dc = Math.Abs(foundorg.Area - foundrun.Area) * 1.0 / foundorg.Area * 1.0;
+                                    ////dc = foundrun.Area / foundorg.Area;
+                                    //if (dc > mblobParaPropertyGrid.checkAreaResultRatio * 0.01)
+                                    //{
+
+                                    //    gg.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), Rectangle.Round(foundrun.rect));
+                                    //    gg.DrawRectangle(new Pen(new SolidBrush(Color.Gold), 3), Rectangle.Round(foundorg.rect));
+
+                                    //    gg.DrawString(((float)dc).ToString("0.00"), new Font("宋体", 11), new SolidBrush(Color.Red), foundorg.rect.Location);
+
+                                    //    strErr += $"PIN研磨不均匀";
+                                    //    bmpoutput.Save("D:\\LOA\\bmpoutput" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+                                    //}
+
+                                    //判断前后长宽的比例
+                                    //判断原来的那条边长 就 算哪边的比例
+                                    double aw = foundrun.Width * 1.0 / foundorg.Width * 100;
+                                    double ah = foundrun.Height * 1.0 / foundorg.Height * 100;
+                                    if (foundorg.Width >= foundorg.Height)
                                     {
+                                        if (aw < mblobParaPropertyGrid.checkWidthResultRatio)
+                                        {
+                                            gg.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), Rectangle.Round(foundrun.rect));
+                                            gg.DrawRectangle(new Pen(new SolidBrush(Color.Gold), 3), Rectangle.Round(foundorg.rect));
 
-                                        gg.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), Rectangle.Round(foundrun.rect));
-                                        gg.DrawRectangle(new Pen(new SolidBrush(Color.Gold), 3), Rectangle.Round(foundorg.rect));
+                                            gg.DrawString($"w:{aw.ToString("0.00")}", new Font("宋体", 11), new SolidBrush(Color.Red), foundorg.rect.Location);
 
-                                        gg.DrawString(((float)dc).ToString("0.00"), new Font("宋体", 11), new SolidBrush(Color.Red), foundorg.rect.Location);
-
-                                        strErr += $"PIN研磨不均匀";
-
+                                            errTypeStr = $"宽度错误";
+                                            strErr += $"PIN研磨不均匀";
+                                            //bmpoutput.Save("D:\\LOA\\bmpoutput" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+                                        }
                                     }
+                                    else
+                                    {
+                                        if (ah < mblobParaPropertyGrid.checkHeightResultRatio)
+                                        {
+                                            gg.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), Rectangle.Round(foundrun.rect));
+                                            gg.DrawRectangle(new Pen(new SolidBrush(Color.Gold), 3), Rectangle.Round(foundorg.rect));
+
+                                            gg.DrawString($"h:{ah.ToString("0.00")}", new Font("宋体", 11), new SolidBrush(Color.Red), foundorg.rect.Location);
+
+                                            errTypeStr = $"高度错误";
+                                            strErr += $"PIN研磨不均匀";
+                                            //bmpoutput.Save("D:\\LOA\\bmpoutput" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+                                        }
+                                    }
+
                                 }
                             }
                         }
@@ -393,10 +450,14 @@ namespace Allinone.BasicSpace.MeasureD
                     {
                         if (string.IsNullOrEmpty(strErr))
                         {
-                            // abs(org-run)/org
-                            double dc = Math.Abs(mblobParaPropertyGrid.MaxFound.Area - mblobParaPropertyGrid.MaxFoundRun.Area) * 1.0 / mblobParaPropertyGrid.MaxFound.Area * 1.0;
-                            //dc = foundrun.Area / foundorg.Area;
-                            if (dc > mblobParaPropertyGrid.checkAreaMaxResultRatio * 0.01)
+                            //// abs(org-run)/org
+                            //double dc = Math.Abs(mblobParaPropertyGrid.MaxFound.Area - mblobParaPropertyGrid.MaxFoundRun.Area) * 1.0 / mblobParaPropertyGrid.MaxFound.Area * 1.0;
+                            ////dc = foundrun.Area / foundorg.Area;
+                            //if (dc > mblobParaPropertyGrid.checkAreaMaxResultRatio * 0.01)
+
+
+                            double dc = Math.Abs(mblobParaPropertyGrid.MaxFound.Area - mblobParaPropertyGrid.MaxFoundRun.Area);
+                            if (dc > mblobParaPropertyGrid.checkAreaMaxResultRatio)
                             {
 
                                 gg.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), Rectangle.Round(mblobParaPropertyGrid.MaxFoundRun.rect));
@@ -423,7 +484,7 @@ namespace Allinone.BasicSpace.MeasureD
                         str = strErr;
                         workstatus.ProcessString += str + Environment.NewLine;
                         workstatus.Reason = ReasonEnum.NG;
-                        workstatus.Desc = "PIN研磨不均匀";
+                        workstatus.Desc = $"PIN研磨不均匀[{errTypeStr}]";
                         ret = false;
                     }
                 }
@@ -438,7 +499,7 @@ namespace Allinone.BasicSpace.MeasureD
         {
             bool ret = false;
             string str = "";
-
+            string errTypeStr = string.Empty;
             if (istrain)
                 mblobParaPropertyGrid.ClassList.Clear();
             else
@@ -566,23 +627,60 @@ namespace Allinone.BasicSpace.MeasureD
 
                                     gg.DrawString(((float)dAreaRatio).ToString("0.00"), new Font("宋体", 11), new SolidBrush(Color.Red), foundorg.rect.Location);
 
+                                    errTypeStr = $"重合错误";
                                     strErr += $"PIN研磨不均匀";
                                 }
                                 else
                                 {
-                                    // abs(org-run)/org
-                                    double dc = Math.Abs(foundorg.Area - foundrun.Area) * 1.0 / foundorg.Area * 1.0;
-                                    //dc = foundrun.Area / foundorg.Area;
-                                    if (dc > mblobParaPropertyGrid.checkAreaResultRatio * 0.01)
+                                    //// abs(org-run)/org
+                                    //double dc = Math.Abs(foundorg.Area - foundrun.Area) * 1.0 / foundorg.Area * 1.0;
+                                    ////dc = foundrun.Area / foundorg.Area;
+                                    //if (dc > mblobParaPropertyGrid.checkAreaResultRatio * 0.01)
+
+                                    ////double dc = Math.Abs(foundorg.Area - foundrun.Area);
+                                    ////if (dc > mblobParaPropertyGrid.checkAreaResultRatio)
+                                    //{
+
+                                    //    gg.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), Rectangle.Round(foundrun.rect));
+                                    //    gg.DrawRectangle(new Pen(new SolidBrush(Color.Gold), 3), Rectangle.Round(foundorg.rect));
+
+                                    //    gg.DrawString(((float)dc).ToString("0.00"), new Font("宋体", 11), new SolidBrush(Color.Red), foundorg.rect.Location);
+
+                                    //    strErr += $"PIN研磨不均匀";
+
+                                    //}
+
+                                    //判断前后长宽的比例
+                                    //判断原来的那条边长 就 算哪边的比例
+                                    double aw = foundrun.Width * 1.0 / foundorg.Width * 100;
+                                    double ah = foundrun.Height * 1.0 / foundorg.Height * 100;
+                                    if (foundorg.Width >= foundorg.Height)
                                     {
+                                        if (aw < mblobParaPropertyGrid.checkWidthResultRatio)
+                                        {
+                                            gg.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), Rectangle.Round(foundrun.rect));
+                                            gg.DrawRectangle(new Pen(new SolidBrush(Color.Gold), 3), Rectangle.Round(foundorg.rect));
 
-                                        gg.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), Rectangle.Round(foundrun.rect));
-                                        gg.DrawRectangle(new Pen(new SolidBrush(Color.Gold), 3), Rectangle.Round(foundorg.rect));
+                                            gg.DrawString($"w:{aw.ToString("0.00")}", new Font("宋体", 11), new SolidBrush(Color.Red), foundorg.rect.Location);
 
-                                        gg.DrawString(((float)dc).ToString("0.00"), new Font("宋体", 11), new SolidBrush(Color.Red), foundorg.rect.Location);
+                                            errTypeStr = $"宽度错误";
+                                            strErr += $"PIN研磨不均匀";
+                                            //bmpoutput.Save("D:\\LOA\\bmpoutput" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (ah < mblobParaPropertyGrid.checkHeightResultRatio)
+                                        {
+                                            gg.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), Rectangle.Round(foundrun.rect));
+                                            gg.DrawRectangle(new Pen(new SolidBrush(Color.Gold), 3), Rectangle.Round(foundorg.rect));
 
-                                        strErr += $"PIN研磨不均匀";
+                                            gg.DrawString($"h:{ah.ToString("0.00")}", new Font("宋体", 11), new SolidBrush(Color.Red), foundorg.rect.Location);
 
+                                            errTypeStr = $"高度错误";
+                                            strErr += $"PIN研磨不均匀";
+                                            //bmpoutput.Save("D:\\LOA\\bmpoutput" + DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".bmp", System.Drawing.Imaging.ImageFormat.Bmp);
+                                        }
                                     }
                                 }
                             }
@@ -599,12 +697,15 @@ namespace Allinone.BasicSpace.MeasureD
                     {
                         if (string.IsNullOrEmpty(strErr))
                         {
-                            // abs(org-run)/org
-                            double dc = Math.Abs(mblobParaPropertyGrid.MaxFound.Area - mblobParaPropertyGrid.MaxFoundRun.Area) * 1.0 / mblobParaPropertyGrid.MaxFound.Area * 1.0;
-                            //dc = foundrun.Area / foundorg.Area;
-                            if (dc > mblobParaPropertyGrid.checkAreaMaxResultRatio * 0.01)
-                            {
+                            //OLD 判断前后面积比例
+                            //// abs(org-run)/org
+                            //double dc = Math.Abs(mblobParaPropertyGrid.MaxFound.Area - mblobParaPropertyGrid.MaxFoundRun.Area) * 1.0 / mblobParaPropertyGrid.MaxFound.Area * 1.0;
+                            ////dc = foundrun.Area / foundorg.Area;
+                            //if (dc > mblobParaPropertyGrid.checkAreaMaxResultRatio * 0.01)
 
+                            double dc = Math.Abs(mblobParaPropertyGrid.MaxFound.Area - mblobParaPropertyGrid.MaxFoundRun.Area);
+                            if (dc > mblobParaPropertyGrid.checkAreaMaxResultRatio)
+                            {
                                 gg.DrawRectangle(new Pen(new SolidBrush(Color.Red), 5), Rectangle.Round(mblobParaPropertyGrid.MaxFoundRun.rect));
                                 gg.DrawRectangle(new Pen(new SolidBrush(Color.Gold), 3), Rectangle.Round(mblobParaPropertyGrid.MaxFound.rect));
 
@@ -628,7 +729,7 @@ namespace Allinone.BasicSpace.MeasureD
                         str = strErr;
                         workstatus.ProcessString += str + Environment.NewLine;
                         workstatus.Reason = ReasonEnum.NG;
-                        workstatus.Desc = "PIN研磨不均匀";
+                        workstatus.Desc = $"PIN研磨不均匀[{errTypeStr}]";
                         ret = false;
                     }
                 }

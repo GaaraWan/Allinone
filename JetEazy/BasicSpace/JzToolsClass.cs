@@ -2171,6 +2171,13 @@ namespace JetEazy.BasicSpace
 
             return _cvrect.Angle;
         }
+        public static TimeSpan TimeDifference(DateTime time1, DateTime time2)
+        {
+            TimeSpan ts1 = time1.TimeOfDay;
+            TimeSpan ts2 = time2.TimeOfDay;
 
+            TimeSpan diff = ts2 - ts1;
+            return diff < TimeSpan.Zero ? diff + TimeSpan.FromHours(24) : diff;
+        }
     }
 }

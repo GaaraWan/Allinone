@@ -47,11 +47,15 @@
             this.label14 = new System.Windows.Forms.Label();
             this.jzTransparentPanel1 = new JetEazy.BasicSpace.JzTransparentPanel();
             this.label17 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.label19);
+            this.groupBox1.Controls.Add(this.label18);
             this.groupBox1.Controls.Add(this.label16);
             this.groupBox1.Controls.Add(this.label15);
             this.groupBox1.Controls.Add(this.label13);
@@ -267,7 +271,7 @@
             // 
             // jzTransparentPanel1
             // 
-            this.jzTransparentPanel1.Location = new System.Drawing.Point(72, 133);
+            this.jzTransparentPanel1.Location = new System.Drawing.Point(239, 182);
             this.jzTransparentPanel1.Name = "jzTransparentPanel1";
             this.jzTransparentPanel1.Size = new System.Drawing.Size(173, 173);
             this.jzTransparentPanel1.TabIndex = 198;
@@ -283,6 +287,30 @@
             this.label17.TabIndex = 218;
             this.label17.Text = "CipMapping";
             this.label17.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label18
+            // 
+            this.label18.BackColor = System.Drawing.Color.Green;
+            this.label18.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label18.ForeColor = System.Drawing.Color.Yellow;
+            this.label18.Location = new System.Drawing.Point(6, 130);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(67, 18);
+            this.label18.TabIndex = 222;
+            this.label18.Text = "软件准备";
+            this.label18.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label19
+            // 
+            this.label19.BackColor = System.Drawing.Color.Green;
+            this.label19.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label19.ForeColor = System.Drawing.Color.Yellow;
+            this.label19.Location = new System.Drawing.Point(79, 130);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(67, 18);
+            this.label19.TabIndex = 223;
+            this.label19.Text = "心跳";
+            this.label19.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // MainX6CtrlUI
             // 
@@ -321,5 +349,7 @@
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Label label18;
     }
 }

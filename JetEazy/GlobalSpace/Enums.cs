@@ -864,6 +864,8 @@ namespace JetEazy
         DAGUI = 1,
         [Description("东莞")]
         DONGGUAN = 2,
+        [Description("日月星")]
+        RIYUEXING = 3,
     }
 }
 

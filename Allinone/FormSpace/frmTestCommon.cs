@@ -1,6 +1,7 @@
 ﻿using Allinone.BasicSpace;
 using Allinone.ControlSpace;
 using JetEazy.BasicSpace;
+using JetEazy.PlugSpace.BarcodeEx;
 using JzDisplay;
 using JzDisplay.UISpace;
 using MoveGraphLibrary;
@@ -224,26 +225,40 @@ namespace Allinone.FormSpace
 
             m_PropertyGrid.SelectedObject = m_BarcodePara;
 
-            AForge.Imaging.Filters.ContrastCorrection contrast = new AForge.Imaging.Filters.ContrastCorrection(m_BarcodePara.nContrast);
-            bmp2 = contrast.Apply(bmp2);
-            AForge.Imaging.Filters.BrightnessCorrection brightness = new AForge.Imaging.Filters.BrightnessCorrection(m_BarcodePara.nBrightness);
-            bmp2 = brightness.Apply(bmp2);
+            Mvd2DReaderClass mvd2DReader = new Mvd2DReaderClass();
+            mvd2DReader.Run(bmp2, new RectangleF(0, 0, bmp2.Width, bmp2.Height));
 
-            EzSegDMTX IxBarcode = new EzSegDMTX();
-            IxBarcode.InputImage = bmp2;
-            //if (m_UseAIFromPy)
-            //    IxBarcode.SetEzSeg(model);
-            int iret = IxBarcode.Run();
-            if (iret == 0)
+            if (string.IsNullOrEmpty(mvd2DReader.xBarcodeStr))
             {
-                lblResult.Text = "读取成功：" + IxBarcode.BarcodeStr + Environment.NewLine;
-                lblResult.Text += "耗时：" + IxBarcode.ElapsedTime.ToString() + " ms";
+                AForge.Imaging.Filters.ContrastCorrection contrast = new AForge.Imaging.Filters.ContrastCorrection(m_BarcodePara.nContrast);
+                bmp2 = contrast.Apply(bmp2);
+                AForge.Imaging.Filters.BrightnessCorrection brightness = new AForge.Imaging.Filters.BrightnessCorrection(m_BarcodePara.nBrightness);
+                bmp2 = brightness.Apply(bmp2);
+
+                EzSegDMTX IxBarcode = new EzSegDMTX();
+                IxBarcode.InputImage = bmp2;
+                //if (m_UseAIFromPy)
+                //    IxBarcode.SetEzSeg(model);
+                int iret = IxBarcode.Run();
+                if (iret == 0)
+                {
+                    lblResult.Text = "读取成功：" + IxBarcode.BarcodeStr + Environment.NewLine;
+                    lblResult.Text += "耗时：" + IxBarcode.ElapsedTime.ToString() + " ms";
+                }
+                else
+                    lblResult.Text = "读取失败：错误码=" + iret.ToString();
             }
             else
-                lblResult.Text = "读取失败：错误码=" + iret.ToString();
-
-
+            {
+                lblResult.Text = "读取成功：" + mvd2DReader.xBarcodeStr + Environment.NewLine;
+            }
             bmp2.Dispose();
+            if (mvd2DReader != null)
+            {
+                mvd2DReader.Dispose();
+                mvd2DReader = null;
+            }
+
         }
 
         void init_Display()

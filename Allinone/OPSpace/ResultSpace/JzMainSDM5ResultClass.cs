@@ -3807,9 +3807,13 @@ namespace Allinone.OPSpace.ResultSpace
             {
                 OnTrigger(ResultStatusEnum.CALNG);
 
-                JzMainSDPositionParas.INSPECT_NGINDEX++;
-                JzMainSDPositionParas.SaveRecord();
+                //JzMainSDPositionParas.INSPECT_NGINDEX++;
+                //JzMainSDPositionParas.SaveRecord();
             }
+
+            JzMainSDPositionParas.INSPECT_NGINDEX++;
+            JzMainSDPositionParas.SaveRecord();
+
             //if (INI.ISQSMCALLSAVE)
             //    _saveAllResultPictures();
 

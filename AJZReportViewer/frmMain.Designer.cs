@@ -69,7 +69,6 @@ namespace AJZReportViewer
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.allinoneViewerUI1 = new AJZReportViewer.AllinoneViewerUI();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.listBox2 = new System.Windows.Forms.ListBox();
             this.pgINI = new System.Windows.Forms.PropertyGrid();
@@ -91,6 +90,7 @@ namespace AJZReportViewer
             this.查询ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.导出ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.报表一ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.allinoneViewerUI1 = new AJZReportViewer.AllinoneViewerUI();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -113,7 +113,7 @@ namespace AJZReportViewer
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Left;
             this.groupBox1.Location = new System.Drawing.Point(3, 3);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(246, 633);
+            this.groupBox1.Size = new System.Drawing.Size(246, 779);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "批号";
@@ -123,7 +123,7 @@ namespace AJZReportViewer
             this.treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeView1.Location = new System.Drawing.Point(3, 17);
             this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(166, 613);
+            this.treeView1.Size = new System.Drawing.Size(166, 759);
             this.treeView1.TabIndex = 0;
             // 
             // panel1
@@ -135,7 +135,7 @@ namespace AJZReportViewer
             this.panel1.Dock = System.Windows.Forms.DockStyle.Right;
             this.panel1.Location = new System.Drawing.Point(169, 17);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(74, 613);
+            this.panel1.Size = new System.Drawing.Size(74, 759);
             this.panel1.TabIndex = 1;
             // 
             // button4
@@ -189,7 +189,7 @@ namespace AJZReportViewer
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Left;
             this.groupBox2.Location = new System.Drawing.Point(249, 3);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(246, 633);
+            this.groupBox2.Size = new System.Drawing.Size(171, 779);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "文档名称";
@@ -201,7 +201,7 @@ namespace AJZReportViewer
             this.listBox1.ItemHeight = 12;
             this.listBox1.Location = new System.Drawing.Point(3, 17);
             this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(166, 613);
+            this.listBox1.Size = new System.Drawing.Size(89, 759);
             this.listBox1.TabIndex = 0;
             // 
             // panel2
@@ -211,9 +211,9 @@ namespace AJZReportViewer
             this.panel2.Controls.Add(this.button6);
             this.panel2.Controls.Add(this.button5);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Right;
-            this.panel2.Location = new System.Drawing.Point(169, 17);
+            this.panel2.Location = new System.Drawing.Point(92, 17);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(74, 613);
+            this.panel2.Size = new System.Drawing.Size(76, 759);
             this.panel2.TabIndex = 2;
             // 
             // button8
@@ -272,9 +272,9 @@ namespace AJZReportViewer
             this.panel3.Controls.Add(this.textBox1);
             this.panel3.Controls.Add(this.label1);
             this.panel3.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panel3.Location = new System.Drawing.Point(495, 3);
+            this.panel3.Location = new System.Drawing.Point(420, 3);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(692, 237);
+            this.panel3.Size = new System.Drawing.Size(833, 237);
             this.panel3.TabIndex = 3;
             // 
             // chkManualLook
@@ -294,7 +294,7 @@ namespace AJZReportViewer
             | System.Windows.Forms.AnchorStyles.Right)));
             this.richTextBox1.Location = new System.Drawing.Point(6, 135);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(681, 96);
+            this.richTextBox1.Size = new System.Drawing.Size(822, 96);
             this.richTextBox1.TabIndex = 42;
             this.richTextBox1.Text = "";
             // 
@@ -491,7 +491,7 @@ namespace AJZReportViewer
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1198, 665);
+            this.tabControl1.Size = new System.Drawing.Size(1264, 811);
             this.tabControl1.TabIndex = 4;
             // 
             // tabPage1
@@ -503,23 +503,10 @@ namespace AJZReportViewer
             this.tabPage1.Location = new System.Drawing.Point(4, 22);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(1190, 639);
+            this.tabPage1.Size = new System.Drawing.Size(1256, 785);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "主页(数据查看)";
             this.tabPage1.UseVisualStyleBackColor = true;
-            // 
-            // allinoneViewerUI1
-            // 
-            this.allinoneViewerUI1.Date = "";
-            this.allinoneViewerUI1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.allinoneViewerUI1.Location = new System.Drawing.Point(495, 240);
-            this.allinoneViewerUI1.Name = "allinoneViewerUI1";
-            this.allinoneViewerUI1.ReportCount = 0;
-            this.allinoneViewerUI1.ReportFilename = "";
-            this.allinoneViewerUI1.ReportLot = "";
-            this.allinoneViewerUI1.ReportPath = "D:\\report\\work\\auto";
-            this.allinoneViewerUI1.Size = new System.Drawing.Size(692, 396);
-            this.allinoneViewerUI1.TabIndex = 2;
             // 
             // tabPage2
             // 
@@ -529,7 +516,7 @@ namespace AJZReportViewer
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(1190, 639);
+            this.tabPage2.Size = new System.Drawing.Size(1256, 835);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "清理资料";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -541,15 +528,15 @@ namespace AJZReportViewer
             this.listBox2.ItemHeight = 12;
             this.listBox2.Location = new System.Drawing.Point(3, 30);
             this.listBox2.Name = "listBox2";
-            this.listBox2.Size = new System.Drawing.Size(894, 606);
+            this.listBox2.Size = new System.Drawing.Size(960, 802);
             this.listBox2.TabIndex = 3;
             // 
             // pgINI
             // 
             this.pgINI.Dock = System.Windows.Forms.DockStyle.Right;
-            this.pgINI.Location = new System.Drawing.Point(897, 30);
+            this.pgINI.Location = new System.Drawing.Point(963, 30);
             this.pgINI.Name = "pgINI";
-            this.pgINI.Size = new System.Drawing.Size(290, 606);
+            this.pgINI.Size = new System.Drawing.Size(290, 802);
             this.pgINI.TabIndex = 4;
             // 
             // menuStrip1
@@ -561,7 +548,7 @@ namespace AJZReportViewer
             this.toolStripTextBox1});
             this.menuStrip1.Location = new System.Drawing.Point(3, 3);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1184, 27);
+            this.menuStrip1.Size = new System.Drawing.Size(1250, 27);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -627,7 +614,7 @@ namespace AJZReportViewer
             this.tabPage3.Controls.Add(this.menuStrip2);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(1190, 639);
+            this.tabPage3.Size = new System.Drawing.Size(1256, 835);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "报表导出";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -679,7 +666,7 @@ namespace AJZReportViewer
             this.导出ToolStripMenuItem});
             this.menuStrip2.Location = new System.Drawing.Point(0, 0);
             this.menuStrip2.Name = "menuStrip2";
-            this.menuStrip2.Size = new System.Drawing.Size(1190, 25);
+            this.menuStrip2.Size = new System.Drawing.Size(1256, 25);
             this.menuStrip2.TabIndex = 6;
             this.menuStrip2.Text = "menuStrip2";
             // 
@@ -700,15 +687,28 @@ namespace AJZReportViewer
             // 报表一ToolStripMenuItem
             // 
             this.报表一ToolStripMenuItem.Name = "报表一ToolStripMenuItem";
-            this.报表一ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.报表一ToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
             this.报表一ToolStripMenuItem.Text = "报表一";
             this.报表一ToolStripMenuItem.Click += new System.EventHandler(this.报表一ToolStripMenuItem_Click);
+            // 
+            // allinoneViewerUI1
+            // 
+            this.allinoneViewerUI1.Date = "";
+            this.allinoneViewerUI1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.allinoneViewerUI1.Location = new System.Drawing.Point(420, 240);
+            this.allinoneViewerUI1.Name = "allinoneViewerUI1";
+            this.allinoneViewerUI1.ReportCount = 0;
+            this.allinoneViewerUI1.ReportFilename = "";
+            this.allinoneViewerUI1.ReportLot = "";
+            this.allinoneViewerUI1.ReportPath = "D:\\report\\work\\auto";
+            this.allinoneViewerUI1.Size = new System.Drawing.Size(833, 542);
+            this.allinoneViewerUI1.TabIndex = 2;
             // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1198, 665);
+            this.ClientSize = new System.Drawing.Size(1264, 811);
             this.ControlBox = false;
             this.Controls.Add(this.tabControl1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));

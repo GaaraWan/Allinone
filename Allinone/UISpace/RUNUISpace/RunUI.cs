@@ -20,6 +20,7 @@ using iTextSharp.text.pdf;
 using static System.Net.Mime.MediaTypeNames;
 using JetEazy.PlugSpace;
 using Allinone.BasicSpace;
+using JetEazy.DBSpace;
 
 namespace Allinone.UISpace.RUNUISpace
 {
@@ -29,6 +30,14 @@ namespace Allinone.UISpace.RUNUISpace
         const int ShiningTimes = 2;
 
         bool IsResultPass = false;
+
+        AccDBClass ACCDB
+        {
+            get
+            {
+                return Universal.ACCDB;
+            }
+        }
 
         //Language Setup
 
@@ -144,13 +153,15 @@ namespace Allinone.UISpace.RUNUISpace
         {
             set
             {
-                grpShopFloor.Enabled = value;
-                grpUserData.Enabled = value;
-                RPTUI.Enabled = value;
+                grpShopFloor.Enabled = ACCDB.DataNow.AllowSetup;
+                grpUserData.Enabled = ACCDB.DataNow.AllowSetup;
+                RPTUI.Enabled = ACCDB.DataNow.AllowSetup;
                 switch(Universal.OPTION)
                 {
                     case OptionEnum.MAIN_SDM2:
-                        //btnReady.Enabled = value;
+                        btnReady.Enabled = ACCDB.DataNow.AllowSetup;
+
+                        btnBypass.Enabled = ACCDB.DataNow.AllowUseShopFloor;
                         break;
                 }
             }
@@ -168,6 +179,91 @@ namespace Allinone.UISpace.RUNUISpace
         int m_Mapping_Col = 0;
         int m_Mapping_Row = 0;
 
+        //左下角排序
+        //public void QcRandomMappingInit(int eRow, int eCol)
+        //{
+        //    m_Mapping_Row = eRow;
+        //    m_Mapping_Col = eCol;
+
+        //    lblBigPass.Visible = true;
+        //    if (!Universal.IsUseMappingUI)
+        //    {
+        //        lblBigPass.Text = "PASS";
+        //        lblPass.Text = "PASS";
+
+        //        lblBigPass.ForeColor = (true ? Color.Lime : Color.Red);
+        //        lblPass.ForeColor = (true ? Color.Lime : Color.Red);
+
+        //        return;
+        //    }
+        //    lblBigPass.Visible = false;
+
+        //    #region 生成随机抽检的Mapping页面
+
+        //    int iMappingCount = m_Mapping_Row * m_Mapping_Col;
+
+        //    int iMappingItemWidth = ((pnlResult.Width - 10) - m_Mapping_Col * 3) / m_Mapping_Col;
+        //    int iMappingItemHeight = iMappingItemWidth;
+        //    iMappingItemHeight = ((pnlResult.Height - 10) - m_Mapping_Row * 3) / m_Mapping_Row;
+
+        //    m_MappingItem = new Label[iMappingCount];
+
+        //    this.pnlResult.Controls.Clear();
+        //    int ix = 0;
+        //    int iy = 0;
+
+        //    //string colname = "A";
+        //    int colindex = 0;
+
+        //    int colnameindex = 0;
+        //    int i = 0;
+        //    i = 0;
+        //    while (i < iMappingCount)
+        //    {
+        //        m_MappingItem[i] = new Label();
+
+        //        m_MappingItem[i].Name = "lbl" + colindex.ToString() + "-" + colnameindex.ToString();
+        //        m_MappingItem[i].Text = colindex.ToString() + "-" + colnameindex.ToString();
+
+        //        m_MappingItem[i].AccessibleName = colindex.ToString() + "-" + colnameindex.ToString();
+
+        //        m_MappingItem[i].BackColor = Color.Silver;
+        //        m_MappingItem[i].Font = new System.Drawing.Font("黑体", 9F);
+        //        m_MappingItem[i].TextAlign = ContentAlignment.MiddleCenter;
+        //        m_MappingItem[i].Width = iMappingItemWidth;
+        //        m_MappingItem[i].Height = iMappingItemHeight;
+        //        m_MappingItem[i].Location = new Point(5 + ix, pnlResult.Height - 10 - 5 - iy - m_MappingItem[i].Height);
+        //        m_MappingItem[i].DoubleClick += RunUI_DoubleClick;
+        //        m_MappingItem[i].MouseEnter += RunUI_MouseEnter;
+        //        ix += m_MappingItem[i].Width + 3;
+        //        colnameindex++;
+        //        if ((i + 1) % m_Mapping_Col == 0)
+        //        {
+        //            iy += m_MappingItem[i].Height + 3;
+        //            ix = 0;
+
+        //            colindex++;
+
+        //            colnameindex = 0;
+
+        //            //m_MappingItem[i].Text = (i + 1).ToString();
+        //        }
+        //        this.pnlResult.Controls.Add(m_MappingItem[i]);
+
+        //        i++;
+        //    }
+
+        //    //foreach (Label lbl in m_MappingItem)
+        //    //{
+        //    //    lbl.BackColor = Color.Gray;
+        //    //    lbl.Refresh();
+        //    //}
+
+        //    #endregion
+
+        //}
+
+        //左上角排序
         public void QcRandomMappingInit(int eRow, int eCol)
         {
             m_Mapping_Row = eRow;
@@ -215,12 +311,12 @@ namespace Allinone.UISpace.RUNUISpace
 
                 m_MappingItem[i].AccessibleName = colindex.ToString() + "-" + colnameindex.ToString();
 
-                m_MappingItem[i].BackColor = Color.Silver;
+                m_MappingItem[i].BackColor = Color.Green;
                 m_MappingItem[i].Font = new System.Drawing.Font("黑体", 9F);
                 m_MappingItem[i].TextAlign = ContentAlignment.MiddleCenter;
                 m_MappingItem[i].Width = iMappingItemWidth;
                 m_MappingItem[i].Height = iMappingItemHeight;
-                m_MappingItem[i].Location = new Point(5 + ix, pnlResult.Height - 10 - 5 - iy - m_MappingItem[i].Height);
+                m_MappingItem[i].Location = new Point(5 + ix, 5 + iy);
                 m_MappingItem[i].DoubleClick += RunUI_DoubleClick;
                 m_MappingItem[i].MouseEnter += RunUI_MouseEnter;
                 ix += m_MappingItem[i].Width + 3;
@@ -241,91 +337,9 @@ namespace Allinone.UISpace.RUNUISpace
                 i++;
             }
 
-            //foreach (Label lbl in m_MappingItem)
-            //{
-            //    lbl.BackColor = Color.Gray;
-            //    lbl.Refresh();
-            //}
-
             #endregion
 
         }
-        //public void QcRandomMappingInitBAK(int eRow, int eCol)
-        //{
-        //    m_Mapping_Row = eRow;
-        //    m_Mapping_Col = eCol;
-
-        //    lblBigPass.Visible = true;
-        //    if (!Universal.IsUseMappingUI)
-        //    {
-        //        lblBigPass.Text = "PASS";
-        //        lblPass.Text = "PASS";
-
-        //        lblBigPass.ForeColor = (true ? Color.Lime : Color.Red);
-        //        lblPass.ForeColor = (true ? Color.Lime : Color.Red);
-
-        //        return;
-        //    }
-        //    lblBigPass.Visible = false;
-
-        //    #region 生成随机抽检的Mapping页面
-
-        //    int iMappingCount = m_Mapping_Row * m_Mapping_Col;
-
-        //    int iMappingItemWidth = ((pnlResult.Width - 10) - m_Mapping_Col * 3) / m_Mapping_Col;
-        //    int iMappingItemHeight = iMappingItemWidth;
-        //    iMappingItemHeight = ((pnlResult.Height - 10) - m_Mapping_Row * 3) / m_Mapping_Row;
-
-        //    m_MappingItem = new Label[iMappingCount];
-
-        //    this.pnlResult.Controls.Clear();
-        //    int ix = 0;
-        //    int iy = 0;
-
-        //    //string colname = "A";
-        //    int colindex = 1;
-
-        //    int colnameindex = 1;
-        //    int i = 0;
-        //    i = 0;
-        //    while (i < iMappingCount)
-        //    {
-        //        m_MappingItem[i] = new Label();
-
-        //        m_MappingItem[i].Name = "lbl" + colindex.ToString() + "-" + colnameindex.ToString();
-        //        m_MappingItem[i].Text = colindex.ToString() + "-" + colnameindex.ToString();
-
-        //        m_MappingItem[i].AccessibleName = colindex.ToString() + "-" + colnameindex.ToString();
-
-        //        m_MappingItem[i].BackColor = Color.Green;
-        //        m_MappingItem[i].Font = new System.Drawing.Font("黑体", 9F);
-        //        m_MappingItem[i].TextAlign = ContentAlignment.MiddleCenter;
-        //        m_MappingItem[i].Width = iMappingItemWidth;
-        //        m_MappingItem[i].Height = iMappingItemHeight;
-        //        m_MappingItem[i].Location = new Point(5 + ix, 5 + iy);
-        //        m_MappingItem[i].DoubleClick += RunUI_DoubleClick;
-        //        m_MappingItem[i].MouseEnter += RunUI_MouseEnter;
-        //        ix += m_MappingItem[i].Width + 3;
-        //        colnameindex++;
-        //        if ((i + 1) % m_Mapping_Col == 0)
-        //        {
-        //            iy += m_MappingItem[i].Height + 3;
-        //            ix = 0;
-
-        //            colindex++;
-
-        //            colnameindex = 1;
-
-        //            //m_MappingItem[i].Text = (i + 1).ToString();
-        //        }
-        //        this.pnlResult.Controls.Add(m_MappingItem[i]);
-
-        //        i++;
-        //    }
-
-        //    #endregion
-
-        //}
         public void QcRandomSetResult(string eCurrentPos, Color c, string txt = "")
         {
             foreach (Label lbl in m_MappingItem)
@@ -1473,6 +1487,27 @@ namespace Allinone.UISpace.RUNUISpace
                     case OptionEnum.MAIN_SERVICE:
 
 
+                        if (INI.IsOpenQcRandom)
+                        {
+                            if (INI.IsOpenCip)
+                            {
+                                //int[] ints = new int[m_MappingItem.Length];
+                                List<int> list = new List<int>();
+                                //StringBuilder sb = new StringBuilder();
+                                foreach (var myLabel in m_MappingItem)
+                                {
+                                    int _colorIndex = _getColorIndex(myLabel.BackColor);
+                                    list.Add(_colorIndex);
+                                    //sb.Append(_colorIndex);
+                                    //sb.Append(" ");
+                                }
+
+                                Universal.CipExtend.QcMapResult(list.ToArray());
+
+                            }
+                        }
+
+
                         switch (Universal.jetMappingType)
                         {
                             case JetMappingType.MAPPING_A:
@@ -2159,12 +2194,19 @@ namespace Allinone.UISpace.RUNUISpace
 
         }
 
+        frmShowPicture showPicture = null;
         private void PResult_DoubleClick(object sender, EventArgs e)
         {
             PassInfoClass passinfo = (PassInfoClass)((PictureBox)sender).Tag;
             //MessageBox.Show(passinfo.ToInformation());
 
             OnLearn(passinfo, LearnOperEnum.COMP);
+
+            showPicture = new frmShowPicture();
+            showPicture.SetImage((Bitmap)((PictureBox)sender).Image);
+            showPicture.ShowDialog();
+            showPicture.Dispose();
+            showPicture = null;
         }
 
         //public string ErrorReason(ReasonEnum reason)

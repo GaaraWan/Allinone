@@ -16,6 +16,7 @@ namespace JetEazy.DBSpace
         public bool AllowManageAccount { get; set; }
         public bool AllowSetupRecipe { get; set; }
         public bool AllowUseShopFloor { get; set; }
+        //public bool AllowUseJudge { get; set; }
 
         public bool IsSuperUser
         {

@@ -6522,32 +6522,40 @@ namespace JetEazy.ControlSpace
 #if DVP2
                     case CCDTYPEEnum.DVP2:
 
-                        //5480x3648
-                        iw = 5480;
-                        ih = 3648;
-                        iw = SizeDefArray[relateindex].OrgSize.Width;
-                        ih = SizeDefArray[relateindex].OrgSize.Height;
-                        try
+                        switch (OPTION)
                         {
-                            if (bmplist[relateindex] != null)
-                            {
-                                iw = bmplist[relateindex].Width;
-                                ih = bmplist[relateindex].Height;
-                            }
+                            case OptionEnum.MAIN_SDM2:
+                                #region 胶水检测缩图
+                                //5480x3648
+                                iw = 5480;
+                                ih = 3648;
+                                iw = SizeDefArray[relateindex].OrgSize.Width;
+                                ih = SizeDefArray[relateindex].OrgSize.Height;
+                                try
+                                {
+                                    if (bmplist[relateindex] != null)
+                                    {
+                                        iw = bmplist[relateindex].Width;
+                                        ih = bmplist[relateindex].Height;
+                                    }
+                                }
+                                catch
+                                {
+
+                                }
+
+                                bmpnewtemp = new Bitmap(iw, ih);
+                                RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
+                                bmplist[relateindex] = bmpnewtemp;
+                                #endregion
+                                break;
+                            default:
+                                bmp = dvp2GetImageNow(index);
+                                //bmp.Save("D:\\test.bmp");
+                                bmplist[relateindex] = bmp;
+                                break;
                         }
-                        catch
-                        {
 
-                        }
-
-                        bmpnewtemp = new Bitmap(iw, ih);
-                        RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
-                        bmplist[relateindex] = bmpnewtemp;
-
-
-                        //bmp = dvp2GetImageNow(index);
-                        ////bmp.Save("D:\\test.bmp");
-                        //bmplist[relateindex] = bmp;
                         break;
 #endif
                 }
@@ -6779,31 +6787,40 @@ namespace JetEazy.ControlSpace
 #if DVP2
                     case CCDTYPEEnum.DVP2:
 
-                        //5480x3648
-                        iw = 5480;
-                        ih = 3648;
-                        iw = SizeDefArray[relateindex].OrgSize.Width;
-                        ih = SizeDefArray[relateindex].OrgSize.Height;
-                        try
+                        switch (OPTION)
                         {
-                            if (bmplist[relateindex] != null)
-                            {
-                                iw = bmplist[relateindex].Width;
-                                ih = bmplist[relateindex].Height;
-                            }
+                            case OptionEnum.MAIN_SDM2:
+                                #region 胶水检测缩图
+                                //5480x3648
+                                iw = 5480;
+                                ih = 3648;
+                                iw = SizeDefArray[relateindex].OrgSize.Width;
+                                ih = SizeDefArray[relateindex].OrgSize.Height;
+                                try
+                                {
+                                    if (bmplist[relateindex] != null)
+                                    {
+                                        iw = bmplist[relateindex].Width;
+                                        ih = bmplist[relateindex].Height;
+                                    }
+                                }
+                                catch
+                                {
+
+                                }
+
+                                bmpnewtemp = new Bitmap(iw, ih);
+                                RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
+                                bmplist[relateindex] = bmpnewtemp;
+                                #endregion
+                                break;
+                            default:
+                                bmp = dvp2GetImageNow(index);
+                                //bmp.Save("D:\\test.bmp");
+                                bmplist[relateindex] = bmp;
+                                break;
                         }
-                        catch
-                        {
 
-                        }
-
-                        bmpnewtemp = new Bitmap(iw, ih);
-                        RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
-                        bmplist[relateindex] = bmpnewtemp;
-
-                        //bmp = dvp2GetImageNow(index);
-                        ////bmp.Save("D:\\test.png");
-                        //bmplist[relateindex] = bmp;
                         break;
 #endif
                 }
@@ -6970,31 +6987,40 @@ namespace JetEazy.ControlSpace
 #if DVP2
                     case CCDTYPEEnum.DVP2:
 
-                        //5480x3648
-                        iw = 5480;
-                        ih = 3648;
-                        iw = SizeDefArray[relateindex].OrgSize.Width;
-                        ih = SizeDefArray[relateindex].OrgSize.Height;
-                        try
+                        switch (OPTION)
                         {
-                            if (bmplist[relateindex] != null)
-                            {
-                                iw = bmplist[relateindex].Width;
-                                ih = bmplist[relateindex].Height;
-                            }
+                            case OptionEnum.MAIN_SDM2:
+                                #region 胶水检测缩图
+                                //5480x3648
+                                iw = 5480;
+                                ih = 3648;
+                                iw = SizeDefArray[relateindex].OrgSize.Width;
+                                ih = SizeDefArray[relateindex].OrgSize.Height;
+                                try
+                                {
+                                    if (bmplist[relateindex] != null)
+                                    {
+                                        iw = bmplist[relateindex].Width;
+                                        ih = bmplist[relateindex].Height;
+                                    }
+                                }
+                                catch
+                                {
+
+                                }
+
+                                bmpnewtemp = new Bitmap(iw, ih);
+                                RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
+                                bmplist[relateindex] = bmpnewtemp;
+                                #endregion
+                                break;
+                            default:
+                                bmp = dvp2GetImageNow(index);
+                                //bmp.Save("D:\\test.bmp");
+                                bmplist[relateindex] = bmp;
+                                break;
                         }
-                        catch
-                        {
 
-                        }
-
-                        bmpnewtemp = new Bitmap(iw, ih);
-                        RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
-                        bmplist[relateindex] = bmpnewtemp;
-
-
-                        //bmp = bmplist[relateindex];
-                        //bmp = dvp2GetImageNow(index);
                         break;
 #endif
                 }
@@ -7075,27 +7101,39 @@ namespace JetEazy.ControlSpace
 #if DVP2
                     case CCDTYPEEnum.DVP2:
 
-                        //5480x3648
-                        iw = 5480;
-                        ih = 3648;
-                        iw = SizeDefArray[relateindex].OrgSize.Width;
-                        ih = SizeDefArray[relateindex].OrgSize.Height;
-                        try
+                        switch (OPTION)
                         {
-                            if (bmpR32Captured[relateindex] != null)
-                            {
-                                iw = bmpR32Captured[relateindex].Width;
-                                ih = bmpR32Captured[relateindex].Height;
-                            }
-                        }
-                        catch
-                        {
+                            case OptionEnum.MAIN_SDM2:
+                                #region 胶水检测缩图
+                                //5480x3648
+                                iw = 5480;
+                                ih = 3648;
+                                iw = SizeDefArray[relateindex].OrgSize.Width;
+                                ih = SizeDefArray[relateindex].OrgSize.Height;
+                                try
+                                {
+                                    if (bmpR32Captured[relateindex] != null)
+                                    {
+                                        iw = bmpR32Captured[relateindex].Width;
+                                        ih = bmpR32Captured[relateindex].Height;
+                                    }
+                                }
+                                catch
+                                {
 
-                        }
+                                }
 
-                        bmpnewtemp = new Bitmap(iw, ih);
-                        RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
-                        bmpR32Captured[relateindex] = bmpnewtemp;
+                                bmpnewtemp = new Bitmap(iw, ih);
+                                RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
+                                bmpR32Captured[relateindex] = bmpnewtemp;
+                                #endregion
+                                break;
+                            default:
+                                bmpnewtemp = dvp2GetImageNow(index);
+                                //bmp.Save("D:\\test.bmp");
+                                bmpR32Captured[relateindex] = bmpnewtemp;
+                                break;
+                        }
 
 
                         //bmp = dvp2GetImageNow(index);
@@ -7172,32 +7210,40 @@ namespace JetEazy.ControlSpace
 #if DVP2
                     case CCDTYPEEnum.DVP2:
 
-                        //5480x3648
-                        iw = 5480;
-                        ih = 3648;
-                        iw = SizeDefArray[relateindex].OrgSize.Width;
-                        ih = SizeDefArray[relateindex].OrgSize.Height;
-                        try
+                        switch (OPTION)
                         {
-                            if (bmpR32Captured[relateindex] != null)
-                            {
-                                iw = bmpR32Captured[relateindex].Width;
-                                ih = bmpR32Captured[relateindex].Height;
-                            }
+                            case OptionEnum.MAIN_SDM2:
+                                #region 胶水检测缩图
+                                //5480x3648
+                                iw = 5480;
+                                ih = 3648;
+                                iw = SizeDefArray[relateindex].OrgSize.Width;
+                                ih = SizeDefArray[relateindex].OrgSize.Height;
+                                try
+                                {
+                                    if (bmpR32Captured[relateindex] != null)
+                                    {
+                                        iw = bmpR32Captured[relateindex].Width;
+                                        ih = bmpR32Captured[relateindex].Height;
+                                    }
+                                }
+                                catch
+                                {
+
+                                }
+
+                                bmpnewtemp = new Bitmap(iw, ih);
+                                RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
+                                bmpR32Captured[relateindex] = bmpnewtemp;
+                                #endregion
+                                break;
+                            default:
+                                bmpnewtemp = dvp2GetImageNow(index);
+                                //bmp.Save("D:\\test.bmp");
+                                bmpR32Captured[relateindex] = bmpnewtemp;
+                                break;
                         }
-                        catch
-                        {
 
-                        }
-
-                        bmpnewtemp = new Bitmap(iw, ih);
-                        RenderBMPSizeChange(dvp2GetImageNow(index), bmpnewtemp);
-                        bmpR32Captured[relateindex] = bmpnewtemp;
-
-
-                        //bmp = dvp2GetImageNow(index);
-                        ////     bmp.Save("D:\\test.png");
-                        //bmpR32Captured[relateindex] = bmp;
                         break;
 #endif
 
@@ -7404,6 +7450,7 @@ namespace JetEazy.ControlSpace
                         switch (OPTION)
                         {
                             case OptionEnum.MAIN_SDM2:
+                            case OptionEnum.MAIN_SDM3:
                                 dvp2SetGain(index, gainvalue);
                                 break;
                             default:

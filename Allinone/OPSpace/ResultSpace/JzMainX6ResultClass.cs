@@ -1672,6 +1672,16 @@ namespace Allinone.OPSpace.ResultSpace
                             //});
                             //task.Start();
 
+                            //开启Map功能 读取是否需要检测
+                            if (Universal.CipExtend.QcUseMap)
+                            {
+                                LogProcessIDTimer(Process.ID, $"开启QcUseMap=true");
+                                LogProcessIDTimer(Process.ID, $"QcBoatID={Universal.CipExtend.QcBoatID}");
+                                LogProcessIDTimer(Process.ID, $"QcCurrentPos={Universal.CipExtend.QcCurrentPos}");
+                                LogProcessIDTimer(Process.ID, $"QcMapNeed={Universal.CipExtend.QcMapNeed}");
+                                SetAnalyzeBypass(Universal.CipExtend.QcMapNeed.ToString());
+                            }
+
                             SetAnalyzeMapping(Universal.CipExtend.QcMapStr);
 
                             m_IsTaskRun = false;
@@ -1959,8 +1969,16 @@ namespace Allinone.OPSpace.ResultSpace
                     case 50:
 
                         Process.Stop();
-                        RXXLastProcess();
 
+                        switch (Universal.FACTORYNAME)
+                        {
+                            case FactoryName.DONGGUAN:
+                                RXXLastProcessDONGGUAN();
+                                break;
+                            default:
+                                RXXLastProcess();
+                                break;
+                        }
                         LogProcessIDTimer(Process.ID, "流程结束");
                         LogProcessIDTimer(Process.ID, "==================");
                         LogProcessIDTimer(Process.ID, "==================");
@@ -1974,6 +1992,21 @@ namespace Allinone.OPSpace.ResultSpace
         }
 
         #region 单次测试显示的颜色
+        void SetAnalyzeBypass(string eVariStr)
+        {
+            AlbumClass album = AlbumWork;
+            EnvClass env = album.ENVList[EnvIndex];
+            List<AnalyzeClass> BranchList = new List<AnalyzeClass>();
+
+            foreach (PageClass page in env.PageList)
+            {
+                foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                {
+                    analyze.SetAnalyzeByPass(eVariStr != "1");
+                }
+            }
+        }
+
         void SetAnalyzeMapping(string eVariStr)
         {
             AlbumClass album = AlbumWork;
@@ -3094,6 +3127,50 @@ void MainX6Tick()
         /// <summary>
         /// RXX 結束流程後要做的雞巴毛事
         /// </summary>
+        void RXXLastProcessDONGGUAN()
+        {
+            //LogProcessIDTimer(8889, $"显示开始");
+            if (IsPass)
+            {
+                OnTrigger(ResultStatusEnum.CALPASS);
+                //LogProcessIDTimer(8889, $"CALPASS");
+            }
+            else
+            {
+                OnTrigger(ResultStatusEnum.CALNG);
+
+                
+                //LogProcessIDTimer(8889, $"CALNG");
+            }
+
+            JzMainSDPositionParas.INSPECT_NGINDEX++;
+            JzMainSDPositionParas.SaveRecord();
+
+            if (INI.IsCollectPictures)
+            {
+                MainX6Save();
+                LogProcessIDTimer(8889, $"收集图片");
+            }
+
+            OnTrigger(ResultStatusEnum.COUNTEND);
+            LogProcessIDTimer(8889, $"COUNTEND");
+
+            OnTrigger(ResultStatusEnum.CALEND);
+            LogProcessIDTimer(8889, $"CALEND");
+
+            //if (!IsPass)
+            {
+                JzMainSDPositionParas.ReportAUTOSave(JzMainSDPositionParas.INSPECT_NGINDEX, false, true);
+                if (INI.IsCollectStripPictures)
+                {
+                    MainX6StripImageDataSave();//保存strip图片
+                    LogProcessIDTimer(8889, $"收集Strip图片");
+                }
+            }
+            JzMainSDPositionParas.ReportGradeSave(JzMainSDPositionParas.INSPECT_NGINDEX, false);
+            //LogProcessIDTimer(8889, $"测试结束");
+            Universal.IsRunningTest = false;
+        }
         void RXXLastProcess()
         {
             //LogProcessIDTimer(8889, $"显示开始");
@@ -3136,7 +3213,6 @@ void MainX6Tick()
             //LogProcessIDTimer(8889, $"测试结束");
             Universal.IsRunningTest = false;
         }
-
         //int tickCmd = Environment.TickCount;
         void SendSignToPLC(object obj)
         {

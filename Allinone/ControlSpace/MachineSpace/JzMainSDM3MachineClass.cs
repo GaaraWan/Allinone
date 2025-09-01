@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Allinone.ControlSpace.MachineSpace
 {
-    public class JzMainSDM2MachineClass : GeoMachineClass
+    public class JzMainSDM3MachineClass : GeoMachineClass
     {
         private IntPtr handle
         {
@@ -21,9 +21,9 @@ namespace Allinone.ControlSpace.MachineSpace
 
         const int MSDuriation = 10;
 
-        public JzMainSDM2IOClass PLCIO;
+        public JzMainSDM3IOClass PLCIO;
         
-        public JzMainSDM2MachineClass(Machine_EA machineea, VersionEnum version, OptionEnum option, string opstr, string workpath, bool isnouseplc)
+        public JzMainSDM3MachineClass(Machine_EA machineea, VersionEnum version, OptionEnum option, string opstr, string workpath, bool isnouseplc)
         {
             IsNoUseIO = isnouseplc;
 
@@ -117,7 +117,7 @@ namespace Allinone.ControlSpace.MachineSpace
                 i++;
             }
 
-            PLCIO = new JzMainSDM2IOClass();
+            PLCIO = new JzMainSDM3IOClass();
             PLCIO.Initial(WORKPATH + "\\" + myMachineEA.ToString(), OPTION, PLCCollection);
 
             switch (mRobotType)
@@ -538,9 +538,9 @@ namespace Allinone.ControlSpace.MachineSpace
             {
                 string[] strs = lightstr.Split(',');
 
-                if (strs.Length < 2)
+                if (strs.Length < 5)
                 {
-                    lightstr = "1,0";
+                    lightstr = "1,1,1,1,1";
                     strs = lightstr.Split(',');
                 }
 

@@ -70,7 +70,7 @@
             this.checkBox4.Name = "checkBox4";
             this.checkBox4.Size = new System.Drawing.Size(120, 16);
             this.checkBox4.TabIndex = 92;
-            this.checkBox4.Text = "指定使用工廠系統";
+            this.checkBox4.Text = "指定使用人工复判";
             this.checkBox4.UseVisualStyleBackColor = true;
             // 
             // checkBox3
@@ -124,7 +124,7 @@
             this.textBox2.Location = new System.Drawing.Point(195, 36);
             this.textBox2.Name = "textBox2";
             this.textBox2.PasswordChar = '*';
-            this.textBox2.Size = new System.Drawing.Size(157, 22);
+            this.textBox2.Size = new System.Drawing.Size(157, 21);
             this.textBox2.TabIndex = 86;
             this.textBox2.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
@@ -132,18 +132,18 @@
             // 
             this.textBox1.Location = new System.Drawing.Point(20, 36);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(169, 22);
+            this.textBox1.Size = new System.Drawing.Size(169, 21);
             this.textBox1.TabIndex = 85;
             this.textBox1.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // comboBox1
             // 
             this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBox1.Font = new System.Drawing.Font("新細明體", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.comboBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Location = new System.Drawing.Point(27, 34);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(169, 21);
+            this.comboBox1.Size = new System.Drawing.Size(169, 24);
             this.comboBox1.TabIndex = 89;
             // 
             // button6

@@ -13,6 +13,7 @@ using JetEazy.UISpace;
 using JetEazy.ControlSpace;
 
 using JzDisplay.UISpace;
+using Allinone.OPSpace;
 
 namespace Allinone.FormSpace
 {
@@ -65,6 +66,17 @@ namespace Allinone.FormSpace
             }
         }
 
+        //AlbumCollectionClass AlbumCollection
+        //{
+        //    get
+        //    {
+        //        return Universal.ALBCollection;
+        //    }
+        //}
+
+        bool IsExecuteDel = false;
+        int m_CurrentIndex = 0;
+
         //Language Setup
 
         RcpDBClass RCPDB;
@@ -106,10 +118,11 @@ namespace Allinone.FormSpace
 
             //OpDisplay = new OpDisplayNormal(dispUI1);
             //OpDisplay.Initial();
-
+            IsExecuteDel = false;
             RCPDB = rcpdb.Clone();
 
             JzToolsClass.PassingString = "";
+            m_CurrentIndex = RCPDB.DataNow.No;
 
             DISPUI = dispUI1;
             DISPUI.Initial();
@@ -186,7 +199,17 @@ namespace Allinone.FormSpace
                     break;
                 case TagEnum.EXIT:
 
-                    ProgramClose(false);
+                    if (IsExecuteDel)
+                    {
+                        JzToolsClass.PassingInteger = m_CurrentIndex;// RCPDB.DataNow.No;// FilterItemNow.Index;
+
+                        if (JzToolsClass.PassingString != "")
+                            JzToolsClass.PassingString = myJzTools.RemoveLastChar(JzToolsClass.PassingString, 1);
+
+                        ProgramClose(true);
+                    }
+                    else
+                        ProgramClose(false);
 
                     break;
             }
@@ -259,6 +282,22 @@ namespace Allinone.FormSpace
                 i--;
             }
 
+
+            //if (JzToolsClass.PassingString != "")
+            //{
+            //    string[] RemoveIndexStr = JzToolsClass.PassingString.Split(',');
+
+            //    foreach (string str in RemoveIndexStr)
+            //        if (!string.IsNullOrEmpty(str))
+            //            RCPDB.Delete(RCPDB.FindIndex(int.Parse(str)));
+            //}
+
+            //AlbumCollection.Del(RCPDB);
+
+            //Universal.BackupDATADB();
+            //RCPDB.Save();
+
+            IsExecuteDel = true;
             SearchFilter();
         }
 

@@ -14,6 +14,8 @@ using JetEazy;
 using JetEazy.BasicSpace;
 using System.Reflection;
 using System.IO;
+using JetEazy.UISpace;
+using System.Drawing.Design;
 
 namespace Allinone.UISpace.ALBUISpace
 {
@@ -535,13 +537,17 @@ namespace Allinone.UISpace.ALBUISpace
         {
             private bool pannel = true;
             private bool bottom = false;
+            private bool _bCheckNoHave = false;
+            private float _CheckNoHaveRatio = 0.1f;
 
             public override string ToString()
             {
                 string retstr = "";
 
                 retstr += (pannel ? "1" : "0") + ",";
-                retstr += (bottom ? "1" : "0");
+                retstr += (bottom ? "1" : "0") + ",";
+                retstr += (_bCheckNoHave ? "1" : "0") + ",";
+                retstr += _CheckNoHaveRatio.ToString();
 
                 return retstr;
             }
@@ -560,6 +566,12 @@ namespace Allinone.UISpace.ALBUISpace
                             break;
                         case 1:
                             bottom = strx == "1";
+                            break;
+                        case 2:
+                            _bCheckNoHave = strx == "1";
+                            break;
+                        case 3:
+                            _CheckNoHaveRatio = float.Parse(strx);
                             break;
                     }
                     i++;
@@ -583,6 +595,23 @@ namespace Allinone.UISpace.ALBUISpace
             {
                 get { return bottom; }
                 set { bottom = value; }
+            }
+            [CategoryAttribute("Light Settings"),
+                    DefaultValueAttribute(true)]
+            [DisplayName("开启无芯片比例检测")]
+            public bool bCheckNoHave
+            {
+                get { return _bCheckNoHave; }
+                set { _bCheckNoHave = value; }
+            }
+            [CategoryAttribute("Light Settings"),
+                    DefaultValueAttribute(true)]
+            [DisplayName("无芯片比例值")]
+            [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 1, 2)]
+            public float CheckNoHaveRatio
+            {
+                get { return _CheckNoHaveRatio; }
+                set { _CheckNoHaveRatio = value; }
             }
         }
 

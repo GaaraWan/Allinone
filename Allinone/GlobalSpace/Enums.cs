@@ -110,12 +110,47 @@ namespace Allinone
     }
     public enum PadInspectMethodEnum : int
     {
-        COUNT = 2,
+        //COUNT = 2,
+
+        NONE = -1,
+        [Description("ipd小颗粒")]
+        PAD_SMALL = 0,
+        [Description("ipd小颗粒V1")]
+        PAD_V1 = 1,
+        [Description("胶水间距")]
+        PAD_G1 = 2,
+        [Description("银胶异形检测")]
+        PAD_G2 = 3,
+
+    }
+    /// <summary>
+    /// 无胶检测的方法
+    /// </summary>
+    public enum ChipNoGlueMethod : int
+    {
+        //COUNT = 2,
 
         NONE = -1,
 
-        PAD_SMALL = 0,
-        PAD_V1 = 1,
+        [Description("通用方法")]
+        NoGlueNormal = 0,
+        [Description("V1")]
+        NoGlueV1 = 1,
+
+    }
+    /// <summary>
+    /// 判断芯片有无
+    /// </summary>
+    public enum ChipNoHave : int
+    {
+        //COUNT = 2,
+
+        NONE = -1,
+
+        [Description("通用方法")]
+        Normal = 0,
+        [Description("检查焊点数")]
+        BlobCount = 1,
 
     }
     public enum OCRMethodEnum : int
@@ -241,6 +276,19 @@ namespace Allinone
         [Description("银胶缺陷检查")]
         QLE_CHECK = 4,
 
+
+        /// <summary>
+        /// 晶片溢胶检查V1
+        /// </summary>
+        [Description("晶片溢胶检查V1")]
+        GLUECHECKV1 = 5,
+
+        /// <summary>
+        /// 晶片有无判断
+        /// </summary>
+        [Description("晶片有无判断")]
+        CHIPCHECKNOHAVE = 6,
+
     }
 
     /// <summary>
@@ -284,6 +332,42 @@ namespace Allinone
 
     }
     /// <summary>
+    /// PAD溢胶计算宽度模式
+    /// </summary>
+    public enum ChipSlotDir : int
+    {
+        /// <summary>
+        /// 无
+        /// </summary>
+        [Description("无")]
+        NONE = -1,
+
+        /// <summary>
+        /// 槽在上
+        /// </summary>
+        [Description("槽在上")]
+        SlotTop = 0,
+
+        /// <summary>
+        /// 槽在下
+        /// </summary>
+        [Description("槽在下")]
+        SlotBottom = 1,
+
+        /// <summary>
+        /// 槽在左
+        /// </summary>
+        [Description("槽在左")]
+        SlotLeft = 2,
+
+        /// <summary>
+        /// 槽在右
+        /// </summary>
+        [Description("槽在右")]
+        SlotRight = 3,
+
+    }
+    /// <summary>
     /// PAD胶水宽度 图像处理模式 大芯片的图像于小芯片处理不太一样 所以这里区分一下 将来有更好的处理方法 可以 继续添加
     /// </summary>
     public enum PADChipSize : int
@@ -297,9 +381,9 @@ namespace Allinone
         CHIP_NORMAL = 0,
 
         /// <summary>
-        /// V1模式
+        /// 普通V1(暗图)
         /// </summary>
-        [Description("V1模式"), Browsable(false)]
+        [Description("普通V1(暗图)"), Browsable(true)]
         CHIP_V1 = 1,
 
         /// <summary>

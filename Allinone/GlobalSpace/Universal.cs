@@ -38,6 +38,8 @@ using JetEazy.CCDSpace.CamLinkDriver;
 using FreeImageAPI;
 using Allinone.BasicSpace;
 using System.Globalization;
+using static MFApi.Script;
+using Newtonsoft.Json.Linq;
 
 namespace Allinone
 {
@@ -47,7 +49,7 @@ namespace Allinone
         public static bool IsNoUseIO = true;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2025/04/29";
+        public static string VersionDate = "2025/08/24";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
         public static OptionEnum OPTION = OptionEnum.MAIN_SDM2;
@@ -479,6 +481,9 @@ namespace Allinone
             bool ret = true;
             WORKPATH = MAINPATH + @"\WORK";
 
+            //byte[] m_VersionByte = new byte[3] { 0x06, 0x01, 0x05 };
+            //string value = System.Text.Encoding.ASCII.GetString(m_VersionByte);
+            //Console.WriteLine(value);
             //try
             //{
             //    FACTORYNAME = (FactoryName)INI.FactoryNameIndex;
@@ -491,7 +496,7 @@ namespace Allinone
             JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
             JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
             //JetEazy.BasicSpace.LanguageExClass.Instance.FirstCsv = true;
-
+            
             string ccd_type_filepath = "";
 
             switch(Universal.OPTION)
@@ -2371,7 +2376,8 @@ namespace Allinone
                     //        break;
                     //}
                     IxLineScan = new Linescan_Dvp2();
-                    IxLineScan.Init(Universal.IsNoUseIO, JetEazy.CCDSpace.CameraConfig.Instance.cameras[0].ToCameraString());
+                    IxLineScan.Init(JetEazy.CCDSpace.CameraConfig.Instance.cameras[0].IsDebug, 
+                                    JetEazy.CCDSpace.CameraConfig.Instance.cameras[0].ToCameraString());
                     ret = IxLineScan.Open();
 
 
@@ -2380,7 +2386,8 @@ namespace Allinone
                         if (INI.IsOpenAutoChangeRecipe)
                         {
                             IxAreaCam =new Linescan_Dvp2();
-                            IxAreaCam.Init(Universal.IsNoUseCCD, JetEazy.CCDSpace.CameraConfig.Instance.cameras[1].ToCameraString());
+                            IxAreaCam.Init(JetEazy.CCDSpace.CameraConfig.Instance.cameras[1].IsDebug,
+                                           JetEazy.CCDSpace.CameraConfig.Instance.cameras[1].ToCameraString());
                             ret = IxAreaCam.Open();
 
 

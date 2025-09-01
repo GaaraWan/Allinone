@@ -16,7 +16,7 @@ namespace Allinone.ControlSpace.IOSpace
 
         public enum CipMainX6AddressEnum : int
         {
-            COUNT = 7,
+            COUNT = 9,
 
             ADR_MAPPING = 0,
             /// <summary>
@@ -42,6 +42,9 @@ namespace Allinone.ControlSpace.IOSpace
 
             ADR_QCROWINDEX=5,
             ADR_QCCOLINDEX=6,
+
+            ADR_QCUSEMAP=7,
+            ADR_QCMAPNEED=8,
         }
 
         public JzCipMainX6IO1Class()
@@ -84,6 +87,11 @@ namespace Allinone.ControlSpace.IOSpace
 
             CIPADDRESSARRAY[(int)CipMainX6AddressEnum.ADR_QCCOLINDEX] =
              new FATEKAddressClass(ReadINIValue("Operation Address", "ADR_QCCOLINDEX", "", INIFILE));
+
+            CIPADDRESSARRAY[(int)CipMainX6AddressEnum.ADR_QCUSEMAP] =
+            new FATEKAddressClass(ReadINIValue("Operation Address", "ADR_QCUSEMAP", "0:Gvl_QcPC.bQcUseMap", INIFILE));
+            CIPADDRESSARRAY[(int)CipMainX6AddressEnum.ADR_QCMAPNEED] =
+            new FATEKAddressClass(ReadINIValue("Operation Address", "ADR_QCMAPNEED", "0:Gvl_QcPC.iMapNeedQc", INIFILE));
 
             m_IsDebug = ReadINIValue("Parameters", "IsDebug", "0", INIFILE) == "1";
 
@@ -203,6 +211,22 @@ namespace Allinone.ControlSpace.IOSpace
                 return CIP.ReadVari(address.Address0);
             }
         }
+        /// <summary>
+        /// boatID号
+        /// </summary>
+        public string QcBotaID
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = getQcDebugStrIndex(9);
+                    return str;
+                }
+                FATEKAddressClass address = getCipAdress("QcBotaID");
+                return CIP.ReadVari(address.Address0);
+            }
+        }
         public string QcCurrentPos
         {
             get
@@ -228,7 +252,103 @@ namespace Allinone.ControlSpace.IOSpace
                 return ret;
             }
         }
+        /// <summary>
+        /// 是否启用MAPPING测试
+        /// </summary>
+        public bool QcUseMap
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = getQcDebugStrIndex(6);
+                    return str == "1";
+                }
+                FATEKAddressClass address = CIPADDRESSARRAY[(int)CipMainX6AddressEnum.ADR_QCUSEMAP];
+                return CIP.ReadVari(address.Address0).ToLower() == "true";
+            }
+        }
+        /// <summary>
+        /// true-Qc写入完成 false-Laser读取完成
+        /// </summary>
+        public bool QcWriteDone
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = getQcDebugStrIndex(8);
+                    return str == "1";
+                }
+                FATEKAddressClass address = getCipAdress("bQcWriteDone");
+                return CIP.ReadVari(address.Address0).ToLower() == "true";
+            }
+            set
+            {
+                if (m_IsDebug)
+                {
+                    return;
+                }
+                FATEKAddressClass address = getCipAdress("bQcWriteDone");
+                CIP.WriteVari(address.Address0, (value ? "true" : "false"));
+            }
+        }
+        /// <summary>
+        /// 更新测试结果Map到plc
+        /// </summary>
+        /// <param name="mapResults">根据自定义的错误数组</param>
+        public void iQcMapResult(int[] mapResults)
+        {
+            if (mapResults == null)
+                return;
+            if (mapResults.Length > 0)
+            {
+                for (int i = 0; i < mapResults.Length; i++)
+                {
+                    FATEKAddressClass address = getCipAdress($"iSingleQcResult[{i}]");
+                    CIP.WriteVari(address.Address0, mapResults[i].ToString());
+                }
+            }
+            QcWriteDone = true;
+        }
+        /// <summary>
+        /// Map需要QC检测 1-检测 2-不检测 5-空
+        /// </summary>
+        /// <returns>1-检测 2-不检测 5-空</returns>
+        public int GetQcMap()
+        {
+            int iret = 1;
+            string _currPos = QcCurrentPos;//格式 0-0 0-1 ...1-0 1-1...
+            string[] strings = _currPos.Split('-');
+            if (strings.Length > 1)
+            {
+                int ir = 0;
+                int ic = 0;
+                int.TryParse(strings[0], out ir);
+                int.TryParse(strings[1], out ic);
 
+                int iMapIndex = ir * QcColCount + ic;
+
+                string currMap = "1";
+                if (m_IsDebug)
+                {
+                    currMap = getQcDebugStrIndex(7);
+                }
+                else
+                {
+                    FATEKAddressClass address = getCipAdress($"iMapNeedQc[{iMapIndex}]");
+                    currMap = CIP.ReadVari(address.Address0);
+                }
+                int.TryParse(currMap, out iret);
+            }
+            return iret;
+        }
+
+        FATEKAddressClass getCipAdress(string eAdrStr)
+        {
+            FATEKAddressClass address = new FATEKAddressClass($"0:Gvl_QcPC.{eAdrStr}");
+            return address;
+        }
 
 
     }

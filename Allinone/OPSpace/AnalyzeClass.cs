@@ -286,7 +286,7 @@ namespace Allinone.OPSpace
                         _collectDataStr += strDescription + Environment.NewLine;
                         strNewName = ToChangeLanguage(strDescription);
                     }
-                        
+
 
 
 
@@ -4981,6 +4981,8 @@ namespace Allinone.OPSpace
                 }
 
                 ALIGNPara.IsTempSave = false;
+                bmpALIGNED = (Bitmap)bmpOUTPUT.Clone();
+
 
                 //if (!istrain)
                 //{
@@ -5002,18 +5004,19 @@ namespace Allinone.OPSpace
 
                         switch (PADPara.PADMethod)
                         {
-                            case PADMethodEnum.QLE_CHECK:
-                            case PADMethodEnum.GLUECHECK:
-                            case PADMethodEnum.GLUECHECK_BlackEdge:
+                            //case PADMethodEnum.QLE_CHECK:
+                            //case PADMethodEnum.GLUECHECK:
+                            //case PADMethodEnum.GLUECHECK_BlackEdge:
+                            case PADMethodEnum.CHIPCHECKNOHAVE:
                                 PADPara.bmpMeasureOutput.Dispose();
                                 PADPara.bmpMeasureOutput = new Bitmap(bmpWIP);
                                 //PADPara.bmpMeasureOutput = (Bitmap)bmpALIGNED.Clone();
-
                                 if (!isgood)
                                 {
                                     PADPara.DescStr = "无芯片";
+                                    bmpALIGNED = new Bitmap(bmpWIP);
                                 }
-
+                                //bmpALIGNED = new Bitmap(bmpWIP);
 
                                 break;
                         }
@@ -5058,7 +5061,7 @@ namespace Allinone.OPSpace
 
                 //bmpALIGNED.Dispose();
                 //bmpALIGNED = new Bitmap(bmpOUTPUT);
-                bmpALIGNED = (Bitmap)bmpOUTPUT.Clone();
+                
 
             }
 
@@ -5452,44 +5455,8 @@ namespace Allinone.OPSpace
                 StiltsPara.FillRunStatus(RunStatusCollection);
 
             }
-
-
-            //PADPara.RunDataOK = false;//复位数据
-            //PADPara.DescStr = string.Empty;
-            //PADPara.QLERunDataStr = string.Empty;
-
-            //switch (OPTION)
-            //{
-            //    case OptionEnum.MAIN_SDM3:
-            //    case OptionEnum.MAIN_SDM2:
-
-            //        //PADPara.bmpMeasureOutput.Dispose();
-            //        ////PADPara.bmpMeasureOutput = new Bitmap(bmpWIP);
-            //        //PADPara.bmpMeasureOutput = (Bitmap)bmpWIP.Clone();
-
-            //        switch (PADPara.PADMethod)
-            //        {
-            //            case PADMethodEnum.QLE_CHECK:
-            //            case PADMethodEnum.GLUECHECK:
-            //            case PADMethodEnum.GLUECHECK_BlackEdge:
-            //                PADPara.bmpMeasureOutput.Dispose();
-            //                PADPara.bmpMeasureOutput = new Bitmap(bmpALIGNED);
-            //                //PADPara.bmpMeasureOutput = (Bitmap)bmpALIGNED.Clone();
-
-            //                if (!isgood)
-            //                {
-            //                    PADPara.DescStr = "无芯片";
-            //                }
-
-
-            //                break;
-            //        }
-
-            //        break;
-            //}
-
             //8检查PAD溢胶
-            if (isgood)
+            if (isgood || PADPara.DescStr == "无芯片")
             {
                 if (PADPara.PADMethod == PADMethodEnum.PADCHECK)
                 {
@@ -5692,25 +5659,34 @@ namespace Allinone.OPSpace
                         //SaveData(ALIGNPara.ToAlignParaString(), Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + " Info.txt");
                     }
                 }
+                else if (PADPara.PADMethod == PADMethodEnum.CHIPCHECKNOHAVE && (PADPara.DescStr == "无芯片" || istrain))
+                {
+                    bmpWIP.Dispose();
+                    bmpWIP = new Bitmap(bmpALIGNED);
+
+                    isgood = P10_PADInspectionProcess(istrain);
+
+                    if (istrain)
+                        PADPara.FillTrainStatus(TrainStatusCollection, ToLogString());
+                    else
+                    {
+                        if (isoutputfilltrain)
+                            PADPara.FillRunStatus(TrainStatusCollection, ToLogString());
+                        else
+                            PADPara.FillRunStatus(RunStatusCollection, ToLogString());
+                    }
+
+                    if (!isgood && !istrain && IsTempSave)
+                    {
+                        //bmpPATTERN.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_PATTERN" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpWIP.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_WIP" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpMASK.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_MASK" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                        //bmpOUTPUT.Save(Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + "-B_OUTPUT" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+
+                        //SaveData(ALIGNPara.ToAlignParaString(), Universal.TESTPATH + "\\ANALYZETEST\\" + NoSaveStr + " Info.txt");
+                    }
+                }
             }
-            //else
-            //{
-            //    switch(OPTION)
-            //    {
-            //        case OptionEnum.MAIN_SDM2:
-
-            //            if (PADPara.PADMethod == PADMethodEnum.GLUECHECK)
-            //            {
-            //                PADPara.bmpMeasureOutput.Dispose();
-            //                PADPara.bmpMeasureOutput = new Bitmap(bmpOUTPUT);
-            //            }
-
-            //            break;
-            //    }
-            //}
-
-            //bmpOUTPUT.Dispose();
-            //bmpOUTPUT = new Bitmap(bmpALIGNED);
 
             bmpOUTPUT = (Bitmap)bmpALIGNED.Clone();
 
@@ -6639,13 +6615,36 @@ namespace Allinone.OPSpace
 
             if (istrain)
             {
-                JzToolsClass toolsClass = new JzToolsClass();
-                Rectangle rect = toolsClass.SimpleRect(bmpPATTERN.Size);
-                rect.Inflate(-ExtendX, -ExtendY);
 
-                Bitmap mybmptemp = bmpPATTERN.Clone(rect, PixelFormat.Format32bppArgb);
-                PADPara.P10_GetPADInspectionRequirement(mybmptemp, bmpMASK, ToAnalyzeString(), PassInfo);
-                mybmptemp.Dispose();
+                switch (PADPara.PADMethod)
+                {
+                    case PADMethodEnum.PADCHECK:
+                        JzToolsClass toolsClass = new JzToolsClass();
+                        Rectangle rect = toolsClass.SimpleRect(bmpPATTERN.Size);
+                        rect.Inflate(-ExtendX, -ExtendY);
+
+                        Bitmap mybmptemp = bmpPATTERN.Clone(rect, PixelFormat.Format32bppArgb);
+                        PADPara.P10_GetPADInspectionRequirement(mybmptemp, bmpMASK, ToAnalyzeString(), PassInfo);
+                        mybmptemp.Dispose();
+
+                        break;
+                    case PADMethodEnum.GLUECHECK:
+                    case PADMethodEnum.GLUECHECK_BlackEdge:
+                    case PADMethodEnum.PLACODE_CHECK:
+                    case PADMethodEnum.QLE_CHECK:
+                    case PADMethodEnum.CHIPCHECKNOHAVE:
+
+                        PADPara.P10_GetPADInspectionRequirement(bmpPATTERN, bmpMASK, ToAnalyzeString(), PassInfo);
+                        break;
+                }
+
+                //JzToolsClass toolsClass = new JzToolsClass();
+                //Rectangle rect = toolsClass.SimpleRect(bmpPATTERN.Size);
+                ////rect.Inflate(-ExtendX, -ExtendY);
+
+                //Bitmap mybmptemp = bmpPATTERN.Clone(rect, PixelFormat.Format32bppArgb);
+                //PADPara.P10_GetPADInspectionRequirement(mybmptemp, bmpMASK, ToAnalyzeString(), PassInfo);
+                //mybmptemp.Dispose();
                 //PADPara.P10_GetPADInspectionRequirement(bmpPATTERN, bmpMASK, ToAnalyzeString(), PassInfo);
             }
             else
@@ -6680,6 +6679,9 @@ namespace Allinone.OPSpace
                         break;
                     case PADMethodEnum.QLE_CHECK:
                         isgood = PADPara.PB10_QLECheckInspectionProcess(bmpWIP, ref bmpOUTPUT);
+                        break;
+                    case PADMethodEnum.CHIPCHECKNOHAVE:
+                        isgood = PADPara.PB10_ChipCheckNoHaveProcess(bmpWIP, false, ref bmpOUTPUT);
                         break;
                 }
                 //isgood = PADPara.PB10_PADInspectionProcess(bmpWIP, ref bmpOUTPUT);
@@ -6889,6 +6891,17 @@ namespace Allinone.OPSpace
                     bmpWIP = new Bitmap(PADPara.bmpPadFindOutput);
                 else
                     bmpWIP = new Bitmap(PADPara.bmpMeasureOutput);
+
+                PADPara.FillRunStatus(TrainStatusCollection, ToLogString());
+            }
+            else if (PADPara.PADMethod == PADMethodEnum.CHIPCHECKNOHAVE)
+            {
+                bmpWIP.Dispose();
+                bmpWIP = new Bitmap(PADPara.bmpMeasureOutput);
+                //if (istrain)
+                //    bmpWIP = new Bitmap(PADPara.bmpPadFindOutput);
+                //else
+                //    bmpWIP = new Bitmap(PADPara.bmpMeasureOutput);
 
                 PADPara.FillRunStatus(TrainStatusCollection, ToLogString());
             }

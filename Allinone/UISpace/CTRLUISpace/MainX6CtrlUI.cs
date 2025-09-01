@@ -16,6 +16,7 @@ using Allinone.ControlSpace.MachineSpace;
 using Allinone.ControlSpace.IOSpace;
 using JetEazy.PlugSpace;
 using System.Threading;
+using System.Diagnostics;
 
 namespace Allinone.UISpace
 {
@@ -83,6 +84,11 @@ namespace Allinone.UISpace
         Label lblHandlerOK;
         Label lblTcpComplete;
 
+
+        Label lblSoftwareReady;
+        Label lblHeart;
+
+
         Label lblReConnectServer;
         Label lblReConnectHandleServer;
         Label lblCipMapping;
@@ -117,6 +123,9 @@ namespace Allinone.UISpace
             lblTcpComplete = label16;
             lblCipMapping = label17;
 
+            lblSoftwareReady = label18;
+            lblHeart = label19;
+
             lblTopLight.Tag = TagEnum.TOPLIGHT;
             lblFrontLight.Tag = TagEnum.FRONTLIGHT;
             lblBackLight.Tag = TagEnum.BACKLIGHT;
@@ -145,6 +154,10 @@ namespace Allinone.UISpace
             lblTcpComplete.BackColor = Color.Black;
             lblCipMapping.DoubleClick += lbl_DoubleClick;
             lblCipMapping.Visible = false;
+
+            lblSoftwareReady.Visible = false;
+            lblHeart.Visible = false;
+            lblSoftwareReady.DoubleClick += LblSoftwareReady_DoubleClick;
 
             switch (Universal.OPTION)
             {
@@ -180,6 +193,11 @@ namespace Allinone.UISpace
 
             }
 
+        }
+
+        private void LblSoftwareReady_DoubleClick(object sender, EventArgs e)
+        {
+            MACHINE.PLCIO.SoftwareReady = !MACHINE.PLCIO.SoftwareReady;
         }
 
         private void lbl_DoubleClick(object sender, EventArgs e)
@@ -277,6 +295,14 @@ namespace Allinone.UISpace
 
                 updateReConnectHandleServerUI(X6_HANDLE_CLIENT.IsConnecting);
                 X6_HANDLE_CLIENT.TriggerStringAction += X6_HANDLE_CLIENT_TriggerStringAction;
+            }
+
+            switch (Universal.FACTORYNAME)
+            {
+                case FactoryName.RIYUEXING:
+                    lblSoftwareReady.Visible = true;
+                    lblHeart.Visible = true;
+                    break;
             }
 
             if (Universal.IsUseThreadReviceTcp)
@@ -446,14 +472,50 @@ namespace Allinone.UISpace
             if (INI.IsReadHandlerOKSign && !INI.IsNoUseHandlerOKSign)
                 lblHandlerOK.BackColor = (PLCIO.IsHandlerOK ? Color.Green : Color.Black);
 
+            switch(Universal.FACTORYNAME)
+            {
+                case FactoryName.RIYUEXING:
+                    lblSoftwareReady.BackColor = (PLCIO.SoftwareReady ? Color.Green : Color.Black);
+                    lblHeart.BackColor = (PLCIO.HeartBeat ? Color.Green : Color.Black);
+                    break;
+            }
+           
+
             myJzTimer.Cut();
         }
+
+
+        Stopwatch m_HeartTime = new Stopwatch();
+
         public void PlcTick()
         {
+           
+            switch (Universal.FACTORYNAME)
+            {
+                case FactoryName.RIYUEXING:
+                    MACHINE.PLCIO.SoftwareReady = true;
+                    break;
+            }
             while (m_ThRunning)
             {
                 MACHINE.Tick();
                 Thread.Sleep(50);
+
+                switch (Universal.FACTORYNAME)
+                {
+                    case FactoryName.RIYUEXING:
+                        if (m_HeartTime.ElapsedMilliseconds > 1000)
+                        {
+                            m_HeartTime.Restart();
+                            MACHINE.PLCIO.HeartBeat = !MACHINE.PLCIO.HeartBeat;
+                        }
+                        else
+                        {
+                            if (!m_HeartTime.IsRunning)
+                                m_HeartTime.Restart();
+                        }
+                        break;
+                }
             }
         }
 
@@ -472,6 +534,14 @@ namespace Allinone.UISpace
             MACHINE.PLCIO.TopLight = false;
             MACHINE.PLCIO.FrontLight = false;
             MACHINE.PLCIO.BackLight = false;
+
+            switch (Universal.FACTORYNAME)
+            {
+                case FactoryName.RIYUEXING:
+                    MACHINE.PLCIO.SoftwareReady = false;
+                    MACHINE.PLCIO.HeartBeat = false;
+                    break;
+            }
 
             m_ThRunning = false;
             if (m_ThreadPlc != null)

@@ -196,9 +196,17 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDAlmightyPatMatch.NET.dll</HintPath>
     </Reference>
+    <Reference Include="MVDBlobFind.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=1ddaedcf30433c37, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDBlobFind.Net.dll</HintPath>
+    </Reference>
     <Reference Include="MVDCore.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=1325730a174c0650, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Common\MVDCore.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MVDEdgeWidth.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=0beaa88e62b44d2b, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDEdgeWidth.Net.dll</HintPath>
     </Reference>
     <Reference Include="MVDGrayPatMatch.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=a8b65b043ba16bb7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -211,6 +219,18 @@
     <Reference Include="MVDImage.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=ce2c144a3e6a9a93, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Common\MVDImage.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MVDImageBinary.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=c8e52e37b57a53fa, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDImageBinary.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MVDIntensityMeasure.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=1fb8ad9d47742a1d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDIntensityMeasure.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MVDPositionFix.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=0dabd5a0cd753dff, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\MVDAlgorithmSDK\ReferencedAssemblies\Algorithms\MVDPositionFix.Net.dll</HintPath>
     </Reference>
     <Reference Include="MVDShape.Net, Version=4.2.1.4, Culture=neutral, PublicKeyToken=a59215ef735587a6, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -267,7 +287,11 @@
     <Compile Include="BasicSpace\JzASNStringConverter.cs" />
     <Compile Include="BasicSpace\JzSliderItemClass.cs" />
     <Compile Include="BasicSpace\MeasureD\BlobMeasureClass.cs" />
+    <Compile Include="BasicSpace\MVD\JzMVDBlobClass.cs" />
+    <Compile Include="BasicSpace\MVD\JzMVDEdgeWidthClass.cs" />
     <Compile Include="BasicSpace\MVD\JzMVDGrayPatMatchClass.cs" />
+    <Compile Include="BasicSpace\MVD\JzMVDIntensityMeasureClass.cs" />
+    <Compile Include="BasicSpace\MVD\JzMVDPatMatchClass.cs" />
     <Compile Include="BasicSpace\ServiceClass.cs" />
     <Compile Include="BasicSpace\WinAPI.cs" />
     <Compile Include="ControlSpace\IOSpace\GeoIOClass.cs" />
@@ -294,8 +318,8 @@
     <Compile Include="ControlSpace\MachineCollectionClass.cs" />
     <Compile Include="ControlSpace\MachineSpace\GeoMachineClass.cs" />
     <Compile Include="ControlSpace\MachineSpace\JzMainSDM1MachineClass.cs" />
-    <Compile Include="ControlSpace\MachineSpace\JzMainSDM2MachineClass.cs" />
     <Compile Include="ControlSpace\MachineSpace\JzMainSDM3MachineClass.cs" />
+    <Compile Include="ControlSpace\MachineSpace\JzMainSDM2MachineClass.cs" />
     <Compile Include="ControlSpace\MachineSpace\JzMainSDM5MachineClass.cs" />
     <Compile Include="ControlSpace\MachineSpace\JzMainSDMachineClass.cs" />
     <Compile Include="ControlSpace\MachineSpace\JzMainServiceMachineClass.cs" />
@@ -323,6 +347,10 @@
     <Compile Include="FormSpace\AlarmQueryForm.Designer.cs">
       <DependentUpon>AlarmQueryForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSpace\BasicPG\N1Class.cs" />
+    <Compile Include="FormSpace\BasicPG\N2Class.cs" />
+    <Compile Include="FormSpace\BasicPG\PADG1Class.cs" />
+    <Compile Include="FormSpace\BasicPG\PADG2Class.cs" />
     <Compile Include="FormSpace\CamExportForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -388,6 +416,12 @@
     </Compile>
     <Compile Include="FormSpace\frmSetMutilPosition.Designer.cs">
       <DependentUpon>frmSetMutilPosition.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\frmShowPicture.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\frmShowPicture.Designer.cs">
+      <DependentUpon>frmShowPicture.cs</DependentUpon>
     </Compile>
     <Compile Include="FormSpace\frmTestCommon.cs">
       <SubType>Form</SubType>
@@ -456,11 +490,41 @@
     <Compile Include="FormSpace\OtherSetExposureForm.Designer.cs">
       <DependentUpon>OtherSetExposureForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormSpace\PADForm\NoHaveInspect\N1UI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\NoHaveInspect\N1UI.Designer.cs">
+      <DependentUpon>N1UI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\NoHaveInspect\N2UI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\NoHaveInspect\N2UI.Designer.cs">
+      <DependentUpon>N2UI.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSpace\PADForm\PadInspectDataForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FormSpace\PADForm\PadInspectDataForm.Designer.cs">
       <DependentUpon>PadInspectDataForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PadInspect\PADG1UI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PadInspect\PADG1UI.Designer.cs">
+      <DependentUpon>PADG1UI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PadInspect\PADG2UI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PadInspect\PADG2UI.Designer.cs">
+      <DependentUpon>PADG2UI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PadNoHaveForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PadNoHaveForm.Designer.cs">
+      <DependentUpon>PadNoHaveForm.cs</DependentUpon>
     </Compile>
     <Compile Include="FormSpace\PageInsertForm.cs">
       <SubType>Form</SubType>
@@ -930,6 +994,9 @@
     <EmbeddedResource Include="FormSpace\frmSetMutilPosition.resx">
       <DependentUpon>frmSetMutilPosition.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\frmShowPicture.resx">
+      <DependentUpon>frmShowPicture.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\frmTestCommon.resx">
       <DependentUpon>frmTestCommon.cs</DependentUpon>
     </EmbeddedResource>
@@ -963,8 +1030,23 @@
     <EmbeddedResource Include="FormSpace\OtherSetExposureForm.resx">
       <DependentUpon>OtherSetExposureForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\PADForm\NoHaveInspect\N1UI.resx">
+      <DependentUpon>N1UI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\PADForm\NoHaveInspect\N2UI.resx">
+      <DependentUpon>N2UI.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\PADForm\PadInspectDataForm.resx">
       <DependentUpon>PadInspectDataForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\PADForm\PadInspect\PADG1UI.resx">
+      <DependentUpon>PADG1UI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\PADForm\PadInspect\PADG2UI.resx">
+      <DependentUpon>PADG2UI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\PADForm\PadNoHaveForm.resx">
+      <DependentUpon>PadNoHaveForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\PageInsertForm.resx">
       <DependentUpon>PageInsertForm.cs</DependentUpon>

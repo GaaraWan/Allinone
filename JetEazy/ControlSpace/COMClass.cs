@@ -2,12 +2,14 @@
 //#define HC_Q1_1300D
 
 using JetEazy.BasicSpace;
+using OMRON.Compolet.CIPCompolet64;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace JetEazy.ControlSpace
 {
@@ -436,6 +438,7 @@ namespace JetEazy.ControlSpace
         protected int RetryIndex = 0;
         protected int Timeoutinms = 0;
         protected int ChannelCount = 2;
+        protected string CommTypeStr = "";
 
         protected bool IsWindowClose = false;
         protected bool IsSimulater = false;
@@ -874,6 +877,22 @@ namespace JetEazy.ControlSpace
             if (string.IsNullOrEmpty(ioname))
                 return;
         }
+
+        public virtual void WriteVari(string eVari, string eValue)
+        {
+            //if (IsSimulater)
+            //    return;
+        }
+
+        public virtual string ReadVari(string eVari)
+        {
+            string ret = string.Empty;
+
+            if (IsSimulater)
+                return ret;
+            return ret;
+        }
+
         public virtual void RetryConn()
         {
             RetryIndex = 0;

@@ -31,6 +31,7 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.button9 = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -49,6 +50,7 @@
             this.button5 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label16 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
@@ -68,7 +70,6 @@
             this.axisMotionUI3 = new JetEazy.UISpace.AxisMotionUI();
             this.tabPage6 = new System.Windows.Forms.TabPage();
             this.axisMotionUI4 = new JetEazy.UISpace.AxisMotionUI();
-            this.label16 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -109,6 +110,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.button9);
             this.groupBox1.Controls.Add(this.label6);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.label4);
@@ -128,11 +130,22 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "狀態顯示";
             // 
+            // button9
+            // 
+            this.button9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button9.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
+            this.button9.Location = new System.Drawing.Point(224, 10);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size(95, 38);
+            this.button9.TabIndex = 238;
+            this.button9.Text = "Robot复位";
+            this.button9.UseVisualStyleBackColor = false;
+            // 
             // label6
             // 
             this.label6.BackColor = System.Drawing.Color.Green;
             this.label6.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label6.ForeColor = System.Drawing.Color.Yellow;
+            this.label6.ForeColor = System.Drawing.Color.Black;
             this.label6.Location = new System.Drawing.Point(176, 62);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(79, 18);
@@ -144,7 +157,7 @@
             // 
             this.label5.BackColor = System.Drawing.Color.Green;
             this.label5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label5.ForeColor = System.Drawing.Color.Yellow;
+            this.label5.ForeColor = System.Drawing.Color.Black;
             this.label5.Location = new System.Drawing.Point(91, 62);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(79, 18);
@@ -156,7 +169,7 @@
             // 
             this.label4.BackColor = System.Drawing.Color.Green;
             this.label4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label4.ForeColor = System.Drawing.Color.Yellow;
+            this.label4.ForeColor = System.Drawing.Color.Black;
             this.label4.Location = new System.Drawing.Point(6, 62);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(79, 18);
@@ -242,12 +255,6 @@
             // tabPage2
             // 
             this.tabPage2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.tabPage2.Controls.Add(this.label11);
-            this.tabPage2.Controls.Add(this.numericUpDown1);
-            this.tabPage2.Controls.Add(this.button7);
-            this.tabPage2.Controls.Add(this.button6);
-            this.tabPage2.Controls.Add(this.button5);
-            this.tabPage2.Controls.Add(this.button4);
             this.tabPage2.Controls.Add(this.groupBox2);
             this.tabPage2.Controls.Add(this.jzTransparentPanel1);
             this.tabPage2.Location = new System.Drawing.Point(4, 54);
@@ -261,7 +268,7 @@
             // label11
             // 
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(294, 141);
+            this.label11.Location = new System.Drawing.Point(289, 147);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(11, 12);
             this.label11.TabIndex = 206;
@@ -271,7 +278,7 @@
             // 
             this.numericUpDown1.DecimalPlaces = 2;
             this.numericUpDown1.Enabled = false;
-            this.numericUpDown1.Location = new System.Drawing.Point(209, 136);
+            this.numericUpDown1.Location = new System.Drawing.Point(207, 145);
             this.numericUpDown1.Name = "numericUpDown1";
             this.numericUpDown1.Size = new System.Drawing.Size(77, 21);
             this.numericUpDown1.TabIndex = 204;
@@ -285,7 +292,7 @@
             // 
             this.button7.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button7.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button7.Location = new System.Drawing.Point(91, 136);
+            this.button7.Location = new System.Drawing.Point(89, 145);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(67, 38);
             this.button7.TabIndex = 203;
@@ -296,7 +303,7 @@
             // 
             this.button6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button6.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button6.Location = new System.Drawing.Point(91, 180);
+            this.button6.Location = new System.Drawing.Point(89, 189);
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(67, 38);
             this.button6.TabIndex = 202;
@@ -307,7 +314,7 @@
             // 
             this.button5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button5.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button5.Location = new System.Drawing.Point(18, 180);
+            this.button5.Location = new System.Drawing.Point(16, 189);
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(67, 38);
             this.button5.TabIndex = 201;
@@ -318,7 +325,7 @@
             // 
             this.button4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button4.Location = new System.Drawing.Point(18, 136);
+            this.button4.Location = new System.Drawing.Point(16, 145);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(67, 38);
             this.button4.TabIndex = 200;
@@ -327,10 +334,16 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.label11);
             this.groupBox2.Controls.Add(this.label16);
+            this.groupBox2.Controls.Add(this.numericUpDown1);
             this.groupBox2.Controls.Add(this.label13);
+            this.groupBox2.Controls.Add(this.button7);
+            this.groupBox2.Controls.Add(this.button6);
             this.groupBox2.Controls.Add(this.label12);
+            this.groupBox2.Controls.Add(this.button5);
             this.groupBox2.Controls.Add(this.label1);
+            this.groupBox2.Controls.Add(this.button4);
             this.groupBox2.Controls.Add(this.label2);
             this.groupBox2.Controls.Add(this.label10);
             this.groupBox2.Controls.Add(this.label9);
@@ -340,16 +353,28 @@
             this.groupBox2.Controls.Add(this.label15);
             this.groupBox2.Location = new System.Drawing.Point(2, 2);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(316, 108);
+            this.groupBox2.Size = new System.Drawing.Size(316, 233);
             this.groupBox2.TabIndex = 198;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "IO Control";
+            // 
+            // label16
+            // 
+            this.label16.BackColor = System.Drawing.Color.Green;
+            this.label16.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label16.ForeColor = System.Drawing.Color.Black;
+            this.label16.Location = new System.Drawing.Point(89, 39);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(67, 18);
+            this.label16.TabIndex = 232;
+            this.label16.Text = "内同轴";
+            this.label16.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label13
             // 
             this.label13.BackColor = System.Drawing.Color.Green;
             this.label13.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label13.ForeColor = System.Drawing.Color.Yellow;
+            this.label13.ForeColor = System.Drawing.Color.Black;
             this.label13.Location = new System.Drawing.Point(160, 17);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(67, 18);
@@ -361,7 +386,7 @@
             // 
             this.label12.BackColor = System.Drawing.Color.Green;
             this.label12.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label12.ForeColor = System.Drawing.Color.Yellow;
+            this.label12.ForeColor = System.Drawing.Color.Black;
             this.label12.Location = new System.Drawing.Point(89, 83);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(67, 18);
@@ -373,7 +398,7 @@
             // 
             this.label1.BackColor = System.Drawing.Color.Green;
             this.label1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label1.ForeColor = System.Drawing.Color.Yellow;
+            this.label1.ForeColor = System.Drawing.Color.Black;
             this.label1.Location = new System.Drawing.Point(16, 83);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(67, 18);
@@ -385,7 +410,7 @@
             // 
             this.label2.BackColor = System.Drawing.Color.Green;
             this.label2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label2.ForeColor = System.Drawing.Color.Yellow;
+            this.label2.ForeColor = System.Drawing.Color.Black;
             this.label2.Location = new System.Drawing.Point(89, 17);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(67, 18);
@@ -397,7 +422,7 @@
             // 
             this.label10.BackColor = System.Drawing.Color.Green;
             this.label10.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label10.ForeColor = System.Drawing.Color.Yellow;
+            this.label10.ForeColor = System.Drawing.Color.Black;
             this.label10.Location = new System.Drawing.Point(233, 61);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(67, 18);
@@ -409,7 +434,7 @@
             // 
             this.label9.BackColor = System.Drawing.Color.Green;
             this.label9.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label9.ForeColor = System.Drawing.Color.Yellow;
+            this.label9.ForeColor = System.Drawing.Color.Black;
             this.label9.Location = new System.Drawing.Point(160, 61);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(67, 18);
@@ -421,7 +446,7 @@
             // 
             this.label8.BackColor = System.Drawing.Color.Green;
             this.label8.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label8.ForeColor = System.Drawing.Color.Yellow;
+            this.label8.ForeColor = System.Drawing.Color.Black;
             this.label8.Location = new System.Drawing.Point(89, 61);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(67, 18);
@@ -433,7 +458,7 @@
             // 
             this.label7.BackColor = System.Drawing.Color.Green;
             this.label7.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label7.ForeColor = System.Drawing.Color.Yellow;
+            this.label7.ForeColor = System.Drawing.Color.Black;
             this.label7.Location = new System.Drawing.Point(16, 61);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(67, 18);
@@ -445,7 +470,7 @@
             // 
             this.label14.BackColor = System.Drawing.Color.Green;
             this.label14.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label14.ForeColor = System.Drawing.Color.Yellow;
+            this.label14.ForeColor = System.Drawing.Color.Black;
             this.label14.Location = new System.Drawing.Point(16, 39);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(67, 18);
@@ -457,7 +482,7 @@
             // 
             this.label15.BackColor = System.Drawing.Color.Green;
             this.label15.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label15.ForeColor = System.Drawing.Color.Yellow;
+            this.label15.ForeColor = System.Drawing.Color.Black;
             this.label15.Location = new System.Drawing.Point(16, 17);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(67, 18);
@@ -467,7 +492,7 @@
             // 
             // jzTransparentPanel1
             // 
-            this.jzTransparentPanel1.Location = new System.Drawing.Point(192, 188);
+            this.jzTransparentPanel1.Location = new System.Drawing.Point(235, 201);
             this.jzTransparentPanel1.Name = "jzTransparentPanel1";
             this.jzTransparentPanel1.Size = new System.Drawing.Size(173, 173);
             this.jzTransparentPanel1.TabIndex = 199;
@@ -544,18 +569,6 @@
             this.axisMotionUI4.Size = new System.Drawing.Size(305, 137);
             this.axisMotionUI4.TabIndex = 202;
             // 
-            // label16
-            // 
-            this.label16.BackColor = System.Drawing.Color.Green;
-            this.label16.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label16.ForeColor = System.Drawing.Color.Yellow;
-            this.label16.Location = new System.Drawing.Point(89, 39);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(67, 18);
-            this.label16.TabIndex = 232;
-            this.label16.Text = "内同轴";
-            this.label16.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
             // AllinoneSDM2CtrlUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -568,9 +581,9 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tabPage2.ResumeLayout(false);
-            this.tabPage2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.tabPage3.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
             this.tabPage5.ResumeLayout(false);
@@ -622,5 +635,6 @@
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.NumericUpDown numericUpDown1;
         private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Button button9;
     }
 }

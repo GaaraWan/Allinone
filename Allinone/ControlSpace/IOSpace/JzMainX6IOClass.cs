@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 
 using JetEazy.ControlSpace;
 using JetEazy;
+using static Allinone.ControlSpace.IOSpace.JzCipMainX6IO1Class;
 
 
 namespace Allinone.ControlSpace.IOSpace
 {
     public enum MainX6AddressEnum : int
     {
-        COUNT = 12,
+        COUNT = 20,
         /// <summary>
         /// START
         /// </summary>
@@ -35,10 +36,21 @@ namespace Allinone.ControlSpace.IOSpace
         /// </summary>
         ADR_GETIMAGERESET=10,
         ADR_ISHANDLEROK = 11,
+
+
+        iQcNum=12,
+        iQcXTotal=13,
+        iQcYTotal=14,
+        bSoftwareReady=15,
+        bHeartBeat=16,
+        iQcResult=17,
+        RecipeName=18,
+        Map=19,
     }
     public class JzMainX6IOClass : GeoIOClass
     {
         bool m_IsDebug = false;
+        string QcDebugStr = $"2,2,4";
 
         public JzMainX6IOClass()
         {   
@@ -62,6 +74,10 @@ namespace Allinone.ControlSpace.IOSpace
             ADDRESSARRAY[(int)MainX6AddressEnum.ADR_GETIMAGERESET] = new FATEKAddressClass(ReadINIValue("Status Address", MainX6AddressEnum.ADR_GETIMAGERESET.ToString(), "", INIFILE));
             ADDRESSARRAY[(int)MainX6AddressEnum.ADR_ISHANDLEROK] = new FATEKAddressClass(ReadINIValue("Status Address", MainX6AddressEnum.ADR_ISHANDLEROK.ToString(), "", INIFILE));
 
+            ADDRESSARRAY[(int)MainX6AddressEnum.iQcNum] = new FATEKAddressClass(ReadINIValue("Status Address", MainX6AddressEnum.iQcNum.ToString(), "", INIFILE));
+            ADDRESSARRAY[(int)MainX6AddressEnum.iQcXTotal] = new FATEKAddressClass(ReadINIValue("Status Address", MainX6AddressEnum.iQcXTotal.ToString(), "", INIFILE));
+            ADDRESSARRAY[(int)MainX6AddressEnum.iQcYTotal] = new FATEKAddressClass(ReadINIValue("Status Address", MainX6AddressEnum.iQcYTotal.ToString(), "", INIFILE));
+
 
             ADDRESSARRAY[(int)MainX6AddressEnum.ADR_BUSY] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.ADR_BUSY.ToString(), "", INIFILE));
             ADDRESSARRAY[(int)MainX6AddressEnum.ADR_READY] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.ADR_READY.ToString(), "", INIFILE));
@@ -71,9 +87,17 @@ namespace Allinone.ControlSpace.IOSpace
             ADDRESSARRAY[(int)MainX6AddressEnum.ADR_FRONTLIGHT] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.ADR_FRONTLIGHT.ToString(), "", INIFILE));
             ADDRESSARRAY[(int)MainX6AddressEnum.ADR_BACKLIGHT] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.ADR_BACKLIGHT.ToString(), "", INIFILE));
             ADDRESSARRAY[(int)MainX6AddressEnum.ADR_GETIMAGEOK] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.ADR_GETIMAGEOK.ToString(), "", INIFILE));
+            
+            ADDRESSARRAY[(int)MainX6AddressEnum.bSoftwareReady] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.bSoftwareReady.ToString(), "", INIFILE));
+            ADDRESSARRAY[(int)MainX6AddressEnum.bHeartBeat] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.bHeartBeat.ToString(), "", INIFILE));
+            ADDRESSARRAY[(int)MainX6AddressEnum.iQcResult] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.iQcResult.ToString(), "", INIFILE));
+            ADDRESSARRAY[(int)MainX6AddressEnum.RecipeName] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.RecipeName.ToString(), "", INIFILE));
+            ADDRESSARRAY[(int)MainX6AddressEnum.Map] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.Map.ToString(), "0:Gvl_QcPC.Map", INIFILE));
 
 
             m_IsDebug = ReadINIValue("Parameters", "IsDebug", "0", INIFILE) == "1";
+
+            loadQcDebugStr();
         }
 
         public override void SaveData()
@@ -94,6 +118,19 @@ namespace Allinone.ControlSpace.IOSpace
                 }
 
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_ISSTART];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
+                
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
@@ -114,6 +151,18 @@ namespace Allinone.ControlSpace.IOSpace
                 }
 
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_ISGETIMAGE];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
@@ -134,6 +183,18 @@ namespace Allinone.ControlSpace.IOSpace
                 }
 
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_GETIMAGERESET];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
@@ -154,6 +215,18 @@ namespace Allinone.ControlSpace.IOSpace
                 }
 
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_ISHANDLEROK];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
@@ -162,6 +235,104 @@ namespace Allinone.ControlSpace.IOSpace
                 {
                     M_X[3] = value;
                 }
+            }
+        }
+
+
+        /// <summary>
+        /// 拍照次数
+        /// </summary>
+        public int QcNum
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = getQcDebugStrIndex(0);
+                    if (!string.IsNullOrEmpty(str))
+                        return int.Parse(str);
+                    return 1;
+                }
+
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.iQcNum];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return 1;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        string ret = PLC[address.SiteNo].ReadVari(address.Address0);
+                        int iret = 1;
+                        int.TryParse(ret, out iret);
+                        return iret;
+                        break;
+                }
+                return 1;
+            }
+        }
+        /// <summary>
+        /// X方向总颗数
+        /// </summary>
+        public int QcXTotal
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = getQcDebugStrIndex(1);
+                    if (!string.IsNullOrEmpty(str))
+                        return int.Parse(str);
+                    return 1;
+                }
+
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.iQcXTotal];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return 1;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        string ret = PLC[address.SiteNo].ReadVari(address.Address0);
+                        int iret = 1;
+                        int.TryParse(ret, out iret);
+                        return iret;
+                        break;
+                }
+                return 1;
+                
+            }
+        }
+        /// <summary>
+        /// Y方向总颗数
+        /// </summary>
+        public int QcYTotal
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = getQcDebugStrIndex(2);
+                    if (!string.IsNullOrEmpty(str))
+                        return int.Parse(str);
+                    return 1;
+                }
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.iQcYTotal];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return 1;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        string ret = PLC[address.SiteNo].ReadVari(address.Address0);
+                        int iret = 1;
+                        int.TryParse(ret, out iret);
+                        return iret;
+                        break;
+                }
+                return 1;
             }
         }
 
@@ -175,6 +346,18 @@ namespace Allinone.ControlSpace.IOSpace
                 }
 
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_BUSY];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
@@ -186,6 +369,17 @@ namespace Allinone.ControlSpace.IOSpace
                 }
 
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_BUSY];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        PLC[address.SiteNo].WriteVari(address.Address0, (value ? "true" : "false"));
+                        return;
+                        break;
+
+                }
                 PLC[address.SiteNo].SetIO(value, address.Address0);
             }
         }
@@ -199,6 +393,18 @@ namespace Allinone.ControlSpace.IOSpace
                 }
 
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_READY];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
@@ -209,6 +415,17 @@ namespace Allinone.ControlSpace.IOSpace
                     return;
                 }
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_READY];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        PLC[address.SiteNo].WriteVari(address.Address0, (value ? "true" : "false"));
+                        return;
+                        break;
+
+                }
                 PLC[address.SiteNo].SetIO(value, address.Address0);
             }
         }
@@ -223,6 +440,19 @@ namespace Allinone.ControlSpace.IOSpace
                 }
 
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_PASS];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        //if(QcResult == 1)
+                        return QcResult == 1;
+                        //return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
@@ -233,6 +463,23 @@ namespace Allinone.ControlSpace.IOSpace
                     return;
                 }
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_PASS];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        if (value)
+                            QcResult = 1;
+                        else
+                            QcResult = 0;
+                        //else
+                        //    QcResult = 1;
+                        //PLC[address.SiteNo].WriteVari(address.Address0, (value ? "true" : "false"));
+                        return;
+                        break;
+
+                }
                 PLC[address.SiteNo].SetIO(value, address.Address0);
             }
         }
@@ -246,6 +493,18 @@ namespace Allinone.ControlSpace.IOSpace
                 }
 
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_FAIL];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        return QcResult == 2;
+                        //return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
@@ -256,6 +515,23 @@ namespace Allinone.ControlSpace.IOSpace
                     return;
                 }
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_FAIL];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        if (value)
+                            QcResult = 2;
+                        else
+                            QcResult = 0;
+                        //else
+                        //    QcResult = 1;
+                        //PLC[address.SiteNo].WriteVari(address.Address0, (value ? "true" : "false"));
+                        return;
+                        break;
+
+                }
                 PLC[address.SiteNo].SetIO(value, address.Address0);
             }
         }
@@ -269,6 +545,18 @@ namespace Allinone.ControlSpace.IOSpace
                 }
 
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_GETIMAGEOK];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
@@ -279,6 +567,17 @@ namespace Allinone.ControlSpace.IOSpace
                     return;
                 }
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_GETIMAGEOK];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        PLC[address.SiteNo].WriteVari(address.Address0, (value ? "true" : "false"));
+                        return;
+                        break;
+
+                }
                 PLC[address.SiteNo].SetIO(value, address.Address0);
             }
         }
@@ -287,12 +586,39 @@ namespace Allinone.ControlSpace.IOSpace
         {
             get
             {
+                if (m_IsDebug)
+                    return false;
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_TOPLIGHT];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
             {
+                if (m_IsDebug)
+                    return;
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_TOPLIGHT];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        PLC[address.SiteNo].WriteVari(address.Address0, (value ? "true" : "false"));
+                        return;
+                        break;
+
+                }
                 PLC[address.SiteNo].SetIO(value, address.Address0);
             }
         }
@@ -300,12 +626,39 @@ namespace Allinone.ControlSpace.IOSpace
         {
             get
             {
+                if (m_IsDebug)
+                    return false;
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_FRONTLIGHT];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
             {
+                if (m_IsDebug)
+                    return;
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_FRONTLIGHT];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        PLC[address.SiteNo].WriteVari(address.Address0, (value ? "true" : "false"));
+                        return;
+                        break;
+
+                }
                 PLC[address.SiteNo].SetIO(value, address.Address0);
             }
         }
@@ -313,19 +666,263 @@ namespace Allinone.ControlSpace.IOSpace
         {
             get
             {
+                if (m_IsDebug)
+                    return false;
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_BACKLIGHT];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
                 return PLC[address.SiteNo].IOData.GetBit(address.Address0);
             }
             set
             {
+                if (m_IsDebug)
+                    return;
                 FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.ADR_BACKLIGHT];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        PLC[address.SiteNo].WriteVari(address.Address0, (value ? "true" : "false"));
+                        return;
+                        break;
+
+                }
                 PLC[address.SiteNo].SetIO(value, address.Address0);
             }
         }
 
-        public void SetRGBWLight()
-        {
+        //public void SetRGBWLight()
+        //{
 
+        //}
+
+        public bool SoftwareReady
+        {
+            get
+            {
+                if (m_IsDebug)
+                    return false;
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.bSoftwareReady];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+            set
+            {
+                if (m_IsDebug)
+                    return;
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.bSoftwareReady];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        PLC[address.SiteNo].WriteVari(address.Address0, (value ? "true" : "false"));
+                        return;
+                        break;
+
+                }
+                PLC[address.SiteNo].SetIO(value, address.Address0);
+            }
+        }
+        public bool HeartBeat
+        {
+            get
+            {
+                if (m_IsDebug)
+                    return false;
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.bHeartBeat];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return false;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0).ToLower() == "true";
+
+                        break;
+
+                }
+                return PLC[address.SiteNo].IOData.GetBit(address.Address0);
+            }
+            set
+            {
+                if (m_IsDebug)
+                    return;
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.bHeartBeat];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        PLC[address.SiteNo].WriteVari(address.Address0, (value ? "true" : "false"));
+                        //return;
+                        break;
+
+                }
+                PLC[address.SiteNo].SetIO(value, address.Address0);
+            }
+        }
+        int QcResult
+        {
+            get
+            {
+                if (m_IsDebug)
+                    return 1;
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.iQcResult];
+                string ret = PLC[address.SiteNo].ReadVari(address.Address0);
+                int iret = 1;
+                int.TryParse(ret, out iret);
+                return iret;
+            }
+            set
+            {
+                if (m_IsDebug)
+                    return;
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.iQcResult];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        PLC[address.SiteNo].WriteVari(address.Address0, value.ToString());
+
+                        break;
+
+                }
+            }
+        }
+        public string RecipeName
+        {
+            get
+            {
+                if (m_IsDebug)
+                    return string.Empty;
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.RecipeName];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return "";
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0);
+
+                        break;
+
+                }
+                return "";
+            }
+            set
+            {
+                if (m_IsDebug)
+                    return;
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.RecipeName];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+                        PLC[address.SiteNo].WriteVari(address.Address0, value);
+
+                        break;
+
+                }
+
+            }
+        }
+        public string QcMap
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = getQcDebugStrIndex(3);
+                    if (!string.IsNullOrEmpty(str))
+                        return str;
+                    return string.Empty;
+                }
+
+                FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.Map];
+                if (string.IsNullOrEmpty(address.Address0))
+                    return string.Empty;
+
+                switch (PLC[address.SiteNo].TypeStr)
+                {
+                    case "CIP":
+
+                        return PLC[address.SiteNo].ReadVari(address.Address0);
+
+                        //int icount = QcXTotal * QcYTotal;
+                        //bool[] strings = new bool[icount];
+                        //for (int i = 0; i < icount; i++)
+                        //{
+                        //    strings[i] = CIP.ReadVari($"{address.Address0}[{i}]") == "0";
+                        //}
+                        //return strings;
+                        //break;
+
+                }
+                return string.Empty;
+            }
+            //set
+            //{
+            //    FATEKAddressClass address = ADDRESSARRAY[(int)MainX6AddressEnum.Map];
+            //    if (string.IsNullOrEmpty(address.Address0))
+            //        return;
+
+            //    switch (PLC[address.SiteNo].TypeStr)
+            //    {
+            //        case "CIP":
+            //            //PLC[address.SiteNo].WriteVari(address.Address0, value);
+
+            //            break;
+
+            //    }
+
+            //}
+        }
+
+        void loadQcDebugStr()
+        {
+            QcDebugStr = ReadINIValue("Parameters", "QcDebugStr", QcDebugStr, INIFILE);
+        }
+        string getQcDebugStrIndex(int eIndex)
+        {
+            loadQcDebugStr();
+            string[] strings = QcDebugStr.Split(',');
+            if (eIndex < strings.Length)
+            {
+                return strings[eIndex];
+            }
+            return null;
         }
 
     }

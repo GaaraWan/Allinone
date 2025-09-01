@@ -45,6 +45,36 @@ namespace Allinone.BasicSpace
         //[Description("垂直方向")]
         VERTICAL,
     }
+    // 1. 创建自定义编辑器
+    public class TimeEditor : UITypeEditor
+    {
+        public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+        {
+            return UITypeEditorEditStyle.DropDown;
+        }
+
+        public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+        {
+            IWindowsFormsEditorService editorService =
+                (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
+
+            if (editorService != null && value is DateTime)
+            {
+                DateTimePicker picker = new DateTimePicker
+                {
+                    Format = DateTimePickerFormat.Custom,
+                    CustomFormat = "HH:mm:ss",
+                    ShowUpDown = true,
+                    Value = (DateTime)value
+                };
+
+                editorService.DropDownControl(picker);
+                return picker.Value;
+            }
+
+            return value;
+        }
+    }
     public class GetPlugsPropertyEditor : UITypeEditor
     {
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext pContext)
@@ -1159,7 +1189,24 @@ namespace Allinone.BasicSpace
             get { return INI.IsOpenRecipeDataRecord; }
             set { INI.IsOpenRecipeDataRecord = value; }
         }
-
+        [CategoryAttribute(cat4), DescriptionAttribute("关闭参数记录数据使用")]
+        [Editor(typeof(TimeEditor), typeof(UITypeEditor))]
+        [DisplayName("12A.记录时间节点1")]
+        //[Browsable(false)]
+        public DateTime xClearDataTime1
+        {
+            get { return INI.xClearDataTime1; }
+            set { INI.xClearDataTime1 = value; }
+        }
+        [CategoryAttribute(cat4), DescriptionAttribute("关闭参数记录数据使用")]
+        [Editor(typeof(TimeEditor), typeof(UITypeEditor))]
+        [DisplayName("12B.记录时间节点2")]
+        //[Browsable(false)]
+        public DateTime xClearDataTime2
+        {
+            get { return INI.xClearDataTime2; }
+            set { INI.xClearDataTime2 = value; }
+        }
         [CategoryAttribute(cat4), DescriptionAttribute("选择数据存储的路径 eg.D:\\ 数据将存于D:\\DataRoot")]
         [DisplayName("13.数据存储路径")]
         [Editor(typeof(GetPlugsPropertyEditor), typeof(UITypeEditor))]
@@ -1174,6 +1221,20 @@ namespace Allinone.BasicSpace
         {
             get { return INI.IsOpenCheckSensor; }
             set { INI.IsOpenCheckSensor = value; }
+        }
+        [CategoryAttribute(cat4), DescriptionAttribute("")]
+        [DisplayName("14A.开启判断sensor3")]
+        public bool IsOpenCheckSensor2
+        {
+            get { return INI.IsOpenCheckSensor2; }
+            set { INI.IsOpenCheckSensor2 = value; }
+        }
+        [CategoryAttribute(cat4), DescriptionAttribute("")]
+        [DisplayName("15.线条字体颜色")]
+        public Color chipPassColor
+        {
+            get { return INI.chipPassColor; }
+            set { INI.chipPassColor = value; }
         }
         //[CategoryAttribute(cat4), DescriptionAttribute("设备名称 即DeviceName 用于存储归纳数据")]
         //[DisplayName("14.设备名称")]

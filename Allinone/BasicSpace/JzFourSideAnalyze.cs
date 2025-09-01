@@ -2,6 +2,8 @@
 using AForge.Imaging;
 using AForge.Imaging.Filters;
 using AForge.Math;
+//using JetEazy.BasicSpace;
+using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Utilities.Collections;
 using System;
 using System.Collections.Generic;
@@ -717,7 +719,7 @@ namespace Common
         {
             return (int)((double)R * 0.3 + (double)G * 0.59 + (double)B * 0.11);
         }
-        public void GetHistogramData(Bitmap bmp, Rectangle rect,int[] histogramdata)
+        public void GetHistogramData(Bitmap bmp, Rectangle rect, int[] histogramdata)
         {
             int Grade = 0;
 
@@ -764,7 +766,7 @@ namespace Common
 
                             index++;
 
-                            pucPtr ++;
+                            pucPtr++;
                             x++;
                         }
                         pucStart += iStride;
@@ -784,7 +786,7 @@ namespace Common
 
             //Complete();
         }
-        public void GetHistogramData(Bitmap bmp, Bitmap bmpmask, bool ischeckwhite,int[] histogramdata)
+        public void GetHistogramData(Bitmap bmp, Bitmap bmpmask, bool ischeckwhite, int[] histogramdata)
         {
             int Grade = 0;
             int maskGrade = 0;
@@ -851,12 +853,12 @@ namespace Common
                             if (maskGrade == CheckColor)
                             {
                                 histogramdata[*pucPtr]++;
-                                
+
                                 index++;
                             }
 
-                            pucPtr ++;
-                            maskpucPtr ++;
+                            pucPtr++;
+                            maskpucPtr++;
                             x++;
                         }
                         pucStart += iStride;
@@ -879,7 +881,7 @@ namespace Common
             //Complete();
         }
 
-        public void FillColor(Bitmap bmp, Bitmap bmpmask, bool ischeckwhite,byte graycolor)
+        public void FillColor(Bitmap bmp, Bitmap bmpmask, bool ischeckwhite, byte graycolor)
         {
             int Grade = 0;
             int maskGrade = 0;
@@ -1286,9 +1288,9 @@ namespace Common
         {
             itemlist.Add(item);
 
-            if(maxval < item.length)
+            if (maxval < item.length)
                 maxval = item.length;
-            if(minval > item.length)
+            if (minval > item.length)
                 minval = item.length;
         }
 
@@ -1296,7 +1298,7 @@ namespace Common
         public void ClearItems()
         {
             itemlist.Clear();
-            
+
             maxval = -100000;
             minval = 100000;
         }
@@ -1304,11 +1306,11 @@ namespace Common
         {
             return itemlist.Count;
         }
-        public void FillPts(ref Point[] pts,Point offsetpt,bool isnew = false)
+        public void FillPts(ref Point[] pts, Point offsetpt, bool isnew = false)
         {
-            if(isnew)
+            if (isnew)
                 NGPtsFilter(1d);
-            
+
             pts = new Point[itemlist.Count];
 
             int i = 0;
@@ -1336,22 +1338,22 @@ namespace Common
                 i++;
             }
         }
-        public void FillDistance(List<int> dist,ref int max,ref int min,ref double mean)
+        public void FillDistance(List<int> dist, ref int max, ref int min, ref double mean)
         {
             max = -10000;
             min = 100000;
             double totoal = 0;
             double count = 0;
 
-            foreach(SideFoundItemClass item in itemlist)
+            foreach (SideFoundItemClass item in itemlist)
             {
                 dist.Add(item.length);
-            
-                if(max < item.length)
+
+                if (max < item.length)
                 {
                     max = item.length;
                 }
-                if(min > item.length)
+                if (min > item.length)
                 {
                     min = item.length;
                 }
@@ -1359,7 +1361,7 @@ namespace Common
                 count++;
             }
 
-           mean = totoal / count;
+            mean = totoal / count;
         }
 
         public void NGPtsFilter(double rangeratio)
@@ -1387,9 +1389,9 @@ namespace Common
 
             i = itemlist.Count - 1;
 
-            while(i > -1)
+            while (i > -1)
             {
-                if (itemlist[i].length > upperval ||  itemlist[i].length < lowerval)
+                if (itemlist[i].length > upperval || itemlist[i].length < lowerval)
                 {
                     itemlist.RemoveAt(i);
                 }
@@ -1438,7 +1440,7 @@ namespace Common
         public Point ptEnd = new Point(0, 0);
         public int length = 0;
 
-        public SideFoundItemClass(Point ptst,Point pted,int len)
+        public SideFoundItemClass(Point ptst, Point pted, int len)
         {
             ptStart = ptst;
             ptEnd = pted;
@@ -1484,13 +1486,13 @@ namespace Common
         public int mysideCount = 0;
 
 
-        public void GetSide(SIDEEmnum side,Bitmap bmpfirst,Rectangle centerrect,double rangeratio)
+        public void GetSide(SIDEEmnum side, Bitmap bmpfirst, Rectangle centerrect, double rangeratio)
         {
             SIDEIndex = side;
             //bmp1st = (Bitmap)bmpfirst.Clone(new Rectangle(0,0,bmpfirst.Width,bmpfirst.Height),bmpfirst.PixelFormat);
             bmp1st = CopyImage(bmpfirst);
 
-            int infwidth = (int)((centerrect.Width - ((double)centerrect.Width * rangeratio)) /2);
+            int infwidth = (int)((centerrect.Width - ((double)centerrect.Width * rangeratio)) / 2);
             int infheight = (int)((centerrect.Height - ((double)centerrect.Height * rangeratio)) / 2);
 
             Rectangle rect = centerrect;
@@ -1499,7 +1501,7 @@ namespace Common
             switch (side)
             {
                 case SIDEEmnum.TOP:
-                    myrect = new Rectangle(rect.X,0,rect.Width,rect.Y);
+                    myrect = new Rectangle(rect.X, 0, rect.Width, rect.Y);
                     break;
                 case SIDEEmnum.BOTTOM:
                     myrect = new Rectangle(rect.X, rect.Bottom, rect.Width, bmp1st.Height - rect.Bottom);
@@ -1516,10 +1518,10 @@ namespace Common
 
             SIDEFound.ClearItems();
 
-            bmpside.Save(@"D:\JETEAZY\SIDE" + SIDEIndex.ToString() + ".BMP",ImageFormat.Bmp);
+            bmpside.Save(@"D:\JETEAZY\SIDE" + SIDEIndex.ToString() + ".BMP", ImageFormat.Bmp);
         }
 
-        public void GetSide(SIDEEmnum side, Bitmap bmpfirst, Rectangle centerrect, double longratio,double shortratio)
+        public void GetSide(SIDEEmnum side, Bitmap bmpfirst, Rectangle centerrect, double longratio, double shortratio)
         {
             SIDEIndex = side;
             //bmp1st = (Bitmap)bmpfirst.Clone(new Rectangle(0,0,bmpfirst.Width,bmpfirst.Height),bmpfirst.PixelFormat);
@@ -1529,7 +1531,7 @@ namespace Common
             int infheight = (int)((centerrect.Height - ((double)centerrect.Height * shortratio)) / 2);
 
             Rectangle rect = centerrect;
-            
+
             switch (side)
             {
                 case SIDEEmnum.TOP:
@@ -1541,7 +1543,7 @@ namespace Common
                     myrect = new Rectangle(rect.X, 0, rect.Width, rect.Y);
                     break;
                 case SIDEEmnum.BOTTOM:
-                    
+
                     infwidth = (int)((centerrect.Width - ((double)centerrect.Width * longratio)) / 2);
                     infheight = (int)((centerrect.Height - ((double)centerrect.Height * shortratio)) / 2);
                     rect.Inflate(-infwidth, -infheight);
@@ -1587,7 +1589,7 @@ namespace Common
                 case SIDEEmnum.TOP:
 
                     bmprect = new Rectangle(0, 0, bmp.Width, rect.Y);
-                    myrect = new Rectangle(rect.X,0,rect.Width,rect.Height + rect.Y);
+                    myrect = new Rectangle(rect.X, 0, rect.Width, rect.Height + rect.Y);
 
                     myrect.Intersect(bmprect);
                     break;
@@ -1722,12 +1724,12 @@ namespace Common
                 }
             }
 
-            double mean = (double)totolcount / (double) foundcount;
+            double mean = (double)totolcount / (double)foundcount;
             int checkmean = (int)(mean * 0.5d);
 
             int i = SideFoundCollection.sidefounds.Length - 1;
-            
-            while(i > -1)
+
+            while (i > -1)
             {
                 if (SideFoundCollection.sidefounds[i].CountItems() < checkmean)
                 {
@@ -1737,7 +1739,7 @@ namespace Common
             }
             //bmptmp.Save(@"D:\JETEAZY\2ND-" + SIDEIndex.ToString() + ".png", ImageFormat.Png);
         }
-        public void ProcessIX(Bitmap bmp,double holesratio)
+        public void ProcessIX(Bitmap bmp, double holesratio)
         {
             int index = 0;
             SIDEFound.ClearItems();
@@ -1753,7 +1755,7 @@ namespace Common
             bmps[index + 1] = otsu.Apply(bmps[index]);
             index++;
 
-            CannyEdgeDetector canny = new CannyEdgeDetector(20,100,1.4d);
+            CannyEdgeDetector canny = new CannyEdgeDetector(20, 100, 1.4d);
             bmps[index + 1] = canny.Apply(bmps[index]);
             index++;
 
@@ -1778,7 +1780,7 @@ namespace Common
         {
             int i = 0;
 
-            resultstr += SIDEIndex.ToString()+ Environment.NewLine;
+            resultstr += SIDEIndex.ToString() + Environment.NewLine;
 
             foreach (SideFoundClass sideFound in SideFoundCollection.sidefounds)
             {
@@ -1875,14 +1877,14 @@ namespace Common
 
         public void DrawResult(Bitmap bmp, Color color, int width, bool isnew = false)
         {
-            Graphics g= Graphics.FromImage(bmp);
+            Graphics g = Graphics.FromImage(bmp);
 
             Point[] pts = new Point[SIDEFound.CountItems()];
-            SIDEFound.FillPts(ref pts, myrect.Location,isnew);
+            SIDEFound.FillPts(ref pts, myrect.Location, isnew);
 
-            if(pts.Length > 1)
+            if (pts.Length > 1)
                 g.DrawLines(new Pen(color, width), pts);
-            
+
             g.Dispose();
         }
         public void DrawResultEX(Bitmap bmp, Color color, int width, bool isnew = false)
@@ -1905,12 +1907,12 @@ namespace Common
             Bitmap retbmp;
             Bitmap[] bmps = new Bitmap[10];
 
-            bmpsrc.Save(@"D:\JETEAZY\2TS-" + SIDEIndex.ToString() +  ".BMP", ImageFormat.Bmp);
+            bmpsrc.Save(@"D:\JETEAZY\2TS-" + SIDEIndex.ToString() + ".BMP", ImageFormat.Bmp);
 
             SISThreshold sis = new SISThreshold();
             bmps[0] = sis.Apply(bmpsrc);
 
-            bmps[0].Save(@"D:\JETEAZY\2TS-" + SIDEIndex.ToString() +  "0.BMP", ImageFormat.Bmp);
+            bmps[0].Save(@"D:\JETEAZY\2TS-" + SIDEIndex.ToString() + "0.BMP", ImageFormat.Bmp);
 
             FillHoles fillHoles = new FillHoles();
             fillHoles.CoupledSizeFiltering = true;
@@ -1918,11 +1920,11 @@ namespace Common
             fillHoles.MaxHoleHeight = 100;
             bmps[1] = fillHoles.Apply(bmps[0]);
 
-            bmps[1].Save(@"D:\JETEAZY\2TS-" + SIDEIndex.ToString() +  "1.BMP", ImageFormat.Bmp);
+            bmps[1].Save(@"D:\JETEAZY\2TS-" + SIDEIndex.ToString() + "1.BMP", ImageFormat.Bmp);
 
             Closing closing = new Closing();
             bmps[2] = closing.Apply(bmps[1]);
-            bmps[2].Save(@"D:\JETEAZY\2TS-" + SIDEIndex.ToString() +  "2.BMP", ImageFormat.Bmp);
+            bmps[2].Save(@"D:\JETEAZY\2TS-" + SIDEIndex.ToString() + "2.BMP", ImageFormat.Bmp);
 
             fillHoles.CoupledSizeFiltering = true;
             fillHoles.MaxHoleWidth = 30;
@@ -1940,7 +1942,7 @@ namespace Common
             //外框畫一圈白色讓洞洞分離，為了Fillholes參數
             DrawRectOutLine(bmps[7], 255);
 
-            bmps[7].Save(@"D:\JETEAZY\2TS-" + SIDEIndex.ToString() +  "7" +
+            bmps[7].Save(@"D:\JETEAZY\2TS-" + SIDEIndex.ToString() + "7" +
                 ".BMP", ImageFormat.Bmp);
 
             int holewidth = (int)((double)bmps[7].Width * 0.5d);
@@ -2220,7 +2222,7 @@ namespace Common
                     int y = ymin;
 
                     int iStride = bmpData.Stride;
-                    
+
                     int sidefoundindex = 0;
                     int livedupgap = 1;
                     int lastval = 0;
@@ -2240,7 +2242,7 @@ namespace Common
                                 sidefoundindex = 0;
                                 lastval = y;
 
-                                while (y > ymin -1)
+                                while (y > ymin - 1)
                                 {
                                     livedupgap = 1;
 
@@ -2248,7 +2250,7 @@ namespace Common
                                     {
                                         *pucPtr = 100;
 
-                                        SideFoundItemClass sidefounditem = new SideFoundItemClass(new Point(x, y),Math.Abs(y - lastval));
+                                        SideFoundItemClass sidefounditem = new SideFoundItemClass(new Point(x, y), Math.Abs(y - lastval));
                                         lastval = y;
 
                                         sidefoundcollection.sidefounds[sidefoundindex].Add(sidefounditem);
@@ -2260,7 +2262,7 @@ namespace Common
                                         *pucPtr = 30;
 
                                     pucPtr -= iStride * livedupgap;
-                                    y-= livedupgap;
+                                    y -= livedupgap;
                                 }
 
                                 pucStart += gap;
@@ -2327,7 +2329,7 @@ namespace Common
                                     {
                                         *pucPtr = 100;
 
-                                        SideFoundItemClass sidefounditem = new SideFoundItemClass(new Point(x, y),Math.Abs(x-lastval));
+                                        SideFoundItemClass sidefounditem = new SideFoundItemClass(new Point(x, y), Math.Abs(x - lastval));
                                         lastval = x;
 
                                         sidefoundcollection.sidefounds[sidefoundindex].Add(sidefounditem);
@@ -2357,7 +2359,7 @@ namespace Common
                                 x = xmin;
                                 pucPtr = pucStart;
                                 sidefoundindex = 0;
-                                lastval= x;
+                                lastval = x;
 
                                 while (x < xmax)
                                 {
@@ -2367,7 +2369,7 @@ namespace Common
                                     {
                                         *pucPtr = 100;
 
-                                        SideFoundItemClass sidefounditem = new SideFoundItemClass(new Point(x, y),Math.Abs(x-lastval));
+                                        SideFoundItemClass sidefounditem = new SideFoundItemClass(new Point(x, y), Math.Abs(x - lastval));
                                         lastval = x;
 
                                         sidefoundcollection.sidefounds[sidefoundindex].Add(sidefounditem);
@@ -2473,7 +2475,7 @@ namespace Common
                                     }
                                     else
                                     {
-                                        if(*pucPtr == 0)
+                                        if (*pucPtr == 0)
                                             *pucPtr = 30;
                                     }
                                     pucPtr -= iStride * livedupgap;
@@ -2521,8 +2523,8 @@ namespace Common
                                             CheckColor = 255;
                                     }
                                     else
-                                        if(*pucPtr == 0)
-                                            *pucPtr = 30;
+                                        if (*pucPtr == 0)
+                                        *pucPtr = 30;
 
                                     pucPtr += iStride * livedupgap;
                                     y += livedupgap;
@@ -2567,8 +2569,8 @@ namespace Common
                                             CheckColor = 255;
                                     }
                                     else
-                                        if(*pucPtr == 0)
-                                            *pucPtr = 30;
+                                        if (*pucPtr == 0)
+                                        *pucPtr = 30;
 
                                     pucPtr -= livedupgap;
                                     x -= livedupgap;
@@ -2614,8 +2616,8 @@ namespace Common
                                             CheckColor = 255;
                                     }
                                     else
-                                        if(*pucPtr == 0)
-                                            *pucPtr = 30;
+                                        if (*pucPtr == 0)
+                                        *pucPtr = 30;
 
                                     pucPtr += livedupgap;
                                     x += livedupgap;
@@ -2636,7 +2638,7 @@ namespace Common
             }
         }
 
-        void SearchLine(Bitmap bmpsrc,int sidecount,SideFoundClass sidefound, int gap = 1)
+        void SearchLine(Bitmap bmpsrc, int sidecount, SideFoundClass sidefound, int gap = 1)
         {
             Rectangle rectbmp = SimpleRect(bmpsrc.Size);
             BitmapData bmpData = bmpsrc.LockBits(rectbmp, ImageLockMode.ReadWrite, PixelFormat.Format32bppRgb);
@@ -2654,7 +2656,7 @@ namespace Common
                     int xmin = rectbmp.X;
                     int ymin = rectbmp.Y;
 
-                    int xmax = rectbmp.Right -1;
+                    int xmax = rectbmp.Right - 1;
                     int ymax = rectbmp.Bottom - 1;
 
                     int x = rectbmp.X;
@@ -2918,7 +2920,7 @@ namespace Common
                                             pucPtr[1] = 255;
                                             pucPtr[2] = 255;
 
-                                            pucPtr-=4;
+                                            pucPtr -= 4;
                                             x--;
                                             continue;
                                         }
@@ -3338,7 +3340,7 @@ namespace Common
         }
         void DrawRectOutLine(Bitmap bmp, byte color)
         {
-            Rectangle rectbmp = new Rectangle(0,0,bmp.Width,bmp.Height);
+            Rectangle rectbmp = new Rectangle(0, 0, bmp.Width, bmp.Height);
             BitmapData bmpData = bmp.LockBits(rectbmp, ImageLockMode.ReadWrite, PixelFormat.Format8bppIndexed);
             IntPtr Scan0 = bmpData.Scan0;
 
@@ -3365,7 +3367,7 @@ namespace Common
 
                     while (y < ymax)
                     {
-                        if(y != 0 && y != ymax - 1)
+                        if (y != 0 && y != ymax - 1)
                         {
                             pucPtr = pucStart;
 
@@ -3386,7 +3388,7 @@ namespace Common
                         {
                             *pucPtr = color;
 
-                            pucPtr ++;
+                            pucPtr++;
                             x++;
                         }
                         pucStart += iStride;
@@ -3413,7 +3415,7 @@ namespace Common
 
         public string allresultstr = "";
 
-        public SideDataClass [] SIDEData = new SideDataClass[(int)SIDEEmnum.COUNT]; 
+        public SideDataClass[] SIDEData = new SideDataClass[(int)SIDEEmnum.COUNT];
 
         public JzFourSideAnalyze()
         {
@@ -3428,7 +3430,7 @@ namespace Common
         /// <param name="holeheight"></param>
         /// <param name="isand"></param>
         /// <param name="erosioncount"></param>
-        public void GetData(Bitmap bmporg,int holewidth,int holeheight, bool isand,int erosioncount,FirstStepEnum firstStep = FirstStepEnum.FMethod1)
+        public void GetData(Bitmap bmporg, int holewidth, int holeheight, bool isand, int erosioncount, FirstStepEnum firstStep = FirstStepEnum.FMethod1)
         {
             int i = 0;
             Bitmap[] bmps = new Bitmap[20];
@@ -3480,7 +3482,7 @@ namespace Common
             jzHistogram.GetHistogramData(bmps[0], bmps[6 + i - 1], true, histogramdata);
             GetHistogramData(histogramdata, jzhresult);
 
-            bmps[6 + i - 1].Save(@"D:\JETEAZY\T"+ (6 + i - 1).ToString() + ".BMP", ImageFormat.Bmp);
+            bmps[6 + i - 1].Save(@"D:\JETEAZY\T" + (6 + i - 1).ToString() + ".BMP", ImageFormat.Bmp);
 
             bmpOrg = CopyImage(bmporg);
             bmpFirst = CopyImage(bmps[0]);
@@ -3509,27 +3511,27 @@ namespace Common
                 bmpSecond.Dispose();
             if (bmpThird != null)
                 bmpThird.Dispose();
-            
+
             HistogramEqualization histogramEqualization = new HistogramEqualization();
             bmps[bmpindex] = histogramEqualization.Apply(bmporg);
-            
+
             Blur blur = new Blur();
-            bmps[bmpindex+1] = blur.Apply(bmps[bmpindex]);
+            bmps[bmpindex + 1] = blur.Apply(bmps[bmpindex]);
             bmpindex++;
 
             ContrastStretch contraststrch = new ContrastStretch();
-            bmps[bmpindex+1] = contraststrch.Apply(bmps[bmpindex]);
+            bmps[bmpindex + 1] = contraststrch.Apply(bmps[bmpindex]);
             bmpindex++;
 
-            bmps[bmpindex + 1]= ConvertToGrayScale(bmps[bmpindex]);
+            bmps[bmpindex + 1] = ConvertToGrayScale(bmps[bmpindex]);
             bmpindex++;
 
             SISThreshold sis = new SISThreshold();
-            bmps[bmpindex+1] = sis.Apply(bmps[bmpindex]);
+            bmps[bmpindex + 1] = sis.Apply(bmps[bmpindex]);
             bmpindex++;
 
-            CannyEdgeDetector canny = new CannyEdgeDetector(20,100,1.4d);
-            bmps[bmpindex+1] = canny.Apply(bmps[bmpindex]);
+            CannyEdgeDetector canny = new CannyEdgeDetector(20, 100, 1.4d);
+            bmps[bmpindex + 1] = canny.Apply(bmps[bmpindex]);
             bmpindex++;
 
             Invert invert = new Invert();
@@ -3632,9 +3634,9 @@ namespace Common
         }
 
 
-        public void GetDataGX(Bitmap bmporg, 
+        public void GetDataGX(Bitmap bmporg,
             double gammacor, int blurcount, double holeratio, bool isneedclose
-            ,ComboBox cbo)
+            , ComboBox cbo)
         {
             int i = 0;
             int bmpindex = 0;
@@ -3700,7 +3702,7 @@ namespace Common
 
             FillHoles fillHoles = new FillHoles();
             fillHoles.CoupledSizeFiltering = true;
-            fillHoles.MaxHoleWidth = (int)(bmporg.Width * holeratio /100d);
+            fillHoles.MaxHoleWidth = (int)(bmporg.Width * holeratio / 100d);
             fillHoles.MaxHoleHeight = (int)(bmporg.Height * holeratio / 100d);
 
             bmps[bmpindex + 1] = fillHoles.Apply(bmps[bmpindex]);
@@ -3724,7 +3726,7 @@ namespace Common
             string firstfilename = @"D:\\JETEAZY\\FIRST.BMP";
 
             bmpFirst = CopyImage(bmps[bmpindex]);
-            SaveAllbmps(bmps, "NEW-",ref filenames);
+            SaveAllbmps(bmps, "NEW-", ref filenames);
 
             bmpFirst.Save(firstfilename, ImageFormat.Bmp);
             filenames = firstfilename + "," + filenames.Remove(filenames.Length - 1, 1);
@@ -3866,8 +3868,8 @@ namespace Common
         /// <param name="insidecolor"></param>
         public void GetDataIX(Bitmap bmporg,
             double gammacor, int blurcount, double holeratio, bool isneedclose
-            ,ComboBox cbo,int[] sidecount
-            ,double longratio,double shortratio,int enlarge,byte insidecolor)
+            , ComboBox cbo, int[] sidecount
+            , double longratio, double shortratio, int enlarge, byte insidecolor)
         {
             int i = 0;
             int bmpindex = 0;
@@ -3902,7 +3904,7 @@ namespace Common
             //bmpindex++;
 
             //GetBoarderIX(bmps[bmpindex], 0.6d,0.9d, sidecount,20);
-            GetBoarderIX(bmps[bmpindex], longratio, shortratio, sidecount, enlarge, holeratio,insidecolor);
+            GetBoarderIX(bmps[bmpindex], longratio, shortratio, sidecount, enlarge, holeratio, insidecolor);
 
             string filenames = "";
             string firstfilename = @"D:\\JETEAZY\\FIRST.BMP";
@@ -3926,10 +3928,10 @@ namespace Common
             Clearbmps(bmps);
         }
 
-        public void GetBoarder(Bitmap bmp,double rangeratio,int[] sidecount)
+        public void GetBoarder(Bitmap bmp, double rangeratio, int[] sidecount)
         {
             Rectangle[] smallrects = new Rectangle[100];
-            Rectangle bigrect = GetAllRects(bmp,ref smallrects);
+            Rectangle bigrect = GetAllRects(bmp, ref smallrects);
 
             int i = 0;
 
@@ -3947,8 +3949,8 @@ namespace Common
             }
         }
 
-        public void GetBoarderIX(Bitmap bmp, double longratio,double shortratio, 
-            int[] sidecount,int enlarge,double holesratio,byte insidecolor)
+        public void GetBoarderIX(Bitmap bmp, double longratio, double shortratio,
+            int[] sidecount, int enlarge, double holesratio, byte insidecolor)
         {
             Rectangle[] smallrects = new Rectangle[100];
             Rectangle bigrect = GetAllRectsIX(bmp, 500);
@@ -3965,23 +3967,23 @@ namespace Common
             while (i < (int)SIDEEmnum.COUNT)
             {
                 SideDataClass sidedata = new SideDataClass();
-                sidedata.GetSide((SIDEEmnum)i, bmp, bigrect, longratio, (1 -  shortratio));
+                sidedata.GetSide((SIDEEmnum)i, bmp, bigrect, longratio, (1 - shortratio));
                 sidedata.mysideCount = sidecount[i];
-                sidedata.ProcessIX(sidedata.bmpside,holesratio);
+                sidedata.ProcessIX(sidedata.bmpside, holesratio);
 
                 SIDEData[i] = sidedata;
                 i++;
             }
         }
 
-        void FillRect8bit(Bitmap bmp,Rectangle rect,byte color8bit)
+        void FillRect8bit(Bitmap bmp, Rectangle rect, byte color8bit)
         {
             Rectangle rectbmp = new Rectangle(new Point(0, 0), bmp.Size);
 
             BitmapData bmpData = bmp.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format8bppIndexed);
-            
+
             IntPtr Scan0 = bmpData.Scan0;
-            
+
             try
             {
                 unsafe
@@ -4003,17 +4005,17 @@ namespace Common
 
                     y = ymin;
                     pucStart = scan0 + (x - xmin) + (iStride * (y - ymin));
-                
+
                     while (y < ymax)
                     {
                         x = xmin;
                         pucPtr = pucStart;
-                        
+
                         while (x < xmax)
                         {
                             *pucPtr = color8bit;
 
-                            pucPtr ++;
+                            pucPtr++;
                             x++;
                         }
                         pucStart += iStride;
@@ -4028,12 +4030,12 @@ namespace Common
             }
         }
 
-        public void SaveAllbmps(Bitmap[] bmps,string headstr)
+        public void SaveAllbmps(Bitmap[] bmps, string headstr)
         {
             string filenames = "";
             SaveAllbmps(bmps, headstr, ref filenames);
         }
-        public void SaveAllbmps(Bitmap[] bmps, string headstr,ref string filenames)
+        public void SaveAllbmps(Bitmap[] bmps, string headstr, ref string filenames)
         {
             int i = 0;
 
@@ -4045,15 +4047,15 @@ namespace Common
 
                     bmps[i].Save(filename, ImageFormat.Bmp);
 
-                    if(filenames != "")
+                    if (filenames != "")
                         filenames += filename + ",";
                 }
                 i++;
             }
         }
-        public void GetDietBMP(Bitmap bmpsrc,double deitrangeratio)
+        public void GetDietBMP(Bitmap bmpsrc, double deitrangeratio)
         {
-            Bitmap [] bmps = new Bitmap[20];
+            Bitmap[] bmps = new Bitmap[20];
 
             int i = 0;
             int bmpindex = 0;
@@ -4069,7 +4071,7 @@ namespace Common
 
             BlobCounter blobCounter = new BlobCounter();
             blobCounter.ProcessImage(bmps[bmpindex]);
-            Blob[] blobs = blobCounter.GetObjectsInformation(); 
+            Blob[] blobs = blobCounter.GetObjectsInformation();
 
             Rectangle bigrect = new Rectangle();
 
@@ -4077,7 +4079,7 @@ namespace Common
             i = 0;
             while (i < blobCounter.ObjectsCount)
             {
-                if(area < blobs[i].Area)
+                if (area < blobs[i].Area)
                 {
                     area = blobs[i].Area;
                     bigrect = blobs[i].Rectangle;
@@ -4089,21 +4091,21 @@ namespace Common
             //Check Rectangle 
 
             int VW = (bigrect.Width - (int)((double)bigrect.Width * deitrangeratio)) / 2;
-            int VL = bigrect.X + VW ;
+            int VL = bigrect.X + VW;
             int VR = bigrect.Right - VW;
 
-            Rectangle vlRect = new Rectangle(0,0,VL,bmpsrc.Height);
-            Rectangle vrRect = new Rectangle(VR,0,bmpsrc.Width - VR -1,bmpsrc.Height);
+            Rectangle vlRect = new Rectangle(0, 0, VL, bmpsrc.Height);
+            Rectangle vrRect = new Rectangle(VR, 0, bmpsrc.Width - VR - 1, bmpsrc.Height);
 
             int HH = (bigrect.Height - (int)((double)bigrect.Height * deitrangeratio)) / 2;
             int HT = bigrect.Y + HH;
             int HB = bigrect.Bottom - HH;
 
             Rectangle htRect = new Rectangle(0, 0, bmpsrc.Width, HT);
-            Rectangle hbRect = new Rectangle(0, HB, bmpsrc.Width, bmpsrc.Height - HB -1);
+            Rectangle hbRect = new Rectangle(0, HB, bmpsrc.Width, bmpsrc.Height - HB - 1);
 
             Bitmap vBMP = new Bitmap(vlRect.Width + vrRect.Width, vlRect.Height);
-            Bitmap hBMP = new Bitmap(htRect.Width, htRect.Height +hbRect.Height);
+            Bitmap hBMP = new Bitmap(htRect.Width, htRect.Height + hbRect.Height);
 
             DrawCompactImage(bmpsrc, vlRect, vrRect, vBMP, false);
             DrawCompactImage(bmpsrc, htRect, hbRect, hBMP, true);
@@ -4119,7 +4121,7 @@ namespace Common
         public string PASSNG = "PASS";
 
         public void GetIPDDietBMP(Bitmap bmpsrc,
-            short rgb, 
+            short rgb,
             double thresholdratio,
             double objectfilterratio,
             int edcount,
@@ -4288,9 +4290,9 @@ namespace Common
             //STEP1 先確認bangbang 是上下還是左右的bangbang
             SIDEEmnum bangbangside = SIDEEmnum.TOP;
 
-            if(bangbangrect.Width > bangbangrect.Height) //棒棒是否位於上下左右位置
+            if (bangbangrect.Width > bangbangrect.Height) //棒棒是否位於上下左右位置
             {
-                if(bangbangrect.Y < (bmp.Height >> 1))
+                if (bangbangrect.Y < (bmp.Height >> 1))
                     bangbangside = SIDEEmnum.TOP;
                 else
                     bangbangside = SIDEEmnum.BOTTOM;
@@ -4314,10 +4316,10 @@ namespace Common
             }
 
             int NGRange = 4;
-            switch(bangbangside)
-            { 
+            switch (bangbangside)
+            {
                 case SIDEEmnum.TOP:
-                    if(bangbangrect.Top - foundbanbangrect.Top > NGRange)
+                    if (bangbangrect.Top - foundbanbangrect.Top > NGRange)
                     {
                         PASSNG = "NG";
                     }
@@ -4344,14 +4346,14 @@ namespace Common
 
             //排名第2的是晶片 //NG!!! //REVISED By VICTOR 2025/03/11
             blobCounter.ProcessImage(bmps[CheckChipSizeIndex]);
-            Blob [] chckchipblobs = blobCounter.GetObjectsInformation();
+            Blob[] chckchipblobs = blobCounter.GetObjectsInformation();
 
             i = 0;
             Rectangle bmpcenterrect = new Rectangle(bmpOrg.Width >> 1, bmpOrg.Height >> 1, 10, 10);
-            
-            foreach(Blob bb in chckchipblobs)
+
+            foreach (Blob bb in chckchipblobs)
             {
-                if(bb.Rectangle.IntersectsWith(bmpcenterrect))
+                if (bb.Rectangle.IntersectsWith(bmpcenterrect))
                 {
                     Rectangle orgrect = bb.Rectangle;
                     Rectangle bmprect = new Rectangle(0, 0, bmp.Width, bmp.Height);
@@ -4515,7 +4517,7 @@ namespace Common
             Clearbmps(bmps);
         }
 
-        void DrawText(Bitmap bmp,string str)
+        void DrawText(Bitmap bmp, string str)
         {
             Graphics g = Graphics.FromImage(bmp);
             g.DrawString(str, new Font("Arial", 8), new SolidBrush(Color.Red), new PointF(0, 0));
@@ -5019,7 +5021,7 @@ namespace Common
         }
         */
 
-        Rectangle GetAllRects(Bitmap bmpsrc,ref Rectangle[] ballrects)
+        Rectangle GetAllRects(Bitmap bmpsrc, ref Rectangle[] ballrects)
         {
             Rectangle bigrect = new Rectangle();
 
@@ -5062,7 +5064,7 @@ namespace Common
                 if (bigrect != blobs[i].Rectangle)
                 {
                     ballrects[index] = blobs[i].Rectangle;
-                    index ++;
+                    index++;
                 }
                 i++;
             }
@@ -5073,7 +5075,7 @@ namespace Common
             return bigrect;
         }
 
-        Rectangle GetAllRectsIX(Bitmap bmpsrc,int mincombinwh)
+        Rectangle GetAllRectsIX(Bitmap bmpsrc, int mincombinwh)
         {
             Rectangle bigrect = new Rectangle();
 
@@ -5100,7 +5102,7 @@ namespace Common
             {
                 if (blobs[i].Rectangle.Width > mincombinwh && blobs[i].Rectangle.Height > mincombinwh)
                 {
-                    if(bigrect.X == 0)
+                    if (bigrect.X == 0)
                     {
                         bigrect = blobs[i].Rectangle;
                     }
@@ -5146,7 +5148,7 @@ namespace Common
 
             SuiccideSideData();
 
-            while(i < (int)SIDEEmnum.COUNT)
+            while (i < (int)SIDEEmnum.COUNT)
             {
                 SideDataClass sidedata = new SideDataClass();
                 sidedata.GetSide((SIDEEmnum)i, bmpFirst, 0.6d, 0.1d);
@@ -5169,7 +5171,7 @@ namespace Common
 
             //bmpSecond = CopyImage(bmpFirst);
 
-            while(i < (int)SIDEEmnum.COUNT)
+            while (i < (int)SIDEEmnum.COUNT)
             {
                 SIDEData[i].Process(methods[i]);
                 i++;
@@ -5181,10 +5183,10 @@ namespace Common
 
         public void DrawProcessedSides()
         {
-            DrawProcessedSides(Color.Lime,3);
+            DrawProcessedSides(Color.Lime, 3);
         }
 
-        public void DrawProcessedSides(Color color,int width)
+        public void DrawProcessedSides(Color color, int width)
         {
             int i = 0;
 
@@ -5196,7 +5198,7 @@ namespace Common
             while (i < (int)SIDEEmnum.COUNT)
             {
                 SIDEData[i].DrawResult(bmpSecond, color, width, true);
-                
+
                 i++;
             }
 
@@ -5208,8 +5210,8 @@ namespace Common
 
             //bmpOrg.Save(@"D:\JETEAZY\ORG.bmp", ImageFormat.Bmp);
             //bmpFirst.Save(@"D:\JETEAZY\FIRST.bmp", ImageFormat.Bmp);
-            
-            while(i < (int)SIDEEmnum.COUNT)
+
+            while (i < (int)SIDEEmnum.COUNT)
             {
                 SIDEData[i].bmpside.Save(@"D:\JETEAZY\S" + ((SIDEEmnum)i).ToString() + ".bmp", ImageFormat.Bmp);
 
@@ -5220,7 +5222,7 @@ namespace Common
         {
             return AForge.Imaging.Filters.Grayscale.CommonAlgorithms.BT709.Apply(bmp);
         }
-        Bitmap GetChannel(Bitmap bmp,short rgb)
+        Bitmap GetChannel(Bitmap bmp, short rgb)
         {
             ExtractChannel extract = new ExtractChannel();
             extract.Channel = rgb;
@@ -5292,14 +5294,14 @@ namespace Common
         }
         public void Suiccide()
         {
-            if(bmpOrg != null)
+            if (bmpOrg != null)
                 bmpOrg.Dispose();
             if (bmpFirst != null)
                 bmpFirst.Dispose();
-            if(bmpSecond != null)
+            if (bmpSecond != null)
                 bmpSecond.Dispose();
-            if(bmpThird != null)
-                bmpThird.Dispose();            
+            if (bmpThird != null)
+                bmpThird.Dispose();
         }
         void SuiccideSideData()
         {
@@ -5322,10 +5324,10 @@ namespace Common
         {
             return (Bitmap)bmp.Clone(rect, bmp.PixelFormat);
         }
-        void DrawRectOutside(Bitmap bmp,Color color,int linewidth)
+        void DrawRectOutside(Bitmap bmp, Color color, int linewidth)
         {
             Graphics g = Graphics.FromImage(bmp);
-            Rectangle rect = new Rectangle(0,0,bmp.Width - 1,bmp.Height - 1);
+            Rectangle rect = new Rectangle(0, 0, bmp.Width - 1, bmp.Height - 1);
 
             g.DrawRectangle(new Pen(Color.Red, linewidth), rect);
             g.Dispose();
@@ -5336,7 +5338,7 @@ namespace Common
             DrawRectOutLine(bmp, color, rectbmp);
         }
 
-        void DrawRectOutLine(Bitmap bmp, byte color,Rectangle rect)
+        void DrawRectOutLine(Bitmap bmp, byte color, Rectangle rect)
         {
             Rectangle recttmp = rect;
             BitmapData bmpData = bmp.LockBits(recttmp, ImageLockMode.ReadWrite, PixelFormat.Format8bppIndexed);
@@ -5428,15 +5430,15 @@ namespace Common
     public class JzSideAnalyzeEXClass
     {
         const int bmpcount = 50;
-        public SideDataEXClass[] sidedataexs; 
+        public SideDataEXClass[] sidedataexs;
         JzAnalyzeParaEXClass jzapara;
         Bitmap[] bmps;
 
         string passStr = "PASS";
-        public string AnalyzeResultStr = ""; 
-        
-        # region 小菊花工具
-        
+        public string AnalyzeResultStr = "";
+
+        #region 小菊花工具
+
         JzHistogramClass jzHistogram = new JzHistogramClass(1);
         JzHistogramResult jzhresult = new JzHistogramResult();
 
@@ -5444,6 +5446,7 @@ namespace Common
         CannyEdgeDetector canny = new CannyEdgeDetector();
         SISThreshold sis = new SISThreshold();
         OtsuThreshold otsu = new OtsuThreshold();
+        BradleyLocalThresholding localThresholding = new BradleyLocalThresholding();
         Erosion erosion = new Erosion();
         Dilatation dilatation = new Dilatation();
         BlobCounter blobCounter = new BlobCounter();
@@ -5452,7 +5455,9 @@ namespace Common
         Threshold threshold = new Threshold();
         ContrastStretch contrastStretch = new ContrastStretch();
         Invert invert = new Invert();
-        
+        BlobsFiltering blobsFiltering = new BlobsFiltering();
+        AForge.Imaging.Filters.Grayscale grayscale = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+
         #endregion
 
         public JzSideAnalyzeEXClass()
@@ -5462,7 +5467,7 @@ namespace Common
             sidedataexs = new SideDataEXClass[(int)SIDEEmnum.COUNT];
         }
 
-        public void Train(JzAnalyzeParaEXClass para,Bitmap bmpsrc,List<Bitmap> bmplist)
+        public void Train(JzAnalyzeParaEXClass para, Bitmap bmpsrc, List<Bitmap> bmplist)
         {
             int i = 0;
             Rectangle rectwhole = new Rectangle(0, 0, bmpsrc.Width, bmpsrc.Height);
@@ -5492,36 +5497,38 @@ namespace Common
 
         }
 
-        public void Run(Bitmap bmpsrc, List<Bitmap> bmplist)
+        public string Run(Bitmap bmpsrc, List<Bitmap> bmplist)
         {
             passStr = "PASS";
 
-            switch(jzapara.Method)
+            switch (jzapara.Method)
             {
                 case MethodEnum.IPD:
-                    RunIPDCheck(bmpsrc, bmplist);
+                    passStr = RunIPDCheck(bmpsrc, bmplist);
                     break;
                 case MethodEnum.NORMAL:
-                    RunNormalCheck(bmpsrc, bmplist);
+                    passStr = RunNormalCheck(bmpsrc, bmplist);
                     break;
             }
+
+            return passStr;
         }
         /// <summary>
         /// 取得Chip 的尺吋及位置訊息
         /// </summary>
         /// <param name="bmpsrc"></param>
         /// <returns></returns>
-        public Rectangle GetTrainedChipRect(Bitmap bmpsrc,List<Bitmap> bmplist)
+        public Rectangle GetTrainedChipRect(Bitmap bmpsrc, List<Bitmap> bmplist)
         {
             Rectangle rectret = new Rectangle();
 
-            switch(jzapara.Method)
+            switch (jzapara.Method)
             {
                 case MethodEnum.IPD:
-                    rectret = GetIPDChipRect(bmpsrc,bmplist);
+                    rectret = GetIPDChipRect(bmpsrc, bmplist);
                     break;
                 case MethodEnum.NORMAL:
-                    rectret = GetNormalChipRect(bmpsrc,bmplist);
+                    rectret = GetNormalChipRect(bmpsrc, bmplist);
                     break;
             }
 
@@ -5532,19 +5539,21 @@ namespace Common
         /// </summary>
         /// <param name="bmpsrc"></param>
         /// <returns></returns>
-        Rectangle GetIPDChipRect(Bitmap bmpsrc,List<Bitmap> bmplist)
+        Rectangle GetIPDChipRect(Bitmap bmpsrc, List<Bitmap> bmplist)
         {
+            return GetIPDChipRect20250506(bmpsrc, bmplist);
+
             Rectangle rectret = new Rectangle();
 
             int i = 0;
             int bmpindex = 0;
-            
+
             Rectangle rectwhole = new Rectangle(0, 0, bmpsrc.Width, bmpsrc.Height);
             Rectangle rectcenter = new Rectangle(rectwhole.Width >> 1, rectwhole.Height >> 1, 10, 10);
 
             bmps[bmpindex] = CopyImage(bmpsrc);
 
-            if(!jzapara.RectBangBang.Equals(new Rectangle()))
+            if (!jzapara.RectBangBang.Equals(new Rectangle()))
             {
                 DrawBangBang(bmps[bmpindex], jzapara.RectBangBang);
             }
@@ -5554,7 +5563,7 @@ namespace Common
 
             bmps[bmpindex + 1] = otsu.Apply(bmps[bmpindex]);
             bmpindex++;
-            
+
             blobCounter.ProcessImage(bmps[bmpindex]);
             Blob[] blobs = blobCounter.GetObjectsInformation();
 
@@ -5564,7 +5573,7 @@ namespace Common
                 if (blob.Rectangle.IntersectsWith(rectcenter))
                 {
                     Rectangle rectorg = blob.Rectangle;
-                    
+
                     rectorg.Inflate(20, 20);
                     rectorg.Intersect(rectwhole);
 
@@ -5590,11 +5599,110 @@ namespace Common
             return rectret;
         }
         /// <summary>
+        /// 取得IPD Die 裏的晶片尺吋及位置訊息
+        /// </summary>
+        /// <param name="bmpsrc"></param>
+        /// <returns></returns>
+        Rectangle GetIPDChipRect20250506(Bitmap bmpsrc, List<Bitmap> bmplist)
+        {
+            Rectangle rectret = new Rectangle();
+
+            int i = 0;
+            int bmpindex = 0;
+
+            Rectangle rectwhole = new Rectangle(0, 0, bmpsrc.Width, bmpsrc.Height);
+            Rectangle rectcenter = new Rectangle(rectwhole.Width >> 1, rectwhole.Height >> 1, 10, 10);
+
+            bmps[bmpindex] = CopyImage(bmpsrc);
+
+            if (!jzapara.RectBangBang.Equals(new Rectangle()))
+            {
+                DrawBangBang(bmps[bmpindex], jzapara.RectBangBang);
+            }
+
+            //bmps[bmpindex + 1] = GetChannel(bmps[bmpindex], jzapara.RGBChannel);
+            //bmpindex++;
+
+            bmps[bmpindex + 1] = grayscale.Apply(bmps[bmpindex]);
+            bmpindex++;
+
+            threshold.ThresholdValue = 230;
+            bmps[bmpindex + 1] = threshold.Apply(bmps[bmpindex]);
+            bmpindex++;
+
+            //bmps[bmpindex + 1] = invert.Apply(bmps[bmpindex]);
+            //bmpindex++;
+
+            //blobsFiltering.CoupledSizeFiltering = true;
+            //blobsFiltering.MinWidth = bmps[bmpindex].Width / 3;
+            //blobsFiltering.MinHeight = bmps[bmpindex].Height / 3;
+            //bmps[bmpindex + 1] = blobsFiltering.Apply(bmps[bmpindex]);
+            //bmpindex++;
+
+            //bmps[bmpindex + 1] = invert.Apply(bmps[bmpindex]);
+            //bmpindex++;
+
+            //blobCounter.ObjectsOrder = ObjectsOrder.Area;
+            blobCounter.ProcessImage(bmps[bmpindex]);
+            Blob[] blobs = blobCounter.GetObjectsInformation();
+
+            int iMAX = -10000000;
+            int iMAXIndex = 0;
+
+            i = 0;
+            foreach (Blob blob in blobs)
+            {
+                int iArea = blob.Area;
+                //Console.WriteLine($"{i}:{iArea}");
+                if (iArea > 1000)
+                {
+                    if (iMAX > iArea)
+                    {
+                    }
+                    else
+                    {
+                        iMAX = iArea;
+                        iMAXIndex = i;
+                    }
+                }
+
+                //if (blob.Rectangle.IntersectsWith(rectcenter))
+                //{
+                //    Rectangle rectorg = blob.Rectangle;
+
+                //    rectorg.Inflate(20, 20);
+                //    rectorg.Intersect(rectwhole);
+
+                //    if (rectorg != rectwhole)
+                //    {
+                //        break;
+                //    }
+                //}
+
+                i++;
+            }
+
+            if (iMAXIndex < blobs.Length)
+                rectret = blobs[iMAXIndex].Rectangle;
+            else
+                rectret = rectwhole;
+
+            //画出找到的晶片尺寸
+            Bitmap bmp = (Bitmap)bmps[0].Clone();
+            DrawRectOutside(bmp, Color.Red, 3, rectret);
+            bmplist.Add(bmp); //bmplist[0]
+            //SaveAllbmps(bmps, "TRAINIPD");
+
+            Suicide();
+
+            return rectret;
+        }
+        /// <summary>
         /// 取得 Normal Die 裏的晶片尺吋及位置訊息
         /// </summary>
         /// <param name="bmpsrc"></param>
         /// <returns></returns>
-        Rectangle GetNormalChipRect(Bitmap bmpsrc,List<Bitmap>bmplist)
+        Rectangle GetNormalChipRect(Bitmap bmpsrc, List<Bitmap> bmplist)
         {
             Rectangle rectret = new Rectangle();
 
@@ -5618,7 +5726,7 @@ namespace Common
 
             //清除雜訊
             fillholes.CoupledSizeFiltering = true;//true and false or
-            fillholes.MaxHoleWidth = (int)(rectwhole.Width*  jzapara.ObjetFilteRatio);
+            fillholes.MaxHoleWidth = (int)(rectwhole.Width * jzapara.ObjetFilteRatio);
             fillholes.MaxHoleHeight = (int)(rectwhole.Height * jzapara.ObjetFilteRatio);
             bmps[bmpindex + 1] = fillholes.Apply(bmps[bmpindex]);
             bmpindex++;
@@ -5668,8 +5776,11 @@ namespace Common
             return rectret;
 
         }
-        public string RunIPDCheck(Bitmap bmpsrc,List<Bitmap> bmplist)
+        public string RunIPDCheck(Bitmap bmpsrc, List<Bitmap> bmplist)
         {
+
+            return RunIPDCheck20250505(bmpsrc, bmplist);
+
             string retstr = "PASS";
             Rectangle rectwhole = new Rectangle(0, 0, bmpsrc.Width, bmpsrc.Height);
 
@@ -5760,7 +5871,7 @@ namespace Common
             }
 
             //檢查是否溢出棒棒
-            if(!jzapara.CheckSideBangBang(foundrect))
+            if (!jzapara.CheckSideBangBang(foundrect))
             {
                 retstr = "NG";
                 //return retstr;
@@ -5856,13 +5967,13 @@ namespace Common
                 Rectangle rectCheckNeverOutide = AllblobRect;
                 rectCheckNeverOutide.IntersectsWith(jzapara.RectNeverOutRange);
 
-                if(!rectCheckNeverOutide.Equals(AllblobRect))
+                if (!rectCheckNeverOutide.Equals(AllblobRect))
                 {
                     retstr = "NG";
                     //return retstr;
                 }
             }
-            
+
             //取得所有的點點資料
             i = 0;
             while (i < (int)SIDEEmnum.COUNT)
@@ -5874,7 +5985,7 @@ namespace Common
             i = 0;
             while (i < (int)SIDEEmnum.COUNT)
             {
-                sidedataexs[i].DrawResultEX(bmps[0],Color.Red,3);
+                sidedataexs[i].DrawResultEX(bmps[0], Color.Red, 3);
                 i++;
             }
 
@@ -5898,6 +6009,240 @@ namespace Common
 
             return retstr;
         }
+
+        public string RunIPDCheck20250505(Bitmap bmpsrc, List<Bitmap> bmplist)
+        {
+            string retstr = "PASS";
+            Rectangle rectwhole = new Rectangle(0, 0, bmpsrc.Width, bmpsrc.Height);
+
+            int i = 0;
+            int bmpindex = 0;
+
+            bmps[bmpindex] = CopyImage(bmpsrc);
+
+            bmps[bmpindex + 1] = CopyImage(bmps[bmpindex]);
+            bmpindex++;
+
+            if (!jzapara.RectBangBang.Equals(new Rectangle()))
+            {
+                DrawBangBang(bmps[bmpindex], jzapara.RectBangBang);
+            }
+
+            bmps[bmpindex + 1] = GetChannel(bmps[bmpindex], jzapara.RGBChannel);
+            bmpindex++;
+
+            int bmpindexTobeThreshold = bmpindex;
+
+            bmps[bmpindex + 1] = localThresholding.Apply(bmps[bmpindex]);
+            bmpindex++;
+
+            //畫外框白色，把靠邊的洞洞弄離開邊緣
+            DrawRectOutLine(bmps[bmpindex], 255);
+
+            ////外蝕
+            //i = 0;
+            //while (i < jzapara.EDCount)
+            //{
+            //    bmps[bmpindex + 1] = dilatation.Apply(bmps[bmpindex]);
+            //    bmpindex++;
+            //    i++;
+            //}
+
+            //消除小雜毛邊
+            bmps[bmpindex + 1] = closing.Apply(bmps[bmpindex]);
+            bmpindex++;
+
+            //清除雜訊
+            fillholes.CoupledSizeFiltering = true;//true and false or
+            fillholes.MaxHoleWidth = (int)(rectwhole.Width * jzapara.ObjetFilteRatio);
+            fillholes.MaxHoleHeight = (int)(rectwhole.Height * jzapara.ObjetFilteRatio);
+            bmps[bmpindex + 1] = fillholes.Apply(bmps[bmpindex]);
+            bmpindex++;
+
+            ////外擴
+            //i = 0;
+            //while (i < jzapara.EDCount)
+            //{
+            //    bmps[bmpindex + 1] = erosion.Apply(bmps[bmpindex]);
+            //    bmpindex++;
+            //    i++;
+            //}
+
+            //尋外框
+            canny.GaussianSigma = 1.4;
+            canny.HighThreshold = 100;
+            canny.LowThreshold = 20;
+            bmps[bmpindex + 1] = canny.Apply(bmps[bmpindex]);
+            bmpindex++;
+
+            //加強
+            bmps[bmpindex + 1] = sis.Apply(bmps[bmpindex]);
+            bmpindex++;
+
+            //閉合邊緣
+            bmps[bmpindex + 1] = closing.Apply(bmps[bmpindex]);
+            bmpindex++;
+
+            Bitmap bmpFoundProcessed = (Bitmap)bmps[bmpindex].Clone();
+            bmplist.Add(bmpFoundProcessed); //bmplist[1]
+
+            int bmpindexTobeCheckFoundLine = bmpindex;
+            //取出所有的物件
+            blobCounter.ProcessImage(bmps[bmpindex]);
+            Blob[] blobs = blobCounter.GetObjectsInformation();
+
+            //檢查blob的位置是否比一開始定義的blob位置要上下左右距離大，只要更大就是NG
+            Rectangle foundrect = new Rectangle();
+            foreach (Blob blob in blobs)
+            {
+                if (blob.Rectangle.IntersectsWith(jzapara.RectBangBang))
+                {
+                    foundrect = blob.Rectangle;
+                }
+            }
+
+            //檢查是否溢出棒棒
+            if (!jzapara.CheckSideBangBang(foundrect))
+            {
+                retstr = "NG";
+                //return retstr;
+            }
+
+            bool isallinside = true;
+            //檢查是否透明膠是正常的
+            if (jzapara.RectBangBang != new Rectangle())
+            {
+                List<string> sortlist = new List<string>();
+
+                //int[] histogramdata = new int[256];
+
+                //jzHistogram.GetHistogramData(bmps[bmpindexTobeThreshold],
+                //        rectwhole,
+                //        histogramdata);
+
+                //GetHistogramData(histogramdata, jzhresult);
+
+                //threshold.ThresholdValue = (int)(jzhresult.mean * (1 - jzapara.ThresholdRatio));
+                bmps[bmpindex + 1] = sis.Apply(bmps[bmpindexTobeThreshold]);
+                bmpindex++;
+
+                //畫外框白色
+                DrawRectOutLine(bmps[bmpindex], 255);
+
+                bmps[bmpindex + 1] = fillholes.Apply(bmps[bmpindex]);
+                bmpindex++;
+
+                //確認是否透明膠有黏住棒棒，先找外框
+                bmps[bmpindex + 1] = canny.Apply(bmps[bmpindex]);
+                bmpindex++;
+
+                //強化外框
+                bmps[bmpindex + 1] = sis.Apply(bmps[bmpindex]);
+                bmpindex++;
+                //反白
+                bmps[bmpindex + 1] = invert.Apply(bmps[bmpindex]);
+                bmpindex++;
+                //連結線
+                bmps[bmpindex + 1] = opening.Apply(bmps[bmpindex]);
+                bmpindex++;
+                //清除雜訊
+                bmps[bmpindex + 1] = fillholes.Apply(bmps[bmpindex]);
+                bmpindex++;
+                //反白
+                bmps[bmpindex + 1] = invert.Apply(bmps[bmpindex]);
+                bmpindex++;
+
+                Bitmap bmpAllinProcessed = (Bitmap)bmps[bmpindex].Clone();
+                bmplist.Add(bmpAllinProcessed); //bmplist[2]
+
+                //取得最大範圍的外圍
+                blobCounter.ProcessImage(bmps[bmpindex]);
+                Blob[] rangeblobs = blobCounter.GetObjectsInformation();
+                sortlist.Clear();
+                i = 0;
+                while (i < blobCounter.ObjectsCount)
+                {
+                    string str = rangeblobs[i].Area.ToString("000000000000") + "," + i.ToString("000");
+                    sortlist.Add(str);
+
+                    i++;
+                }
+                sortlist.Sort();
+                sortlist.Reverse();
+
+                Blob Allblob = rangeblobs[int.Parse(sortlist[0].Split(',')[1])];
+
+                Rectangle AllblobRect = Allblob.Rectangle;
+                AllblobRect.Inflate(10, 10);
+
+                foreach (Blob blob in blobs)
+                {
+                    Rectangle blbrect = blob.Rectangle;
+
+                    blbrect.Intersect(AllblobRect);
+
+                    if (blbrect != blob.Rectangle)
+                    {
+                        isallinside = false;
+                        break;
+                    }
+                }
+
+                //检查最大的范围是否有透明胶黏著
+                if (!isallinside)
+                {
+                    retstr = "NG";
+                    //return retstr;
+                }
+                //檢查是否有超出指定不能超出的範圍的情況發生
+                Rectangle rectCheckNeverOutide = AllblobRect;
+                rectCheckNeverOutide.IntersectsWith(jzapara.RectNeverOutRange);
+
+                if (!rectCheckNeverOutide.Equals(AllblobRect))
+                {
+                    retstr = "NG";
+                    //return retstr;
+                }
+            }
+
+            //取得所有的點點資料
+            i = 0;
+            while (i < (int)SIDEEmnum.COUNT)
+            {
+                sidedataexs[i].ProcessEX(bmps[bmpindexTobeCheckFoundLine]);
+                i++;
+            }
+            //畫出所有的點點
+            i = 0;
+            while (i < (int)SIDEEmnum.COUNT)
+            {
+                sidedataexs[i].DrawResultEX(bmps[0], Color.Red, 3);
+                i++;
+            }
+
+            Bitmap bmpFinalProcessed = (Bitmap)bmps[0].Clone();
+            bmplist.Add(bmpFinalProcessed); //bmplist[3]
+
+            if (isallinside)
+            {
+                AnalyzeResultStr = "";
+
+                foreach (SideDataEXClass sidedata in sidedataexs)
+                {
+                    sidedata.ProcessDistance(ref AnalyzeResultStr);
+                }
+
+            }
+
+            //SaveAllbmps(bmps, "RUNIPD");
+
+            Suicide();
+
+            return retstr;
+        }
+
+
+
         public string RunNormalCheck(Bitmap bmpsrc, List<Bitmap> bmplist)
         {
             string retstr = "PASS";
@@ -6060,7 +6405,7 @@ namespace Common
             g.DrawRectangle(new Pen(Color.Red, linewidth), rect);
             g.Dispose();
         }
-        void DrawRectOutside(Bitmap bmp, Color color, int linewidth,Rectangle rect)
+        void DrawRectOutside(Bitmap bmp, Color color, int linewidth, Rectangle rect)
         {
             Graphics g = Graphics.FromImage(bmp);
 
@@ -6275,7 +6620,7 @@ namespace Common
         }
         public Rectangle RectBangBang
         {
-            get 
+            get
             {
                 return rectbangbang;
             }
@@ -6374,7 +6719,7 @@ namespace Common
         /// <param name="rectwhole"></param>全尺吋
         /// <param name="rectchip"></param>晶片尺吋
         /// <returns></returns>
-        public Rectangle GetSideDefinedRect(SIDEEmnum side,Rectangle rectwhole)
+        public Rectangle GetSideDefinedRect(SIDEEmnum side, Rectangle rectwhole)
         {
             Rectangle rectret = new Rectangle();    //回傳的四邊形
             Rectangle rectchipratio = rectChipRatio;
@@ -6385,9 +6730,9 @@ namespace Common
             {
                 case SIDEEmnum.TOP:
 
-                    rectpartial = new Rectangle(0, 0, 
+                    rectpartial = new Rectangle(0, 0,
                         rectwhole.Width, rectchipratio.Y);
-                    
+
                     rectret = new Rectangle(rectchipratio.X, 0,
                         rectchipratio.Width, rectchipratio.Height + rectchipratio.Y);
 
@@ -6397,32 +6742,32 @@ namespace Common
                     rectpartial = new Rectangle(0, rectchipratio.Bottom,
                         rectwhole.Width, rectwhole.Height - rectchipratio.Bottom);
 
-                    rectret = new Rectangle(rectchipratio.X, rectchipratio.Y, 
+                    rectret = new Rectangle(rectchipratio.X, rectchipratio.Y,
                         rectchipratio.Width, rectwhole.Height - rectchipratio.Top);
 
                     break;
                 case SIDEEmnum.LEFT:
 
-                    rectpartial = new Rectangle(0, 0, 
+                    rectpartial = new Rectangle(0, 0,
                         rectchipratio.Left, rectwhole.Height);
 
-                    rectret = new Rectangle(0, rectchipratio.Y, 
+                    rectret = new Rectangle(0, rectchipratio.Y,
                         rectchipratio.Width + rectchipratio.X, rectchipratio.Height);
 
                     break;
                 case SIDEEmnum.RIGHT:
 
-                    rectpartial = new Rectangle(rectchipratio.Right, 0, 
+                    rectpartial = new Rectangle(rectchipratio.Right, 0,
                         rectwhole.Width - rectchipratio.Right, rectwhole.Height);
 
-                    rectret = new Rectangle(rectchipratio.X, rectchipratio.Y, 
+                    rectret = new Rectangle(rectchipratio.X, rectchipratio.Y,
                         rectwhole.Width - rectchipratio.X, rectchipratio.Height);
 
                     break;
             }
 
             rectret.Intersect(rectpartial);
-            
+
             return rectret;
         }
         /// <summary>
@@ -6574,7 +6919,7 @@ namespace Common
 
             //bmptmp.Save(@"D:\JETEAZY\1ST-" + SIDEIndex.ToString() + ".png", ImageFormat.Png);
 
-            SearchLine8bitFX(bmp, true, myside, sidefounds, 5, 5);
+            SearchLine8bitFX(bmp, true, myside, sidefounds, 1, 2);
 
 
             //如果有裏面點點的數量小於平均值的50%表示為錯誤點點
@@ -6909,7 +7254,7 @@ namespace Common
         {
             Point[] pts = new Point[10];
 
-            if (index == -1)
+            if (index > 0)
             {
                 int i = 0;
                 foreach (SideFoundEXClass sidedfound in sidefounds)
@@ -6922,7 +7267,13 @@ namespace Common
                     //sidedfound.FillPtsEX(ref pts, rectside.Location);
                     i++;
                 }
-                if (i > 0)
+                if (index < i)
+                {
+                    SideFoundEXClass sidedfoundx = sidefounds[index];
+                    pts = new Point[sidedfoundx.CountItems()];
+                    sidedfoundx.FillPtsEX(ref pts, rectside.Location);
+                }
+                else if (i > 0)
                 {
                     SideFoundEXClass sidedfoundx = sidefounds[i - 1];
                     pts = new Point[sidedfoundx.CountItems()];
