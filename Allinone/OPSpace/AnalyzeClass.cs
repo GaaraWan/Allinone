@@ -1405,23 +1405,23 @@ namespace Allinone.OPSpace
             {
                 if (PADPara.DescStr.Contains("无胶"))
                 {
-                    descStr = "无胶";
+                    descStr = "无胶,";
                 }
                 else if (PADPara.DescStr.Contains("尺寸"))
                 {
-                    descStr = "尺寸";
+                    descStr = "尺寸,";
                 }
                 else if (PADPara.DescStr.Contains("溢胶"))
                 {
-                    descStr = "溢胶";
+                    descStr = "溢胶,";
                 }
                 else if (PADPara.DescStr.Contains("胶水异常"))
                 {
-                    descStr = "胶水异常";
+                    descStr = "胶水异常,";
                 }
                 else
                 {
-                    descStr = PADPara.DescStr;
+                    descStr = PADPara.DescStr + ",";
                 }
             }
             foreach (AnalyzeClass analyzeClass in BranchList)
@@ -7436,8 +7436,34 @@ namespace Allinone.OPSpace
                         checkitem.BorderType = (BorderTypeEnum)i;
                         //checkitem.ChipMin = PADPara.glues[i].GetMinMM() + (float)GetRandom(-50000, 50000) * 0.000000013 * aa;// + GetRandom(-0.1, 0.1);
                         //checkitem.ChipMax = PADPara.glues[i].GetMaxMM() + (float)GetRandom(-30000, 30000) * 0.000000012 * aa;// + GetRandom(-0.1, 0.1);
-                        checkitem.ChipMin = PADPara.glues[i].GetMinMM() + (float)GetRandom(-aa * 0.000013, aa * 0.000015);// + GetRandom(-0.1, 0.1);
-                        checkitem.ChipMax = PADPara.glues[i].GetMaxMM() + (float)GetRandom(-aa * 0.000012, aa * 0.000017);// + GetRandom(-0.1, 0.1);
+
+                        bool bNoCheck = false;
+                        switch (checkitem.BorderType)
+                        {
+                            case BorderTypeEnum.TOP:
+                                bNoCheck = PADPara.PADExtend.bNoInspectTop;
+                                break;
+                            case BorderTypeEnum.BOTTOM:
+                                bNoCheck = PADPara.PADExtend.bNoInspectBottom;
+                                break;
+                            case BorderTypeEnum.LEFT:
+                                bNoCheck = PADPara.PADExtend.bNoInspectLeft;
+                                break;
+                            case BorderTypeEnum.RIGHT:
+                                bNoCheck = PADPara.PADExtend.bNoInspectRight;
+                                break;
+                        }
+
+                        if (bNoCheck)
+                        {
+                            checkitem.ChipMin = -1000;
+                            checkitem.ChipMax = 1000;
+                        }
+                        else
+                        {
+                            checkitem.ChipMin = PADPara.glues[i].GetMinMM() + (float)GetRandom(-aa * 0.000013, aa * 0.000015);// + GetRandom(-0.1, 0.1);
+                            checkitem.ChipMax = PADPara.glues[i].GetMaxMM() + (float)GetRandom(-aa * 0.000012, aa * 0.000017);// + GetRandom(-0.1, 0.1);
+                        }
 
                         CheckItemsList.Add(checkitem);
                         //System.Threading.Thread.Sleep(1);

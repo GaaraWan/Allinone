@@ -4346,12 +4346,22 @@ namespace Allinone.FormSpace
                                                                 {
                                                                     if (!string.IsNullOrEmpty(vs[i]))
                                                                     {
-                                                                        string[] vs1 = vs[i].Split(' ');
-                                                                        foreach (string s in vs1)
+                                                                        ////空格分隔
+                                                                        //string[] vs1 = vs[i].Split(' ');
+                                                                        //foreach (string s in vs1)
+                                                                        //{
+                                                                        //    if (!string.IsNullOrEmpty(s))
+                                                                        //    {
+                                                                        //        vs2.Add(s);
+                                                                        //    }
+                                                                        //}
+
+                                                                        //不分隔
+                                                                        foreach (char s in vs[i])
                                                                         {
-                                                                            if (!string.IsNullOrEmpty(s))
+                                                                            if (!string.IsNullOrEmpty(s.ToString()))
                                                                             {
-                                                                                vs2.Add(s);
+                                                                                vs2.Add(s.ToString());
                                                                             }
                                                                         }
                                                                     }

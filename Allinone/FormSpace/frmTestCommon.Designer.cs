@@ -34,11 +34,12 @@
             this.btnLoad = new System.Windows.Forms.ToolStripButton();
             this.btnTest = new System.Windows.Forms.ToolStripButton();
             this.lblResult = new System.Windows.Forms.ToolStripLabel();
-            this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             this.btnGetImage = new System.Windows.Forms.ToolStripButton();
             this.btnSetupPos = new System.Windows.Forms.ToolStripButton();
             this.btnSaveExit = new System.Windows.Forms.ToolStripButton();
             this.btnExit = new System.Windows.Forms.ToolStripButton();
+            this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
+            this.btnGoSetupPos = new System.Windows.Forms.ToolStripButton();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -59,6 +60,7 @@
             this.lblResult,
             this.btnGetImage,
             this.btnSetupPos,
+            this.btnGoSetupPos,
             this.btnSaveExit,
             this.btnExit});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
@@ -88,14 +90,6 @@
             this.lblResult.Name = "lblResult";
             this.lblResult.Size = new System.Drawing.Size(17, 22);
             this.lblResult.Text = "...";
-            // 
-            // propertyGrid1
-            // 
-            this.propertyGrid1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.propertyGrid1.Location = new System.Drawing.Point(683, 25);
-            this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(371, 596);
-            this.propertyGrid1.TabIndex = 4;
             // 
             // btnGetImage
             // 
@@ -129,6 +123,22 @@
             this.btnExit.Size = new System.Drawing.Size(52, 22);
             this.btnExit.Text = "退出";
             // 
+            // propertyGrid1
+            // 
+            this.propertyGrid1.Dock = System.Windows.Forms.DockStyle.Right;
+            this.propertyGrid1.Location = new System.Drawing.Point(683, 25);
+            this.propertyGrid1.Name = "propertyGrid1";
+            this.propertyGrid1.Size = new System.Drawing.Size(371, 596);
+            this.propertyGrid1.TabIndex = 4;
+            // 
+            // btnGoSetupPos
+            // 
+            this.btnGoSetupPos.Image = ((System.Drawing.Image)(resources.GetObject("btnGoSetupPos.Image")));
+            this.btnGoSetupPos.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnGoSetupPos.Name = "btnGoSetupPos";
+            this.btnGoSetupPos.Size = new System.Drawing.Size(88, 22);
+            this.btnGoSetupPos.Text = "运行至位置";
+            // 
             // frmTestCommon
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -158,5 +168,6 @@
         private System.Windows.Forms.PropertyGrid propertyGrid1;
         private System.Windows.Forms.ToolStripButton btnSaveExit;
         private System.Windows.Forms.ToolStripButton btnExit;
+        private System.Windows.Forms.ToolStripButton btnGoSetupPos;
     }
 }

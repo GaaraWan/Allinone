@@ -24,29 +24,35 @@ namespace Allinone.FormSpace.BasicPG
 
         [Category("定位参数")]
         [DisplayName("角度")]
-        //[Description("角度")]
+        [Description("即在此角度范围内寻找")]
         public float Rotation { get; set; } = 15;
         [Category("定位参数")]
         [DisplayName("相似度")]
-        //[Description("相似度")]
+        [Description("即前后比较的相似度 小于此值则NG")]
         public float Tolerance { get; set; } = 0.5f;
 
         [Category("判断异常参数")]
         [DisplayName("二值化阈值")]
-        //[Description("二值化阈值")]
+        [Description("即黑白图像的处理")]
         public int ThresholdValue { get; set; } = 128;
         [Category("判断异常参数")]
         [DisplayName("找白色")]
-        //[Description("找白色")]
+        [Description("找区域内的白色斑点")]
         public bool IsWhite { get; set; } = true;
         [Category("判断异常参数")]
         [DisplayName("异常最小值")]
         //[Description("二值化阈值")]
+        [Browsable(false)]
         public int blobMin { get; set; } = 100;
         [Category("判断异常参数")]
         [DisplayName("异常最大值")]
         //[Description("二值化阈值")]
+        [Browsable(false)]
         public int blobMax { get; set; } = 60000;
+        [Category("判断异常参数")]
+        [DisplayName("缺陷百分比")]
+        [Description("即缺陷占寻找区域的比例 大于此比例则NG")]
+        public float blobRatio { get; set; } = 0.5f;
 
         public void FromString(string eStr)
         {
@@ -61,6 +67,11 @@ namespace Allinone.FormSpace.BasicPG
                 blobMax = int.Parse(strings[5]);
                 FromMoverString(strings[6]);
             }
+            if (strings.Length > 7)
+            {
+                blobRatio = float.Parse(strings[7]);
+                
+            }
         }
         public string ToParaString()
         {
@@ -72,8 +83,8 @@ namespace Allinone.FormSpace.BasicPG
             str += (IsWhite ? "1" : "0") + SeperateCharG;
             str += blobMin.ToString() + SeperateCharG;
             str += blobMax.ToString() + SeperateCharG;
-            str += ToMoverString();
-
+            str += ToMoverString() + SeperateCharG;
+            str += blobRatio.ToString();
             return str;
         }
 

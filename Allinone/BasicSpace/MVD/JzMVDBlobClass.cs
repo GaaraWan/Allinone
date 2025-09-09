@@ -30,6 +30,8 @@ namespace Allinone.BasicSpace.MVD
         public bool IsWhite { get; set; } = true;
         public int blobMin { get; set; } = 100;
         public int blobMax { get; set; } = 60000;
+        public float blobRatio { get; set; } = 0.5f;
+        public double FindBaseArea { get; set; } = 100;
 
         /// <summary>
         /// 找blob
@@ -89,14 +91,20 @@ namespace Allinone.BasicSpace.MVD
             }
 
             NGBounds.Clear();
+            float allArea = cImageBinaryToolObj.Result.OutputImage.Width * cImageBinaryToolObj.Result.OutputImage.Height;
             foreach (var item in cBlobFindToolObj.Result.BlobInfo)
             {
-                if (item.AreaF > blobMin && item.AreaF < blobMax)
+                if (item.AreaF > blobMin && item.AreaF < FindBaseArea * 0.3)
                 {
-                    bOK = false;
-                    MVD_RECT_F mVD_RECT_ = item.BoxInfo.GetBoundingRect();
-                    NGBounds.Add(new RectangleF(mVD_RECT_.fX, mVD_RECT_.fY, mVD_RECT_.fWidth, mVD_RECT_.fHeight));
-                    //break;
+                    double _ratio = item.AreaF / FindBaseArea;
+                    //if (item.AreaF > blobMin && item.AreaF < blobMax)
+                    if (_ratio > blobRatio)
+                    {
+                        bOK = false;
+                        MVD_RECT_F mVD_RECT_ = item.BoxInfo.GetBoundingRect();
+                        NGBounds.Add(new RectangleF(mVD_RECT_.fX, mVD_RECT_.fY, mVD_RECT_.fWidth, mVD_RECT_.fHeight));
+                        //break;
+                    }
                 }
             }
             //if (NGBounds.Count > 0)

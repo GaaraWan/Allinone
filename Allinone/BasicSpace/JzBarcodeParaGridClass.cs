@@ -37,7 +37,19 @@ namespace Allinone.BasicSpace
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
         [Browsable(true)]
-        public int CamExpo { get; set; } = 8;
+        public float CamExpo { get; set; } = 8;
+        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [DisplayName("A04.相机曝光次数")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(1, 100)]
+        [Browsable(true)]
+        public int CamExpoCount { get; set; } = 1;
+        [CategoryAttribute(cat1), DescriptionAttribute("")]
+        [DisplayName("A05.相机曝光梯度")]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 100)]
+        [Browsable(true)]
+        public float CamExpoOffset { get; set; } = 1;
 
 
         const string cat0 = "01.读码设定";
@@ -69,7 +81,12 @@ namespace Allinone.BasicSpace
             }
             if (parts.Length > 6)
             {
-                CamExpo = int.Parse(parts[5]);
+                CamExpo = float.Parse(parts[5]);
+            }
+            if (parts.Length > 8)
+            {
+                CamExpoCount = int.Parse(parts[6]);
+                CamExpoOffset = float.Parse(parts[7]);
             }
         }
         public string ToParaString()
@@ -82,6 +99,8 @@ namespace Allinone.BasicSpace
             str += nBrightness.ToString() + ",";
             str += nContrast.ToString() + ",";
             str += CamExpo.ToString() + ",";
+            str += CamExpoCount.ToString() + ",";
+            str += CamExpoOffset.ToString() + ",";
 
             return str;
         }

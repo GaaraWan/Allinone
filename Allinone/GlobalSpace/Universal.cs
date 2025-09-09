@@ -46,10 +46,10 @@ namespace Allinone
     public class Universal : JetEazy.Universal
     {
         public static bool IsNoUseCCD = false;
-        public static bool IsNoUseIO = true;
+        public static bool IsNoUseIO = false;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2025/08/24";
+        public static string VersionDate = "2025/09/09";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
         public static OptionEnum OPTION = OptionEnum.MAIN_SDM2;

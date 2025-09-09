@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Allinone.BasicSpace.MVD;
+using JetEazy.BasicSpace;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -30,6 +32,10 @@ namespace Allinone.FormSpace.BasicPG
             "得到的边缘数量越少，" +
             "甚至导致目标边缘点被筛除。 ")]
         public int ContrastTH { get; set; } = 15;
+        [DisplayName("查找模式")]
+        [Description("- “最宽”表示检测范围内间距最大的边缘对。\r\n- “最窄”表示检测范围内间距最小的边缘对。\r\n- “最强”表示检测范围内边缘对平均梯度最大的边缘对。\r\n- “最弱”表示检测范围内梯度最小的边缘对。")]
+        [TypeConverter(typeof(JzEnumConverter))]
+        public EWFindMode FindMode { get; set; } = EWFindMode.Strongest;
         [DisplayName("外扩X方向")]
         [Description("限定X方向的范围超出则NG")]
         public int FindX { get; set; } = 50;
@@ -57,6 +63,10 @@ namespace Allinone.FormSpace.BasicPG
                 FindInY = int.Parse(strings[5]);
                 //IsWhite = strings[2] == "1";
             }
+            if (strings.Length > 6)
+            {
+                FindMode = (EWFindMode)int.Parse(strings[6]);
+            }
         }
         public string ToParaString()
         {
@@ -67,7 +77,8 @@ namespace Allinone.FormSpace.BasicPG
             str += FindX.ToString() + ",";
             str += FindY.ToString() + ",";
             str += FindInX.ToString() + ",";
-            str += FindInY.ToString();
+            str += FindInY.ToString() + ",";
+            str += ((int)FindMode).ToString();
             //str += (IsWhite ? "1" : "0").ToString();
 
             return str;

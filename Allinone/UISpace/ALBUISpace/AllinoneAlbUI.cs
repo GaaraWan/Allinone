@@ -539,6 +539,7 @@ namespace Allinone.UISpace.ALBUISpace
             private bool bottom = false;
             private bool _bCheckNoHave = false;
             private float _CheckNoHaveRatio = 0.1f;
+            private bool _bCheckNoDIE = false;
 
             public override string ToString()
             {
@@ -547,7 +548,8 @@ namespace Allinone.UISpace.ALBUISpace
                 retstr += (pannel ? "1" : "0") + ",";
                 retstr += (bottom ? "1" : "0") + ",";
                 retstr += (_bCheckNoHave ? "1" : "0") + ",";
-                retstr += _CheckNoHaveRatio.ToString();
+                retstr += _CheckNoHaveRatio.ToString() + ",";
+                retstr += (_bCheckNoDIE ? "1" : "0");
 
                 return retstr;
             }
@@ -572,6 +574,9 @@ namespace Allinone.UISpace.ALBUISpace
                             break;
                         case 3:
                             _CheckNoHaveRatio = float.Parse(strx);
+                            break;
+                        case 4:
+                            _bCheckNoDIE = strx == "1";
                             break;
                     }
                     i++;
@@ -613,6 +618,15 @@ namespace Allinone.UISpace.ALBUISpace
                 get { return _CheckNoHaveRatio; }
                 set { _CheckNoHaveRatio = value; }
             }
+            [CategoryAttribute("Light Settings"),
+                    DefaultValueAttribute(true)]
+            [DisplayName("开启缺Die检测")]
+            public bool bCheckNoDIE
+            {
+                get { return _bCheckNoDIE; }
+                set { _bCheckNoDIE = value; }
+            }
+
         }
 
 

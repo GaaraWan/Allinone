@@ -279,7 +279,8 @@ namespace Allinone.OPSpace
 
 
             //RelateAnalyzeInformation = relateanalyzeinformation;
-            PassInfo = new PassInfoClass(passinfo, OPLevelEnum.COPY);
+            if (passinfo != null)
+                PassInfo = new PassInfoClass(passinfo, OPLevelEnum.COPY);
 
             ErrorString = errorstr;
             ProcessString = processsstr;

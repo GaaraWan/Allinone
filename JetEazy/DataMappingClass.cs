@@ -48,6 +48,9 @@ namespace JetEazy
                 case 5:
                     str = "无芯片";
                     break;
+                //case 6:
+                //    str = "缺DIE";
+                //    break;
             }
             return str;
         }

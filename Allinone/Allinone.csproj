@@ -349,6 +349,7 @@
     </Compile>
     <Compile Include="FormSpace\BasicPG\N1Class.cs" />
     <Compile Include="FormSpace\BasicPG\N2Class.cs" />
+    <Compile Include="FormSpace\BasicPG\PADExtendClass.cs" />
     <Compile Include="FormSpace\BasicPG\PADG1Class.cs" />
     <Compile Include="FormSpace\BasicPG\PADG2Class.cs" />
     <Compile Include="FormSpace\CamExportForm.cs">
@@ -501,6 +502,18 @@
     </Compile>
     <Compile Include="FormSpace\PADForm\NoHaveInspect\N2UI.Designer.cs">
       <DependentUpon>N2UI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PadExtendForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PadExtendForm.Designer.cs">
+      <DependentUpon>PadExtendForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PADExtend\PADEX1UI.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FormSpace\PADForm\PADExtend\PADEX1UI.Designer.cs">
+      <DependentUpon>PADEX1UI.cs</DependentUpon>
     </Compile>
     <Compile Include="FormSpace\PADForm\PadInspectDataForm.cs">
       <SubType>Form</SubType>
@@ -1035,6 +1048,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\PADForm\NoHaveInspect\N2UI.resx">
       <DependentUpon>N2UI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\PADForm\PadExtendForm.resx">
+      <DependentUpon>PadExtendForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\PADForm\PADExtend\PADEX1UI.resx">
+      <DependentUpon>PADEX1UI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\PADForm\PadInspectDataForm.resx">
       <DependentUpon>PadInspectDataForm.cs</DependentUpon>

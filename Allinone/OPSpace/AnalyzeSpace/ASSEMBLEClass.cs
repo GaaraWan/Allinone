@@ -165,7 +165,44 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 return pValue;
             }
         }
+        public class GetExtendPropertyEditor : UITypeEditor
+        {
+            public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext pContext)
+            {
+                if (pContext != null && pContext.Instance != null)
+                {
+                    //以「...」按鈕的方式顯示
+                    //UITypeEditorEditStyle.DropDown    下拉選單
+                    //UITypeEditorEditStyle.None        預設的輸入欄位
+                    return UITypeEditorEditStyle.Modal;
+                }
+                return base.GetEditStyle(pContext);
+            }
+            public override object EditValue(ITypeDescriptorContext pContext, IServiceProvider pProvider, object pValue)
+            {
+                IWindowsFormsEditorService editorService = null;
+                if (pContext != null && pContext.Instance != null && pProvider != null)
+                {
+                    editorService = (IWindowsFormsEditorService)pProvider.GetService(typeof(IWindowsFormsEditorService));
+                    if (editorService != null)
+                    {
+                        //將顯示得視窗放在這邊，並透過ShowDialog方式來呼叫
+                        //取得到的值再回傳回去
+                        //MessageBox.Show("sfsf");
+                        PadExtendForm msrdataform = new PadExtendForm((string)pValue);
 
+                        if (msrdataform.ShowDialog() == DialogResult.OK)
+                        {
+                            pValue = JzToolsClass.PassingString;
+                            JzToolsClass.PassingString = "";
+                        }
+
+                        //pValue = "FUCK YOU!";
+                    }
+                }
+                return pValue;
+            }
+        }
 
         public PropertyList publicproperties = new PropertyList();
         //ICustomClass implementation
@@ -1333,7 +1370,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
 
-
+        [Category("10.PADCHECK"), DefaultValue("")]
+        [Description("")]
+        [DisplayName("E1.扩展参数")]
+        [Editor(typeof(GetExtendPropertyEditor), typeof(UITypeEditor))]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1f, 0.1f, 2)]
+        public virtual string PADExtendOPString
+        {
+            get; set;
+        }
 
 
         [Category("11.PADCHECK"), DefaultValue(0.6)]
@@ -1539,6 +1585,20 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
 
                     break;
+                case OptionEnum.MAIN_SDM2:
+
+                    publicproperties.Add(new myProperty("Name", "01.Normal"));
+                    publicproperties.Add(new myProperty("AliasName", "01.Normal"));
+                    publicproperties.Add(new myProperty("ExtendX", "01.Normal"));
+                    publicproperties.Add(new myProperty("ExtendY", "01.Normal"));
+
+                    publicproperties.Add(new myProperty("AlignMethod", "02.Align"));
+                    publicproperties.Add(new myProperty("AlignMode", "02.Align"));
+                    publicproperties.Add(new myProperty("MTPSample", "02.Align"));
+                    publicproperties.Add(new myProperty("MTRotation", "02.Align"));
+                    publicproperties.Add(new myProperty("MTTolerance", "02.Align"));
+
+                    break;
                 default:
 
                     publicproperties.Add(new myProperty("Name", "01.Normal"));
@@ -1658,6 +1718,38 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             break;
 
                         case OptionEnum.MAIN_SDM2:
+
+                            //publicproperties.Add(new myProperty("PADMethod", "10.PADCHECK"));
+                            //#region 分层 选择测试项目则显示相应的参数
+
+                            //switch(PADMethod)
+                            //{
+                            //    case PADMethodEnum.GLUECHECK:
+
+                            //        publicproperties.Add(new myProperty("PADOWidthRatio", "10.PADCHECK"));
+                            //        publicproperties.Add(new myProperty("PADOHeightRatio", "10.PADCHECK"));
+                            //        publicproperties.Add(new myProperty("PADOAreaRatio", "10.PADCHECK"));
+                            //        publicproperties.Add(new myProperty("PADThresholdMode", "10.PADCHECK"));
+                            //        publicproperties.Add(new myProperty("PADGrayThreshold", "10.PADCHECK"));
+                            //        publicproperties.Add(new myProperty("PADBlobGrayThreshold", "10.PADCHECK"));
+
+                            //        publicproperties.Add(new myProperty("PADCheckDArea", "10.PADCHECK"));
+                            //        publicproperties.Add(new myProperty("PADCheckDWidth", "10.PADCHECK"));
+                            //        publicproperties.Add(new myProperty("PADCheckDHeight", "10.PADCHECK"));
+                            //        publicproperties.Add(new myProperty("PADExtendX", "10.PADCHECK"));
+                            //        publicproperties.Add(new myProperty("PADExtendY", "10.PADCHECK"));
+                            //        publicproperties.Add(new myProperty("GlueCheck", "10.PADCHECK"));
+                            //        publicproperties.Add(new myProperty("ChipDirlevel", "10.PADCHECK"));
+
+
+                            //        break;
+                            //    default:
+                            //        break;
+                            //}
+
+                            //#endregion
+
+                            //break;
                         case OptionEnum.MAIN_SDM1:
                         case OptionEnum.MAIN_SD:
 
@@ -1800,6 +1892,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
                             publicproperties.Add(new myProperty("GleHeightLower", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("GleAreaUpper", "10.PADCHECK"));
                             publicproperties.Add(new myProperty("GleAreaLower", "10.PADCHECK"));
+
+                            publicproperties.Add(new myProperty("PADExtendOPString", "10.PADCHECK"));
 
                             break;
 
@@ -2283,6 +2377,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             PadInspectMethod = PAD.PadInspectMethod;
             PADINSPECTOPString = PAD.PadInspectMethod.ToString() + "#" + PAD.PADINSPECTOPString;
+            PADExtendOPString = PAD.PADExtendOPString;
         }
         public void SetPADCHECK(PADINSPECTClass PAD)
         {
@@ -2349,6 +2444,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             PAD.PadInspectMethod = (PadInspectMethodEnum)Enum.Parse(typeof(PadInspectMethodEnum), PADINSPECTOPString.Split('#')[0], true);
             PAD.PADINSPECTOPString = PADINSPECTOPString.Split('#')[1];
+            PAD.PADExtendOPString = PADExtendOPString;
         }
 
     }
@@ -2397,7 +2493,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
         [Category("01.Normal"), DefaultValue(20)]
-        [Description("0 非必要.\r范围 0 <-> 1000, 默认 20")]
+        [Description("0 非必要.\r范围 0 <-> 1000, 默认 20 单位像素pixel")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 1000)]
         [DisplayName("5.横向外扩")]
@@ -2406,7 +2502,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
         [Category("01.Normal"), DefaultValue(20)]
-        [Description("0 非必要.\r范围 0 <-> 1000, 默认 20")]
+        [Description("0 非必要.\r范围 0 <-> 1000, 默认 20 单位像素pixel")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 1000)]
         [DisplayName("6.纵向外扩")]
@@ -2465,7 +2561,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
         [Category("02.Align"), DefaultValue(0.1)]
-        [Description("筛选分数 数值越大越严格.\r范围 0 <-> 1.,  默认 0.1")]
+        [Description("筛选分数 数值越大越严格.\r范围 0 <-> 1.,  默认 0.1 此值是百分比无单位")]
         [DisplayName("2.容许值")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1f, 0.1f, 2)]
@@ -2521,7 +2617,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
         [Category("02.Align"), DefaultValue(0.5)]
-        [Description("允许的偏移量.\r范围 0 <-> 100.,  默认 0.5")]
+        [Description("允许的偏移量.\r范围 0 <-> 100.,  默认 0.5 单位毫米mm")]
         [DisplayName("8.偏移")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 100f, 0.1f, 3)]
@@ -2530,7 +2626,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
         [Category("02.Align"), DefaultValue(0.02)]
-        [Description("一个像素代表的大小(分辩率).\r范围 0 <-> 100.,  默认 0.02")]
+        [Description("一个像素代表的大小(分辩率).\r范围 0 <-> 100.,  默认 0.02 单位毫米/像素  mm/pixel")]
         [DisplayName("9.分辩率")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 100f, 0.1f, 3)]
@@ -2577,7 +2673,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
         [Category("02.Align"), DefaultValue(0.2)]
-        [Description("允许的偏移量.\r范围 0 <-> 100.,  默认 0.2")]
+        [Description("允许的偏移量.\r范围 0 <-> 100.,  默认 0.2 单位毫米mm")]
         [DisplayName("B.绝对偏移")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 100f, 0.1f, 3)]
@@ -2598,7 +2694,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
         [Category("03.Inspection"), DefaultValue(3)]
-        [Description("检测最允许的最大个数\r范围 -1 <-> 1000.,  默认 3, -1 为禁用")]
+        [Description("检测最允许的最大个数\r范围 -1 <-> 1000.,  默认 3, -1 为禁用 单位个")]
         [DisplayName("2.个数")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(-1, 1000)]
@@ -2607,7 +2703,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
         [Category("03.Inspection"), DefaultValue(5)]
-        [Description("检测时允许的最大面积\r范围 1 <-> 1000.,  默认 5")]
+        [Description("检测时允许的最大面积\r范围 1 <-> 1000.,  默认 5 单位pixel ")]
         [DisplayName("1.面积")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(1, 1000)]
@@ -2616,7 +2712,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
         [Category("03.Inspection"), DefaultValue(15)]
-        [Description("像素容许值.\r范围 0 <-> 255,  默认 15")]
+        [Description("像素容许值.\r范围 0 <-> 255,  默认 15 图像灰阶值")]
         [DisplayName("3.容许值")]
         [TypeConverter(typeof(NumericUpDownTypeConverter))]
         [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 255)]
@@ -3509,6 +3605,18 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             get; set;
         }
+
+        [Category("10.PADCHECK"), DefaultValue("")]
+        [Description("")]
+        [DisplayName("E1.扩展参数")]
+        [Editor(typeof(GetExtendPropertyEditor), typeof(UITypeEditor))]
+        //[TypeConverter(typeof(NumericUpDownTypeConverter))]
+        //[Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0f, 1f, 0.1f, 2)]
+        public override string PADExtendOPString
+        {
+            get; set;
+        }
+
 
         [Category("11.PADCHECK"), DefaultValue(0.6)]
         [Description("")]

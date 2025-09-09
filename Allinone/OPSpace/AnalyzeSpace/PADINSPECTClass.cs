@@ -156,6 +156,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public PadInspectMethodEnum PadInspectMethod { get; set; } = PadInspectMethodEnum.NONE;
         public string PADINSPECTOPString { get; set; } = "";
 
+        public string PADExtendOPString { get; set; } = "";
+
         string m_format = "0.000";
 
         private string m_DescStr = string.Empty;
@@ -183,6 +185,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         JzMVDPatMatchClass mVDPatMatchClass = new JzMVDPatMatchClass();
         public JzMVDPatMatchClass EzMVDPatMatchPADG2 = new JzMVDPatMatchClass();
         public JzMVDBlobClass EzMVDBLOB = new JzMVDBlobClass();
+        public PADExtendClass PADExtend = new PADExtendClass();
 
         Bitmap imginput;
         Bitmap imgoutput;
@@ -250,6 +253,9 @@ namespace Allinone.OPSpace.AnalyzeSpace
             RelateAnalyzeString = relateanalyzestring;
             //RelateAnalyzeInformation = relateanalyzeinformation;
             PassInfo = new PassInfoClass(passinfo, OPLevelEnum.COPY);
+
+            if (!string.IsNullOrEmpty(PADExtendOPString))
+                PADExtend.FromString(PADExtendOPString);
 
             switch (PADMethod)
             {
@@ -384,6 +390,21 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                                     break;
                             }
+
+
+                            if (PADExtend.bOpenUseContactEle)
+                            {
+                                Graphics grapContactEle = Graphics.FromImage(bitmap);
+                                Rectangle rect2 = new Rectangle(m_PADRegion.RegionForEdgeRect.X,
+                                                                                       m_PADRegion.RegionForEdgeRect.Y,
+                                                                                       m_PADRegion.RegionForEdgeRect.Width,
+                                                                                       m_PADRegion.RegionForEdgeRect.Height);
+                                rect2.Inflate(PADExtend.cEleX, PADExtend.cEleY);
+                                grapContactEle.DrawRectangle(new Pen(Color.Yellow, LineWidth), rect2);
+                                grapContactEle.Dispose();
+
+
+                            }
                             bmpPadFindOutput.Dispose();
                             bmpPadFindOutput = new Bitmap(bitmap);
                             bitmap.Dispose();
@@ -451,6 +472,21 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                     }
                                     break;
                             }
+
+                            if (PADExtend.bOpenUseContactEle)
+                            {
+                                Graphics grapContactEle = Graphics.FromImage(bitmap);
+                                Rectangle rect2 = new Rectangle(m_PADRegion.RegionForEdgeRect.X,
+                                                                                       m_PADRegion.RegionForEdgeRect.Y,
+                                                                                       m_PADRegion.RegionForEdgeRect.Width,
+                                                                                       m_PADRegion.RegionForEdgeRect.Height);
+                                rect2.Inflate(PADExtend.cEleX, PADExtend.cEleY);
+                                grapContactEle.DrawRectangle(new Pen(Color.Yellow, LineWidth), rect2);
+                                grapContactEle.Dispose();
+
+
+                            }
+
                             bmpPadFindOutput.Dispose();
                             bmpPadFindOutput = new Bitmap(bitmap);
                             bitmap.Dispose();
@@ -797,6 +833,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //0.025/0.022 = 1 mil/1 pixel
             Resolution_Mil = 0.0254 / INI.MAINSD_PAD_MIL_RESOLUTION;
             m_DescStr = string.Empty;
+            if (!string.IsNullOrEmpty(PADExtendOPString))
+                PADExtend.FromString(PADExtendOPString);
 
             bmpMeasureOutput.Dispose();
             //bmpMeasureOutput = new Bitmap(bmpinput);
@@ -1583,6 +1621,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 bool m_ischeckgluepass = true;
                 string ngstr = string.Empty;
                 string measureStr = string.Empty;
+                bool _bNoInspect = false;
+                bool _bSlot = false;
 
                 double GlueTmpMax = 0;// GlueMax * Resolution_Mil;
                 double GlueTmpMin = 0;// GlueMin * Resolution_Mil;
@@ -1628,66 +1668,96 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     switch ((BorderTypeEnum)i)
                     {
                         case BorderTypeEnum.LEFT:
+                            _bNoInspect = PADExtend.bNoInspectLeft;
+                            _bSlot = GlueChipSlotDir == ChipSlotDir.SlotLeft;
                             measureStr += "左";// + Environment.NewLine;
-                            measureStr += "[min:" + min.ToString(format) + " mm]";
-                            measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
+                            //measureStr += "[min:" + min.ToString(format) + " mm]";
+                            //measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
 
-                            if (GlueChipSlotDir == ChipSlotDir.SlotLeft)
-                            {
-                                measureStr += "薄膜胶";// + Environment.NewLine;
-                                measureStr += "[min:" + minSlot.ToString(format) + " mm]";
-                                measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
+                            //if (GlueChipSlotDir == ChipSlotDir.SlotLeft)
+                            //{
+                            //    measureStr += "薄膜胶";// + Environment.NewLine;
+                            //    measureStr += "[min:" + minSlot.ToString(format) + " mm]";
+                            //    measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
 
-                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
-                            }
+                            //    isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            //}
 
                             break;
                         case BorderTypeEnum.RIGHT:
+                            _bNoInspect = PADExtend.bNoInspectRight;
+                            _bSlot = GlueChipSlotDir == ChipSlotDir.SlotRight;
                             measureStr += "右";// + Environment.NewLine;
-                            measureStr += "[min:" + min.ToString(format) + " mm]";
-                            measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
+                            //measureStr += "[min:" + min.ToString(format) + " mm]";
+                            //measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
 
-                            if (GlueChipSlotDir == ChipSlotDir.SlotRight)
-                            {
-                                measureStr += "薄膜胶";// + Environment.NewLine;
-                                measureStr += "[min:" + minSlot.ToString(format) + " mm]";
-                                measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
+                            //if (GlueChipSlotDir == ChipSlotDir.SlotRight)
+                            //{
+                            //    measureStr += "薄膜胶";// + Environment.NewLine;
+                            //    measureStr += "[min:" + minSlot.ToString(format) + " mm]";
+                            //    measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
 
-                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
-                            }
+                            //    isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            //}
 
                             break;
                         case BorderTypeEnum.TOP:
+                            _bNoInspect = PADExtend.bNoInspectTop;
+                            _bSlot = GlueChipSlotDir == ChipSlotDir.SlotTop;
                             measureStr += "上";// + Environment.NewLine;
-                            measureStr += "[min:" + min.ToString(format) + " mm]";
-                            measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
+                            //measureStr += "[min:" + min.ToString(format) + " mm]";
+                            //measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
 
-                            if (GlueChipSlotDir == ChipSlotDir.SlotTop)
-                            {
-                                measureStr += "薄膜胶";// + Environment.NewLine;
-                                measureStr += "[min:" + minSlot.ToString(format) + " mm]";
-                                measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
+                            //if (GlueChipSlotDir == ChipSlotDir.SlotTop)
+                            //{
+                            //    measureStr += "薄膜胶";// + Environment.NewLine;
+                            //    measureStr += "[min:" + minSlot.ToString(format) + " mm]";
+                            //    measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
 
-                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
-                            }
+                            //    isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            //}
 
                             break;
                         case BorderTypeEnum.BOTTOM:
+                            _bNoInspect = PADExtend.bNoInspectBottom;
+                            _bSlot = GlueChipSlotDir == ChipSlotDir.SlotBottom;
                             measureStr += "下";// + Environment.NewLine;
-                            measureStr += "[min:" + min.ToString(format) + " mm]";
-                            measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
+                            //measureStr += "[min:" + min.ToString(format) + " mm]";
+                            //measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
 
-                            if (GlueChipSlotDir == ChipSlotDir.SlotBottom)
-                            {
-                                measureStr += "薄膜胶";// + Environment.NewLine;
-                                measureStr += "[min:" + minSlot.ToString(format) + " mm]";
-                                measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
+                            //if (GlueChipSlotDir == ChipSlotDir.SlotBottom)
+                            //{
+                            //    measureStr += "薄膜胶";// + Environment.NewLine;
+                            //    measureStr += "[min:" + minSlot.ToString(format) + " mm]";
+                            //    measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
 
-                                isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
-                            }
+                            //    isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                            //}
 
                             break;
                     }
+
+
+                    if (_bNoInspect)
+                    {
+                        measureStr += "[min:no measure]";
+                        measureStr += "[max:no measure]" + Environment.NewLine;
+                        isSlotPass = true;
+                    }
+                    else
+                    {
+                        measureStr += "[min:" + min.ToString(format) + " mm]";
+                        measureStr += "[max:" + max.ToString(format) + " mm]" + Environment.NewLine;
+                        if (_bSlot)
+                        {
+                            measureStr += "薄膜胶";// + Environment.NewLine;
+                            measureStr += "[min:" + minSlot.ToString(format) + " mm]";
+                            measureStr += "[max:" + maxSlot.ToString(format) + " mm]" + Environment.NewLine;
+
+                            isSlotPass = (glues[i].LengthSlotMax <= (GlueSlotTmpMax) && glues[i].LengthSlotMin >= (GlueSlotTmpMin));
+                        }
+                    }
+
 
                     if (glues[i].LengthMax > (GlueTmpMax) || glues[i].LengthMin < (GlueTmpMin))
                     {
@@ -1697,35 +1767,55 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         {
                             case BorderTypeEnum.LEFT:
                                 ngstr += "左";
-                                ngstr += "[min:" + min.ToString(format) + " mm]";
-                                ngstr += "[max:" + max.ToString(format) + " mm]";
+                                //ngstr += "[min:" + min.ToString(format) + " mm]";
+                                //ngstr += "[max:" + max.ToString(format) + " mm]";
                                 break;
                             case BorderTypeEnum.RIGHT:
                                 ngstr += "右";
-                                ngstr += "[min:" + min.ToString(format) + " mm]";
-                                ngstr += "[max:" + max.ToString(format) + " mm]";
+                                //ngstr += "[min:" + min.ToString(format) + " mm]";
+                                //ngstr += "[max:" + max.ToString(format) + " mm]";
                                 break;
                             case BorderTypeEnum.TOP:
                                 ngstr += "上";
-                                ngstr += "[min:" + min.ToString(format) + " mm]";
-                                ngstr += "[max:" + max.ToString(format) + " mm]";
+                                //ngstr += "[min:" + min.ToString(format) + " mm]";
+                                //ngstr += "[max:" + max.ToString(format) + " mm]";
                                 break;
                             case BorderTypeEnum.BOTTOM:
                                 ngstr += "下";
-                                ngstr += "[min:" + min.ToString(format) + " mm]";
-                                ngstr += "[max:" + max.ToString(format) + " mm]";
+                                //ngstr += "[min:" + min.ToString(format) + " mm]";
+                                //ngstr += "[max:" + max.ToString(format) + " mm]";
                                 break;
                         }
                     }
 
-                    if (GlueChipSlotDir != ChipSlotDir.NONE && !isSlotPass)
+                    if(_bNoInspect)
                     {
-                        m_ischeckgluepass = false;
-
-                        ngstr += "薄膜胶";// + Environment.NewLine;
-                        ngstr += "[min:" + minSlot.ToString(format) + " mm]";
-                        ngstr += "[max:" + maxSlot.ToString(format) + " mm]";
+                        ngstr += "[min:no measure]";
+                        ngstr += "[max:no measure]" + Environment.NewLine;
+                        m_ischeckgluepass = true;
                     }
+                    else
+                    {
+                        ngstr += "[min:" + min.ToString(format) + " mm]";
+                        ngstr += "[max:" + max.ToString(format) + " mm]";
+                        if (_bSlot && !isSlotPass)
+                        {
+                            m_ischeckgluepass = false;
+
+                            ngstr += "薄膜胶";// + Environment.NewLine;
+                            ngstr += "[min:" + minSlot.ToString(format) + " mm]";
+                            ngstr += "[max:" + maxSlot.ToString(format) + " mm]";
+                        }
+                    }
+
+                    //if (GlueChipSlotDir != ChipSlotDir.NONE && !isSlotPass)
+                    //{
+                    //    m_ischeckgluepass = false;
+
+                    //    ngstr += "薄膜胶";// + Environment.NewLine;
+                    //    ngstr += "[min:" + minSlot.ToString(format) + " mm]";
+                    //    ngstr += "[max:" + maxSlot.ToString(format) + " mm]";
+                    //}
 
                     i++;
                 }
@@ -1736,6 +1826,67 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //g.FillRectangle(Brushes.Black, _rectF);
                 int linewidth = LineWidth;
                 int fontsize = FontSize;
+
+                if (PADExtend.bOpenUseContactEle)
+                {
+                    Rectangle org = new Rectangle(m_PADRegion.RegionForEdgeRect.X,
+                                                                        m_PADRegion.RegionForEdgeRect.Y,
+                                                                        m_PADRegion.RegionForEdgeRect.Width,
+                                                                        m_PADRegion.RegionForEdgeRect.Height);
+                    //if(PADExtend.cEleX > 0 && PADExtend.cEleY >0)
+                    org.Inflate(PADExtend.cEleX, PADExtend.cEleY);
+
+                    bool bInstert = true;
+                    //判别边缘点都在范围内
+                    for (int glueindex = 0; glueindex < 4; glueindex++)
+                    {
+                        bool a0 = true;
+                        switch ((BorderTypeEnum)glueindex)
+                        {
+                            case BorderTypeEnum.LEFT:
+                                a0 = PADExtend.bNoInspectLeft;
+                                break;
+                            case BorderTypeEnum.RIGHT:
+                                a0 = PADExtend.bNoInspectRight;
+                                break;
+                            case BorderTypeEnum.TOP:
+                                a0 = PADExtend.bNoInspectTop;
+                                break;
+                            case BorderTypeEnum.BOTTOM:
+                                a0 = PADExtend.bNoInspectBottom;
+                                break;
+                        }
+                        if (a0) //不检测的话跳过判断碰到元件
+                            continue;
+
+                        foreach (var pt in glues[glueindex].GetPointF())
+                        {
+                            RectangleF r0 = SimpleRectF(pt, 1, 1);
+                            bInstert = r0.IntersectsWith(org);
+                            if (!bInstert)
+                            {
+                                break;
+                            }
+                        }
+                        if (!bInstert)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (!bInstert)
+                    {
+                        m_ischeckgluepass = false;
+                        //measureStr += "";
+                        measureStr += $"胶水碰到元件NG" + Environment.NewLine;
+                        ngstr += $"胶水碰到元件NG" + Environment.NewLine;
+                    }
+
+                    if (!m_ischeckgluepass)
+                    {
+                        g.DrawRectangle(new Pen(Color.Yellow, linewidth), org);
+                    }
+                }
 
                 //画图 及 显示比对图
                 i = 0;
@@ -1787,6 +1938,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     drawIndex++;
                 }
                 //);
+
+                
 
                 if (m_IsSaveTemp)
                 {
@@ -3308,6 +3461,8 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
 
         public bool PB10_GlueInspectionProcess_BlackEdge(Bitmap bmpinput, ref Bitmap bmpoutput)
         {
+            if (!string.IsNullOrEmpty(PADExtendOPString))
+                PADExtend.FromString(PADExtendOPString);
             //0.025/0.022 = 1 mil/1 pixel
             Resolution_Mil = 0.0254 / INI.MAINSD_PAD_MIL_RESOLUTION;
             m_DescStr = string.Empty;
@@ -3541,8 +3696,10 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
 
             #region 胶水宽度判断
 
+            bool bChkAll = PADExtend.bNoInspectAll;
+
             glues = null;
-            if (isgood && GlueCheck || (!isgood && descstriing == "晶片表面溢胶" && GlueCheck))
+            if (isgood && GlueCheck && !bChkAll || (!isgood && descstriing == "晶片表面溢胶" && GlueCheck && !bChkAll))
             {
 
                 glues = new GlueRegionClass[(int)BorderTypeEnum.COUNT];
@@ -3848,6 +4005,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                 bool m_ischeckgluepass = true;
                 string ngstr = string.Empty;
                 string measureStr = string.Empty;
+                bool _bNoInspect = false;
 
                 double GlueTmpMax = 0;// GlueMax * Resolution_Mil;
                 double GlueTmpMin = 0;// GlueMin * Resolution_Mil;
@@ -3888,69 +4046,133 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                     switch ((BorderTypeEnum)i)
                     {
                         case BorderTypeEnum.LEFT:
-                            GlueTmpMax = GlueMaxLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMax = GlueMaxLeft;// / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMin = GlueMinLeft;// / INI.MAINSD_PAD_MIL_RESOLUTION;
                             break;
                         case BorderTypeEnum.TOP:
-                            GlueTmpMax = GlueMaxTop / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinTop / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMax = GlueMaxTop;// / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMin = GlueMinTop;// / INI.MAINSD_PAD_MIL_RESOLUTION;
                             break;
                         case BorderTypeEnum.RIGHT:
-                            GlueTmpMax = GlueMaxRight / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinRight / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMax = GlueMaxRight;// / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMin = GlueMinRight;// / INI.MAINSD_PAD_MIL_RESOLUTION;
                             break;
                         case BorderTypeEnum.BOTTOM:
-                            GlueTmpMax = GlueMaxBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMax = GlueMaxBottom;// / INI.MAINSD_PAD_MIL_RESOLUTION;
+                            GlueTmpMin = GlueMinBottom;/// INI.MAINSD_PAD_MIL_RESOLUTION;
                             break;
                     }
 
                     double min = glues[i].LengthMin * INI.MAINSD_PAD_MIL_RESOLUTION;
                     double max = glues[i].LengthMax * INI.MAINSD_PAD_MIL_RESOLUTION;
 
+                    min = glues[i].GetMinMM();
+                    max = glues[i].GetMaxMM();
+
                     //ngstr += ((BorderTypeEnum)i).ToString() + "_NG,";
 
                     switch ((BorderTypeEnum)i)
                     {
                         case BorderTypeEnum.LEFT:
+                            _bNoInspect = PADExtend.bNoInspectLeft;
                             measureStr += "左";// + Environment.NewLine;
                             break;
                         case BorderTypeEnum.RIGHT:
+                            _bNoInspect = PADExtend.bNoInspectRight;
                             measureStr += "右";// + Environment.NewLine;
                             break;
                         case BorderTypeEnum.TOP:
+                            _bNoInspect = PADExtend.bNoInspectTop;
                             measureStr += "上";// + Environment.NewLine;
                             break;
                         case BorderTypeEnum.BOTTOM:
+                            _bNoInspect = PADExtend.bNoInspectBottom;
                             measureStr += "下";// + Environment.NewLine;
                             break;
                     }
+                    if (_bNoInspect)
+                    {
+                        measureStr += "[min:no measure]";
+                        measureStr += "[max:no measure]" + Environment.NewLine;
+                    }
+                    else
+                    {
+                        measureStr += "[min:" + min.ToString("0.000000") + " mm]";
+                        measureStr += "[max:" + max.ToString("0.000000") + " mm]" + Environment.NewLine;
+                    }
 
-                    measureStr += "[min:" + min.ToString("0.000000") + " mm]";
-                    measureStr += "[max:" + max.ToString("0.000000") + " mm]" + Environment.NewLine;
-
-                    if (glues[i].LengthMax > (GlueTmpMax) || glues[i].LengthMin < (GlueTmpMin))
+                    //if (glues[i].LengthMax > (GlueTmpMax) || glues[i].LengthMin < (GlueTmpMin))
+                    if (max > (GlueTmpMax) || min < (GlueTmpMin))
                     {
                         m_ischeckgluepass = false;
 
                         switch ((BorderTypeEnum)i)
                         {
                             case BorderTypeEnum.LEFT:
+                                
                                 ngstr += "左";
+                                //if (!PADExtend.bNoInspectLeft)
+                                //    ngstr += "左";
+                                //else
+                                //{
+                                //    m_ischeckgluepass = true;
+                                //    ngstr += "左";
+                                //    ngstr += "[min:no measure]";
+                                //    ngstr += "[max:no measure]";
+                                //}
                                 break;
                             case BorderTypeEnum.RIGHT:
+                           
                                 ngstr += "右";
+                                //if (!PADExtend.bNoInspectRight)
+                                //    ngstr += "右";
+                                //else
+                                //{
+                                //    m_ischeckgluepass = true;
+                                //    ngstr += "右";
+                                //    ngstr += "[min:no measure]";
+                                //    ngstr += "[max:no measure]";
+                                //}
                                 break;
                             case BorderTypeEnum.TOP:
+                            
                                 ngstr += "上";
+                                //if (!PADExtend.bNoInspectTop)
+                                //    ngstr += "上";
+                                //else
+                                //{
+                                //    m_ischeckgluepass = true;
+                                //    ngstr += "上";
+                                //    ngstr += "[min:no measure]";
+                                //    ngstr += "[max:no measure]";
+                                //}
                                 break;
                             case BorderTypeEnum.BOTTOM:
+                            
                                 ngstr += "下";
+                                //if (!PADExtend.bNoInspectBottom)
+                                //    ngstr += "下";
+                                //else
+                                //{
+                                //    m_ischeckgluepass = true;
+                                //    ngstr += "下";
+                                //    ngstr += "[min:no measure]";
+                                //    ngstr += "[max:no measure]";
+                                //}
                                 break;
                         }
 
-                        ngstr += "[min:" + min.ToString("0.000000") + " mm]";
-                        ngstr += "[max:" + max.ToString("0.000000") + " mm]";
+                        if (_bNoInspect)
+                        {
+                            m_ischeckgluepass = true;
+                            ngstr += "[min:no measure]";
+                            ngstr += "[max:no measure]";
+                        }
+                        else
+                        {
+                            ngstr += "[min:" + min.ToString("0.000000") + " mm]";
+                            ngstr += "[max:" + max.ToString("0.000000") + " mm]";
+                        }
                     }
 
                     i++;
@@ -3963,31 +4185,92 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                 int fontsize = FontSize;// 34;
                 int linewidth = LineWidth;// 5;
 
+                if (PADExtend.bOpenUseContactEle)
+                {
+                    Rectangle org = new Rectangle(m_PADRegion.RegionForEdgeRect.X,
+                                                                        m_PADRegion.RegionForEdgeRect.Y,
+                                                                        m_PADRegion.RegionForEdgeRect.Width,
+                                                                        m_PADRegion.RegionForEdgeRect.Height);
+                    //if(PADExtend.cEleX > 0 && PADExtend.cEleY >0)
+                    org.Inflate(PADExtend.cEleX, PADExtend.cEleY);
+
+                    bool bInstert = true;
+                    //判别边缘点都在范围内
+                    for (int glueindex = 0; glueindex < 4; glueindex++)
+                    {
+                        bool a0 = true;
+                        switch ((BorderTypeEnum)glueindex)
+                        {
+                            case BorderTypeEnum.LEFT:
+                                a0 = PADExtend.bNoInspectLeft;
+                                break;
+                            case BorderTypeEnum.RIGHT:
+                                a0 = PADExtend.bNoInspectRight;
+                                break;
+                            case BorderTypeEnum.TOP:
+                                a0 = PADExtend.bNoInspectTop;
+                                break;
+                            case BorderTypeEnum.BOTTOM:
+                                a0 = PADExtend.bNoInspectBottom;
+                                break;
+                        }
+                        if (a0) //不检测的话跳过判断碰到元件
+                            continue;
+
+                        foreach (var pt in glues[glueindex].GetPointF())
+                        {
+                            RectangleF r0 = SimpleRectF(pt, 1, 1);
+                            bInstert = r0.IntersectsWith(org);
+                            if (!bInstert)
+                            {
+                                break;
+                            }
+                        }
+                        if (!bInstert)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (!bInstert)
+                    {
+                        m_ischeckgluepass = false;
+                        //measureStr += "";
+                        measureStr += $"胶水碰到元件NG" + Environment.NewLine;
+                        ngstr += $"胶水碰到元件NG" + Environment.NewLine;
+                    }
+
+                    if (!m_ischeckgluepass)
+                    {
+                        g.DrawRectangle(new Pen(Color.Yellow, linewidth), org);
+                    }
+                }
+
                 //画图 及 显示比对图
                 i = 0;
                 int drawIndex = 0;
                 while (drawIndex < (int)BorderTypeEnum.COUNT)
                 //Parallel.For(0, (int)BorderTypeEnum.COUNT, (drawIndex) =>
                 {
-                    switch ((BorderTypeEnum)drawIndex)
-                    {
-                        case BorderTypeEnum.LEFT:
-                            GlueTmpMax = GlueMaxLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            break;
-                        case BorderTypeEnum.TOP:
-                            GlueTmpMax = GlueMaxTop / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinTop / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            break;
-                        case BorderTypeEnum.RIGHT:
-                            GlueTmpMax = GlueMaxRight / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinRight / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            break;
-                        case BorderTypeEnum.BOTTOM:
-                            GlueTmpMax = GlueMaxBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            GlueTmpMin = GlueMinBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
-                            break;
-                    }
+                    //switch ((BorderTypeEnum)drawIndex)
+                    //{
+                    //    case BorderTypeEnum.LEFT:
+                    //        GlueTmpMax = GlueMaxLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        GlueTmpMin = GlueMinLeft / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        break;
+                    //    case BorderTypeEnum.TOP:
+                    //        GlueTmpMax = GlueMaxTop / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        GlueTmpMin = GlueMinTop / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        break;
+                    //    case BorderTypeEnum.RIGHT:
+                    //        GlueTmpMax = GlueMaxRight / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        GlueTmpMin = GlueMinRight / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        break;
+                    //    case BorderTypeEnum.BOTTOM:
+                    //        GlueTmpMax = GlueMaxBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        GlueTmpMin = GlueMinBottom / INI.MAINSD_PAD_MIL_RESOLUTION;
+                    //        break;
+                    //}
 
                     //pts = glues[drawIndex].GetPointF();
                     //ptsIN = glues[drawIndex].GetPointFIN();
@@ -5942,6 +6225,8 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                         EzMVDBLOB.IsWhite = pADG2Class.IsWhite;
                         EzMVDBLOB.blobMin = pADG2Class.blobMin;
                         EzMVDBLOB.blobMax = pADG2Class.blobMax;
+                        EzMVDBLOB.blobRatio = pADG2Class.blobRatio;
+                        EzMVDBLOB.FindBaseArea = m_PADRegion.RegionArea;
                         bret = EzMVDBLOB.Run(bmprun, bmpmask);
 
                         if (bTrain)
@@ -5978,7 +6263,19 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                     }
                 }
             }
+            else
+            {
+                using (Bitmap bmprun = get8bitbmp(pADG2Class.bmpRun))
+                {
+                    bmpPadBolbOutput?.Dispose();
+                    bmpPadBolbOutput = new Bitmap(bmprun);
 
+                    //Graphics graphics = Graphics.FromImage(bmpPadBolbOutput);
+                    //graphics.DrawString($"", new Font("宋体", 18), Brushes.Red, new PointF(5, 5));
+                    //graphics.Dispose();
+
+                }
+            }
             #endregion
 
             return bret;
@@ -11865,6 +12162,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             JzMVDEdgeWidthClass jzMVDEdgeWidthClass = new JzMVDEdgeWidthClass();
             jzMVDEdgeWidthClass.HalfKernelSize = ePADG1.HalfKernelSize;
             jzMVDEdgeWidthClass.ContrastTH = ePADG1.ContrastTH;
+            jzMVDEdgeWidthClass.FindMode = ePADG1.FindMode;
 
             //Bitmap bitmap = bmpGlueOrg.Clone(new Rectangle(0, 0, bmpGlueOrg.Width, bmpGlueOrg.Height),
             //        System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -12567,6 +12865,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             str += ((int)ChipNoGlueMode).ToString() + Universal.SeperateCharB;     //0
             str += ((int)ChipNoHaveMode).ToString() + Universal.SeperateCharB;     //0
             str += ChipNoHaveModeOpString.ToString() + Universal.SeperateCharB;
+            str += PADExtendOPString + Universal.SeperateCharB;
 
             str += "";
 
@@ -12730,6 +13029,10 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                 {
                     ChipNoHaveModeOpString = strs[55];
                 }
+                if (strs.Length > 56)
+                {
+                    PADExtendOPString = strs[56];
+                }
 
             }
         }
@@ -12806,6 +13109,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             ChipNoGlueMode = ChipNoGlueMethod.NONE;
             ChipNoHaveMode = ChipNoHave.NONE;
             ChipNoHaveModeOpString = "";
+            PADExtendOPString = "";
 
         }
         public void FromPropertyChange(string changeitemstring, string valuestring)
@@ -12988,6 +13292,9 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                 case "ChipNoHaveModeOpString":
                     ChipNoHaveModeOpString = valuestring.Split('#')[1];
                     ChipNoHaveMode = (ChipNoHave)Enum.Parse(typeof(ChipNoHave), valuestring.Split('#')[0], true);
+                    break;
+                case "PADExtendOPString":
+                    PADExtendOPString = valuestring;
                     break;
             }
         }

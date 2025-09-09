@@ -81,9 +81,23 @@ namespace Allinone.FormSpace
             btnLoad.Click += BtnLoad_Click;
             btnGetImage.Click += BtnGetImage_Click;
             btnSetupPos.Click += BtnSetupPos_Click;
+            btnGoSetupPos.Click += BtnGoSetupPos_Click;
 
             btnSaveExit.Click += BtnSaveExit_Click;
             btnExit.Click += BtnExit_Click;
+        }
+
+        private void BtnGoSetupPos_Click(object sender, EventArgs e)
+        {
+            string msg = "是否运行至拍照位置？";
+
+            if (VsMSG.Instance.Question(msg) != DialogResult.OK)
+            {
+                return;
+            }
+            string _pos = m_BarcodePara.MotorPositionStr.Replace(";", ",");
+            MACHINECollection.GoPosition(_pos);
+
         }
 
         private void M_PropertyGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -112,7 +126,13 @@ namespace Allinone.FormSpace
                     m_BarcodePara.IsOpenBarcode = (bool)e.ChangedItem.Value;
                     break;
                 case "CamExpo":
-                    m_BarcodePara.CamExpo = (int)e.ChangedItem.Value;
+                    m_BarcodePara.CamExpo = (float)e.ChangedItem.Value;
+                    break;
+                case "CamExpoCount":
+                    m_BarcodePara.CamExpoCount = (int)e.ChangedItem.Value;
+                    break;
+                case "CamExpoOffset":
+                    m_BarcodePara.CamExpoOffset = (float)e.ChangedItem.Value;
                     break;
             }
         }

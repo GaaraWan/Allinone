@@ -568,7 +568,7 @@
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(211, 20);
             this.label18.TabIndex = 1;
-            this.label18.Text = "尺寸错误";
+            this.label18.Text = "尺寸错误&缺DIE";
             this.label18.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label19

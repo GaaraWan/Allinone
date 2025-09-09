@@ -1,6 +1,7 @@
 ﻿using PdfSharp.Pdf.AcroForms;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
@@ -12,6 +13,22 @@ using VisionDesigner.EdgeWidth;
 
 namespace Allinone.BasicSpace.MVD
 {
+    public enum EWFindMode : int
+    {
+        [Description("最宽")]
+        Widest = 0,
+        [Description("最窄")]
+        Narrowest = 1,
+        [Description("最强")]
+        Strongest = 2,
+        [Description("最弱")]
+        Worst = 3,
+        //First = 0, 
+        //Last = 0, 
+        //Nearest = 0, 
+        //Farthest = 0, 
+        //All = 0,
+    }
     public class JzMVDEdgeWidthClass : IDisposable
     {
 
@@ -31,6 +48,7 @@ namespace Allinone.BasicSpace.MVD
         public bool FindOrient { get; set; } = true;
         //public Rectangle RoiPos { get; set; } = new Rectangle();
         //public VisionDesigner.CMvdImage cInputImg2 { get; set; } = new CMvdImage();
+        public EWFindMode FindMode { get; set; } = EWFindMode.Strongest;
 
         private PointF p0 = new PointF(0, 0);
         private PointF p1 = new PointF(10, 10);
@@ -300,7 +318,7 @@ namespace Allinone.BasicSpace.MVD
                 else
                     cEdgeWidthToolObj.SetRunParam("FindOrient", "LeftToRight");
 
-                cEdgeWidthToolObj.SetRunParam("EdgeWidthFindMode", "Widest");
+                cEdgeWidthToolObj.SetRunParam("EdgeWidthFindMode", FindMode.ToString());
 
                 // Running
 

@@ -77,6 +77,12 @@ namespace Allinone.OPSpace.ResultSpace
         SoundPlayer PlayerFail = new SoundPlayer();
 
         Bitmap bmpBarcode = new Bitmap(1, 1);
+        /// <summary>
+        /// 曝光序号 进行了几次
+        /// </summary>
+        int m_CurrentExpoIndex = 0;
+        int m_Expoi = 0;
+        int m_Expoj = 0;
 
         //EnvClass m_EnvNow = null;
         EnvClass m_EnvNow
@@ -671,6 +677,9 @@ namespace Allinone.OPSpace.ResultSpace
 
                                         MACHINE.GoPosition(m_CurrentPosition);
 
+                                        m_CurrentExpoIndex = 0;
+                                        m_Expoi = 1;
+                                        m_Expoj = 1;
                                         RunStepComplete = true;//第一次强制给完成信号
                                         m_IsAlignComplete = false;//第一次复位标志
 
@@ -777,8 +786,8 @@ namespace Allinone.OPSpace.ResultSpace
                                 OnTriggerOP(ResultStatusEnum.SHOW_BARCODE_RESULT, Universal.CalTestBarcode);
                                 _LOG_MSG($"{Process.ID} {barcodeStrResult}");
 
-                                if (!Directory.Exists(Universal.CalTestPath))
-                                    Directory.CreateDirectory(Universal.CalTestPath);
+                                //if (!Directory.Exists(Universal.CalTestPath))
+                                //    Directory.CreateDirectory(Universal.CalTestPath);
 
 
                                 bmp2.Dispose();
@@ -791,12 +800,70 @@ namespace Allinone.OPSpace.ResultSpace
                                 #endregion
 
                                 Process.NextDuriation = 0;
-                                Process.ID = 10;
+                                Process.ID = 540;
 
                                 LogProcessIDTimer(Process.ID, $"读码={barcodeStrResult}");
                             }
                         }
                         break;
+
+                    #region 变换曝光
+                    case 540:                        //
+                        if (Process.IsTimeup)
+                        {
+                            if (m_CurrentExpoIndex < m_JzBarcodeParaGridClass.CamExpoCount)
+                            {
+                                if (string.IsNullOrEmpty(Universal.CalTestBarcode))
+                                {
+                                    float _expo = m_JzBarcodeParaGridClass.CamExpo;
+                                    if (m_CurrentExpoIndex % 2 == 0)
+                                    {
+                                        _expo -= m_JzBarcodeParaGridClass.CamExpoOffset * m_Expoi;
+                                        m_Expoi++;
+                                    }
+                                    else
+                                    {
+                                        _expo += m_JzBarcodeParaGridClass.CamExpoOffset * m_Expoj;
+                                        m_Expoj++;
+                                    }
+                                    if (_expo <= 0)
+                                        _expo = m_JzBarcodeParaGridClass.CamExpo;
+                                    Universal.CCDCollection.SetExposure(_expo, 0);//设定读码的相机曝光
+                                    LogProcessIDTimer(Process.ID, $"曝光{_expo} 次数{m_CurrentExpoIndex}");
+                                    m_CurrentExpoIndex++;
+
+                                    Process.NextDuriation = 100;
+                                    Process.ID = 530;
+                                }
+                                else
+                                {
+                                    Process.NextDuriation = 0;
+                                    Process.ID = 550;
+                                }
+                            }
+                            else
+                            {
+                                Process.NextDuriation = 0;
+                                Process.ID = 550;
+                            }
+                        }
+                        break;
+                    case 550:                        //读码完成或是NG 都结束
+                        if (Process.IsTimeup)
+                        {
+                            if (!Directory.Exists(Universal.CalTestPath))
+                                Directory.CreateDirectory(Universal.CalTestPath);
+
+                            Process.NextDuriation = 0;
+                            Process.ID = 10;
+
+                            LogProcessIDTimer(Process.ID, $"创建读码路径");
+
+                        }
+                        break;
+
+
+                    #endregion
 
                     #endregion
                     case 10:                        //變換CCD亮度設定及光源設定，並且合起鍵盤的壓框
@@ -2408,6 +2475,9 @@ namespace Allinone.OPSpace.ResultSpace
             //RunStepComplete = true;
             //return;
             RunStepComplete = false;
+            MainsdLightSettings mainsdLight = new MainsdLightSettings();
+            mainsdLight.GetString(AlbumWork.ENVList[envindex].GeneralLight);
+            bool _bCheckNoDie = mainsdLight.bCheckNoDIE;
 
             System.Diagnostics.Stopwatch watchThreadTime = new System.Diagnostics.Stopwatch();
             watchThreadTime.Restart();
@@ -2573,7 +2643,7 @@ namespace Allinone.OPSpace.ResultSpace
                                 }
                             }
 
-                            graphics1.Dispose();
+                            //graphics1.Dispose();
 
                             graphics.DrawImage(bmpAll,
                                                        new RectangleF(new PointF(0 + itemwidth * drawcol, 0 + itemheight * drawrow), new Size(itemwidth, itemheight)),
@@ -2599,8 +2669,8 @@ namespace Allinone.OPSpace.ResultSpace
                             //Universal.SDM2_BMP_SHOW_CURRENT = (Bitmap)analyze.PADPara.bmpMeasureOutput.Clone();
                             //new Bitmap(analyze.PADPara.bmpMeasureOutput);
 
-                            dataMapping.bmpResult.Dispose();
-                            dataMapping.bmpResult = new Bitmap(bmpAll);
+                            //dataMapping.bmpResult.Dispose();
+                            //dataMapping.bmpResult = new Bitmap(bmpAll);
 
                             dataMapping.TypeIndex = 0;
                             if (analyze.PADPara.PADMethod == PADMethodEnum.QLE_CHECK)
@@ -2635,7 +2705,36 @@ namespace Allinone.OPSpace.ResultSpace
                                     }
                                     else
                                     {
-                                        dataMapping.ReportBinValue = 5;
+                                        if (!_bCheckNoDie)
+                                        {
+                                            dataMapping.ReportBinValue = 5;
+                                        }
+                                        else
+                                        {
+                                            string[] stringsxx = myDescTemp.Split(',');
+                                            int isum = 0;
+                                            foreach (string str in stringsxx)
+                                            {
+                                                if (str == "无芯片")
+                                                {
+                                                    isum++;
+                                                }
+                                            }
+                                            if (isum == analyze.BranchList.Count)
+                                            {
+                                                dataMapping.ReportBinValue = 5;
+                                            }
+                                            else
+                                            {
+                                                dataMapping.ReportBinValue = 2;
+
+                                                WorkStatusClass work = new WorkStatusClass(AnanlyzeProcedureEnum.PADINSPECT);
+                                                work.SetWorkStatus(new Bitmap(1, 1), new Bitmap(1, 1), new Bitmap(1, 1),
+                                                    ReasonEnum.NG, $"缺Die【{isum}】", $"缺Die【{isum}】", null, "");
+                                                RunStatusCollection.Add(work);
+                                                graphics1.DrawString($"缺Die【{isum}】", new Font("宋体", 35), Brushes.Red, new PointF(15, 35));
+                                            }
+                                        }
                                     }
                                 }
 
@@ -2712,6 +2811,12 @@ namespace Allinone.OPSpace.ResultSpace
                                     }
                                 }
                             }
+
+                            graphics1.Dispose();
+                            //graphics.Dispose();
+
+                            dataMapping.bmpResult.Dispose();
+                            dataMapping.bmpResult = new Bitmap(bmpAll);
 
                             break;
                         }
