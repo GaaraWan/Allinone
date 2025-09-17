@@ -107,15 +107,31 @@ namespace Allinone.ControlSpace.IOSpace
         {
             QcDebugStr = ReadINIValue("Parameters", "QcDebugStr", QcDebugStr, INIFILE);
         }
-        string getQcDebugStrIndex(int eIndex)
+        string getQcDebugStrIndex(int eIndex,bool eInit=true)
         {
-            loadQcDebugStr();
+            if (eInit)
+                loadQcDebugStr();
             string[] strings = QcDebugStr.Split(',');
             if (eIndex < strings.Length)
             {
                 return strings[eIndex];
             }
             return null;
+        }
+        void setQcDebugStrIndex(int eIndex, string str, bool eInit = true)
+        {
+            if (eInit)
+                loadQcDebugStr();
+            string[] strings = QcDebugStr.Split(',');
+            if (eIndex < 0 || eIndex >= strings.Length)
+                return;
+            strings[eIndex] = str;
+            string temp =string.Empty;
+            for (int i = 0; i < strings.Length; i++)
+            {
+                temp += strings[i] + ",";
+            }
+            QcDebugStr = temp;
         }
 
         public string MappingStr
@@ -220,11 +236,21 @@ namespace Allinone.ControlSpace.IOSpace
             {
                 if (m_IsDebug)
                 {
-                    string str = getQcDebugStrIndex(9);
+                    string str = getQcDebugStrIndex(12, false);
                     return str;
                 }
                 FATEKAddressClass address = getCipAdress("QcBotaID");
                 return CIP.ReadVari(address.Address0);
+            }
+            set
+            {
+                if (m_IsDebug)
+                {
+                    setQcDebugStrIndex(12, value);
+                    return;
+                }
+                FATEKAddressClass address = getCipAdress("QcBotaID");
+                CIP.WriteVari(address.Address0, value);
             }
         }
         public string QcCurrentPos
@@ -294,6 +320,22 @@ namespace Allinone.ControlSpace.IOSpace
             }
         }
         /// <summary>
+        /// 是否启用FILE MAPPING测试
+        /// </summary>
+        public bool QcUseFileMap
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = getQcDebugStrIndex(11);
+                    return str == "1";
+                }
+                FATEKAddressClass address = new FATEKAddressClass($"0:Gvl_LaserPC.bUseMap");
+                return CIP.ReadVari(address.Address0).ToLower() == "true";
+            }
+        }
+        /// <summary>
         /// 更新测试结果Map到plc
         /// </summary>
         /// <param name="mapResults">根据自定义的错误数组</param>
@@ -343,6 +385,75 @@ namespace Allinone.ControlSpace.IOSpace
             }
             return iret;
         }
+
+        #region 东莞-Rayxin
+
+        /// <summary>
+        /// 读取plc的map  格式 1 1 1 空格隔开
+        /// </summary>
+        public string DGMap1
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = getQcDebugStrIndex(9);
+                    return str;
+                }
+                FATEKAddressClass address = new FATEKAddressClass($"0:Gvl_Status.Data[5].Map1");
+                return CIP.ReadVari(address.Address0);
+            }
+        }
+        /// <summary>
+        /// 读取plc的map  格式 1 1 1 空格隔开
+        /// </summary>
+        public string DGMap2
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = getQcDebugStrIndex(10);
+                    return str;
+                }
+                FATEKAddressClass address = new FATEKAddressClass($"0:Gvl_Status.Data[5].Map2");
+                return CIP.ReadVari(address.Address0);
+            }
+        }
+        /// <summary>
+        /// 单颗Unit内部的打印信息用";"分隔，Unit与Unit直接用","分隔。
+        /// </summary>
+        public string DGMarkedContent1
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = $"ABCDEFG;HI,ABCDEFG;HI,ABCDEFG;HI";// getQcDebugStrIndex(11);
+                    return str;
+                }
+                FATEKAddressClass address = new FATEKAddressClass($"0:Gvl_Status.Data[5].MarkedContent1");
+                return CIP.ReadVari(address.Address0);
+            }
+        }
+        /// <summary>
+        /// 单颗Unit内部的打印信息用";"分隔，Unit与Unit直接用","分隔。
+        /// </summary>
+        public string DGMarkedContent2
+        {
+            get
+            {
+                if (m_IsDebug)
+                {
+                    string str = $"ABCDEFG";//getQcDebugStrIndex(12);
+                    return str;
+                }
+                FATEKAddressClass address = new FATEKAddressClass($"0:Gvl_Status.Data[5].MarkedContent2");
+                return CIP.ReadVari(address.Address0);
+            }
+        }
+
+        #endregion
 
         FATEKAddressClass getCipAdress(string eAdrStr)
         {

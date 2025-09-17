@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label19 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
@@ -47,13 +49,13 @@
             this.label14 = new System.Windows.Forms.Label();
             this.jzTransparentPanel1 = new JetEazy.BasicSpace.JzTransparentPanel();
             this.label17 = new System.Windows.Forms.Label();
-            this.label18 = new System.Windows.Forms.Label();
-            this.label19 = new System.Windows.Forms.Label();
+            this.label20 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.label20);
             this.groupBox1.Controls.Add(this.label19);
             this.groupBox1.Controls.Add(this.label18);
             this.groupBox1.Controls.Add(this.label16);
@@ -76,6 +78,30 @@
             this.groupBox1.TabIndex = 197;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "IO Control";
+            // 
+            // label19
+            // 
+            this.label19.BackColor = System.Drawing.Color.Green;
+            this.label19.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label19.ForeColor = System.Drawing.Color.Yellow;
+            this.label19.Location = new System.Drawing.Point(79, 130);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(67, 18);
+            this.label19.TabIndex = 223;
+            this.label19.Text = "心跳";
+            this.label19.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label18
+            // 
+            this.label18.BackColor = System.Drawing.Color.Green;
+            this.label18.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label18.ForeColor = System.Drawing.Color.Yellow;
+            this.label18.Location = new System.Drawing.Point(6, 130);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(67, 18);
+            this.label18.TabIndex = 222;
+            this.label18.Text = "软件准备";
+            this.label18.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label16
             // 
@@ -288,29 +314,18 @@
             this.label17.Text = "CipMapping";
             this.label17.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // label18
+            // label20
             // 
-            this.label18.BackColor = System.Drawing.Color.Green;
-            this.label18.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label18.ForeColor = System.Drawing.Color.Yellow;
-            this.label18.Location = new System.Drawing.Point(6, 130);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(67, 18);
-            this.label18.TabIndex = 222;
-            this.label18.Text = "软件准备";
-            this.label18.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label19
-            // 
-            this.label19.BackColor = System.Drawing.Color.Green;
-            this.label19.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label19.ForeColor = System.Drawing.Color.Yellow;
-            this.label19.Location = new System.Drawing.Point(79, 130);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(67, 18);
-            this.label19.TabIndex = 223;
-            this.label19.Text = "心跳";
-            this.label19.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label20.BackColor = System.Drawing.Color.Green;
+            this.label20.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label20.ForeColor = System.Drawing.Color.Yellow;
+            this.label20.Location = new System.Drawing.Point(223, 130);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(67, 18);
+            this.label20.TabIndex = 224;
+            this.label20.Text = "Tcp[0]";
+            this.label20.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label20.Visible = false;
             // 
             // MainX6CtrlUI
             // 
@@ -351,5 +366,6 @@
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label label20;
     }
 }

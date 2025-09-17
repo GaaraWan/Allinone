@@ -130,6 +130,14 @@ namespace Allinone.BasicSpace
                     return string.Empty;
                 return m_cipplcio.QcBotaID;
             }
+            set
+            {
+                if (m_compoletClass == null)
+                    return;
+                if (m_cipplcio == null)
+                    return;
+                m_cipplcio.QcBotaID = value;
+            }
         }
         /// <summary>
         /// 是否启用MAPPING测试
@@ -161,6 +169,20 @@ namespace Allinone.BasicSpace
             }
         }
         /// <summary>
+        /// 是否启用FILE MAPPING测试
+        /// </summary>
+        public bool QcUseFileMap
+        {
+            get
+            {
+                if (m_compoletClass == null)
+                    return false;
+                if (m_cipplcio == null)
+                    return false;
+                return m_cipplcio.QcUseFileMap;
+            }
+        }
+        /// <summary>
         /// 更新测试结果Map到plc
         /// </summary>
         /// <param name="mapResults">根据自定义的错误数组</param>
@@ -174,6 +196,55 @@ namespace Allinone.BasicSpace
                 return;
             m_cipplcio.iQcMapResult(mapResults);
         }
+
+        #region 东莞-Rayxin
+
+        public string DGMap1
+        {
+            get
+            {
+                if (m_compoletClass == null)
+                    return string.Empty;
+                if (m_cipplcio == null)
+                    return string.Empty;
+                return m_cipplcio.DGMap1;
+            }
+        }
+        public string DGMap2
+        {
+            get
+            {
+                if (m_compoletClass == null)
+                    return string.Empty;
+                if (m_cipplcio == null)
+                    return string.Empty;
+                return m_cipplcio.DGMap2;
+            }
+        }
+        public string DGMarkedContent1
+        {
+            get
+            {
+                if (m_compoletClass == null)
+                    return string.Empty;
+                if (m_cipplcio == null)
+                    return string.Empty;
+                return m_cipplcio.DGMarkedContent1;
+            }
+        }
+        public string DGMarkedContent2
+        {
+            get
+            {
+                if (m_compoletClass == null)
+                    return string.Empty;
+                if (m_cipplcio == null)
+                    return string.Empty;
+                return m_cipplcio.DGMarkedContent2;
+            }
+        }
+
+        #endregion
 
     }
 }

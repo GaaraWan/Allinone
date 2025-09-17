@@ -21,6 +21,7 @@ using static System.Net.Mime.MediaTypeNames;
 using JetEazy.PlugSpace;
 using Allinone.BasicSpace;
 using JetEazy.DBSpace;
+using Allinone.ZGa.Mvc.Model.MapModel;
 
 namespace Allinone.UISpace.RUNUISpace
 {
@@ -2188,7 +2189,73 @@ namespace Allinone.UISpace.RUNUISpace
             return 0;
 
         }
+        public int SetAnalyzeMapping(IxMapBuilder eMap, ref string datalogStr)
+        {
+            int iret = 0;
 
+            AlbumClass album = AlbumNow;
+            EnvClass env = album.ENVList[0];
+            List<AnalyzeClass> BranchList = new List<AnalyzeClass>();
+            BranchList.Clear();
+
+            foreach (PageClass page in env.PageList)
+            {
+                foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                {
+                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                        continue;
+                    BranchList.Add(analyze);
+                }
+            }
+
+            datalogStr = string.Empty;
+
+            if (BranchList.Count == 0)
+                return -1;
+            if (m_MappingItem == null)
+                return -2;
+            if (eMap == null)
+                return -3;
+            datalogStr += BranchList.Count.ToString() + ",";
+            datalogStr += m_MappingItem.Length.ToString() + ",";
+            datalogStr += eMap.AnylazeCount.ToString();
+
+            if (m_MappingItem.Length != eMap.AnylazeCount)
+                return -4;
+            if (BranchList.Count != eMap.AnylazeCount)
+                return -5;
+
+            int i = 0;
+            foreach (Label lbl in m_MappingItem)
+            {
+                foreach (PageClass page in env.PageList)
+                {
+                    foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                    {
+                        if (lbl.Name == analyze.ToAnalyzeString())
+                        {
+                            //转换label Text的数据 行列=>第几个
+                            //算出当前位置是第几个
+                            string[] _curr = lbl.Text.Split('-');
+                            if (_curr.Length == 2)
+                            {
+                                int x = 0;
+                                int y = 0;
+                                int.TryParse(_curr[0].Trim(), out x);
+                                int.TryParse(_curr[1].Trim(), out y);
+                                int posCurr = (x - 1) * m_Mapping_Row + (y - 1);
+                                analyze.SetAnalyzeCheckBarcodeStr(posCurr, eMap);
+                            }
+                        }
+                    }
+                }
+
+                i++;
+            }
+
+            return 0;
+
+        }
         private void Lbl_DoubleClick(object sender, EventArgs e)
         {
 

@@ -1405,7 +1405,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             bmp24.Dispose();
 
             cAlmightyPatmatchToolObj.InputImage = cInputImg2;
-
+            
             // Running
 
             cAlmightyPatmatchToolObj.Run();

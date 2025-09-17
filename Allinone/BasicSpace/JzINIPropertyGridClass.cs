@@ -116,6 +116,11 @@ namespace Allinone.BasicSpace
                                 pValue = m_frmCorpBmp.GetResult();
                             }
                             break;
+                        case "FileMapPath":
+                            str = PathPicker("", pValue.ToString());
+                            if (!string.IsNullOrEmpty(str))
+                                pValue = str;
+                            break;
                     }
                 }
             }
@@ -451,8 +456,20 @@ namespace Allinone.BasicSpace
             set { INI.tcp_handle_port = value; }
         }
 
+        
         [CategoryAttribute(cat0), DescriptionAttribute("Cip通讯使用 true使用  false不使用")]
-        [DisplayName("Cip通讯使用")]
+        [DisplayName("BJ.AA0.是否开启抽检功能")]
+        [Browsable(true)]
+        public bool IsOpenQcRandom
+        {
+            get { return INI.IsOpenQcRandom; }
+            set
+            {
+                INI.IsOpenQcRandom = value;
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute("Cip通讯使用 true使用  false不使用")]
+        [DisplayName("BJ.AA1.Cip通讯使用")]
         [Browsable(true)]
         public bool IsOpenCip
         {
@@ -464,17 +481,41 @@ namespace Allinone.BasicSpace
                     Universal.CipExtend.Init();
             }
         }
-        [CategoryAttribute(cat0), DescriptionAttribute("Cip通讯使用 true使用  false不使用")]
-        [DisplayName("A0.是否开启抽检功能")]
-        [Browsable(true)]
-        public bool IsOpenQcRandom
+        [CategoryAttribute(cat0), DescriptionAttribute("true:读取共享文件的Map信息 false:读取plc的Map信息")]
+        [DisplayName("BJ.AA2.使用文件Map")]
+        [Browsable(false)]
+        public bool IsOpenUseFileMap
         {
-            get { return INI.IsOpenQcRandom; }
+            get { return INI.IsOpenUseFileMap; }
             set
             {
-                INI.IsOpenQcRandom = value;
+                INI.IsOpenUseFileMap = value;
             }
         }
+        [CategoryAttribute(cat0), DescriptionAttribute("读取Map文件的共享路径")]
+        [DisplayName("BJ.AA3.FileMap共享路径")]
+        [Browsable(true)]
+        [Editor(typeof(GetPlugsPropertyEditor), typeof(UITypeEditor))]
+        public string FileMapPath
+        {
+            get { return INI.FileMapPath; }
+            set
+            {
+                INI.FileMapPath = value;
+            }
+        }
+        [CategoryAttribute(cat0), DescriptionAttribute("开启tcp启动 接收tcp发过来的信号来触发测试 true打开  false关闭")]
+        [DisplayName("JY.AA0.开启tcp启动")]
+        [Browsable(true)]
+        public bool IsUseTcpStart
+        {
+            get { return INI.IsUseTcpStart; }
+            set
+            {
+                INI.IsUseTcpStart = value;
+            }
+        }
+
         [CategoryAttribute(cat0), DescriptionAttribute("开启自动切换参数(需要重启程序) true使用  false不使用")]
         [DisplayName("A1.是否开启自动切换参数")]
         [Browsable(false)]

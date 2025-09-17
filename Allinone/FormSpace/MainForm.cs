@@ -42,6 +42,9 @@ using System.IO;
 using System.Windows.Forms.Automation;
 using FreeImageAPI;
 using Allinone.ControlSpace.MachineSpace;
+using Org.BouncyCastle.Utilities.Collections;
+using Allinone.ZGa.Mvc.Model.MapModel;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
 //using System.Windows.Media;
 
 namespace Allinone.FormSpace
@@ -1327,6 +1330,12 @@ namespace Allinone.FormSpace
                                     //        ClientSocket.Instance.Send(tcpdata.CmdStr + "0005");//不在跑线状态
                                     //    }
                                     //    break;
+                                    case tcpCmd.CMD_QCSTART:
+
+                                        //这里单纯接收数据认为测试哪一步
+                                        X6_LASER_CLIENT.Log.Log2($"tcpCmd.CMD_QCSTART[{tcpdata.StartIndex}]");
+
+                                        break;
                                     default:
 
                                         X6_LASER_CLIENT.Log.Log2("tcpCmd.NONE" + " 无效指令。");
@@ -1550,6 +1559,30 @@ namespace Allinone.FormSpace
                                             X6_HANDLE_CLIENT.Send(bytedata);
                                             //X6_HANDLE_CLIENT.Send(tcpHandledata.CmdStr + "0005");//不在跑线状态
                                         }
+                                        break;
+                                    case tcpCmd.CMD_QCSTART:
+
+                                        //这里单纯接收数据认为测试哪一步
+                                        X6_HANDLE_CLIENT.Log.Log2($"tcpCmd.CMD_QCSTART[{tcpHandledata.StartIndex}]");
+                                        Allinone.Universal.TcpHandlerCurrentIndex = 0;// tcpHandledata.StartIndex;
+                                        if (INI.IsUseTcpStart)
+                                        {
+                                            X6_HANDLE_CLIENT.Log.Log2($"tcpCmd.CMD_QCSTART[INI.IsUseTcpStart ON]");
+                                            ((JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.SetTcpStart(0, true);
+                                        }
+                                        else
+                                        {
+                                            X6_HANDLE_CLIENT.Log.Log2($"tcpCmd.CMD_QCSTART[INI.IsUseTcpStart OFF]");
+                                        }
+                                        
+                                        byte[] bytedata1 = new byte[36];
+                                        bytedata1[0] = 31;
+                                        bytedata1[4] = 4;
+                                        bytedata1[8] = 0;
+                                        bytedata1[32] = (byte)1;
+                                        X6_HANDLE_CLIENT.Send(bytedata1);
+
+
                                         break;
                                     default:
                                         X6_HANDLE_CLIENT.Log.Log2("tcpCmd.NONE" + " 无效指令。");
@@ -2219,6 +2252,27 @@ namespace Allinone.FormSpace
 
                     //AlbumWork.FillFirstEnvResultMover(ShowMover, CCDCollection);
                     AlbumWork.FillCompoundMoverAndBarcode(ShowMover, isshowbarcode);
+
+                    DISPUI.SetMover(ShowMover);
+                    DISPUI.RefreshDisplayShape();
+
+                    //DISPUI.GetOrgBMP().Save(@"D:\LOA\TEST.PNG");
+                    //DISPUI.SaveScreen();
+
+                    break;
+            }
+        }
+        void DISPUIShowResultAndBarcode_Bj(bool isshowbarcode = false)
+        {
+            switch (VERSION)
+            {
+                case VersionEnum.ALLINONE:
+                case VersionEnum.AUDIX:
+
+                    DISPUI.ClearMover();
+
+                    //AlbumWork.FillFirstEnvResultMover(ShowMover, CCDCollection);
+                    AlbumWork.FillCompoundMoverAndBarcode_Bj(ShowMover, isshowbarcode);
 
                     DISPUI.SetMover(ShowMover);
                     DISPUI.RefreshDisplayShape();
@@ -4408,6 +4462,53 @@ namespace Allinone.FormSpace
                                                             }
 
                                                             break;
+                                                        case FactoryName.DONGGUAN:
+
+                                                            //加入东莞 Rayxin 读取plc中的map1 和 打印内容
+                                                            if (INI.IsOpenCip)
+                                                            {
+                                                                //读取map
+                                                                string map = Universal.CipExtend.DGMap1;
+                                                                CommonLogClass.Instance.Log2($"Rayxin.[AUTOSTART]map={map}");
+                                                                if (!string.IsNullOrEmpty(map))
+                                                                {
+                                                                    string[] maps = map.Split(' ');
+                                                                    bool[] bMaps = new bool[maps.Length];
+                                                                    for (int i = 0; i < maps.Length; i++)
+                                                                    {
+                                                                        bMaps[i] = maps[i] == "0";
+                                                                    }
+                                                                    int iret = RUNUI.SetByPass(bMaps, ref m_tcp_dataCheck);
+                                                                    if (iret == 0)
+                                                                        CommonLogClass.Instance.Log2($"Rayxin.[AUTOSTART]SetMap.OK={m_tcp_dataCheck}");
+                                                                    else
+                                                                        CommonLogClass.Instance.Log2($"Rayxin.[AUTOSTART]SetMap.NG={m_tcp_dataCheck}");
+                                                                }
+                                                                //读取marked content
+                                                                string content = Universal.CipExtend.DGMarkedContent1;
+                                                                CommonLogClass.Instance.Log2($"Rayxin.[AUTOSTART]content={content}");
+                                                                if (!string.IsNullOrEmpty(content))
+                                                                {
+                                                                    IxMapBuilder mapContent = Allinone.ZGa.Mvc.GaMvcConfig.CreateMapBuilder();
+                                                                    bool bOK = mapContent.CreateMap(content);
+                                                                    if (bOK)
+                                                                    {
+                                                                        int iret = RUNUI.SetAnalyzeMapping(mapContent, ref m_tcp_dataCheck);
+                                                                        if (iret == 0)
+                                                                            CommonLogClass.Instance.Log2($"Rayxin.[AUTOSTART]SetMapContent.OK={m_tcp_dataCheck}");
+                                                                        else
+                                                                            CommonLogClass.Instance.Log2($"Rayxin.[AUTOSTART]SetMapContent.NG={m_tcp_dataCheck}");
+                                                                    }
+                                                                }
+
+                                                            }
+
+                                                            break;
+                                                    }
+
+                                                    if (INI.IsUseTcpStart)
+                                                    {
+                                                        ((JzMainX6MachineClass)MACHINECollection.MACHINE).PLCIO.SetTcpStart(0);
                                                     }
 
                                                     //不要執行包含在固定參數的參數
@@ -5474,7 +5575,7 @@ namespace Allinone.FormSpace
                                 //这里显示当前抓的图片
                                 DISPUI.SetDisplayImage(AlbumWork.ENVList[0].PageList[0].GetbmpRUN(PageOPTypeEnum.P00));
                                 //显示框和条码
-                                DISPUIShowResultAndBarcode(OPTION == OptionEnum.MAIN_X6);
+                                DISPUIShowResultAndBarcode_Bj(OPTION == OptionEnum.MAIN_X6);
 
                                 //AlbumWork.CPD.GenRUNVIEWData(ASNCollection);
                                 //DISPUI.SetDisplayImage(AlbumWork.CPD.bmpRUNVIEW);
@@ -7810,46 +7911,46 @@ namespace Allinone.FormSpace
             return 0;
         }
 
-        private Bitmap _getMainX6ShowBarcode(Bitmap eBmpInput)
-        {
-            Bitmap bmpinputtemp = new Bitmap(eBmpInput);
+        //private Bitmap _getMainX6ShowBarcode(Bitmap eBmpInput)
+        //{
+        //    Bitmap bmpinputtemp = new Bitmap(eBmpInput);
 
-            Graphics graphics = Graphics.FromImage(bmpinputtemp);
+        //    Graphics graphics = Graphics.FromImage(bmpinputtemp);
             
-            foreach (EnvClass env in AlbumWork.ENVList)
-            {
-                foreach (PageClass page in env.PageList)
-                {
-                    foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
-                    {
-                        PointF ptloc = analyze.myDrawAnalyzeStrRectF.Location;
+        //    foreach (EnvClass env in AlbumWork.ENVList)
+        //    {
+        //        foreach (PageClass page in env.PageList)
+        //        {
+        //            foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+        //            {
+        //                PointF ptloc = analyze.myDrawAnalyzeStrRectF.Location;
 
-                        ptloc.Y += 28;
-                        string _barcode = string.Empty;
+        //                ptloc.Y += 28;
+        //                string _barcode = string.Empty;
 
-                        switch (Universal.jetMappingType)
-                        {
-                            case JetMappingType.MAPPING_A:
+        //                switch (Universal.jetMappingType)
+        //                {
+        //                    case JetMappingType.MAPPING_A:
 
-                                //_barcode = env.GetShow2dMessage(analyze);
+        //                        //_barcode = env.GetShow2dMessage(analyze);
 
-                                break;
-                            default:
-                                analyze.CollectAllBarcodeStr(ref _barcode);
-                                break;
-                        }
-                        if (_barcode.Contains("[FAIL]"))
-                            graphics.DrawString(_barcode, new Font("宋体", 18), Brushes.Red, ptloc);
-                        else
-                            graphics.DrawString(_barcode, new Font("宋体", 18), Brushes.Lime, ptloc);
-                    }
-                }
-            }
-            graphics.Dispose();
+        //                        break;
+        //                    default:
+        //                        analyze.CollectAllBarcodeStr(ref _barcode);
+        //                        break;
+        //                }
+        //                if (_barcode.Contains("[FAIL]"))
+        //                    graphics.DrawString(_barcode, new Font("宋体", 18), Brushes.Red, ptloc);
+        //                else
+        //                    graphics.DrawString(_barcode, new Font("宋体", 18), Brushes.Lime, ptloc);
+        //            }
+        //        }
+        //    }
+        //    graphics.Dispose();
 
 
-            return bmpinputtemp;
-        }
+        //    return bmpinputtemp;
+        //}
 
         //string _getAnalyzeBarcodeStr(AnalyzeClass eAnalyze)
         //{

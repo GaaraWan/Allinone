@@ -40,6 +40,7 @@ using Allinone.BasicSpace;
 using System.Globalization;
 using static MFApi.Script;
 using Newtonsoft.Json.Linq;
+using Allinone.ZGa.Mvc.Model.MapModel;
 
 namespace Allinone
 {
@@ -49,13 +50,13 @@ namespace Allinone
         public static bool IsNoUseIO = false;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2025/09/09";
+        public static string VersionDate = "2025/09/17R";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
-        public static OptionEnum OPTION = OptionEnum.MAIN_SDM2;
+        public static OptionEnum OPTION = OptionEnum.MAIN_X6;
 
         public static CameraActionMode CAMACT = CameraActionMode.CAM_MOTOR_MODE2;
-        public static RobotType myRobotType = RobotType.HCFA;
+        public static RobotType myRobotType = RobotType.NONE;
         public static DiskType myDiskType = DiskType.DISK_D;
         public static JetMappingType jetMappingType = JetMappingType.NONE;
         public static FactoryName FACTORYNAME = FactoryName.NONE;
@@ -145,7 +146,7 @@ namespace Allinone
                 return ret;
             }
         }
-
+        public static int TcpHandlerCurrentIndex = 0;
         #endregion
 
         public static Bitmap bmpProvideAI = new Bitmap(1, 1);
@@ -251,6 +252,8 @@ namespace Allinone
         public static CCDCollectionClass CCDCollection;
         public static IxLineScanCam IxLineScan = null;
         public static IxLineScanCam IxAreaCam = null;
+        public static IxMapBuilder MapBuilder = null;
+        public static int MapCellIndex = 0;
 
         //public static UseIOClass USEIO;
         public static int ALBIndicator = -1;
@@ -534,6 +537,8 @@ namespace Allinone
 
                             break;
                     }
+
+                    MapBuilder = Allinone.ZGa.Mvc.GaMvcConfig.CreateMapBuilder();
 
                     break;
             }

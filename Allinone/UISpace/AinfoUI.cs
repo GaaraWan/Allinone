@@ -177,7 +177,7 @@ namespace Allinone.UISpace
 
             JzOCRStringConverter.ParaData = new string[1];
             JzOCRStringConverter.ParaData[0] = "None";
-            
+
             if (AnalyzeNow.OCRPara.OCRMethod == OCRMethodEnum.MAPPING)
             {
                 JzOCRStringConverter.ParaData = new string[OCRCollection.myDataList.Count];
@@ -192,15 +192,56 @@ namespace Allinone.UISpace
                     i++;
                 }
             }
+            else
+            {
+                switch(Universal.OPTION)
+                {
+                    case OptionEnum.MAIN_X6:
+
+                        string[] datas = Allinone.Universal.MapBuilder.GetCellContent(Allinone.Universal.MapCellIndex);
+
+                        JzOCRStringConverter.ParaData = new string[datas.Length];
+
+                        i = 0;
+                        foreach (string s in datas)
+                        {
+                            //string ocrparastr = ocr.Name + "(" + ocr.No + ")";
+
+                            JzOCRStringConverter.ParaData[i] = $"{s}#{i}";
+
+                            i++;
+                        }
+
+                        break;
+                }
+            }
 
             if (AnalyzeNow.OCRPara.OCRMethod  != OCRMethodEnum.MAPPING)
             {
-                if (ischangeOCRdata)
+                switch (Universal.OPTION)
                 {
-                   // AnalyzeNow.OCRPara.OCRMappingMethod = OCRSETEnum.NONE;//"None";
-                    AnalyzeNow.OCRPara.OCRMappingMethod ="None";
-                    OnChange("05.OCR or Barcode;OCRMappingMethod", "None");
+                    case OptionEnum.MAIN_X6:
+
+                        if (ischangeOCRdata)
+                        {
+                            AnalyzeNow.OCRPara.OCRMappingMethod = JzOCRStringConverter.ParaData[0];
+                            OnChange("05.OCR or Barcode;OCRMappingMethod", JzOCRStringConverter.ParaData[0]);
+                        }
+
+                        break;
+                    default:
+
+                        if (ischangeOCRdata)
+                        {
+                            // AnalyzeNow.OCRPara.OCRMappingMethod = OCRSETEnum.NONE;//"None";
+                            AnalyzeNow.OCRPara.OCRMappingMethod = "None";
+                            OnChange("05.OCR or Barcode;OCRMappingMethod", "None");
+                        }
+
+                        break;
                 }
+
+                
             }
             else
             {
@@ -212,7 +253,47 @@ namespace Allinone.UISpace
                 }
             }
         }
+        //void FillOCRParaData(bool ischangeOCRdata)
+        //{
+        //    int i = 0;
 
+        //    JzOCRStringConverter.ParaData = new string[1];
+        //    JzOCRStringConverter.ParaData[0] = "None";
+
+        //    if (AnalyzeNow.OCRPara.OCRMethod == OCRMethodEnum.MAPPING)
+        //    {
+        //        JzOCRStringConverter.ParaData = new string[OCRCollection.myDataList.Count];
+
+        //        i = 0;
+        //        foreach (OCRClass ocr in OCRCollection.myDataList)
+        //        {
+        //            string ocrparastr = ocr.Name + "(" + ocr.No + ")";
+
+        //            JzOCRStringConverter.ParaData[i] = ocrparastr;
+
+        //            i++;
+        //        }
+        //    }
+
+        //    if (AnalyzeNow.OCRPara.OCRMethod != OCRMethodEnum.MAPPING)
+        //    {
+        //        if (ischangeOCRdata)
+        //        {
+        //            // AnalyzeNow.OCRPara.OCRMappingMethod = OCRSETEnum.NONE;//"None";
+        //            AnalyzeNow.OCRPara.OCRMappingMethod = "None";
+        //            OnChange("05.OCR or Barcode;OCRMappingMethod", "None");
+        //        }
+        //    }
+        //    else
+        //    {
+        //        if (ischangeOCRdata)
+        //        {
+        //            // AnalyzeNow.OCRPara.OCRMappingMethod = (OCRSETEnum)Enum.Parse(typeof(OCRSETEnum), JzOCRStringConverter.ParaData[0], true); //JzOCRStringConverter.ParaData[0];
+        //            AnalyzeNow.OCRPara.OCRMappingMethod = JzOCRStringConverter.ParaData[0];
+        //            OnChange("05.OCR or Barcode;OCRMappingMethod", JzOCRStringConverter.ParaData[0]);
+        //        }
+        //    }
+        //}
 
         #region Event Operation
         private void PpgAnalyze_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)

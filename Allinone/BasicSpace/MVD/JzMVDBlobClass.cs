@@ -94,7 +94,7 @@ namespace Allinone.BasicSpace.MVD
             float allArea = cImageBinaryToolObj.Result.OutputImage.Width * cImageBinaryToolObj.Result.OutputImage.Height;
             foreach (var item in cBlobFindToolObj.Result.BlobInfo)
             {
-                if (item.AreaF > blobMin && item.AreaF < FindBaseArea * 0.3)
+                if (item.AreaF > blobMin && item.AreaF < 10000 && item.AreaF < FindBaseArea * 0.3)
                 {
                     double _ratio = item.AreaF / FindBaseArea;
                     //if (item.AreaF > blobMin && item.AreaF < blobMax)

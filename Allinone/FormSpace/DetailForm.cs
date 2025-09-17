@@ -23,6 +23,8 @@ using Allinone.ControlSpace.MachineSpace;
 using Allinone.BasicSpace;
 using System.Security.Cryptography;
 using static Allinone.UISpace.ALBUISpace.AllinoneAlbUI;
+using System.IO;
+using Allinone.FormSpace.BJ;
 
 namespace Allinone.FormSpace
 {
@@ -169,6 +171,7 @@ namespace Allinone.FormSpace
         Button btnMark1;
         Button btnMark2;
         Button btnCommonFrm;
+        Button btnFileMap;
 
        public PageUI PAGEUI;
         EnvClass ENVNow;
@@ -327,6 +330,7 @@ namespace Allinone.FormSpace
             btnMark1 = button22;
             btnMark2 = button23;
             btnCommonFrm = button24;
+            btnFileMap = button25;
 
             chkMactching = checkBox1;
             cboMatchingMethod = comboBox3;
@@ -442,6 +446,7 @@ namespace Allinone.FormSpace
             btnMark1.Click += BtnMark1_Click;
             btnMark2.Click += BtnMark2_Click;
             btnCommonFrm.Click += BtnCommonFrm_Click;
+            btnFileMap.Click += BtnFileMap_Click;
 
             pageUI1.CaptureTriggerAction += PageUI1_CaptureTriggerAction;
 
@@ -461,6 +466,7 @@ namespace Allinone.FormSpace
 
                     btnOneKeyReget.Visible = true;
                     btnOneKeyExposure.Visible = true;
+                    btnFileMap.Visible = true;
 
                     //switch (Universal.CAMACT)
                     //{
@@ -535,6 +541,48 @@ namespace Allinone.FormSpace
 
             #endregion
 
+        }
+
+        private void BtnFileMap_Click(object sender, EventArgs e)
+        {
+            //switch(Allinone.Universal.FACTORYNAME)
+            //{
+            //    case FactoryName.DONGGUAN:
+            //    case FactoryName.RIYUEXING:
+            //    case FactoryName.DAGUI:
+            //        break;
+            //}
+            using (OpenFileDialog dlg = new OpenFileDialog())
+            {
+                dlg.InitialDirectory = INI.FileMapPath;
+                dlg.Filter = "TXT Files (*.txt)|*.TXT|" + "All files (*.*)|*.*";
+                //dlg.Filter = DefaultPath;
+                //dlg.FileName = DefaultName;
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    string retStr = dlg.FileName;
+                    if (!string.IsNullOrEmpty(retStr))
+                    {
+                        bool bOK = Allinone.Universal.MapBuilder.CreateMap(retStr);
+                        JetEazy.LoggerClass.Instance.WriteLog($"手动加载文件{retStr}[{(bOK ? "成功" : "失败")}]");
+                        if (bOK)
+                        {
+                            if (INI.IsOpenCip)
+                            {
+                                FileInfo fileInfo = new FileInfo(retStr);
+                                Allinone.Universal.CipExtend.QcBoatID = fileInfo.Name.Replace(fileInfo.Extension, "");
+                                JetEazy.LoggerClass.Instance.WriteLog($"写入boatID{Allinone.Universal.CipExtend.QcBoatID}");
+                            }
+                            using (BJCellForm bJCellForm = new BJCellForm(Allinone.Universal.MapBuilder.GetCells()))
+                            {
+                                bJCellForm.ShowDialog();
+                                
+                            }
+                            JetEazy.LoggerClass.Instance.WriteLog($"选择cell {Allinone.Universal.MapCellIndex}");
+                        }
+                    }
+                }
+            }
         }
 
         private void NumCamGain_ValueChanged(object sender, EventArgs e)

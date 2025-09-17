@@ -7968,7 +7968,12 @@ namespace JetEazy.ControlSpace
         void RenderBMP(Bitmap bmpfrom, Bitmap bmpto)
         {
             Graphics g = Graphics.FromImage(bmpto);
-            g.DrawImage(bmpfrom, new Point(0, 0));
+            //g.DrawImage(bmpfrom, new Point(0, 0));
+            g.DrawImage(bmpfrom, 
+                        new Rectangle(0, 0, bmpto.Width, bmpto.Height), 
+                        new Rectangle(0, 0, bmpfrom.Width, bmpfrom.Height), 
+                        GraphicsUnit.Pixel);
+
             g.Dispose();
         }
         void RenderBMPSizeChange(Bitmap bmpfrom, Bitmap bmpto)

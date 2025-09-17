@@ -51,6 +51,7 @@ namespace Allinone.ControlSpace.IOSpace
     {
         bool m_IsDebug = false;
         string QcDebugStr = $"2,2,4";
+        bool[] m_TcpStart = new bool[100];
 
         public JzMainX6IOClass()
         {   
@@ -87,7 +88,7 @@ namespace Allinone.ControlSpace.IOSpace
             ADDRESSARRAY[(int)MainX6AddressEnum.ADR_FRONTLIGHT] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.ADR_FRONTLIGHT.ToString(), "", INIFILE));
             ADDRESSARRAY[(int)MainX6AddressEnum.ADR_BACKLIGHT] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.ADR_BACKLIGHT.ToString(), "", INIFILE));
             ADDRESSARRAY[(int)MainX6AddressEnum.ADR_GETIMAGEOK] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.ADR_GETIMAGEOK.ToString(), "", INIFILE));
-            
+
             ADDRESSARRAY[(int)MainX6AddressEnum.bSoftwareReady] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.bSoftwareReady.ToString(), "", INIFILE));
             ADDRESSARRAY[(int)MainX6AddressEnum.bHeartBeat] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.bHeartBeat.ToString(), "", INIFILE));
             ADDRESSARRAY[(int)MainX6AddressEnum.iQcResult] = new FATEKAddressClass(ReadINIValue("Operation Address", MainX6AddressEnum.iQcResult.ToString(), "", INIFILE));
@@ -98,6 +99,10 @@ namespace Allinone.ControlSpace.IOSpace
             m_IsDebug = ReadINIValue("Parameters", "IsDebug", "0", INIFILE) == "1";
 
             loadQcDebugStr();
+            for (int i = 0; i < 100; i++)
+            {
+                m_TcpStart[i] = false;
+            }
         }
 
         public override void SaveData()
@@ -237,7 +242,33 @@ namespace Allinone.ControlSpace.IOSpace
                 }
             }
         }
+        public bool IsGetTcpStart(int index = 0)
+        {
+            if (index < 0 || index >= m_TcpStart.Length)
+                return false;
+            return m_TcpStart[index];
+            //get
+            //{
+            //    //if (m_TcpStart)
+            //    //{
+            //    //    m_TcpStart = false;
+            //    //    return true;
+            //    //}
+            //    //return false;
 
+            //    return m_TcpStart;
+            //}
+            //set
+            //{
+            //    m_TcpStart = value;
+            //}
+        }
+        public void SetTcpStart(int index = 0, bool ison = false)
+        {
+            if (index < 0 || index >= m_TcpStart.Length)
+                return;
+            m_TcpStart[index] = ison;
+        }
 
         /// <summary>
         /// 拍照次数

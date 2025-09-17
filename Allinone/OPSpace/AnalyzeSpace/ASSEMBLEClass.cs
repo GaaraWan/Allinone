@@ -584,6 +584,18 @@ namespace Allinone.OPSpace.AnalyzeSpace
             get; set;
         }
 
+        [Category("05.OCR or Barcode"), DefaultValue(0)]
+        [Description("OCR MappingTextIndex.")]
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 1000)]
+        [DisplayName("OCR Para")]
+        public virtual int MappingTextIndex
+        {
+            get; set;
+        }
+
         #endregion
 
         #region AOI Factor
@@ -1907,6 +1919,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                 default:
                                     publicproperties.Add(new myProperty("OCRMethod", "05.OCR or Barcode", "字符或条码检测"));
                                     publicproperties.Add(new myProperty("OCRMappingMethod", "05.OCR or Barcode", "字符或条码检测"));
+                                    publicproperties.Add(new myProperty("MappingTextIndex", "05.OCR or Barcode", "字符或条码检测"));
                                     break;
                             }
 
@@ -2187,11 +2200,34 @@ namespace Allinone.OPSpace.AnalyzeSpace
         {
             OCRMethod = ocr.OCRMethod;
             OCRMappingMethod = ocr.OCRMappingMethod;
+            string[] strings = OCRMappingMethod.Split('#');
+            MappingTextIndex = 0;
+            if (strings.Length == 2)
+            {
+                bool bOK = int.TryParse(strings[1], out int indexvalue);
+                if (bOK)
+                    MappingTextIndex = indexvalue;
+
+            }
+            //else
+            //{
+            //    MappingTextIndex = 0;
+            //}
+            //MappingTextIndex = ocr.MappingTextIndex;
         }
         public void SetOCR(OCRCheckClass ocr)
         {
             ocr.OCRMethod = OCRMethod;
             ocr.OCRMappingMethod = OCRMappingMethod;
+            string[] strings = ocr.OCRMappingMethod.Split('#');
+            ocr.MappingTextIndex = 0;
+            if (strings.Length == 2)
+            {
+                bool bOK = int.TryParse(strings[1], out int indexvalue);
+                if (bOK)
+                    ocr.MappingTextIndex = indexvalue;
+            }
+            //ocr.MappingTextIndex = MappingTextIndex;
         }
         public void GetAOI(AOIClass aoi)
         {
@@ -2812,6 +2848,19 @@ namespace Allinone.OPSpace.AnalyzeSpace
         [TypeConverter(typeof(JzOCRStringConverter))]
         [DisplayName("1.参数选择")]
         public override string OCRMappingMethod { get => base.OCRMappingMethod; set => base.OCRMappingMethod = value; }
+
+
+        [Category("05.字符和条码读取"), DefaultValue(0)]
+        [Description("即打印内容的序号")]
+        [Browsable(true)]
+        [ReadOnly(true)]
+        [TypeConverter(typeof(NumericUpDownTypeConverter))]
+        [Editor(typeof(NumericUpDownTypeEditor), typeof(UITypeEditor)), MinMax(0, 1000)]
+        [DisplayName("2.字符索引")]
+        public override int MappingTextIndex
+        {
+            get; set;
+        }
 
         #endregion
 

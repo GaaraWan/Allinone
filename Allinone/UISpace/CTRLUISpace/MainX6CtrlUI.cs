@@ -83,6 +83,7 @@ namespace Allinone.UISpace
         Label lblGetImageIndex;
         Label lblHandlerOK;
         Label lblTcpComplete;
+        Label lblTcpCurrentIndex;
 
 
         Label lblSoftwareReady;
@@ -125,6 +126,7 @@ namespace Allinone.UISpace
 
             lblSoftwareReady = label18;
             lblHeart = label19;
+            lblTcpCurrentIndex = label20;
 
             lblTopLight.Tag = TagEnum.TOPLIGHT;
             lblFrontLight.Tag = TagEnum.FRONTLIGHT;
@@ -167,6 +169,8 @@ namespace Allinone.UISpace
                     {
                         lblCipMapping.Visible = true;
                     }
+                    if (INI.IsUseTcpStart)
+                        lblTcpCurrentIndex.Visible = true;
 
                     lblIsStart.Text = "取像";
                     lblIsGetImage.Text = "测试";
@@ -471,6 +475,14 @@ namespace Allinone.UISpace
 
             if (INI.IsReadHandlerOKSign && !INI.IsNoUseHandlerOKSign)
                 lblHandlerOK.BackColor = (PLCIO.IsHandlerOK ? Color.Green : Color.Black);
+            if (INI.IsUseTcpStart)
+            {
+                lblTcpCurrentIndex.Visible = true;
+                int index = Allinone.Universal.TcpHandlerCurrentIndex;
+                lblTcpCurrentIndex.BackColor = (PLCIO.IsGetTcpStart(index) ? Color.Green : Color.Black);
+                lblTcpCurrentIndex.Text = $"Tcp-{index}";
+
+            }
 
             switch(Universal.FACTORYNAME)
             {

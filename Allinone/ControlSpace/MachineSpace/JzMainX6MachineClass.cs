@@ -329,7 +329,16 @@ namespace Allinone.ControlSpace.MachineSpace
             {
                 case CameraActionMode.CAM_MOTOR_LINESCAN:
                 case CameraActionMode.CAM_MOTOR_MODE2:
-                    isstartnow = PLCIO.IsGetImage;
+                    isstartnow = false;// PLCIO.IsGetImage;
+                    if (INI.IsUseTcpStart)
+                    {
+                        int index = Allinone.Universal.TcpHandlerCurrentIndex;
+                        isstartnow = PLCIO.IsGetTcpStart(index);
+                        //if (isstartnow) //读到后 将信号关闭
+                        //    PLCIO.SetTcpStart(index);
+                    }
+                    else
+                        isstartnow = PLCIO.IsGetImage;
                     break;
                 default:
                     break;

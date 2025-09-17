@@ -399,7 +399,49 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                                                                        m_PADRegion.RegionForEdgeRect.Y,
                                                                                        m_PADRegion.RegionForEdgeRect.Width,
                                                                                        m_PADRegion.RegionForEdgeRect.Height);
-                                rect2.Inflate(PADExtend.cEleX, PADExtend.cEleY);
+
+                                switch(PadInspectMethod)
+                                {
+                                    case PadInspectMethodEnum.PAD_V1:
+
+                                        #region 使用IPD的限流外围
+
+                                        if (!string.IsNullOrEmpty(PADINSPECTOPString))
+                                        {
+                                            string[] strs = PADINSPECTOPString.Split(',');
+                                            if (strs.Length > 5)
+                                            {
+                                                GetRGB = short.Parse(strs[0]);
+                                                numThresholdRatio = int.Parse(strs[1]);
+                                                numObjectFilterRatio = int.Parse(strs[2]);
+                                                numEDCount = int.Parse(strs[3]);
+                                                numShortenRatio = int.Parse(strs[4]);
+                                                txtBangBangRectStr = strs[5];
+                                            }
+                                            if (strs.Length > 8)
+                                            {
+                                                numBangBangOffsetVal = int.Parse(strs[6]);
+                                                txtNeverOutsideRect = strs[7];
+                                                cboIPDMethod = int.Parse(strs[8]);
+                                            }
+                                        }
+
+                                        rect2 = StringtoRect(txtNeverOutsideRect);
+
+                                        #endregion
+
+                                        break;
+                                    default:
+                                        double baseResu = INI.MAINSD_PAD_MIL_RESOLUTION;
+                                        if (baseResu <= 0)
+                                        {
+                                            baseResu = 0.03;
+                                        }
+                                        double _x = PADExtend.cEleX / baseResu;
+                                        double _y = PADExtend.cEleY / baseResu;
+                                        rect2.Inflate((int)_x, (int)_y);
+                                        break;
+                                }
                                 grapContactEle.DrawRectangle(new Pen(Color.Yellow, LineWidth), rect2);
                                 grapContactEle.Dispose();
 
@@ -480,7 +522,15 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                                                                        m_PADRegion.RegionForEdgeRect.Y,
                                                                                        m_PADRegion.RegionForEdgeRect.Width,
                                                                                        m_PADRegion.RegionForEdgeRect.Height);
-                                rect2.Inflate(PADExtend.cEleX, PADExtend.cEleY);
+
+                                double baseResu = INI.MAINSD_PAD_MIL_RESOLUTION;
+                                if (baseResu <= 0)
+                                {
+                                    baseResu = 0.03;
+                                }
+                                double _x = PADExtend.cEleX / baseResu;
+                                double _y = PADExtend.cEleY / baseResu;
+                                rect2.Inflate((int)_x, (int)_y);
                                 grapContactEle.DrawRectangle(new Pen(Color.Yellow, LineWidth), rect2);
                                 grapContactEle.Dispose();
 
@@ -1833,8 +1883,52 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                                                         m_PADRegion.RegionForEdgeRect.Y,
                                                                         m_PADRegion.RegionForEdgeRect.Width,
                                                                         m_PADRegion.RegionForEdgeRect.Height);
-                    //if(PADExtend.cEleX > 0 && PADExtend.cEleY >0)
-                    org.Inflate(PADExtend.cEleX, PADExtend.cEleY);
+
+                    switch(PadInspectMethod)
+                    {
+                        case PadInspectMethodEnum.PAD_V1:
+
+                            #region 使用IPD的限流外围
+
+                            if (!string.IsNullOrEmpty(PADINSPECTOPString))
+                            {
+                                string[] strs = PADINSPECTOPString.Split(',');
+                                if (strs.Length > 5)
+                                {
+                                    GetRGB = short.Parse(strs[0]);
+                                    numThresholdRatio = int.Parse(strs[1]);
+                                    numObjectFilterRatio = int.Parse(strs[2]);
+                                    numEDCount = int.Parse(strs[3]);
+                                    numShortenRatio = int.Parse(strs[4]);
+                                    txtBangBangRectStr = strs[5];
+                                }
+                                if (strs.Length > 8)
+                                {
+                                    numBangBangOffsetVal = int.Parse(strs[6]);
+                                    txtNeverOutsideRect = strs[7];
+                                    cboIPDMethod = int.Parse(strs[8]);
+                                }
+                            }
+
+                            org = StringtoRect(txtNeverOutsideRect);
+
+                            #endregion
+
+                            break;
+                        default:
+
+                            //if(PADExtend.cEleX > 0 && PADExtend.cEleY >0)
+                            double baseResu = INI.MAINSD_PAD_MIL_RESOLUTION;
+                            if (baseResu <= 0)
+                            {
+                                baseResu = 0.03;
+                            }
+                            double _x = PADExtend.cEleX / baseResu;
+                            double _y = PADExtend.cEleY / baseResu;
+                            org.Inflate((int)_x, (int)_y);
+
+                            break;
+                    }
 
                     bool bInstert = true;
                     //判别边缘点都在范围内
@@ -4192,7 +4286,15 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                                                                         m_PADRegion.RegionForEdgeRect.Width,
                                                                         m_PADRegion.RegionForEdgeRect.Height);
                     //if(PADExtend.cEleX > 0 && PADExtend.cEleY >0)
-                    org.Inflate(PADExtend.cEleX, PADExtend.cEleY);
+                    double baseResu = INI.MAINSD_PAD_MIL_RESOLUTION;
+                    if (baseResu <= 0)
+                    {
+                        baseResu = 0.03;
+                    }
+                    double _x = PADExtend.cEleX / baseResu;
+                    double _y = PADExtend.cEleY / baseResu;
+                    org.Inflate((int)_x, (int)_y);
+                    //org.Inflate(PADExtend.cEleX, PADExtend.cEleY);
 
                     bool bInstert = true;
                     //判别边缘点都在范围内
@@ -6555,7 +6657,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
 
             //填充
             Graphics graphics = Graphics.FromImage(ebmpinput);
-            graphics.FillRectangles(Brushes.White, new RectangleF[] { StringtoRect(txtNeverOutsideRect) });
+            graphics.FillRectangles(Brushes.White, new RectangleF[] { StringtoRect(txtNeverOutsideRect) });//no use
             graphics.Dispose();
 
             //抽取绿色
@@ -6687,7 +6789,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             Bitmap bmpGR = new Bitmap(ebmpinput);
             //填充
             Graphics graphics = Graphics.FromImage(bmpGR);
-            graphics.FillRectangles(Brushes.White, new RectangleF[] { StringtoRect(txtNeverOutsideRect) });
+            graphics.FillRectangles(Brushes.White, new RectangleF[] { StringtoRect(txtNeverOutsideRect) });//no use
             graphics.Dispose();
 
             //Grayscale grayscale = new Grayscale(0.299, 0.587, 0.114);
@@ -7013,7 +7115,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             Bitmap bmpGR1 = new Bitmap(bmpGR);
             //填充
             Graphics graphics1 = Graphics.FromImage(bmpGR1);
-            graphics1.FillRectangles(Brushes.Black, new RectangleF[] { StringtoRect(txtNeverOutsideRect) });
+            graphics1.FillRectangles(Brushes.Black, new RectangleF[] { StringtoRect(txtNeverOutsideRect) });//no use
             graphics1.Dispose();
 
             if (m_IsSaveTemp)
@@ -7225,7 +7327,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                 }
             }
 
-            Rectangle _crop = StringtoRect(txtNeverOutsideRect);
+            Rectangle _crop = StringtoRect(txtNeverOutsideRect);//no use
             //Bitmap bmpinput = eInput.Clone(new Rectangle(0, 0, eInput.Width, eInput.Height), PixelFormat.Format24bppRgb);
             Bitmap bmpinput = eInput.Clone(_crop, PixelFormat.Format24bppRgb);
 

@@ -1055,7 +1055,47 @@ namespace Allinone.OPSpace
                 }
             }
         }
+        public void FillCompoundMoverAndBarcode_Bj(Mover mover, bool isshowbarcode = false)
+        {
+            mover.Clear();
 
+            EnvClass env = GetEnv(0);
+            PageClass page = env.GetPageRun(0);
+
+            if (page == null)
+                return;
+
+            if (page.AnalyzeRootArray.Count() > 0)
+            {
+                page.AnalyzeRootArray[0].GetShowResultMover(mover, new PointF(0, 0), new SizeF(1, 1), 0, new Point(0, 0));
+                if (isshowbarcode)
+                {
+                    foreach (AnalyzeClass analyze in page.AnalyzeRootArray[0].BranchList)
+                    {
+                        if (analyze.IsCollectAllBarcodeStrOpen() == OCRMethodEnum.NONE)
+                            continue;
+
+                        Color showcolor = Color.Red;
+                        string _barcode = string.Empty;
+                        analyze.CollectAllBarcodeStr(ref _barcode);
+                        if (_barcode.Contains("[FAIL]"))
+                            showcolor = Color.Red;
+                        else
+                            showcolor = Color.Lime;
+                        JzRectEAG jzrect = new JzRectEAG(Color.FromArgb(0, Color.White), analyze.myOPRectF);
+
+                        jzrect.Desc = _barcode;
+                        jzrect.TransparentForMover = true;
+                        jzrect.ShowMode = JzDisplay.ShowModeEnum.MAINSHOW;
+                        jzrect.MainShowPen = new Pen(showcolor, 1);
+                        jzrect.OffsetPoint = new Point(0, 0);
+                        jzrect.MappingToMovingObject(new PointF(0, 0), 1);
+
+                        mover.Add(jzrect);
+                    }
+                }
+            }
+        }
         public void RecodeRepoer()
         {
             bool isok = true;

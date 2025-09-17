@@ -31,6 +31,7 @@ using FreeImageAPI;
 using System.Windows.Documents;
 using static MFApi.Script;
 using static Allinone.UISpace.ALBUISpace.AllinoneAlbUI;
+using Allinone.ZGa.Mvc.Model.MapModel;
 
 namespace Allinone.OPSpace.ResultSpace
 {
@@ -254,7 +255,10 @@ namespace Allinone.OPSpace.ResultSpace
 
                         MACHINE.PLCIO.Pass = false;
                         MACHINE.PLCIO.Fail = false;
-
+                        if (INI.IsUseTcpStart)
+                        {
+                            MACHINE.PLCIO.SetTcpStart(0);
+                        }
                     }
                     IsGetImageResetOld = isGetImageReset;
 
@@ -1441,7 +1445,19 @@ namespace Allinone.OPSpace.ResultSpace
                             if (!MACHINE.PLCIO.GetImageOK && !m_DLGetImageOK.IsOn)
                             {
                                 //Trigger Start
-                                bool isGetImageStart = MACHINE.PLCIO.IsGetImage;
+                                bool isGetImageStart = false;// MACHINE.PLCIO.IsGetImage;
+                                if (INI.IsUseTcpStart)
+                                {
+                                    int iindex = Allinone.Universal.TcpHandlerCurrentIndex;
+                                    isGetImageStart = MACHINE.PLCIO.IsGetTcpStart(iindex);
+                                    if (isGetImageStart)
+                                    {
+                                        MACHINE.PLCIO.SetTcpStart(iindex);
+                                        LogProcessIDTimer(Process.ID, $"MACHINE.PLCIO.IsGetTcpStart index={iindex} [OFF]");
+                                    }
+                                }
+                                else
+                                    isGetImageStart = MACHINE.PLCIO.IsGetImage;
 
                                 if (isGetImageStart && IsGetTestStartOld != isGetImageStart)
                                 {
@@ -1672,17 +1688,66 @@ namespace Allinone.OPSpace.ResultSpace
                             //});
                             //task.Start();
 
+                            string boatID = Universal.CipExtend.QcBoatID;
+                            string currentPos = Universal.CipExtend.QcCurrentPos;
+                            int row = Universal.CipExtend.QcRowCount;
+                            int col = Universal.CipExtend.QcColCount;
+
                             //开启Map功能 读取是否需要检测
                             if (Universal.CipExtend.QcUseMap)
                             {
                                 LogProcessIDTimer(Process.ID, $"开启QcUseMap=true");
-                                LogProcessIDTimer(Process.ID, $"QcBoatID={Universal.CipExtend.QcBoatID}");
-                                LogProcessIDTimer(Process.ID, $"QcCurrentPos={Universal.CipExtend.QcCurrentPos}");
+                                LogProcessIDTimer(Process.ID, $"QcBoatID={boatID}");
+                                LogProcessIDTimer(Process.ID, $"QcCurrentPos={currentPos}");
                                 LogProcessIDTimer(Process.ID, $"QcMapNeed={Universal.CipExtend.QcMapNeed}");
                                 SetAnalyzeBypass(Universal.CipExtend.QcMapNeed.ToString());
                             }
 
-                            SetAnalyzeMapping(Universal.CipExtend.QcMapStr);
+
+                            if (Universal.CipExtend.QcUseFileMap)
+                            {
+                                if (Directory.Exists(INI.FileMapPath))
+                                {
+                                    //这里先固定文件名称FileMap.txt  需要问德龙 名称BoatID ? 
+                                    IxMapBuilder map = Allinone.ZGa.Mvc.GaMvcConfig.CreateMapBuilder();
+                                    string filenameStr = Path.Combine(INI.FileMapPath, $"{boatID}.txt");
+                                    bool bOK = map.CreateMap(filenameStr);
+                                    if (bOK)
+                                    {
+                                        //算出当前位置是第几个
+                                        string[] _curr = currentPos.Split('-');
+                                        if (_curr.Length == 2)
+                                        {
+                                            int x = 0;
+                                            int y = 0;
+                                            int.TryParse(_curr[0].Trim(), out x);
+                                            int.TryParse(_curr[1].Trim(), out y);
+                                            int posCurr = x * row + y;
+                                            SetAnalyzeMapping(posCurr, map);
+                                        }
+                                        else
+                                        {
+                                            LogProcessIDTimer(Process.ID, $"!!!读取当前位置失败 {currentPos}");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        LogProcessIDTimer(Process.ID, $"!!!读取文件失败 {filenameStr}");
+                                    }
+                                }
+                                else
+                                {
+
+                                    LogProcessIDTimer(Process.ID, $"!!!共享文件不存在 {INI.FileMapPath}");
+                                }
+
+                            }
+                            else
+                            {
+                                string mapStr = Universal.CipExtend.QcMapStr;
+                                LogProcessIDTimer(Process.ID, $"来自plc的Map = {mapStr}");
+                                SetAnalyzeMapping(mapStr);
+                            }
 
                             m_IsTaskRun = false;
                             WorkStatusCollectionClass RunStatusCollectionTemp = new WorkStatusCollectionClass();
@@ -1996,7 +2061,7 @@ namespace Allinone.OPSpace.ResultSpace
         {
             AlbumClass album = AlbumWork;
             EnvClass env = album.ENVList[EnvIndex];
-            List<AnalyzeClass> BranchList = new List<AnalyzeClass>();
+            //List<AnalyzeClass> BranchList = new List<AnalyzeClass>();
 
             foreach (PageClass page in env.PageList)
             {
@@ -2011,13 +2076,27 @@ namespace Allinone.OPSpace.ResultSpace
         {
             AlbumClass album = AlbumWork;
             EnvClass env = album.ENVList[EnvIndex];
-            List<AnalyzeClass> BranchList = new List<AnalyzeClass>();
+            //List<AnalyzeClass> BranchList = new List<AnalyzeClass>();
 
             foreach (PageClass page in env.PageList)
             {
                 foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                 {
                     analyze.SetAnalyzeCheckBarcodeStr(eVariStr);
+                }
+            }
+        }
+        void SetAnalyzeMapping(int ePosCurrent, IxMapBuilder eMap)
+        {
+            AlbumClass album = AlbumWork;
+            EnvClass env = album.ENVList[EnvIndex];
+            //List<AnalyzeClass> BranchList = new List<AnalyzeClass>();
+
+            foreach (PageClass page in env.PageList)
+            {
+                foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
+                {
+                    analyze.SetAnalyzeCheckBarcodeStr(ePosCurrent, eMap);
                 }
             }
         }
@@ -2520,48 +2599,24 @@ void MainX6Tick()
                         Process.NextDuriation = INI.handle_delaytime;
                         Process.ID = 10;
                         MACHINE.PLCIO.GetImageOK = true;
-                        LogProcessIDTimer(80, Process.RelateString + "Finish ON", false);
-
-                        if (INI.IsReadHandlerOKSign)
-                        {
-                            if (INI.IsSendHandlerTcpOKSign)
-                            {
-                                int _currentStep = CamActClass.Instance.StepCurrent;
-                                _tcpSendCompleteOKSign(1, _currentStep, -1);
-                                LogProcessIDTimer(80, "1," + _currentStep.ToString() + ",-1", false);
-
-                                //if (Process.RelateString.Length >= 3)
-                                //{
-                                //    switch(Process.RelateString[0])
-                                //    {
-                                //        case 'C':
-                                //            int _currentStep = int.Parse(Process.RelateString.Split(',')[1]);
-                                //            _tcpSendCompleteOKSign(1, _currentStep, -1);
-                                //            LogProcessIDTimer(80, "1," + _currentStep.ToString() + ",-1", false);
-                                //            break;
-                                //    }
-                                //}
-                            }
-                        }
+                        LogProcessIDTimer(80, Process.RelateString + $"延时 [{INI.handle_delaytime}] Finish ON", false);
 
                         break;
                     case 10:
                         if (Process.IsTimeup)
                         {
+                            Process.Stop();
+                            MACHINE.PLCIO.GetImageOK = false;
+                            LogProcessIDTimer(81, Process.RelateString + "Finish OFF", false);
+
                             if (INI.IsReadHandlerOKSign)
                             {
-                                if (MACHINE.PLCIO.IsHandlerOK || INI.IsNoUseHandlerOKSign)
+                                if (INI.IsSendHandlerTcpOKSign)
                                 {
-                                    Process.Stop();
-                                    MACHINE.PLCIO.GetImageOK = false;
-                                    LogProcessIDTimer(81, Process.RelateString + "Finish OFF", false);
+                                    int _currentStep = CamActClass.Instance.StepCurrent;
+                                    _tcpSendCompleteOKSign(1, _currentStep, -1);
+                                    LogProcessIDTimer(80, "1," + _currentStep.ToString() + ",-1", false);
                                 }
-                            }
-                            else
-                            {
-                                Process.Stop();
-                                MACHINE.PLCIO.GetImageOK = false;
-                                LogProcessIDTimer(81, Process.RelateString + "Finish OFF", false);
                             }
                         }
                         break;
@@ -2660,29 +2715,17 @@ void MainX6Tick()
                             case CameraActionMode.CAM_MOTOR_LINESCAN:
                             case CameraActionMode.CAM_MOTOR_MODE2:
                                 MACHINE.PLCIO.GetImageOK = true;
-                                LogProcessIDTimer(80, "Result Finish ON", false);
+                                LogProcessIDTimer(80, $"Result 延时 [{INI.handle_delaytime}] Finish ON", false);
 
-                                if (INI.IsReadHandlerOKSign)
-                                {
-                                    if (INI.IsSendHandlerTcpOKSign)
-                                    {
-                                        int currentStep = CamActClass.Instance.StepCount - 1;
-                                        _tcpSendCompleteOKSign(1, currentStep, (IsPass ? 0 : 1));
-                                        LogProcessIDTimer(90, "1," + currentStep.ToString() + "," + (IsPass ? "0" : "1"), false);
-                                        //if (Process.RelateString.Length >= 3)
-                                        //{
-                                        //    switch (Process.RelateString[0])
-                                        //    {
-                                        //        case 'C':
-                                        //            int _currentStep = int.Parse(Process.RelateString.Split(',')[1]);
-                                        //            _tcpSendCompleteOKSign(1, _currentStep, -1);
-                                        //            break;
-                                        //    }
-                                        //}
-                                    }
-                                }
-
-                                //LogProcessIDTimer(8889, "发送最后取像完成信号PC==>PLC ON");
+                                //if (INI.IsReadHandlerOKSign)
+                                //{
+                                //    if (INI.IsSendHandlerTcpOKSign)
+                                //    {
+                                //        int currentStep = CamActClass.Instance.StepCount - 1;
+                                //        _tcpSendCompleteOKSign(1, currentStep, (IsPass ? 0 : 1));
+                                //        LogProcessIDTimer(90, "1," + currentStep.ToString() + "," + (IsPass ? "0" : "1"), false);
+                                //    }
+                                //}
                                 break;
                         }
 
@@ -2691,40 +2734,29 @@ void MainX6Tick()
                     case 10:
                         if (Process.IsTimeup)
                         {
+                            Process.Stop();
+                            MACHINE.PLCIO.Busy = false;
+                            switch (Universal.CAMACT)
+                            {
+                                case CameraActionMode.CAM_MOTOR_LINESCAN:
+                                case CameraActionMode.CAM_MOTOR_MODE2:
+                                    MACHINE.PLCIO.GetImageOK = false;
+                                    LogProcessIDTimer(81, "Result Finish OFF", false);
+                                    break;
+                            }
                             if (INI.IsReadHandlerOKSign)
                             {
-                                if (MACHINE.PLCIO.IsHandlerOK || INI.IsNoUseHandlerOKSign)
+                                if (INI.IsSendHandlerTcpOKSign)
                                 {
-                                    Process.Stop();
-                                    MACHINE.PLCIO.Busy = false;
-
-                                    switch (Universal.CAMACT)
-                                    {
-                                        case CameraActionMode.CAM_MOTOR_LINESCAN:
-                                        case CameraActionMode.CAM_MOTOR_MODE2:
-                                            MACHINE.PLCIO.GetImageOK = false;
-                                            LogProcessIDTimer(81, "Result Finish OFF", false);
-                                            //LogProcessIDTimer(8889, "发送最后取像完成信号PC==>PLC OFF");
-                                            break;
-                                    }
+                                    int currentStep = CamActClass.Instance.StepCount - 1;
+                                    _tcpSendCompleteOKSign(1, currentStep, (IsPass ? 0 : 1));
+                                    LogProcessIDTimer(90, "1," + currentStep.ToString() + "," + (IsPass ? "0" : "1"), false);
                                 }
                             }
                             else
                             {
-                                Process.Stop();
-                                MACHINE.PLCIO.Busy = false;
                                 MACHINE.PLCIO.Pass = false;
                                 MACHINE.PLCIO.Fail = false;
-
-                                switch (Universal.CAMACT)
-                                {
-                                    case CameraActionMode.CAM_MOTOR_LINESCAN:
-                                    case CameraActionMode.CAM_MOTOR_MODE2:
-                                        MACHINE.PLCIO.GetImageOK = false;
-                                        LogProcessIDTimer(81, "Result Finish OFF", false);
-                                        //LogProcessIDTimer(8889, "发送最后取像完成信号PC==>PLC OFF");
-                                        break;
-                                }
                             }
                         }
                         break;

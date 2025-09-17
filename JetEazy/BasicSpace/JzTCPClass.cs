@@ -71,6 +71,13 @@ namespace JetEazy.BasicSpace
         /// 剩余字节为2D_Barcode字符串：数据以逗号划分
         /// </summary>
         CMD_QC2DBARCODE = 5,
+        /// <summary>
+        /// 切换参数
+        /// 命令码 31
+        /// 数据内容格式为：
+        /// tcp请求AOI 第几次触发 1,2,3...
+        /// </summary>
+        CMD_QCSTART = 6,
     }
     public class tcpItemData
     {
@@ -84,6 +91,7 @@ namespace JetEazy.BasicSpace
         private bool[] _qcbypass = null;
         private string _qc2ddata = null;
         private string[] _qc2dbarcode = null;
+        private int _start_index = 0;
         public tcpCmd Cmd
         {
             get { return _cmd; }
@@ -107,6 +115,10 @@ namespace JetEazy.BasicSpace
         public string[] QC2dbarcode
         {
             get { return _qc2dbarcode; }
+        }
+        public int StartIndex
+        {
+            get { return _start_index; }
         }
         public string CmdStr
         {
@@ -169,6 +181,30 @@ namespace JetEazy.BasicSpace
                         _qcbypass = null;
 
                         byte[] cmdchange = bytes.Take(32 + idatalength).ToArray();
+                        rev_data = string.Empty;
+                        foreach (byte b in cmdchange)
+                        {
+                            rev_data += b.ToString() + " ";
+                        }
+                        //rev_data = System.Text.Encoding.UTF8.GetString(cmdchange);
+                        break;
+                    case 31:
+                        _cmdStr = "0031";
+                        _cmd = tcpCmd.CMD_QCSTART;
+                        if (bytes.Length >= 32 + idatalength)
+                        {
+                            byte[] brow = bytes.Skip(32).Take(4).ToArray();
+                            _start_index = BitConverter.ToInt32(brow, 0);
+                            //_start_index = Encoding.UTF8.GetString(bytes, 32, idatalength - 1);
+                        }
+                        else
+                        {
+                            _start_index = 0; // string.Empty;
+                        }
+                        _recipename = string.Empty;
+                        _qcbypass = null;
+                        //int iiii = int.Parse(_start_index.Replace('\0', ' ').Trim());
+                        cmdchange = bytes.Take(32 + idatalength).ToArray();
                         rev_data = string.Empty;
                         foreach (byte b in cmdchange)
                         {
@@ -1093,6 +1129,7 @@ namespace JetEazy.BasicSpace
                         case tcpCmd.CMD_QC2DDATA:
                         case tcpCmd.CMD_QCCHANGE_MODEL:
                         case tcpCmd.CMD_QC2DBARCODE:
+                        case tcpCmd.CMD_QCSTART:
                             OnTrigger(_tcp);
                             break;
                     }

@@ -30,7 +30,13 @@ namespace JetEazy.PlugSpace.BarcodeEx
         private string m_GradeStr = string.Empty;
         private CodeType codeType = CodeType.Code_DataMatrix;
         public C2DCodeInfo DCodeInfo = null;
+        private bool m_UseChangeSize = false;
 
+        public bool UseChangeSize
+        {
+            get { return m_UseChangeSize; }
+            set { m_UseChangeSize = value; }
+        }
         public bool IsReadGrade
         {
             get { return m_ReadGrade; }
@@ -131,7 +137,7 @@ namespace JetEazy.PlugSpace.BarcodeEx
 
                 Code2DReaderTool.InputImage = cInputImg;
                 //Code2DReaderTool.InputImage = cImageMorphToolObj.Result.OutputImage;
-                Code2DReaderTool.ROI = eMvdRoi;
+                Code2DReaderTool.ROI = null;// eMvdRoi;
                 switch (codeType)
                 {
                     case CodeType.Code_QrCode:
@@ -144,19 +150,31 @@ namespace JetEazy.PlugSpace.BarcodeEx
                         Code2DReaderTool.SetRunParam("CodeDMFlag", "1");
                         break;
                 }
+                Code2DReaderTool.SetRunParam("DiscreteFlag", "Both");//连续与离散码标志：连续码、离散码、兼容模式。
+                Code2DReaderTool.SetRunParam("DistortionFlag", "Open");//QR畸变配置参数：0关闭(默认)，1开启。
+                Code2DReaderTool.SetRunParam("MirrorMode", "Compatible");//镜像模式：镜像模式启用开关，指的是图像X方向镜像，包括“打开”、“关闭”和“兼容”模式。当采集图像是从反射的镜子中等情况下采集到的图像，该参数开启，否则不开启。
+
                 Code2DReaderTool.SetRunParam("RectangleFlag", "Both");
                 Code2DReaderTool.SetRunParam("AppMode", "ProMode");
                 Code2DReaderTool.SetRunParam("Loc2DCodeNum", "5");
                 Code2DReaderTool.SetRunParam("MaxBarSize", "1000");
                 Code2DReaderTool.SetRunParam("MinBarSize", "20");
-                if (cInputImg.Height >= 400 && cInputImg.Width >= 400)
-                    Code2DReaderTool.SetRunParam("SampleLevel", "4");
-                else if (cInputImg.Height >= 300 && cInputImg.Width >= 300)
-                    Code2DReaderTool.SetRunParam("SampleLevel", "3");
-                else if (cInputImg.Height >= 200 && cInputImg.Width >= 200)
-                    Code2DReaderTool.SetRunParam("SampleLevel", "2");
+
+                if(m_UseChangeSize)
+                {
+                    if (cInputImg.Height >= 400 && cInputImg.Width >= 400)
+                        Code2DReaderTool.SetRunParam("SampleLevel", "4");
+                    else if (cInputImg.Height >= 300 && cInputImg.Width >= 300)
+                        Code2DReaderTool.SetRunParam("SampleLevel", "3");
+                    else if (cInputImg.Height >= 200 && cInputImg.Width >= 200)
+                        Code2DReaderTool.SetRunParam("SampleLevel", "2");
+                    else
+                        Code2DReaderTool.SetRunParam("SampleLevel", "1");
+                }
                 else
+                {
                     Code2DReaderTool.SetRunParam("SampleLevel", "1");
+                }
 
                 #region 变换读取
                 int i = 0;

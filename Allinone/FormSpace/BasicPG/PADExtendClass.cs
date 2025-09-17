@@ -36,11 +36,11 @@ namespace Allinone.FormSpace.BasicPG
         [Description("")]
         public bool bOpenUseContactEle { get; set; } = false;
         [DisplayName("05a.碰触元件外扩X")]
-        [Description("以chip为中心 X方向延伸 单位像素(pixel)")]
-        public int cEleX { get; set; } = 50;
+        [Description("以chip为中心 X方向延伸 单位毫米(mm)")]
+        public float cEleX { get; set; } = 1.5f;
         [DisplayName("05b.碰触元件外扩Y")]
-        [Description("以chip为中心 Y方向延伸 单位像素(pixel)")]
-        public int cEleY { get; set; } = 50;
+        [Description("以chip为中心 Y方向延伸 单位毫米(mm)")]
+        public float cEleY { get; set; } = 1.5f;
 
         public void FromString(string eStr)
         {
@@ -52,8 +52,8 @@ namespace Allinone.FormSpace.BasicPG
                 bNoInspectLeft = strings[2] == "1";
                 bNoInspectRight = strings[3] == "1";
                 bOpenUseContactEle = strings[4] == "1";
-                cEleX = int.Parse(strings[5]);
-                cEleY = int.Parse(strings[6]);
+                cEleX = float.Parse(strings[5]);
+                cEleY = float.Parse(strings[6]);
             }
         }
         public string ToParaString()

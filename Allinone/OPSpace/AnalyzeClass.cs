@@ -1,6 +1,7 @@
 ﻿//#define MULTI
 
 using Allinone.OPSpace.AnalyzeSpace;
+using Allinone.ZGa.Mvc.Model.MapModel;
 using AUVision;
 using JetEazy;
 using JetEazy.BasicSpace;
@@ -992,6 +993,9 @@ namespace Allinone.OPSpace
             return ret;
         }
 
+        /// <summary>
+        /// 复位所有框里面读取的字符串
+        /// </summary>
         public void ResetAnalyzeBarcodeStr()
         {
             if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
@@ -1015,6 +1019,10 @@ namespace Allinone.OPSpace
                 analyzeClass.ResetAnalyzeBarcodeStr();
             }
         }
+        /// <summary>
+        /// 设定字符串 但是这个会赋值所有的内框
+        /// </summary>
+        /// <param name="eBarcodeStr"></param>
         public void SetAnalyzeCheckBarcodeStr(string eBarcodeStr)
         {
             if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
@@ -1036,6 +1044,21 @@ namespace Allinone.OPSpace
             foreach (AnalyzeClass analyzeClass in BranchList)
             {
                 analyzeClass.SetAnalyzeCheckBarcodeStr(eBarcodeStr);
+            }
+        }
+        /// <summary>
+        /// 只设定二级内框
+        /// </summary>
+        /// <param name="ePosCurrent">当前位置</param>
+        /// <param name="eMap">map接口</param>
+        public void SetAnalyzeCheckBarcodeStr(int ePosCurrent, IxMapBuilder eMap)
+        {
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                if (analyzeClass.OCRPara.OCRMethod != OCRMethodEnum.NONE)
+                {
+                    analyzeClass.Barcode_2D = eMap.GetText(ePosCurrent, analyzeClass.OCRPara.MappingTextIndex);
+                }
             }
         }
         public string GetAnalyzeBarcodeStr()
@@ -1095,7 +1118,10 @@ namespace Allinone.OPSpace
             }
             return string.Empty;
         }
-
+        /// <summary>
+        /// 显示所有里面的字符串
+        /// </summary>
+        /// <param name="eBarcode"></param>
         public void CollectAllBarcodeStr(ref string eBarcode)
         {
             if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX || OCRPara.OCRMethod == OCRMethodEnum.QRCODE)

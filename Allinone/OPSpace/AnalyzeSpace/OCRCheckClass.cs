@@ -22,6 +22,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
         public OCRMethodEnum OCRMethod = OCRMethodEnum.NONE;
         // public OCRSETEnum OCRMappingMethod = OCRSETEnum.NONE; //"None";
         public string OCRMappingMethod = "None";
+        public int MappingTextIndex = 0;
 
         public WorkStatusCollectionClass TrainStatusCollection = new WorkStatusCollectionClass();
         public WorkStatusCollectionClass RunStatusCollection = new WorkStatusCollectionClass();
@@ -46,6 +47,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             str += ((int)OCRMethod).ToString() + Universal.SeperateCharB;   //0
             str += OCRMappingMethod + Universal.SeperateCharB;    //1
+            str += MappingTextIndex.ToString() + Universal.SeperateCharB;    //1
 
             str += "";
 
@@ -58,12 +60,19 @@ namespace Allinone.OPSpace.AnalyzeSpace
             OCRMethod = (OCRMethodEnum)int.Parse(strs[0]);
             //  OCRMappingMethod = (OCRSETEnum)int.Parse(strs[1]);
             OCRMappingMethod = strs[1];
+            if (strs.Length > 2)
+            {
+                int.TryParse(strs[2], out MappingTextIndex);
+                //MappingTextIndex = int.Parse(strs[2]);
+            }
         }
         public void Reset()
         {
             OCRMethod = OCRMethodEnum.NONE;
             OCRMappingMethod = "None";
             //  OCRMappingMethod = OCRSETEnum.NONE;
+
+            MappingTextIndex = 0;
         }
 
         public void FromPropertyChange(string changeitemstring, string valuestring)
@@ -81,7 +90,22 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 case "OCRMappingMethod":
                     //   OCRMappingMethod = (OCRSETEnum)Enum.Parse(typeof(OCRSETEnum), valuestring, true);// valuestring;
                     OCRMappingMethod = valuestring;
+
+                    string[] strings = OCRMappingMethod.Split('#');
+                    MappingTextIndex = 0;
+                    if (strings.Length == 2)
+                    {
+                        bool bOK = int.TryParse(strings[1], out int indexvalue);
+                        if (bOK)
+                            MappingTextIndex = indexvalue;
+
+                    }
+
                     break;
+                //case "MappingTextIndex":
+                //    //   OCRMappingMethod = (OCRSETEnum)Enum.Parse(typeof(OCRSETEnum), valuestring, true);// valuestring;
+                //    MappingTextIndex = int.Parse(valuestring);
+                //    break;
             }
         }
 
@@ -1530,27 +1554,27 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //    strSN = strSNAI;
                 //}
 
-                if (strBar != strSN)
-                {
-                    string path = "D:\\LOA\\OcrAiSD\\";
-                    if (!System.IO.Directory.Exists(path)) //若此文件夹不存在
-                        System.IO.Directory.CreateDirectory(path); //创建此文件夹
-                    bmpfindTemp.Save(path + strBar + "_" + strSN + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png");
-                }
+                //if (strBar != strSN)
+                //{
+                //    string path = "D:\\LOA\\OcrAiSD\\";
+                //    if (!System.IO.Directory.Exists(path)) //若此文件夹不存在
+                //        System.IO.Directory.CreateDirectory(path); //创建此文件夹
+                //    bmpfindTemp.Save(path + strBar + "_" + strSN + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png");
+                //}
 
-                string[] strs = { "8", "B", "S", "U", "Z" };
-                foreach (string str in strs)
-                {
-                    if (strBar.IndexOf(str) > -1)
-                    {
-                        string path = "D:\\LOA\\OcrAiSave\\";
-                        if (!System.IO.Directory.Exists(path)) //若此文件夹不存在
-                            System.IO.Directory.CreateDirectory(path); //创建此文件夹
-                        bmpfindTemp.Save(path + strBar + "_" + strSNAI + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png");
+                //string[] strs = { "8", "B", "S", "U", "Z" };
+                //foreach (string str in strs)
+                //{
+                //    if (strBar.IndexOf(str) > -1)
+                //    {
+                //        string path = "D:\\LOA\\OcrAiSave\\";
+                //        if (!System.IO.Directory.Exists(path)) //若此文件夹不存在
+                //            System.IO.Directory.CreateDirectory(path); //创建此文件夹
+                //        bmpfindTemp.Save(path + strBar + "_" + strSNAI + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".png");
 
-                        break;
-                    }
-                }
+                //        break;
+                //    }
+                //}
 
 
                 JetEazy.LoggerClass.Instance.WriteLog("镭雕变动字符 OCR AI 完成" + stopwatch.ElapsedMilliseconds + " ms");
@@ -1632,6 +1656,12 @@ namespace Allinone.OPSpace.AnalyzeSpace
             {
                 JetEazy.LoggerClass.Instance.WriteLog("OCR ERR 闪退 :" + ex.ToString());
                 isgood = false;
+                WorkStatusClass workstatus = new WorkStatusClass(JetEazy.AnanlyzeProcedureEnum.LASER);
+                workstatus.SetWorkStatus(bmpFind, bmpFind, bmpFind, JetEazy.ReasonEnum.NG, $"异常{ex.Message}", "异常", passInfo);
+                if (istrain)
+                    TrainStatusCollection.Add(workstatus);
+                else
+                    RunStatusCollection.Add(workstatus);
             }
             return strSN;
         }

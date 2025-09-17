@@ -328,6 +328,11 @@ namespace Allinone
         public static bool IsNoUseHandlerOKSign = false;
 
         /// <summary>
+        /// 接收tcp的启动信号
+        /// </summary>
+        public static bool IsUseTcpStart = false;
+
+        /// <summary>
         /// 开启和关闭发送德龙完成信号 通过tcp
         /// </summary>
         public static bool IsSendHandlerTcpOKSign = false;
@@ -357,6 +362,11 @@ namespace Allinone
         /// 开启QC抽检功能
         /// </summary>
         public static bool IsOpenQcRandom = false;
+        /// <summary>
+        /// 北京使用文件传递map资料
+        /// </summary>
+        public static bool IsOpenUseFileMap = false;
+        public static string FileMapPath = "D:\\";
         public static int AutoLogoutTime = 30;
         /// <summary>
         /// 强制关闭重复码
@@ -846,6 +856,8 @@ namespace Allinone
             IsCollectPicturesSingle = ReadINIValue("MainX6 Control", "IsCollectPicturesSingle", (IsCollectPicturesSingle ? "1" : "0"), INIFILE) == "1";
             AI_Model_FilenamePath = ReadINIValue("MainX6 Control", "AI_Model_FilenamePath", "", INIFILE);
             IsOpenCip = ReadINIValue("MainX6 Control", "IsOpenCip", (IsOpenCip ? "1" : "0"), INIFILE) == "1";
+            IsOpenUseFileMap = ReadINIValue("MainX6 Control", "IsOpenUseFileMap", (IsOpenUseFileMap ? "1" : "0"), INIFILE) == "1";
+            FileMapPath = ReadINIValue("MainX6 Control", "FileMapPath", FileMapPath, INIFILE);
             IsOpenQcRandom = ReadINIValue("MainX6 Control", "IsOpenQcRandom", (IsOpenQcRandom ? "1" : "0"), INIFILE) == "1";
             IsOpenAutoChangeRecipe = ReadINIValue("MainX6 Control", "IsOpenAutoChangeRecipe", (IsOpenAutoChangeRecipe ? "1" : "0"), INIFILE) == "1";
             pMatchType = (PMatchType)Enum.Parse(typeof(PMatchType), ReadINIValue("MainX6 Control", "pMatchType", pMatchType.ToString(), INIFILE));
@@ -853,6 +865,8 @@ namespace Allinone
             AutoLogoutTime = int.Parse(ReadINIValue("MainX6 Control", "AutoLogoutTime", AutoLogoutTime.ToString(), INIFILE));
             IsOpenForceNoCheckRepeat = ReadINIValue("MainX6 Control", "IsOpenForceNoCheckRepeat", (IsOpenForceNoCheckRepeat ? "1" : "0"), INIFILE) == "1";
             IsOpenShowGrade = ReadINIValue("MainX6 Control", "IsOpenShowGrade", (IsOpenShowGrade ? "1" : "0"), INIFILE) == "1";
+
+            IsUseTcpStart = ReadINIValue("MainX6 Control", "IsUseTcpStart", (IsUseTcpStart ? "1" : "0"), INIFILE) == "1";
 
             IsOpenFaultToleranceRate = ReadINIValue("MainX6 Control", "IsOpenFaultToleranceRate", (IsOpenFaultToleranceRate ? "1" : "0"), INIFILE) == "1";
             FaultToleranceRate = double.Parse(ReadINIValue("MainX6 Control", "FaultToleranceRate", FaultToleranceRate.ToString(), INIFILE));
@@ -1081,12 +1095,15 @@ namespace Allinone
             WriteINIValue("MainX6 Control", "IsCollectStripPictures", (IsCollectStripPictures ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsCollectPicturesSingle", (IsCollectPicturesSingle ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsOpenCip", (IsOpenCip ? "1" : "0"), INIFILE);
+            WriteINIValue("MainX6 Control", "IsOpenUseFileMap", (IsOpenUseFileMap ? "1" : "0"), INIFILE);
+            WriteINIValue("MainX6 Control", "FileMapPath", FileMapPath, INIFILE);
             WriteINIValue("MainX6 Control", "IsOpenQcRandom", (IsOpenQcRandom ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsOpenAutoChangeRecipe", (IsOpenAutoChangeRecipe ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "pMatchType", pMatchType.ToString(), INIFILE);
             WriteINIValue("MainX6 Control", "fTolerance", fTolerance.ToString(), INIFILE);
             WriteINIValue("MainX6 Control", "IsOpenForceNoCheckRepeat", (IsOpenForceNoCheckRepeat ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "IsOpenShowGrade", (IsOpenShowGrade ? "1" : "0"), INIFILE);
+            WriteINIValue("MainX6 Control", "IsUseTcpStart", (IsUseTcpStart ? "1" : "0"), INIFILE);
 
             WriteINIValue("MainX6 Control", "IsOpenFaultToleranceRate", (IsOpenFaultToleranceRate ? "1" : "0"), INIFILE);
             WriteINIValue("MainX6 Control", "FaultToleranceRate", FaultToleranceRate.ToString(), INIFILE);
