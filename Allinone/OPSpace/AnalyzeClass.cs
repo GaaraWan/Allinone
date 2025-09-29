@@ -1,5 +1,6 @@
 ﻿//#define MULTI
 
+//using ADODB;
 using Allinone.OPSpace.AnalyzeSpace;
 using Allinone.ZGa.Mvc.Model.MapModel;
 using AUVision;
@@ -1118,6 +1119,108 @@ namespace Allinone.OPSpace
             }
             return string.Empty;
         }
+        public string GetAnalyzeBarcodeStr_Dg()
+        {
+            ////if (IsByPass)
+            ////    return "不检测";
+            //if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX || OCRPara.OCRMethod == OCRMethodEnum.QRCODE)
+            //{
+            //    return ReadBarcode2DRealStr.Trim();
+            //}
+            //if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
+            //{
+            //    string tempstr = $"No Compare;{Environment.NewLine}{ReadBarcode2DRealStr};{Environment.NewLine}{ReadBarcode2DGrade}";
+            //    if (INI.IsCheckBarcodeOpen)
+            //    {
+            //        if (INI.IsOpenShowGrade)
+            //        {
+            //            if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+            //                tempstr = $"Compare [FAIL];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}];{Environment.NewLine}Grade[{ReadBarcode2DGrade}]";
+            //            else
+            //                tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}];{Environment.NewLine}Grade[{ReadBarcode2DGrade}]";
+
+            //        }
+            //        else
+            //        {
+            //            if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+            //                tempstr = $"Compare [FAIL];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}]";
+            //            else
+            //                tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking 2D[{Barcode_2D}];{Environment.NewLine}Read 2D[{ReadBarcode2DRealStr}]";
+
+            //        }
+            //    }
+            //    return tempstr;
+            //    //return ReadBarcode2DRealStr + ";" + ReadBarcode2DGrade;
+            //}
+            if (OCRPara.OCRMethod == OCRMethodEnum.YEAR
+                || OCRPara.OCRMethod == OCRMethodEnum.MONTH
+                || OCRPara.OCRMethod == OCRMethodEnum.WEEK
+                || OCRPara.OCRMethod == OCRMethodEnum.VARICHARACTER
+
+                   || OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
+                      || OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE
+                         || OCRPara.OCRMethod == OCRMethodEnum.QRCODE
+                )
+            {
+                string tempstr = string.Empty;
+                if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                    tempstr = $"Compare [FAIL];{Environment.NewLine}Marking Char[{Barcode_2D}];{Environment.NewLine}Read Char[{ReadBarcode2DRealStr}]";
+                else
+                    tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking Char[{Barcode_2D}];{Environment.NewLine}Read Char[{ReadBarcode2DRealStr}]";
+
+                return tempstr;
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                //string _barcodeAllStr = string.Empty;
+                string _barcodeStr = analyzeClass.GetAnalyzeBarcodeStr_Dg();
+                if (!string.IsNullOrEmpty(_barcodeStr))
+                {
+                    return _barcodeStr;
+                }
+            }
+            return string.Empty;
+        }
+        public string GetAnalyzeBarcodeStr_Bj()
+        {
+            if ( OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
+                      || OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE
+                         || OCRPara.OCRMethod == OCRMethodEnum.QRCODE
+                )
+            {
+                string tempstr = string.Empty;
+                if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                    tempstr = $"Compare [FAIL];{Environment.NewLine}Marking 2d Char[{Barcode_2D}];{Environment.NewLine}Read 2d Char[{ReadBarcode2DRealStr}]";
+                else
+                    tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking 2d Char[{Barcode_2D}];{Environment.NewLine}Read 2d Char[{ReadBarcode2DRealStr}]";
+
+                return tempstr;
+            }
+            if (OCRPara.OCRMethod == OCRMethodEnum.YEAR
+                || OCRPara.OCRMethod == OCRMethodEnum.MONTH
+                || OCRPara.OCRMethod == OCRMethodEnum.WEEK
+                || OCRPara.OCRMethod == OCRMethodEnum.VARICHARACTER
+                )
+            {
+                string tempstr = string.Empty;
+                if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                    tempstr = $"Compare [FAIL];{Environment.NewLine}Marking Char[{Barcode_2D}];{Environment.NewLine}Read Char[{ReadBarcode2DRealStr}]";
+                else
+                    tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking Char[{Barcode_2D}];{Environment.NewLine}Read Char[{ReadBarcode2DRealStr}]";
+
+                return tempstr;
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                //string _barcodeAllStr = string.Empty;
+                string _barcodeStr = analyzeClass.GetAnalyzeBarcodeStr_Bj();
+                if (!string.IsNullOrEmpty(_barcodeStr))
+                {
+                    return _barcodeStr;
+                }
+            }
+            return string.Empty;
+        }
         /// <summary>
         /// 显示所有里面的字符串
         /// </summary>
@@ -1172,6 +1275,46 @@ namespace Allinone.OPSpace
             {
                 //string _barcodeAllStr = string.Empty;
                 string _barcodeStr = analyzeClass.GetAnalyzeBarcodeStr();
+                if (!string.IsNullOrEmpty(_barcodeStr))
+                {
+                    eBarcode += _barcodeStr + Environment.NewLine;
+                    //return _barcodeStr;
+                }
+            }
+            //return string.Empty;
+        }
+        public void CollectAllBarcodeStr_Bj(ref string eBarcode)
+        {
+            if (
+                OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
+                || OCRPara.OCRMethod == OCRMethodEnum.QRCODE
+                || OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
+            {
+                string tempstr = string.Empty;
+                if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                    tempstr = $"Compare [FAIL];{Environment.NewLine}Marking 2d Char[{Barcode_2D}];{Environment.NewLine}Read 2d Char[{ReadBarcode2DRealStr}]";
+                else
+                    tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking 2d Char[{Barcode_2D}];{Environment.NewLine}Read 2d Char[{ReadBarcode2DRealStr}]";
+                eBarcode += tempstr + Environment.NewLine;
+                //return tempstr;
+            }
+            if (OCRPara.OCRMethod == OCRMethodEnum.YEAR
+                || OCRPara.OCRMethod == OCRMethodEnum.MONTH
+                || OCRPara.OCRMethod == OCRMethodEnum.WEEK
+                || OCRPara.OCRMethod == OCRMethodEnum.VARICHARACTER)
+            {
+                string tempstr = string.Empty;
+                if (string.IsNullOrEmpty(ReadBarcode2DRealStr))
+                    tempstr = $"Compare [FAIL];{Environment.NewLine}Marking Char[{Barcode_2D}];{Environment.NewLine}Read Char[{ReadBarcode2DRealStr}]";
+                else
+                    tempstr = $"Compare [{(ReadBarcode2DRealStr == Barcode_2D ? "PASS" : "FAIL")}];{Environment.NewLine}Marking Char[{Barcode_2D}];{Environment.NewLine}Read Char[{ReadBarcode2DRealStr}]";
+                eBarcode += tempstr + Environment.NewLine;
+                //return tempstr;
+            }
+            foreach (AnalyzeClass analyzeClass in BranchList)
+            {
+                //string _barcodeAllStr = string.Empty;
+                string _barcodeStr = analyzeClass.GetAnalyzeBarcodeStr_Bj();
                 if (!string.IsNullOrEmpty(_barcodeStr))
                 {
                     eBarcode += _barcodeStr + Environment.NewLine;
@@ -1994,6 +2137,103 @@ namespace Allinone.OPSpace
                 {
                     JzCircleHoleEAG jzcirclehole = new JzCircleHoleEAG(str, Color.FromArgb(0, Color.White));
 
+                    jzcirclehole.TransparentForMover = true;
+                    jzcirclehole.ShowMode = ShowModeEnum.MAINSHOW;
+                    jzcirclehole.MainShowPen = new Pen(assigncolor, 1);
+                    jzcirclehole.OffsetPoint = offset;
+                    jzcirclehole.MappingToMovingObject(biaslocation, sizeratio);
+
+                    tomover.Add(jzcirclehole);
+                }
+
+                i++;
+            }
+        }
+        void FromMoverString(Mover tomover, string fromstr, Color assigncolor, PointF biaslocation, SizeF sizeratio, Point offset,
+            string eDesc)
+        {
+            int i = 0;
+            char seperator = Universal.SeperateCharC;
+            string[] strs = fromstr.Split(seperator);
+
+            foreach (string str in strs)
+            {
+                if (str.IndexOf(Figure_EAG.Rectangle.ToString()) > -1)
+                {
+                    JzRectEAG jzrect = new JzRectEAG(str, Color.FromArgb(0, Color.White));
+                    jzrect.Desc = eDesc;
+                    jzrect.TransparentForMover = true;
+                    jzrect.ShowMode = ShowModeEnum.MAINSHOW;
+                    jzrect.MainShowPen = new Pen(assigncolor, 1);
+                    jzrect.OffsetPoint = offset;
+                    jzrect.MappingToMovingObject(biaslocation, sizeratio);
+
+                    tomover.Add(jzrect);
+                }
+                else if (str.IndexOf(Figure_EAG.Circle.ToString()) > -1)
+                {
+                    JzCircleEAG jzcircle = new JzCircleEAG(str, Color.FromArgb(0, Color.White));
+                    jzcircle.Desc = eDesc;
+                    jzcircle.TransparentForMover = true;
+                    jzcircle.ShowMode = ShowModeEnum.MAINSHOW;
+                    jzcircle.MainShowPen = new Pen(assigncolor, 1);
+                    jzcircle.OffsetPoint = offset;
+                    jzcircle.MappingToMovingObject(biaslocation, sizeratio);
+
+                    tomover.Add(jzcircle);
+                }
+                else if (str.IndexOf(Figure_EAG.ChatoyantPolygon.ToString()) > -1)
+                {
+                    JzPolyEAG jzpoly = new JzPolyEAG(str, Color.FromArgb(0, Color.White));
+                    jzpoly.Desc = eDesc;
+                    jzpoly.TransparentForMover = true;
+                    jzpoly.ShowMode = ShowModeEnum.MAINSHOW;
+                    jzpoly.MainShowPen = new Pen(assigncolor, 1);
+                    jzpoly.OffsetPoint = offset;
+                    jzpoly.MappingToMovingObject(biaslocation, sizeratio);
+
+                    tomover.Add(jzpoly);
+                }
+                else if (str.IndexOf(Figure_EAG.Ring.ToString()) > -1 || str.IndexOf(Figure_EAG.ORing.ToString()) > -1)
+                {
+                    JzRingEAG jzring = new JzRingEAG(str, Color.FromArgb(0, Color.White));
+                    jzring.Desc = eDesc;
+                    jzring.TransparentForMover = true;
+                    jzring.ShowMode = ShowModeEnum.MAINSHOW;
+                    jzring.MainShowPen = new Pen(assigncolor, 1);
+                    jzring.OffsetPoint = offset;
+                    jzring.MappingToMovingObject(biaslocation, sizeratio);
+
+                    tomover.Add(jzring);
+                }
+                else if (str.IndexOf(Figure_EAG.Strip.ToString()) > -1)
+                {
+                    JzStripEAG jzstrip = new JzStripEAG(str, Color.FromArgb(0, Color.White));
+                    jzstrip.Desc = eDesc;
+                    jzstrip.TransparentForMover = true;
+                    jzstrip.ShowMode = ShowModeEnum.MAINSHOW;
+                    jzstrip.MainShowPen = new Pen(assigncolor, 1);
+                    jzstrip.OffsetPoint = offset;
+                    jzstrip.MappingToMovingObject(biaslocation, sizeratio);
+
+                    tomover.Add(jzstrip);
+                }
+                else if (str.IndexOf(Figure_EAG.RectRect.ToString()) > -1 || str.IndexOf(Figure_EAG.HexHex.ToString()) > -1)
+                {
+                    JzIdentityHoleEAG jzidentityhole = new JzIdentityHoleEAG(str, Color.FromArgb(0, Color.White));
+                    jzidentityhole.Desc = eDesc;
+                    jzidentityhole.TransparentForMover = true;
+                    jzidentityhole.ShowMode = ShowModeEnum.MAINSHOW;
+                    jzidentityhole.MainShowPen = new Pen(assigncolor, 1);
+                    jzidentityhole.OffsetPoint = offset;
+                    jzidentityhole.MappingToMovingObject(biaslocation, sizeratio);
+
+                    tomover.Add(jzidentityhole);
+                }
+                else if (str.IndexOf(Figure_EAG.RectO.ToString()) > -1 || str.IndexOf(Figure_EAG.HexO.ToString()) > -1)
+                {
+                    JzCircleHoleEAG jzcirclehole = new JzCircleHoleEAG(str, Color.FromArgb(0, Color.White));
+                    jzcirclehole.Desc = eDesc;
                     jzcirclehole.TransparentForMover = true;
                     jzcirclehole.ShowMode = ShowModeEnum.MAINSHOW;
                     jzcirclehole.MainShowPen = new Pen(assigncolor, 1);
@@ -3711,9 +3951,10 @@ namespace Allinone.OPSpace
                     {
                         case OptionEnum.MAIN_X6:
                         case JetEazy.OptionEnum.MAIN_SERVICE:
-                            if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
-                                 || OCRPara.OCRMethod == OCRMethodEnum.QRCODE
-                                || OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
+                            if (OCRPara.OCRMethod != OCRMethodEnum.NONE)
+                                //if (OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIX
+                                //     || OCRPara.OCRMethod == OCRMethodEnum.QRCODE
+                                //    || OCRPara.OCRMethod == OCRMethodEnum.DATAMATRIXGRADE)
                                 FromMoverString(showmover, ToMoverString(), showcolor, biaslocation, sizeratio, offset);
 
                             ////ADD GAARA
@@ -3779,6 +4020,55 @@ namespace Allinone.OPSpace
             }
 
 
+        }
+        public void GetShowResultMover_Dg(Mover showmover, PointF biaslocation, SizeF sizeratio, int colorindex, Point offset,string eDesc)
+        {
+            if (!IsOperated)
+                return;
+
+            Color showcolor = Color.Red;
+
+            if (IsVeryGood)
+                showcolor = Color.Lime;
+            else
+                showcolor = Color.Red;
+
+            FromMoverString(showmover, ToMoverString(), showcolor, biaslocation, sizeratio, offset, eDesc);
+            //foreach (AnalyzeClass analyze in BranchList)
+            //{
+            //    if (analyze.IsCollectAllBarcodeStrOpen() == OCRMethodEnum.NONE)
+            //        continue;
+            //    string _barcode = string.Empty;
+            //    analyze.CollectAllBarcodeStr(ref _barcode);
+            //    if (_barcode.Contains("[FAIL]"))
+            //        showcolor = Color.Red;
+            //    else
+            //        showcolor = Color.Lime;
+            //    analyze.GetShowResultMover_Dg(showmover, biaslocation, sizeratio, colorindex, offset, _barcode);
+            //}
+            foreach (AnalyzeClass analyze in BranchList)
+            {
+                string _barcode = string.Empty;
+                if (analyze.OCRPara.OCRMethod != OCRMethodEnum.NONE)
+                    _barcode = analyze.GetAnalyzeBarcodeStr_Dg();
+                analyze.GetShowResultMover_Dg(showmover, biaslocation, sizeratio, colorindex, offset, _barcode);
+            }
+
+            //foreach (AnalyzeClass analyze in BranchList)
+            //{
+            //    if (analyze.IsCollectAllBarcodeStrOpen() == OCRMethodEnum.NONE)
+            //        continue;
+
+            //    //Color showcolor = Color.Red;
+            //    string _barcode = string.Empty;
+            //    analyze.CollectAllBarcodeStr(ref _barcode);
+            //    //if (_barcode.Contains("[FAIL]"))
+            //    //    showcolor = Color.Red;
+            //    //else
+            //    //    showcolor = Color.Lime;
+            //    FromMoverString(showmover, ToMoverString(), showcolor, biaslocation, sizeratio, offset, _barcode);
+
+            //}
         }
         /// <summary>
         /// 取得 PassInfo 裏指定的 Analyze
@@ -5353,6 +5643,7 @@ namespace Allinone.OPSpace
                         }
 
                         bool isgoodtemp = true;
+                        m_barcode_2D = m_barcode_2D.Trim().Replace(" ", "").Replace("\r", "").Replace("\n", "");
                         ReadBarcode2DRealStr = OCRPara.FindOCR_Biandong(m_barcode_2D, istrain, bmpPATTERN, bmpWIP, PassInfo, out isgoodtemp);
 
 

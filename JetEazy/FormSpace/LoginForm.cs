@@ -63,6 +63,14 @@ namespace JetEazy.FormSpace
             btnOK.Click += new EventHandler(btnOK_Click);
             btnCancel.Click += new EventHandler(btnCancel_Click);
 
+            cboName.Items.Clear();
+            foreach (AccClass acc in DataDB.myDataList)
+            {
+                cboName.Items.Add(acc.Name);
+            }
+            cboName.SelectedIndex = 0;
+            this.Text = $"登入窗口";
+
             JetEazy.BasicSpace.LanguageExClass.Instance.EnumControls(this);
         }
 
@@ -91,7 +99,7 @@ namespace JetEazy.FormSpace
 
         void btnOK_Click(object sender, EventArgs e)
         {
-            if (DataDB.CheckIsCertified(txtName.Text.Trim(), txtPassword.Text.Trim(), true))
+            if (DataDB.CheckIsCertified(cboName.Text.Trim(), txtPassword.Text.Trim(), true))
             {
                 JetEazy.LoggerClass.Instance.WriteLog("帐户登入: " + txtName.Text.Trim());
                 this.DialogResult = DialogResult.OK;
@@ -100,8 +108,8 @@ namespace JetEazy.FormSpace
             {
                 MessageBox.Show(ToChangeLanguageCode("LoginForm.msg1"), "SYS", MessageBoxButtons.OK);
 
-                txtName.Focus();
-                txtName.SelectAll();
+                //txtName.Focus();
+                //txtName.SelectAll();
             }
         }
 

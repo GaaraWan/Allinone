@@ -408,6 +408,7 @@
     <Compile Include="LoggerClass.cs" />
     <Compile Include="PlugSpace\BarcodeEx\Barcode2D_Halcon.cs" />
     <Compile Include="PlugSpace\BarcodeEx\BarcodeAll_MVD.cs" />
+    <Compile Include="PlugSpace\BarcodeEx\Mvd2dCNNReader.cs" />
     <Compile Include="PlugSpace\BarcodeEx\Mvd2DReaderClass.cs" />
     <Compile Include="PlugSpace\CamActClass.cs" />
     <Compile Include="PlugSpace\EnvAnalyzePostionSettings.cs" />

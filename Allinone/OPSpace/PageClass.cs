@@ -168,7 +168,7 @@ namespace Allinone.OPSpace
         }
         public void SetbmpRUN(PageOPTypeEnum pageoptype, Bitmap bmp)
         {
-            bmpRUN[(int)pageoptype].Dispose();
+            bmpRUN[(int)pageoptype]?.Dispose();
             //bmpRUN[(int)pageoptype] = new Bitmap(bmp);
             switch (OPTION)
             {

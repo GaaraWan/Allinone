@@ -374,6 +374,7 @@ namespace Allinone
         public static bool IsOpenForceNoCheckRepeat = true;//强制关闭重复码
         public static int FactoryNameIndex = 0;
         public static int MappingTypeIndex = 0;
+        public static bool bUse2DCNNReader = false;
 
 
         /// <summary>
@@ -635,6 +636,7 @@ namespace Allinone
 
             FactoryNameIndex = int.Parse(ReadINIValue("Basic Control", "FactoryNameIndex", FactoryNameIndex.ToString(), INIFILE));
             MappingTypeIndex = int.Parse(ReadINIValue("Basic Control", "MappingTypeIndex", MappingTypeIndex.ToString(), INIFILE));
+            bUse2DCNNReader = ReadINIValue("Basic Control", "bUse2DCNNReader", "0", INIFILE) == "1";
 
             string page = ReadINIValue("Basic Control", INIEnum.CHECKPAGE.ToString(), "0", INIFILE);
 
@@ -972,6 +974,7 @@ namespace Allinone
             WriteINIValue("Basic Control", INIEnum.RETESTTIME.ToString(), RETESTTIME.ToString(), INIFILE);
 
             WriteINIValue("Basic Control", "FactoryNameIndex", FactoryNameIndex.ToString(), INIFILE);
+            WriteINIValue("Basic Control", "bUse2DCNNReader", (bUse2DCNNReader ? "1" : "0"), INIFILE);
 
             WriteINIValue("Basic Control", INIEnum.CHECKSNERRORCODE.ToString(), CHECKSNERRORCODE, INIFILE);
             WriteINIValue("Basic Control", "chipSaveImageFormat", ((int)chipSaveImageFormat).ToString(), INIFILE);

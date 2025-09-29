@@ -2927,13 +2927,13 @@ namespace Allinone.OPSpace.ResultSpace
             AlbumWork.A08_RunProcess(PageOPTypeEnum.P00, pageindex);
             AlbumWork.SetPageTestState(pageindex, true);
         }
-        private void DLCalPageIndexSDM2(object obj)
-        {
-            int pageindex = (int)obj;
-            m_EnvNow.PageList[pageindex].CalComplete = false;
-            m_EnvNow.A08_RunProcess(PageOPTypeEnum.P00, pageindex);
-            m_EnvNow.PageList[pageindex].CalComplete = true;
-        }
+        //private void DLCalPageIndexSDM2(object obj)
+        //{
+        //    int pageindex = (int)obj;
+        //    m_EnvNow.PageList[pageindex].CalComplete = false;
+        //    m_EnvNow.A08_RunProcess(PageOPTypeEnum.P00, pageindex);
+        //    m_EnvNow.PageList[pageindex].CalComplete = true;
+        //}
         bool m_EnvTrainOK = false;
         private void DLTrainSDM2(object obj)
         {

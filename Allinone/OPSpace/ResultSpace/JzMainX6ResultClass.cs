@@ -1218,6 +1218,7 @@ namespace Allinone.OPSpace.ResultSpace
                                     if (INI.IsOpenQcRandom)
                                     {
                                         Process.ID = 10300;
+                                        AlbumWork.SetAllPageState(0, true);
                                     }
                                     else
                                     {
@@ -1639,130 +1640,140 @@ namespace Allinone.OPSpace.ResultSpace
                         if (Process.IsTimeup)
                         {
 
-                            int _currentStep = CamActClass.Instance.GetCurrentStep();
-                            int _pageindex = 0;
-
-                            if (Universal.IsNoUseIO)
-                                OnEnvTrigger(ResultStatusEnum.CHANGEENVDIRECTORY, EnvIndex, PageOPTypeEnum.P00.ToString());
-
-                            switch (Universal.CAMACT)
-                            {
-                                default:
-
-                                    CCDCollection.GetImage();
-                                    //CCDCollection.GetImage();
-                                    if (_currentStep >= CamActClass.Instance.StepCount)
-                                        CamActClass.Instance.ResetStepCurrent();
-
-                                    CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), _currentStep);
-                                    if (Universal.IsNoUseIO)
-                                    {
-                                        //CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), _currentStep);
-                                        FillProcessImageMotorPageIndexDebug(_currentStep);
-                                    }
-                                    else
-                                    {
-                                        //CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), _pageindex);
-                                        FillProcessImageMotorPageIndex(_pageindex);
-                                    }
-                                     
-                                    //CamActClass.Instance.StepCurrent++;
-                                    Process.ID = 10310;
-                                    break;
-                            }
-
-                            Process.NextDuriation = 0;
-
-                            LogProcessIDTimer(Process.ID, "测试位置=" + _currentStep.ToString());
-
-                            //LogProcessIDTimer(Process.ID, "线程创建" + _currentStep.ToString());
-                            ////计算线程
-                            //System.Threading.Thread thread_DL_Test = new System.Threading.Thread(DLCalPageIndex);
-                            //thread_DL_Test.IsBackground = true;
-                            //thread_DL_Test.Start(_currentStep);
-
-                            OnTrigger(ResultStatusEnum.COUNTSTART);
-                            //Task task = new Task(() =>
-                            //{
-                            //    DLCalPageIndex(_currentStep);
-                            //});
-                            //task.Start();
-
                             string boatID = Universal.CipExtend.QcBoatID;
                             string currentPos = Universal.CipExtend.QcCurrentPos;
                             int row = Universal.CipExtend.QcRowCount;
                             int col = Universal.CipExtend.QcColCount;
 
+                            LogProcessIDTimer(Process.ID, $"QcBoatID={boatID}");
+                            LogProcessIDTimer(Process.ID, $"QcCurrentPos={currentPos}");
+                            int _rowCurrent = 0;
+                            string[] _strs = currentPos.Split('-');
+                            if (_strs.Length == 2)
+                            {
+                                int.TryParse(_strs[0], out _rowCurrent );
+                            }
+
+                            int _currentStep = CamActClass.Instance.GetCurrentStep();
+                            int _pageindex = _rowCurrent;//BJ读取当前行 并选择哪个页面测试
+
+                            if (Universal.IsNoUseIO)
+                                OnEnvTrigger(ResultStatusEnum.CHANGEENVDIRECTORY, EnvIndex, PageOPTypeEnum.P00.ToString());
+                            CCDCollection.GetImage();
+                            if (_currentStep >= CamActClass.Instance.StepCount)
+                                CamActClass.Instance.ResetStepCurrent();
+                            CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), _currentStep);
+
+                            if (Universal.IsNoUseIO)
+                            {
+                                //CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), _currentStep);
+                                FillProcessImageMotorPageIndexDebug(_rowCurrent);
+
+                                string path = "D:\\JETEAZY\\ALLINONE-MAIN_X6\\SRCDEBUG\\TEST0001\\000";
+
+                                //算出当前位置是第几个
+                                string[] _curr = currentPos.Split('-');
+                                int x = 0;
+                                int y = 0;
+                                int.TryParse(_curr[0].Trim(), out x);
+                                int.TryParse(_curr[1].Trim(), out y);
+                                int posCurr = x * col + y;
+                                string filepath = $"{path}\\P00-{posCurr.ToString("000")}.jpg";
+
+                                //加载图片
+                                Bitmap bmptempx0 = new Bitmap(filepath);
+                                Bitmap bmptempx1 = new Bitmap(bmptempx0);
+                                EnvClass env = AlbumWork.ENVList[EnvIndex];
+                                PageClass page = env.PageList[_rowCurrent];
+                                page.SetbmpRUN(PageOPTypeEnum.P00, bmptempx1);
+
+                                bmptempx0.Dispose();
+                                bmptempx1.Dispose();
+
+                            }
+                            else
+                            {
+                                //CamActClass.Instance.SetImage(CCDCollection.GetBMP(0, false), _pageindex);
+                                FillProcessImageMotorPageIndex(_pageindex);
+                            }
+
+                            LogProcessIDTimer(Process.ID, "测试位置=" + _currentStep.ToString());
+                            OnTrigger(ResultStatusEnum.COUNTSTART);
+
                             //开启Map功能 读取是否需要检测
                             if (Universal.CipExtend.QcUseMap)
                             {
                                 LogProcessIDTimer(Process.ID, $"开启QcUseMap=true");
-                                LogProcessIDTimer(Process.ID, $"QcBoatID={boatID}");
-                                LogProcessIDTimer(Process.ID, $"QcCurrentPos={currentPos}");
                                 LogProcessIDTimer(Process.ID, $"QcMapNeed={Universal.CipExtend.QcMapNeed}");
                                 SetAnalyzeBypass(Universal.CipExtend.QcMapNeed.ToString());
                             }
 
 
-                            if (Universal.CipExtend.QcUseFileMap)
+                            #region 02.BJ读取文件的信息内容
+                            if (Directory.Exists(INI.FileMapPath))
                             {
-                                if (Directory.Exists(INI.FileMapPath))
+                                //这里先固定文件名称FileMap.txt  需要问德龙 名称BoatID ? 
+                                IxMapBuilder map = Allinone.ZGa.Mvc.GaMvcConfig.CreateMapBuilder();
+                                string filenameStr = Path.Combine(INI.FileMapPath, $"{boatID}.txt");
+                                bool bOK = map.CreateMap(filenameStr);
+                                if (bOK)
                                 {
-                                    //这里先固定文件名称FileMap.txt  需要问德龙 名称BoatID ? 
-                                    IxMapBuilder map = Allinone.ZGa.Mvc.GaMvcConfig.CreateMapBuilder();
-                                    string filenameStr = Path.Combine(INI.FileMapPath, $"{boatID}.txt");
-                                    bool bOK = map.CreateMap(filenameStr);
-                                    if (bOK)
+                                    //算出当前位置是第几个
+                                    string[] _curr = currentPos.Split('-');
+                                    if (_curr.Length == 2)
                                     {
-                                        //算出当前位置是第几个
-                                        string[] _curr = currentPos.Split('-');
-                                        if (_curr.Length == 2)
+                                        int x = 0;
+                                        int y = 0;
+                                        int.TryParse(_curr[0].Trim(), out x);
+                                        int.TryParse(_curr[1].Trim(), out y);
+                                        int posCurr = x * col + y;
+                                        SetAnalyzeMapping(posCurr, map);
+
+                                        string[] strings = map.GetCellContent(posCurr);
+                                        StringBuilder stringBuilder = new StringBuilder();
+                                        foreach (string s in strings)
                                         {
-                                            int x = 0;
-                                            int y = 0;
-                                            int.TryParse(_curr[0].Trim(), out x);
-                                            int.TryParse(_curr[1].Trim(), out y);
-                                            int posCurr = x * row + y;
-                                            SetAnalyzeMapping(posCurr, map);
+                                            stringBuilder.Append(s);
+                                            stringBuilder.Append(";");
                                         }
-                                        else
-                                        {
-                                            LogProcessIDTimer(Process.ID, $"!!!读取当前位置失败 {currentPos}");
-                                        }
+                                        LogProcessIDTimer(Process.ID, $"Cell[{posCurr}]");
+                                        LogProcessIDTimer(Process.ID, $"Content[{stringBuilder.ToString()}]");
                                     }
                                     else
                                     {
-                                        LogProcessIDTimer(Process.ID, $"!!!读取文件失败 {filenameStr}");
+                                        LogProcessIDTimer(Process.ID, $"!!!读取当前位置失败 {currentPos}");
                                     }
                                 }
                                 else
                                 {
-
-                                    LogProcessIDTimer(Process.ID, $"!!!共享文件不存在 {INI.FileMapPath}");
+                                    LogProcessIDTimer(Process.ID, $"!!!读取文件失败 {filenameStr}");
                                 }
-
                             }
                             else
                             {
-                                string mapStr = Universal.CipExtend.QcMapStr;
-                                LogProcessIDTimer(Process.ID, $"来自plc的Map = {mapStr}");
-                                SetAnalyzeMapping(mapStr);
+
+                                LogProcessIDTimer(Process.ID, $"!!!共享文件不存在 {INI.FileMapPath}");
                             }
+                            #endregion
+
 
                             m_IsTaskRun = false;
                             WorkStatusCollectionClass RunStatusCollectionTemp = new WorkStatusCollectionClass();
                             RunStatusCollectionTemp.Clear();
 
+                            #region 03.BJ测试
+                            LogProcessIDTimer(Process.ID, $"测试第{_pageindex}页");
+                            AlbumWork.ResetRunStatus();
                             AlbumWork.SetPageTestState(_pageindex, false);
                             AlbumWork.A08_RunProcess(PageOPTypeEnum.P00, _pageindex);
                             AlbumWork.SetPageTestState(_pageindex, true);
+                            #endregion
 
+                            #region 04.BJ整合测试结果
                             AlbumWork.FillRunStatus(RunStatusCollectionTemp);
                             AlbumWork.FillRunStatus(RunStatusCollection);
 
                             m_IsStepPass = RunStatusCollectionTemp.NGCOUNT == 0;
-
-
                             Color c = CheckLblResult(RunStatusCollectionTemp, out string msg);
                             string StrColorC = $"{c.A};{c.R};{c.G};{c.B}";
                             string resultStr = $"{Universal.CipExtend.QcCurrentPos},{(m_IsStepPass ? "0" : "1")},{StrColorC},{msg}";
@@ -1770,16 +1781,12 @@ namespace Allinone.OPSpace.ResultSpace
                             LogProcessIDTimer(Process.ID, $"测试结果:{resultStr}");
 
                             m_IsTaskRun = true;
-                            //LogProcessIDTimer(Process.ID, "线程测试" + _currentStep.ToString());
-
-
-                            //if (CamActClass.Instance.StepCurrent < CamActClass.Instance.StepCount - 1)
-                            //{
-                            //    //MACHINE.PLCIO.GetImageOK = true;
-                            //    m_DLGetImageOK.Start("C," + CamActClass.Instance.StepCurrent.ToString());
-                            //    LogProcessIDTimer(Process.ID, "取像完成 Send==>Sign ImageOK");
-                            //}
                             IsGetTestStartOld = false;
+                            #endregion
+
+                            Process.NextDuriation = 0;
+                            Process.ID = 10310;
+
                         }
                         break;
                     case 10310:                        //變換CCD亮度設定及光源設定，並且合起鍵盤的壓框
@@ -3750,6 +3757,7 @@ void MainX6Tick()
                             {
                                 while (qi < CamActClass.Instance.StepCount)
                                 {
+                                    CamActClass.Instance.GetResultImage(qi).Save(_imagePath + "\\000\\R_P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
                                     CamActClass.Instance.GetImage(qi).Save(_imagePath + "\\000\\P00-" + qi.ToString("000") + ".jpg", ImageFormat.Jpeg);
                                     qi++;
                                 }

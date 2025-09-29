@@ -41,6 +41,9 @@ using System.Globalization;
 using static MFApi.Script;
 using Newtonsoft.Json.Linq;
 using Allinone.ZGa.Mvc.Model.MapModel;
+using System.Text.RegularExpressions;
+using JetEazy.PlugSpace.BarcodeEx;
+using Allinone.ZGa.Mvc.Model.BarcodeModel;
 
 namespace Allinone
 {
@@ -50,7 +53,7 @@ namespace Allinone
         public static bool IsNoUseIO = false;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2025/09/17R";
+        public static string VersionDate = "2025/09/28";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
         public static OptionEnum OPTION = OptionEnum.MAIN_X6;
@@ -254,6 +257,7 @@ namespace Allinone
         public static IxLineScanCam IxAreaCam = null;
         public static IxMapBuilder MapBuilder = null;
         public static int MapCellIndex = 0;
+        public static IxCodeBuilder CodeBuilder = null;
 
         //public static UseIOClass USEIO;
         public static int ALBIndicator = -1;
@@ -288,6 +292,7 @@ namespace Allinone
         public static JzQFactoryClass JZQFACTORY;
         public static JzMainSDPositionParaClass JZMAINSDPOSITIONPARA;
         public static OCRByPaddle.OCRByPaddle mOCRByPaddle;
+        //public static Mvd2dCNNReader GvlMvd2D_CNNReader = null;
 
         public static ClientSocket X6_HANDLE_CLIENT = null;
         public static ClientSocket X6_LASER_CLIENT = null;
@@ -484,6 +489,23 @@ namespace Allinone
             bool ret = true;
             WORKPATH = MAINPATH + @"\WORK";
 
+            //string input = "Hello123!@# World456原始字符串";
+            //string result = Regex.Replace(input, @"[^a-zA-Z0-9]", "");
+            ////StringBuilder sb = new StringBuilder();
+
+            ////foreach (char c in input)
+            ////{
+            ////    if (char.IsLetterOrDigit(c))
+            ////    {
+            ////        sb.Append(c);
+            ////    }
+            ////}
+
+            ////string result = sb.ToString();
+            //Console.WriteLine($"原始字符串: {input}");
+            //Console.WriteLine($"过滤后: {result}");
+            //// 输出: Hello123World456
+
             //byte[] m_VersionByte = new byte[3] { 0x06, 0x01, 0x05 };
             //string value = System.Text.Encoding.ASCII.GetString(m_VersionByte);
             //Console.WriteLine(value);
@@ -539,6 +561,14 @@ namespace Allinone
                     }
 
                     MapBuilder = Allinone.ZGa.Mvc.GaMvcConfig.CreateMapBuilder();
+
+                    if (INI.bUse2DCNNReader)
+                    {
+                        //GvlMvd2D_CNNReader = new Mvd2dCNNReader();
+                        //GvlMvd2D_CNNReader.DecodeTrain();
+                        CodeBuilder = new ZGa.Mvc.Model.BarcodeModel.CodeBuilderClassV0();
+                        CodeBuilder.Init();
+                    }
 
                     break;
             }
@@ -2461,6 +2491,11 @@ namespace Allinone
                 case OptionEnum.MAIN_X6:
                     //if (IsUseThreadReviceTcp)
                     //    jzMainX6Result.stop_scan_thread();
+
+                    if (INI.bUse2DCNNReader)
+                    {
+                        CodeBuilder?.Dispose();
+                    }
 
                     switch (CAMACT)
                     {

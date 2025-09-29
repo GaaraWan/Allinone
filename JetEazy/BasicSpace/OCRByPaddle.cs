@@ -28,8 +28,50 @@ namespace OCRByPaddle
         public List<float> scoreList = null;
         public OCRByPaddle()
         {
+
+            //自带轻量版中英文模型PP-OCRv4
+            OCRModelConfig config = new OCRModelConfig();
+            OCRParameter oCRParameter = new OCRParameter();
+            string modelPathroot = ".\\models";
+            //switch (modelType)
+            //{
+            //    case ModelType.CH_EN:
+            //        {
+            //            //服务器中英文模型
+            //            modelPathroot += "\\ch_PP-OCRv4";
+            //            config.det_infer = modelPathroot + @"\ch_PP-OCRv4_det_infer";
+            //            config.cls_infer = modelPathroot + @"\ch_ppocr_mobile_v2.0_cls_infer";
+            //            config.rec_infer = modelPathroot + @"\ch_PP-OCRv4_rec_infer";
+            //            config.keys = modelPathroot + @"\ppocr_keys.txt";
+            //        }
+            //        break;
+            //    case ModelType.EN:
+            //        {
+            //            //英文和数字模型
+            //            modelPathroot += "\\en_PP-OCRv4";
+            //            config.det_infer = modelPathroot + @"\ch_PP-OCRv4_det_infer";
+            //            config.cls_infer = modelPathroot + @"\ch_ppocr_mobile_v2.0_cls_infer";
+            //            config.rec_infer = modelPathroot + @"\en_PP-OCRv4_rec_infer";
+            //            config.keys = modelPathroot + @"\en_dict.txt";
+            //        }
+            //        break;
+            //    default:
+            //        {
+            //            config = null;
+            //        }
+            //        break;
+            //}
+
+            //英文和数字模型
+            modelPathroot += "\\en_PP-OCRv4";
+            config.det_infer = modelPathroot + @"\ch_PP-OCRv4_det_infer";
+            config.cls_infer = modelPathroot + @"\ch_ppocr_mobile_v2.0_cls_infer";
+            config.rec_infer = modelPathroot + @"\en_PP-OCRv4_rec_infer";
+            config.keys = modelPathroot + @"\en_dict.txt";
+
             // 初始化OCR引擎
-            ocrEngine = new PaddleOCREngine();
+            //ocrEngine = new PaddleOCREngine();
+            ocrEngine = new PaddleOCREngine(config, oCRParameter);
             pointList = new List<Point[]>();
             scoreList=new   List<float>();
         }

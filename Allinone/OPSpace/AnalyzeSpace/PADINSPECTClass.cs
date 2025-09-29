@@ -1130,16 +1130,41 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         case ChipNoGlueMethod.NoGlueV1:
 
                             #region NO GLUE V1
-                            _checkRectF = checkNoHaveGlueV4(bmpInput);
 
-                            iwidthtmp = Math.Max(_checkRectF.Width, _checkRectF.Height);
-                            iheighttmp = Math.Min(_checkRectF.Width, _checkRectF.Height);
-
-                            if (!(IsInRangeRatio(m_PADRegion.RegionWidth, iwidthtmp, OWidthRatio)
-                                && 
-                                IsInRangeRatio(m_PADRegion.RegionHeight, iheighttmp, OHeightRatio)))
+                            int i = 0;
+                            float flantvalue = 0.5f;
+                            while (i < 5)
                             {
-                                isgood = false;
+                                isgood = true;
+                                _checkRectF = checkNoHaveGlueV4(bmpInput, flantvalue);
+
+                                iwidthtmp = Math.Max(_checkRectF.Width, _checkRectF.Height);
+                                iheighttmp = Math.Min(_checkRectF.Width, _checkRectF.Height);
+
+                                if (!(IsInRangeRatio(m_PADRegion.RegionWidth, iwidthtmp, OWidthRatio)
+                                    &&
+                                    IsInRangeRatio(m_PADRegion.RegionHeight, iheighttmp, OHeightRatio)))
+                                {
+                                    isgood = false;
+                                    //processstring += "Error in " + RelateAnalyzeString + " PAD WH OVER ";// + OWidthRatio.ToString() + " , " + _checkRectF.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+                                    //errorstring += RelateAnalyzeString + " PAD WH OVER ";// + OWidthRatio.ToString() + " , " + _checkRectF.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+                                    //descstriing = "无胶";
+                                    //reason = ReasonEnum.NG;
+
+                                    //bmpoutput.Dispose();
+                                    //bmpoutput = new Bitmap(bmpinput);
+                                    //jzToolsClass.DrawRect(bmpoutput, _checkRectF, new Pen(Color.Red, 5));
+                                }
+
+                                if (isgood)
+                                    break;
+
+                                flantvalue += 0.5f;
+                                i++;
+                            }
+
+                            if (!isgood)
+                            {
                                 processstring += "Error in " + RelateAnalyzeString + " PAD WH OVER ";// + OWidthRatio.ToString() + " , " + _checkRectF.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
                                 errorstring += RelateAnalyzeString + " PAD WH OVER ";// + OWidthRatio.ToString() + " , " + _checkRectF.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
                                 descstriing = "无胶";
@@ -1149,6 +1174,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                 bmpoutput = new Bitmap(bmpinput);
                                 jzToolsClass.DrawRect(bmpoutput, _checkRectF, new Pen(Color.Red, 5));
                             }
+
                             #endregion
 
                             break;
@@ -7528,7 +7554,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             bb.Dispose();
             return rectangletemp2;
         }
-        RectangleF checkNoHaveGlueV4(Bitmap eInput)
+        RectangleF checkNoHaveGlueV4(Bitmap eInput,float connerFlant=0.5f)
         {
             Bitmap bmpinput = new Bitmap(eInput);// eInput.Clone(new Rectangle(0, 0, eInput.Width, eInput.Height), PixelFormat.Format24bppRgb);
 
@@ -7547,7 +7573,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             ImageStatistics stat = new ImageStatistics(bmpFilter);
             AForge.Math.Histogram activeHistogram = stat.Green;
 
-            Bitmap bmpMean = m_PADRegion.GetFillMean(bmpFilter, (int)activeHistogram.Mean);
+            Bitmap bmpMean = m_PADRegion.GetFillMean(bmpFilter, (int)activeHistogram.Mean, connerFlant);
 
             ExtractChannel extract = new ExtractChannel();
             extract.Channel = 1;
@@ -7555,6 +7581,12 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
 
             SISThreshold sISThreshold = new SISThreshold();
             bmpFilter = sISThreshold.Apply(bmpFilter);
+
+            if (m_IsSaveTemp)
+            {
+                bmpFilter.Save("D:\\testtest\\" + _CalPageIndex() +
+                    RelateAnalyzeString + "NoDispensingFiter00" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+            }
 
             bmpFilter = FloodFill(bmpFilter,
                 new Point(bmpFilter.Width / 2, bmpFilter.Height / 2),
@@ -12453,14 +12485,14 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
 
                 return _min;
             }
-            public Bitmap GetFillMean(Bitmap ebmpInput,int eMean)
+            public Bitmap GetFillMean(Bitmap ebmpInput,int eMean,float connerInflant=0.5f)
             {
                 Bitmap _bmpnewIpd = new Bitmap(ebmpInput);
                 //填充中间的芯片位置
                 Graphics _gPADV1 = Graphics.FromImage(_bmpnewIpd);
                 //_gPADV1.Clear(Color.Black);
                 Brush brush = new SolidBrush(Color.FromArgb(eMean, eMean, eMean));
-                _gPADV1.FillPolygon(brush, GetConner(0.5f));
+                _gPADV1.FillPolygon(brush, GetConner(connerInflant));
                 //_gPADV1.FillPolygon(Brushes.White, m_PADRegion.RegionPtFCorner);
                 //_gPADV1.FillPolygon(Brushes.White, m_PADRegion.RegionPtFCornerORG);
                 _gPADV1.Dispose();

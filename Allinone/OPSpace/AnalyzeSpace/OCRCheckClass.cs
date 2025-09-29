@@ -1,6 +1,6 @@
 ﻿
 #define OPT_USE_MVD_BARCODE
-#define OPT_USE_JET_BARCODE
+//#define OPT_USE_JET_BARCODE
 
 using System;
 using System.Collections.Generic;
@@ -14,6 +14,7 @@ using System.Drawing.Imaging;
 using AUVision;
 using Allinone.BasicSpace;
 using System.Diagnostics;
+using JetEazy.PlugSpace.BarcodeEx;
 
 namespace Allinone.OPSpace.AnalyzeSpace
 {
@@ -102,10 +103,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     }
 
                     break;
-                //case "MappingTextIndex":
-                //    //   OCRMappingMethod = (OCRSETEnum)Enum.Parse(typeof(OCRSETEnum), valuestring, true);// valuestring;
-                //    MappingTextIndex = int.Parse(valuestring);
-                //    break;
+                    //case "MappingTextIndex":
+                    //    //   OCRMappingMethod = (OCRSETEnum)Enum.Parse(typeof(OCRSETEnum), valuestring, true);// valuestring;
+                    //    MappingTextIndex = int.Parse(valuestring);
+                    //    break;
             }
         }
 
@@ -165,6 +166,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
             barcodeStrRead = string.Empty;
             m_BarcodeReadStr = string.Empty;
 
+            Bitmap bmpsetRun = new Bitmap(bmpFind);
+
             switch (Universal.OPTION)
             {
                 case JetEazy.OptionEnum.MAIN_SDM2:
@@ -178,26 +181,18 @@ namespace Allinone.OPSpace.AnalyzeSpace
             switch (Universal.OPTION)
             {
                 case JetEazy.OptionEnum.MAIN_X6:
-                    if (!istrain)
+                    if (istrain)
+                    {
+                        m_MvdCnnReader.DecodeTrain();
+                    }
+                    //if (!istrain)
                     {
                         try
                         {
                             System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
                             stopwatch.Restart();
-
-                            //JetEazy.BasicSpace.JzToolsClass jzTools = new JetEazy.BasicSpace.JzToolsClass();
-                            //Rectangle croprect = jzTools.SimpleRect(bmpFind.Size);
-                            //croprect.Inflate(-40, -40);
-                            //Bitmap myBmp001 = bmpFind.Clone(croprect, PixelFormat.Format24bppRgb);
-
                             AForge.Imaging.Filters.Grayscale grayscale = new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
                             Bitmap bmpgray = grayscale.Apply(bmpFind);
-
-                            //string tmpStr = m_MvdCnnReader.DecodeStr(bmpgray);
-
-                            //AForge.Imaging.Filters.Invert invert = new AForge.Imaging.Filters.Invert();
-                            //Bitmap bmpinvert = invert.Apply(bmpgray);
-
                             AForge.Imaging.Filters.ResizeBilinear resizeBilinear = new AForge.Imaging.Filters.ResizeBilinear(bmpFind.Width * 1, bmpFind.Height * 1);
                             Bitmap bmpresizeBilinear = resizeBilinear.Apply(bmpgray);
 
@@ -210,12 +205,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                                 tmpStr = m_MvdCnnReader.DecodeStr(bmpresizeBilinear);
                             }
-
-                            //if (string.IsNullOrEmpty(tmpStr))
-                            //    bmpinvert.Save("d:\\testtest\\2d\\" + eName + "_" + ".png", ImageFormat.Png);
-
                             bmpgray.Dispose();
-                            //bmpinvert.Dispose();
                             bmpresizeBilinear.Dispose();
 
                             stopwatch.Stop();
@@ -237,10 +227,95 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                         }
                     }
-                    else
+                    //else
+                    //{
+                    //    m_MvdCnnReader.DecodeTrain();
+                    //}
+
+
+                    #region 再次读码
+
+                    if (string.IsNullOrEmpty(myBarcode))
                     {
-                        m_MvdCnnReader.DecodeTrain();
+                        try
+                        {
+                            System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+                            stopwatch.Restart();
+
+                            string tmpStr = string.Empty;
+                            using (var code2D = new Mvd2DReaderClass())
+                            {
+                                using (Bitmap bmpttt = new Bitmap(bmpFind))
+                                using (Bitmap bmp2d = bmpttt.Clone(new Rectangle(0, 0, bmpttt.Width, bmpttt.Height), PixelFormat.Format24bppRgb))
+                                {
+                                    code2D.Run(bmp2d, new Rectangle(0, 0, bmp2d.Width, bmp2d.Height));
+                                    tmpStr = code2D.xBarcodeStr;
+                                }
+                            }
+
+                            stopwatch.Stop();
+                            if (!string.IsNullOrEmpty(tmpStr))
+                            {
+                                barcodeStrRead = tmpStr;
+                                myBarcode = tmpStr;// + " HIK用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms";
+                            }
+                            else
+                            {
+                                barcodeStrRead = tmpStr;
+                                myBarcode = tmpStr;// + " HIK用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms" + m_MvdCnnReader.ErrMsg;
+                            }
+
+                        }
+                        catch
+                        {
+
+                        }
                     }
+
+                    #endregion
+
+                    #region 再次读码
+                    if (INI.bUse2DCNNReader)
+                    {
+                        if (string.IsNullOrEmpty(myBarcode))
+                        {
+                            try
+                            {
+                                System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+                                stopwatch.Restart();
+
+                                string tmpStr = string.Empty;
+                                //using (var code2D = new Mvd2DReaderClass())
+                                {
+                                    using (Bitmap bmpttt = new Bitmap(bmpFind))
+                                    using (Bitmap bmp2d = bmpttt.Clone(new Rectangle(0, 0, bmpttt.Width, bmpttt.Height), PixelFormat.Format24bppRgb))
+                                    {
+                                        tmpStr = Universal.CodeBuilder.Run(bmp2d);
+                                    }
+                                }
+
+                                stopwatch.Stop();
+                                if (!string.IsNullOrEmpty(tmpStr))
+                                {
+                                    barcodeStrRead = tmpStr;
+                                    myBarcode = tmpStr;// + " HIK用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms";
+                                }
+                                else
+                                {
+                                    barcodeStrRead = tmpStr;
+                                    myBarcode = tmpStr;// + " HIK用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms" + m_MvdCnnReader.ErrMsg;
+                                }
+
+                            }
+                            catch
+                            {
+
+                            }
+                        }
+                    }
+                    #endregion
+
+
                     break;
             }
 
@@ -250,7 +325,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
             var timerStart = DateTime.Now.Ticks;
 
-            if (string.IsNullOrEmpty(myBarcode) && !istrain)
+            if (string.IsNullOrEmpty(myBarcode))
             {
                 //JetEazyBarcodeG.Interface.IBarcode IxBarcode = new JetEazyBarcodeG.Model.BarcodeGzx1Class();
                 EzSegDMTX IxBarcode = new EzSegDMTX();
@@ -265,7 +340,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         break;
                 }
                 int iret = IxBarcode.Run();
-                
+
                 var timerStop = DateTime.Now.Ticks;
                 TimeSpan span = new TimeSpan(timerStop - timerStart);
 
@@ -311,7 +386,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //span.Milliseconds
             if (istrain)
             {
-                processstring += "2DBarcode Check OK." + Environment.NewLine;
+                processstring += $"2DBarcode Check OK. ={barcodeStrRead}" + Environment.NewLine;
                 errorstring += "";
                 reason = JetEazy.ReasonEnum.PASS;
                 isgood = true;
@@ -346,8 +421,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 }
             }
 
-            workstatus.SetWorkStatus(bmppattern, bmpFind, bmpErr, reason, errorstring, processstring, passInfo);
-
+            workstatus.SetWorkStatus(bmppattern, bmpsetRun, bmpErr, reason, errorstring, processstring, passInfo);
 
             if (!isgood)
             {
@@ -356,10 +430,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     if (!System.IO.Directory.Exists(Universal.MainX6_Path))
                         System.IO.Directory.CreateDirectory(Universal.MainX6_Path);
 
-                    bmpFind.Save(Universal.MainX6_Path + "\\Bar_" + eName + "_Input" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    bmpsetRun.Save(Universal.MainX6_Path + "\\Bar_" + eName + "_Input" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
                 }
             }
 
+            bmpsetRun?.Dispose();
             if (istrain)
                 TrainStatusCollection.Add(workstatus);
             else
@@ -378,10 +453,16 @@ namespace Allinone.OPSpace.AnalyzeSpace
             barcodeStrRead = string.Empty;
             BarcodeGrade = string.Empty;
             m_BarcodeReadStr = string.Empty;
+            Bitmap bmpsetRun = new Bitmap(bmpFind);
 
 #if OPT_USE_MVD_BARCODE
 
-            if (!istrain)
+            if (istrain)
+            {
+                m_MvdCnnReader.DecodeTrain();
+            }
+
+            //if (!istrain)
             {
                 try
                 {
@@ -448,17 +529,105 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
                 }
             }
-            else
+            //else
+            //{
+            //    m_MvdCnnReader.DecodeTrain();
+            //}
+
+            #region 再次读码
+
+            if (string.IsNullOrEmpty(myBarcode))
             {
-                m_MvdCnnReader.DecodeTrain();
+                try
+                {
+                    System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+                    stopwatch.Restart();
+
+                    string tmpStr = string.Empty;
+                    using (var code2D = new Mvd2DReaderClass())
+                    {
+                        using (Bitmap bmpttt = new Bitmap(bmpFind))
+                        using (Bitmap bmp2d = bmpttt.Clone(new Rectangle(0, 0, bmpttt.Width, bmpttt.Height), PixelFormat.Format24bppRgb))
+                        {
+                            code2D.Run(bmp2d, new Rectangle(0, 0, bmp2d.Width, bmp2d.Height));
+                            tmpStr = code2D.xBarcodeStr;
+                        }
+                    }
+
+                    stopwatch.Stop();
+                    if (!string.IsNullOrEmpty(tmpStr))
+                    {
+                        barcodeStrRead = tmpStr;
+                        myBarcode = tmpStr;// + " HIK用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms";
+                        BarcodeGrade = "A";
+                    }
+                    else
+                    {
+                        barcodeStrRead = tmpStr;
+                        myBarcode = tmpStr;// + " HIK用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms" + m_MvdCnnReader.ErrMsg;
+                    }
+                    m_BarcodeReadStr = barcodeStrRead;
+                  
+
+                }
+                catch
+                {
+
+                }
             }
+
+            #endregion
+
+
+            #region 再次读码
+            if (INI.bUse2DCNNReader)
+            {
+                if (string.IsNullOrEmpty(myBarcode))
+                {
+                    try
+                    {
+                        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+                        stopwatch.Restart();
+
+                        string tmpStr = string.Empty;
+                        //using (var code2D = new Mvd2DReaderClass())
+                        {
+                            using (Bitmap bmpttt = new Bitmap(bmpFind))
+                            using (Bitmap bmp2d = bmpttt.Clone(new Rectangle(0, 0, bmpttt.Width, bmpttt.Height), PixelFormat.Format24bppRgb))
+                            {
+                                tmpStr = Universal.CodeBuilder.Run(bmp2d);
+                            }
+                        }
+
+                        stopwatch.Stop();
+                        if (!string.IsNullOrEmpty(tmpStr))
+                        {
+                            barcodeStrRead = tmpStr;
+                            myBarcode = tmpStr;// + " HIK用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms";
+                            BarcodeGrade = "A";
+                        }
+                        else
+                        {
+                            barcodeStrRead = tmpStr;
+                            myBarcode = tmpStr;// + " HIK用时:" + stopwatch.ElapsedMilliseconds.ToString() + " ms" + m_MvdCnnReader.ErrMsg;
+                        }
+                        m_BarcodeReadStr = barcodeStrRead;
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            #endregion
+
 #endif
 
 #if OPT_USE_JET_BARCODE
 
             var timerStart = DateTime.Now.Ticks;
 
-            if (string.IsNullOrEmpty(myBarcode) && !istrain)
+            if (string.IsNullOrEmpty(myBarcode))
             {
                 //JetEazyBarcodeG.Interface.IBarcode IxBarcode = new JetEazyBarcodeG.Model.BarcodeGzx1Class();
                 EzSegDMTX IxBarcode = new EzSegDMTX();
@@ -473,7 +642,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                         break;
                 }
                 int iret = IxBarcode.Run();
-                
+
                 var timerStop = DateTime.Now.Ticks;
                 TimeSpan span = new TimeSpan(timerStop - timerStart);
 
@@ -508,7 +677,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //span.Milliseconds
             if (istrain)
             {
-                processstring += "2DBarcode Check OK." + Environment.NewLine;
+                processstring += $"2DBarcode Check OK.{barcodeStrRead}" + Environment.NewLine;
                 errorstring += "";
                 reason = JetEazy.ReasonEnum.PASS;
                 isgood = true;
@@ -543,7 +712,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 }
             }
 
-            workstatus.SetWorkStatus(bmppattern, bmpFind, bmpErr, reason, errorstring, processstring, passInfo);
+            workstatus.SetWorkStatus(bmppattern, bmpsetRun, bmpErr, reason, errorstring, processstring, passInfo);
 
             if (!isgood)
             {
@@ -552,10 +721,11 @@ namespace Allinone.OPSpace.AnalyzeSpace
                     if (!System.IO.Directory.Exists(Universal.MainX6_Path))
                         System.IO.Directory.CreateDirectory(Universal.MainX6_Path);
 
-                    bmpFind.Save(Universal.MainX6_Path + "\\Bar2DGrade_" + eName + "_Input" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
+                    bmpsetRun.Save(Universal.MainX6_Path + "\\Bar2DGrade_" + eName + "_Input" + Universal.GlobalImageTypeString, Universal.GlobalImageFormat);
                 }
             }
 
+            bmpsetRun?.Dispose();
             if (istrain)
                 TrainStatusCollection.Add(workstatus);
             else
@@ -1515,6 +1685,8 @@ namespace Allinone.OPSpace.AnalyzeSpace
         /// <returns></returns>
         public string FindOCR_Biandong(string strBar, bool istrain, Bitmap bmppattern, Bitmap bmpFind, PassInfoClass passInfo, out bool isgood)
         {
+
+            strBar = strBar.Trim().Replace(" ", "").Replace("\r", "").Replace("\n", "");
             if (istrain)
             {
                 isgood = true;
@@ -1545,7 +1717,12 @@ namespace Allinone.OPSpace.AnalyzeSpace
 
 
                 string strSNAI = Universal.mOCRByPaddle.OCR(bmpfindTemp);
-                strSN = strSNAI.Replace(Environment.NewLine, "");
+                //strSNAI = System.Text.RegularExpressions.Regex.Replace(strSNAI, @"[^a-zA-Z0-9]", "");
+                //strSNAI = strSNAI.RemoveChineseCharacters();
+                //strSNAI = strSNAI.RemoveChineseCharactersExtended();
+                //strSN = strSNAI.Replace(Environment.NewLine, "").Replace(" ", "");
+
+                strSN = strSNAI.Replace(Environment.NewLine, "").Trim().Replace(" ", "").Replace("\r", "").Replace("\n", "");
 
                 //if (strBar != strSN)
                 //{
@@ -1733,7 +1910,7 @@ namespace Allinone.OPSpace.AnalyzeSpace
             }
         }
 
-        public bool CheckRepeatCode(List<string> eCodes, Bitmap bmppattern, Bitmap bmpFind, PassInfoClass passInfo,int irepeatCount=1)
+        public bool CheckRepeatCode(List<string> eCodes, Bitmap bmppattern, Bitmap bmpFind, PassInfoClass passInfo, int irepeatCount = 1)
         {
             bool result = true;
             WorkStatusClass workstatus = new WorkStatusClass(JetEazy.AnanlyzeProcedureEnum.CHECKREPEATBARCODE);
@@ -2864,6 +3041,51 @@ namespace Allinone.OPSpace.AnalyzeSpace
             //imgoutput24.Save("D:\\testtest\\barcode\\output.png", eImageFormat.eImageFormat_PNG);
             //imginput24.Save("D:\\testtest\\barcode\\input.png", eImageFormat.eImageFormat_PNG);
             return bmpResult;
+        }
+
+        ///// <summary>
+        ///// 移除中文字符（基本汉字范围）
+        ///// </summary>
+        //string RemoveChineseCharacters(this string input)
+        //{
+        //    return new string(input.Where(c => c < 0x4E00 || c > 0x9FFF).ToArray());
+        //}
+
+        ///// <summary>
+        ///// 移除中文字符（包括扩展汉字）
+        ///// </summary>
+        //string RemoveChineseCharactersExtended(this string input)
+        //{
+        //    return new string(input.Where(c =>
+        //        !((c >= 0x4E00 && c <= 0x9FFF) ||    // 基本汉字
+        //          (c >= 0x3400 && c <= 0x4DBF) ||    // 扩展A
+        //          (c >= 0x20000 && c <= 0x2A6DF)     // 扩展B
+        //        )
+        //    ).ToArray());
+        //}
+
+    }
+    public static class StringExtensions
+    {
+        /// <summary>
+        /// 移除中文字符（基本汉字范围）
+        /// </summary>
+        public static string RemoveChineseCharacters(this string input)
+        {
+            return new string(input.Where(c => c < 0x4E00 || c > 0x9FFF).ToArray());
+        }
+
+        /// <summary>
+        /// 移除中文字符（包括扩展汉字）
+        /// </summary>
+        public static string RemoveChineseCharactersExtended(this string input)
+        {
+            return new string(input.Where(c =>
+                !((c >= 0x4E00 && c <= 0x9FFF) ||    // 基本汉字
+                  (c >= 0x3400 && c <= 0x4DBF) ||    // 扩展A
+                  (c >= 0x20000 && c <= 0x2A6DF)     // 扩展B
+                )
+            ).ToArray());
         }
     }
     [Serializable]

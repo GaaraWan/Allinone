@@ -60,6 +60,7 @@
             this.comboBox3 = new System.Windows.Forms.ComboBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.button25 = new System.Windows.Forms.Button();
             this.button20 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.comboBox4 = new System.Windows.Forms.ComboBox();
@@ -75,7 +76,7 @@
             this.button23 = new System.Windows.Forms.Button();
             this.button24 = new System.Windows.Forms.Button();
             this.pageUI1 = new Allinone.UISpace.PageUI();
-            this.button25 = new System.Windows.Forms.Button();
+            this.button26 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
@@ -425,6 +426,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.button26);
             this.groupBox2.Controls.Add(this.button25);
             this.groupBox2.Controls.Add(this.button20);
             this.groupBox2.Controls.Add(this.button2);
@@ -433,6 +435,17 @@
             this.groupBox2.Size = new System.Drawing.Size(163, 55);
             this.groupBox2.TabIndex = 40;
             this.groupBox2.TabStop = false;
+            // 
+            // button25
+            // 
+            this.button25.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button25.Location = new System.Drawing.Point(82, 28);
+            this.button25.Name = "button25";
+            this.button25.Size = new System.Drawing.Size(75, 25);
+            this.button25.TabIndex = 60;
+            this.button25.Text = "文件map";
+            this.button25.UseVisualStyleBackColor = false;
+            this.button25.Visible = false;
             // 
             // button20
             // 
@@ -589,16 +602,16 @@
             this.pageUI1.Size = new System.Drawing.Size(1420, 766);
             this.pageUI1.TabIndex = 41;
             // 
-            // button25
+            // button26
             // 
-            this.button25.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button25.Location = new System.Drawing.Point(82, 28);
-            this.button25.Name = "button25";
-            this.button25.Size = new System.Drawing.Size(75, 25);
-            this.button25.TabIndex = 60;
-            this.button25.Text = "文件map";
-            this.button25.UseVisualStyleBackColor = false;
-            this.button25.Visible = false;
+            this.button26.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button26.Location = new System.Drawing.Point(82, 5);
+            this.button26.Name = "button26";
+            this.button26.Size = new System.Drawing.Size(75, 25);
+            this.button26.TabIndex = 61;
+            this.button26.Text = "模板位置";
+            this.button26.UseVisualStyleBackColor = false;
+            this.button26.Visible = false;
             // 
             // DetailForm
             // 
@@ -690,5 +703,6 @@
         private System.Windows.Forms.NumericUpDown numericUpDown2;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Button button25;
+        private System.Windows.Forms.Button button26;
     }
 }

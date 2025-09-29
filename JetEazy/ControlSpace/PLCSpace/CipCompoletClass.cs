@@ -176,7 +176,6 @@ namespace JetEazy.ControlSpace.PLCSpace
                 }
                 if (m_Compolet != null)
                     this.m_Compolet.Active = false;
-
                 if (m_Thread_Hsl != null)
                 {
                     //if (m_Thread_Hsl.ThreadState != System.Threading.ThreadState.Stopped)

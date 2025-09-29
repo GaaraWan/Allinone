@@ -1196,6 +1196,9 @@ namespace Allinone.UISpace.ALBUISpace
                     ppgPosition.Visible = false;
                     lblPostion.Visible = false;
 
+                    btnAdd.Visible = false;
+                    btnDel.Visible = false;
+
                     break;
             }
 

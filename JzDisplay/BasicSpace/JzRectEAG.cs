@@ -884,7 +884,7 @@ namespace WorldOfMoveableObjects
             Move(OffsetPoint.X, OffsetPoint.Y);
             OffsetPoint = new Point(0, 0);
 
-            FontSize = (float)(50 * ratio);
+            FontSize = (float)(28 * ratio);
 
             //MappingFromMovingObject(new PointF(0, 0), 1);
         }

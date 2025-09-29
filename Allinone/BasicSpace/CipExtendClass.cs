@@ -197,6 +197,19 @@ namespace Allinone.BasicSpace
             m_cipplcio.iQcMapResult(mapResults);
         }
 
+        #region BJ
+
+        public void SetRowCol(string row, string col)
+        {
+            if (m_compoletClass == null)
+                return;
+            if (m_cipplcio == null)
+                return;
+            m_cipplcio.SetRowCol(row, col);
+        }
+
+        #endregion
+
         #region 东莞-Rayxin
 
         public string DGMap1

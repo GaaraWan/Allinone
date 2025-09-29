@@ -581,8 +581,42 @@ namespace Allinone.FormSpace
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-
+            exitToDisposeEnv();
         }
+
+
+        #region 退出程序时释放资源
+
+        void exitToDisposeEnv()
+        {
+            JetEazy.LoggerClass.Instance.WriteLog("程式退出!");
+            SetMachineState(MachineState.Idle);
+
+            if (INI.ISUSE_QFACTORY)
+            {
+                Universal.RESULT.myResult.QFactorySend(Universal.JZQFACTORY, QFactoryErrorCode.Err_Abnormal_CloseSystem);
+            }
+
+            if (INI.ISFOXCONNSF)
+                Universal.Memory.Write("Q,ESC");
+
+            if (CTRLUI != null)
+            {
+                CTRLUI.myDispose();
+            }
+
+            if (X6_HANDLE_CLIENT != null)
+                X6_HANDLE_CLIENT.DisConnectServer();
+
+            if (X6_HANDLE_CLIENT != null)
+                X6_LASER_CLIENT.DisConnectServer();
+
+            //ClientSocket.Instance.DisConnectServer();
+            Universal.Close();
+            //this.Close();
+        }
+
+        #endregion
 
         public static int IsCheckOK()
         {
@@ -2241,6 +2275,22 @@ namespace Allinone.FormSpace
                     break;
             }
         }
+        void DISPUIShowResultAndOCR_Dg()
+        {
+            switch (VERSION)
+            {
+                case VersionEnum.ALLINONE:
+                case VersionEnum.AUDIX:
+
+                    DISPUI.ClearMover();
+                    AlbumWork.FillCompoundMover_Dg(ShowMover);
+
+                    DISPUI.SetMover(ShowMover);
+                    DISPUI.RefreshDisplayShape();
+
+                    break;
+            }
+        }
         void DISPUIShowResultAndBarcode(bool isshowbarcode = false)
         {
             switch (VERSION)
@@ -2262,7 +2312,7 @@ namespace Allinone.FormSpace
                     break;
             }
         }
-        void DISPUIShowResultAndBarcode_Bj(bool isshowbarcode = false)
+        void DISPUIShowResultAndBarcode_Bj(bool isshowbarcode = false,int iPageIndex=0)
         {
             switch (VERSION)
             {
@@ -2272,7 +2322,7 @@ namespace Allinone.FormSpace
                     DISPUI.ClearMover();
 
                     //AlbumWork.FillFirstEnvResultMover(ShowMover, CCDCollection);
-                    AlbumWork.FillCompoundMoverAndBarcode_Bj(ShowMover, isshowbarcode);
+                    AlbumWork.FillCompoundMoverAndBarcode_Bj(ShowMover, isshowbarcode, iPageIndex);
 
                     DISPUI.SetMover(ShowMover);
                     DISPUI.RefreshDisplayShape();
@@ -2635,30 +2685,31 @@ namespace Allinone.FormSpace
                     AccountManagement();
                     break;
                 case ESSStatusEnum.EXIT:
-                    JetEazy.LoggerClass.Instance.WriteLog("程式退出!");
-                    SetMachineState(MachineState.Idle);
+                    //JetEazy.LoggerClass.Instance.WriteLog("程式退出!");
+                    //SetMachineState(MachineState.Idle);
 
-                    if (INI.ISUSE_QFACTORY)
-                    {
-                        Universal.RESULT.myResult.QFactorySend(Universal.JZQFACTORY, QFactoryErrorCode.Err_Abnormal_CloseSystem);
-                    }
+                    //if (INI.ISUSE_QFACTORY)
+                    //{
+                    //    Universal.RESULT.myResult.QFactorySend(Universal.JZQFACTORY, QFactoryErrorCode.Err_Abnormal_CloseSystem);
+                    //}
 
-                    if (INI.ISFOXCONNSF)
-                        Universal.Memory.Write("Q,ESC");
+                    //if (INI.ISFOXCONNSF)
+                    //    Universal.Memory.Write("Q,ESC");
 
-                    if (CTRLUI != null)
-                    {
-                        CTRLUI.myDispose();
-                    }
+                    //if (CTRLUI != null)
+                    //{
+                    //    CTRLUI.myDispose();
+                    //}
 
-                    if (X6_HANDLE_CLIENT != null)
-                        X6_HANDLE_CLIENT.DisConnectServer();
+                    //if (X6_HANDLE_CLIENT != null)
+                    //    X6_HANDLE_CLIENT.DisConnectServer();
 
-                    if (X6_HANDLE_CLIENT != null)
-                        X6_LASER_CLIENT.DisConnectServer();
+                    //if (X6_HANDLE_CLIENT != null)
+                    //    X6_LASER_CLIENT.DisConnectServer();
 
-                    //ClientSocket.Instance.DisConnectServer();
-                    Universal.Close();
+                    ////ClientSocket.Instance.DisConnectServer();
+                    //Universal.Close();
+                    //this.Close();
                     this.Close();
 
                     break;
@@ -4705,7 +4756,15 @@ namespace Allinone.FormSpace
                                             default:
                                                 if (!INI.IsOnlyShowCurrentImage)
                                                 {
-                                                    DISPUIShowResult();
+                                                    switch(Universal.FACTORYNAME)
+                                                    {
+                                                        case FactoryName.DONGGUAN:
+                                                            DISPUIShowResultAndOCR_Dg();
+                                                            break;
+                                                        default:
+                                                            DISPUIShowResult();
+                                                            break;
+                                                    }
                                                 }
                                                 break;
                                         }
@@ -5572,10 +5631,19 @@ namespace Allinone.FormSpace
 
                             if (INI.IsOpenQcRandom)
                             {
+                                string[] strings = operpagestr.Split(',');
+                                //解析当前页面
+                                string[] _str1s = strings[0].Split('-');
+                                int _pageindex = 0;
+                                if (_str1s.Length == 2)
+                                {
+                                    int.TryParse(_str1s[0], out _pageindex);
+                                }
+
                                 //这里显示当前抓的图片
-                                DISPUI.SetDisplayImage(AlbumWork.ENVList[0].PageList[0].GetbmpRUN(PageOPTypeEnum.P00));
+                                DISPUI.SetDisplayImage(AlbumWork.ENVList[0].PageList[_pageindex].GetbmpRUN(PageOPTypeEnum.P00));
                                 //显示框和条码
-                                DISPUIShowResultAndBarcode_Bj(OPTION == OptionEnum.MAIN_X6);
+                                DISPUIShowResultAndBarcode_Bj(OPTION == OptionEnum.MAIN_X6, _pageindex);
 
                                 //AlbumWork.CPD.GenRUNVIEWData(ASNCollection);
                                 //DISPUI.SetDisplayImage(AlbumWork.CPD.bmpRUNVIEW);
@@ -5584,7 +5652,33 @@ namespace Allinone.FormSpace
                                 //bmpshowbarcode = _getMainX6ShowBarcode(AlbumWork.CPD.bmpRUNVIEW);
                                 //DISPUI.SetDisplayImage(bmpshowbarcode);
 
-                                string[] strings = operpagestr.Split(',');
+                                if (INI.IsCollectPicturesSingle)
+                                {
+                                    try
+                                    {
+                                        this.Invoke(new Action(() =>
+                                        {
+                                            Bitmap _showResultBmp = (Bitmap)DISPUI.GetScreen()?.Clone();
+                                            CamActClass.Instance.SetResultImage(_showResultBmp, CamActClass.Instance.StepCurrent);
+                                            //string _imagePath = "D:\\REPORT\\work\\Image\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+                                            //_imagePath = "D:\\REPORT\\work\\Image\\" + JzTimes.DateSerialString + "\\auto_" + JzMainSDPositionParas.Report_LOT + "\\" + JzMainSDPositionParas.INSPECT_NGINDEX.ToString("00000");
+
+                                            //if (!System.IO.Directory.Exists(_imagePath + "\\000"))
+                                            //    System.IO.Directory.CreateDirectory(_imagePath + "\\000");
+
+                                            //_showResultBmp.Save(_imagePath + $"\\000\\R_P00-{CamActClass.Instance.StepCurrent.ToString("000")}" + ".jpg",
+                                            //                                        System.Drawing.Imaging.ImageFormat.Jpeg);
+
+                                            _showResultBmp.Dispose();
+                                        }));
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        JetEazy.LoggerClass.Instance.WriteException(ex);
+                                    }
+                                }
+
+
                                 string[] cc = strings[2].Split(';');
                                 Color color = Color.FromArgb(int.Parse(cc[0]), int.Parse(cc[1]), int.Parse(cc[2]), int.Parse(cc[3]));
                                 RUNUI.QcRandomSetResult(strings[0], color, strings[3]);

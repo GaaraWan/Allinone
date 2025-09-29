@@ -935,19 +935,20 @@ namespace Allinone.OPSpace
                         case JetEazy.OptionEnum.MAIN_SERVICE:
                         case OptionEnum.MAIN_SDM3:
                             page.AnalyzeRootArray[pageopindex].GetShowResultMover(mover,
-                                                                                                                             biaslocationF,
-                                                                                                                             new SizeF(cpditem.NORMALPara.Ratio, cpditem.NORMALPara.Ratio),
-                                                                                                                             0,
-                                                                                                                             new Point(-(int)(cpditem.NORMALPara.iLeft * cpditem.NORMALPara.Ratio), -(int)(cpditem.NORMALPara.iTop * cpditem.NORMALPara.Ratio)));
+                                            biaslocationF,
+                                            new SizeF(cpditem.NORMALPara.Ratio, cpditem.NORMALPara.Ratio),
+                                            0,
+                                            new Point(-(int)(cpditem.NORMALPara.iLeft * cpditem.NORMALPara.Ratio),
+                                            -(int)(cpditem.NORMALPara.iTop * cpditem.NORMALPara.Ratio)));
 
                             break;
                         default:
 
                             page.AnalyzeRootArray[pageopindex].GetShowResultMover(mover,
-                                                                                                                             biaslocationF,
-                                                                                                                             new SizeF(cpditem.NORMALPara.Ratio, cpditem.NORMALPara.Ratio),
-                                                                                                                             0,
-                                                                                                                             new Point(0, 0));
+                                            biaslocationF,
+                                            new SizeF(cpditem.NORMALPara.Ratio, cpditem.NORMALPara.Ratio),
+                                            0,
+                                            new Point(0, 0));
 
                             break;
                     }
@@ -1014,6 +1015,122 @@ namespace Allinone.OPSpace
             //    i++;
             //}
         }
+        public void FillCompoundMover_Dg(Mover mover)
+        {
+            mover.Clear();
+
+            foreach (CPDItemClass cpditem in CPD.CPDItemList)
+            {
+                if (cpditem.NORMALPara.RelatePA.IndexOf("ENV") > -1)
+                {
+                    string[] strs = cpditem.NORMALPara.RelatePA.Split('-');
+
+                    int envno = int.Parse(strs[0].Replace("ENV", ""));
+                    int pageno = int.Parse(strs[1].Replace("PAGE", ""));
+                    int pageopindex = int.Parse(strs[2]);
+
+                    EnvClass env = GetEnv(envno);
+                    PageClass page = env.GetPageRun(pageno);
+
+                    if (page == null)
+                        break;
+
+                    PointF biaslocationF = cpditem.RatioRectEAG.GetRectF.Location;
+
+                    biaslocationF.X = biaslocationF.X - CPD.RangeRectEAG.GetRectF.X;
+                    biaslocationF.Y = biaslocationF.Y - CPD.RangeRectEAG.GetRectF.Y;
+
+
+
+                    switch (OPTION)
+                    {
+                        case OptionEnum.MAIN_X6:
+                        case OptionEnum.MAIN_SDM1:
+                        case OptionEnum.MAIN_SDM2:
+                        case JetEazy.OptionEnum.MAIN_SERVICE:
+                        case OptionEnum.MAIN_SDM3:
+                            page.AnalyzeRootArray[pageopindex].GetShowResultMover_Dg(mover,
+                                            biaslocationF,
+                                            new SizeF(cpditem.NORMALPara.Ratio, cpditem.NORMALPara.Ratio),
+                                            0,
+                                            new Point(-(int)(cpditem.NORMALPara.iLeft * cpditem.NORMALPara.Ratio),
+                                            -(int)(cpditem.NORMALPara.iTop * cpditem.NORMALPara.Ratio)),
+                                            "");
+
+                            break;
+                        default:
+
+                            page.AnalyzeRootArray[pageopindex].GetShowResultMover(mover,
+                                            biaslocationF,
+                                            new SizeF(cpditem.NORMALPara.Ratio, cpditem.NORMALPara.Ratio),
+                                            0,
+                                            new Point(0, 0));
+
+                            break;
+                    }
+                }
+                else
+                {
+                    string[] strs = cpditem.NORMALPara.RelatePA.Split(':');
+
+                    int asnno = int.Parse(strs[0]);
+
+                    ASNClass asn = ASNCollection.GetASN(asnno);
+
+                    //Mapping ASN Item IsVeryGood First
+
+                    PointF biaslocationF = cpditem.RatioRectEAG.GetRectF.Location;
+
+                    biaslocationF.X = biaslocationF.X - CPD.RangeRectEAG.GetRectF.X;
+                    biaslocationF.Y = biaslocationF.Y - CPD.RangeRectEAG.GetRectF.Y;
+
+                    //asn.GetShowResultMover(mover, biaslocationF, cpditem.RatioRectEAG.GetRectF.Size, 0, new Point(0, 0), INI.ISONLYSHOWNG);
+
+                    foreach (ASNItemClass asnitem in asn.ASNItemList)
+                    {
+                        if (asnitem.RelateAnalyzeStr == "")
+                        {
+                            continue;
+                        }
+
+                        string[] analyzestrs = asnitem.RelateAnalyzeStr.Split(';');
+
+                        foreach (string analyzecheckstr in analyzestrs)
+                        {
+                            if (analyzecheckstr == "")
+                                continue;
+
+                            string[] itemstrs = analyzecheckstr.Split('-');
+
+                            int envindex = int.Parse(itemstrs[0]);
+                            int pageindex = int.Parse(itemstrs[1]);
+                            int pageoptypeindex = int.Parse(itemstrs[2]);
+                            int analyzeno = int.Parse(itemstrs[3]);
+
+                            EnvClass env = ENVList[envindex];
+                            PageClass page = env.PageList[pageindex];
+                            AnalyzeClass analyzeroot = page.AnalyzeRootArray[pageoptypeindex];
+
+                            AnalyzeClass analyze = analyzeroot.GetAnalyze(analyzeno);
+
+                            asnitem.IsVeryGood = analyze.IsVeryGood;
+
+                            asnitem.GetShowResultMover(mover, biaslocationF, new SizeF(cpditem.NORMALPara.Ratio, cpditem.NORMALPara.Ratio), 0, new Point(0, 0), INI.ISONLYSHOWNG);
+                        }
+                    }
+                }
+            }
+            //EnvClass env = ENVList[0];
+
+            //foreach (PageClass page in env.PageList)
+            //{
+            //    CCDRectRelateIndexClass cti = ccdcollection.GetRectRelateIndexData(page.CamIndex);
+
+            //    page.AnalyzeRootArray[(int)PageOPTypeEnum.P00].GetShowResultMover(mover, cti.SizedRect.Location, cti.SizedRatio, i, new Point(ccdcollection.EXTEND, ccdcollection.EXTEND));
+
+            //    i++;
+            //}
+        }
         public void FillCompoundMoverAndBarcode(Mover mover, bool isshowbarcode = false)
         {
             mover.Clear();
@@ -1055,12 +1172,12 @@ namespace Allinone.OPSpace
                 }
             }
         }
-        public void FillCompoundMoverAndBarcode_Bj(Mover mover, bool isshowbarcode = false)
+        public void FillCompoundMoverAndBarcode_Bj(Mover mover, bool isshowbarcode = false,int iPageIndex =0 )
         {
             mover.Clear();
 
             EnvClass env = GetEnv(0);
-            PageClass page = env.GetPageRun(0);
+            PageClass page = env.GetPageRun(iPageIndex);
 
             if (page == null)
                 return;
@@ -1077,7 +1194,7 @@ namespace Allinone.OPSpace
 
                         Color showcolor = Color.Red;
                         string _barcode = string.Empty;
-                        analyze.CollectAllBarcodeStr(ref _barcode);
+                        analyze.CollectAllBarcodeStr_Bj(ref _barcode);
                         if (_barcode.Contains("[FAIL]"))
                             showcolor = Color.Red;
                         else
@@ -1794,6 +1911,14 @@ namespace Allinone.OPSpace
         {
             EnvClass env = ENVList[envindex];
             env.PageList[ipage].CalComplete = ison;
+        }
+        public void SetAllPageState(int envindex, bool ison)
+        {
+            EnvClass env = ENVList[envindex];
+            foreach (PageClass page in env.PageList)
+            {
+                page.CalComplete = ison;
+            }
         }
 
         public void SetOffset(int envindex, int pageindex, Point ePoint, bool ison)

@@ -154,6 +154,18 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\JzDlls\FreeImageNET.dll</HintPath>
     </Reference>
+    <Reference Include="ImageSourceModuleCs, Version=1.0.0.0, Culture=neutral, PublicKeyToken=6a03c4a48a6df5e6, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\VisionMaster4.2.0\Development\V4.x\ComControls\Assembly\ImageSourceModuleCs.dll</HintPath>
+    </Reference>
+    <Reference Include="IMVSCnnCodeRecgModuCCs, Version=1.0.0.0, Culture=neutral, PublicKeyToken=ec21f3cc2b45d9d4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\VisionMaster4.2.0\Development\V4.x\ComControls\Assembly\IMVSCnnCodeRecgModuCCs.dll</HintPath>
+    </Reference>
+    <Reference Include="IMVSCnnCodeRecgModuCs, Version=1.0.0.0, Culture=neutral, PublicKeyToken=c2d1fe7f3c7d7e4d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\VisionMaster4.2.0\Development\V4.x\ComControls\Assembly\IMVSCnnCodeRecgModuCs.dll</HintPath>
+    </Reference>
     <Reference Include="Inspection_JE01_DotNet">
       <HintPath>C:\Program Files (x86)\AUVision\bin\dotnet\Inspection_JE01_DotNet.dll</HintPath>
     </Reference>
@@ -263,6 +275,14 @@
     <Reference Include="System.Deployment" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="VM.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=61600122bc9264b9, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\VisionMaster4.2.0\Development\V4.x\ComControls\Assembly\VM.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="VM.PlatformSDKCS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=c1484a72052ee3d4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files\VisionMaster4.2.0\Development\V4.x\ComControls\Assembly\VM.PlatformSDKCS.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="zxing, Version=0.15.0.0, Culture=neutral, PublicKeyToken=4e88037ac681fe60, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -357,6 +377,12 @@
     </Compile>
     <Compile Include="FormSpace\BJ\BJCellForm.Designer.cs">
       <DependentUpon>BJCellForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSpace\BJ\BJChipPosForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSpace\BJ\BJChipPosForm.Designer.cs">
+      <DependentUpon>BJChipPosForm.cs</DependentUpon>
     </Compile>
     <Compile Include="FormSpace\CamExportForm.cs">
       <SubType>Form</SubType>
@@ -974,6 +1000,8 @@
       <DependentUpon>SubUI.cs</DependentUpon>
     </Compile>
     <Compile Include="ZGa.Mvc\GaMvcConfig.cs" />
+    <Compile Include="ZGa.Mvc\Model\BarcodeModel\CodeBuilderClassV0.cs" />
+    <Compile Include="ZGa.Mvc\Model\BarcodeModel\IxCodeBuilder.cs" />
     <Compile Include="ZGa.Mvc\Model\MapModel\BJMapBuilderClassV0.cs" />
     <Compile Include="ZGa.Mvc\Model\MapModel\DGMapBuilderClassV0.cs" />
     <Compile Include="ZGa.Mvc\Model\MapModel\IxMapBuilder.cs" />
@@ -985,6 +1013,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\BJ\BJCellForm.resx">
       <DependentUpon>BJCellForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSpace\BJ\BJChipPosForm.resx">
+      <DependentUpon>BJChipPosForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormSpace\CamExportForm.resx">
       <DependentUpon>CamExportForm.cs</DependentUpon>

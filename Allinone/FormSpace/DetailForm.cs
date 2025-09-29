@@ -172,6 +172,7 @@ namespace Allinone.FormSpace
         Button btnMark2;
         Button btnCommonFrm;
         Button btnFileMap;
+        Button btnSetupPos;
 
        public PageUI PAGEUI;
         EnvClass ENVNow;
@@ -331,6 +332,7 @@ namespace Allinone.FormSpace
             btnMark2 = button23;
             btnCommonFrm = button24;
             btnFileMap = button25;
+            btnSetupPos = button26;
 
             chkMactching = checkBox1;
             cboMatchingMethod = comboBox3;
@@ -447,6 +449,7 @@ namespace Allinone.FormSpace
             btnMark2.Click += BtnMark2_Click;
             btnCommonFrm.Click += BtnCommonFrm_Click;
             btnFileMap.Click += BtnFileMap_Click;
+            btnSetupPos.Click += BtnSetupPos_Click;
 
             pageUI1.CaptureTriggerAction += PageUI1_CaptureTriggerAction;
 
@@ -467,7 +470,7 @@ namespace Allinone.FormSpace
                     btnOneKeyReget.Visible = true;
                     btnOneKeyExposure.Visible = true;
                     btnFileMap.Visible = true;
-
+                    btnSetupPos.Visible = true;
                     //switch (Universal.CAMACT)
                     //{
                     //    case CameraActionMode.CAM_MOTOR:
@@ -543,45 +546,85 @@ namespace Allinone.FormSpace
 
         }
 
-        private void BtnFileMap_Click(object sender, EventArgs e)
+        private void BtnSetupPos_Click(object sender, EventArgs e)
         {
-            //switch(Allinone.Universal.FACTORYNAME)
-            //{
-            //    case FactoryName.DONGGUAN:
-            //    case FactoryName.RIYUEXING:
-            //    case FactoryName.DAGUI:
-            //        break;
-            //}
-            using (OpenFileDialog dlg = new OpenFileDialog())
+            using (BJChipPosForm dlg = new BJChipPosForm())
             {
-                dlg.InitialDirectory = INI.FileMapPath;
-                dlg.Filter = "TXT Files (*.txt)|*.TXT|" + "All files (*.*)|*.*";
-                //dlg.Filter = DefaultPath;
-                //dlg.FileName = DefaultName;
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    string retStr = dlg.FileName;
-                    if (!string.IsNullOrEmpty(retStr))
+
+                }
+            }
+        }
+
+        private void BtnFileMap_Click(object sender, EventArgs e)
+        {
+            switch (Allinone.Universal.FACTORYNAME)
+            {
+                case FactoryName.DONGGUAN:
+
+                    if (INI.IsOpenCip)
                     {
-                        bool bOK = Allinone.Universal.MapBuilder.CreateMap(retStr);
-                        JetEazy.LoggerClass.Instance.WriteLog($"手动加载文件{retStr}[{(bOK ? "成功" : "失败")}]");
+                        //读变量的值
+                        //读取marked content
+                        string content = Universal.CipExtend.DGMarkedContent1;
+                        JetEazy.LoggerClass.Instance.WriteLog($"读取marked内容={content}");
+                        bool bOK = Allinone.Universal.MapBuilder.CreateMap(content);
+                        JetEazy.LoggerClass.Instance.WriteLog($"建立map[{(bOK ? "成功" : "失败")}]");
                         if (bOK)
                         {
-                            if (INI.IsOpenCip)
-                            {
-                                FileInfo fileInfo = new FileInfo(retStr);
-                                Allinone.Universal.CipExtend.QcBoatID = fileInfo.Name.Replace(fileInfo.Extension, "");
-                                JetEazy.LoggerClass.Instance.WriteLog($"写入boatID{Allinone.Universal.CipExtend.QcBoatID}");
-                            }
                             using (BJCellForm bJCellForm = new BJCellForm(Allinone.Universal.MapBuilder.GetCells()))
                             {
                                 bJCellForm.ShowDialog();
-                                
+
                             }
                             JetEazy.LoggerClass.Instance.WriteLog($"选择cell {Allinone.Universal.MapCellIndex}");
                         }
+                        else
+                        {
+                            VsMSG.Instance.Warning($"读取plc变量={content},创建map窗口失败。");
+                        }
                     }
-                }
+                    break;
+                default:
+
+                    using (OpenFileDialog dlg = new OpenFileDialog())
+                    {
+                        dlg.InitialDirectory = INI.FileMapPath;
+                        dlg.Filter = "TXT Files (*.txt)|*.TXT|" + "All files (*.*)|*.*";
+                        //dlg.Filter = DefaultPath;
+                        //dlg.FileName = DefaultName;
+                        if (dlg.ShowDialog() == DialogResult.OK)
+                        {
+                            string retStr = dlg.FileName;
+                            if (!string.IsNullOrEmpty(retStr))
+                            {
+                                bool bOK = Allinone.Universal.MapBuilder.CreateMap(retStr);
+                                JetEazy.LoggerClass.Instance.WriteLog($"手动加载文件{retStr}[{(bOK ? "成功" : "失败")}]");
+                                if (bOK)
+                                {
+                                    if (INI.IsOpenCip)
+                                    {
+                                        FileInfo fileInfo = new FileInfo(retStr);
+                                        Allinone.Universal.CipExtend.QcBoatID = fileInfo.Name.Replace(fileInfo.Extension, "");
+                                        JetEazy.LoggerClass.Instance.WriteLog($"写入boatID{Allinone.Universal.CipExtend.QcBoatID}");
+                                    }
+                                    using (BJCellForm bJCellForm = new BJCellForm(Allinone.Universal.MapBuilder.GetCells()))
+                                    {
+                                        bJCellForm.ShowDialog();
+
+                                    }
+                                    JetEazy.LoggerClass.Instance.WriteLog($"选择cell {Allinone.Universal.MapCellIndex}");
+                                }
+                                else
+                                {
+                                    VsMSG.Instance.Warning($"创建map窗口失败。");
+                                }
+                            }
+                        }
+                    }
+
+                    break;
             }
         }
 

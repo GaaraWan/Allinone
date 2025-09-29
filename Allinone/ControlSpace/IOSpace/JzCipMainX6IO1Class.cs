@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using JetEazy.ControlSpace.PLCSpace;
+using Newtonsoft.Json.Linq;
 
 namespace Allinone.ControlSpace.IOSpace
 {
@@ -386,6 +387,23 @@ namespace Allinone.ControlSpace.IOSpace
             return iret;
         }
 
+        #region BJ
+
+        public void SetRowCol(string row,string col)
+        {
+            if (m_IsDebug)
+            {
+                return;
+            }
+            FATEKAddressClass address = getCipAdress("iQcXPos");
+            CIP.WriteVari(address.Address0, col);
+            FATEKAddressClass address1 = getCipAdress("iQcYPos");
+            CIP.WriteVari(address1.Address0, row);
+
+        }
+
+        #endregion
+
         #region 东莞-Rayxin
 
         /// <summary>
@@ -429,7 +447,7 @@ namespace Allinone.ControlSpace.IOSpace
             {
                 if (m_IsDebug)
                 {
-                    string str = $"ABCDEFG;HI,ABCDEFG;HI,ABCDEFG;HI";// getQcDebugStrIndex(11);
+                    string str = $"N33320;PF0810001 100;HI,,ABCDEFG";// getQcDebugStrIndex(11);
                     return str;
                 }
                 FATEKAddressClass address = new FATEKAddressClass($"0:Gvl_Status.Data[5].MarkedContent1");

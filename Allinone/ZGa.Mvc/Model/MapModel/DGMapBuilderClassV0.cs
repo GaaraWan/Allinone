@@ -26,7 +26,7 @@ namespace Allinone.ZGa.Mvc.Model.MapModel
             int _index = 0;
             foreach (string s in strings)
             {
-                if (!string.IsNullOrEmpty(s))
+                //if (!string.IsNullOrEmpty(s)) //东莞可能有空的字串 所以这边都接受
                 {
                     DGDataItem bJDataItem = new DGDataItem();
                     bJDataItem.Index = _index;
@@ -58,6 +58,8 @@ namespace Allinone.ZGa.Mvc.Model.MapModel
         public string[] GetCellContent(int cellIndex = 0)
         {
             if (cellIndex < 0 || cellIndex >= _bjDataList.Count)
+                return new string[1] { "NONE" };
+            if(_bjDataList[cellIndex].Datas == null)
                 return new string[1] { "NONE" };
             string[] cells = new string[_bjDataList[cellIndex].Datas.Length];
             for (int i = 0; i < _bjDataList[cellIndex].Datas.Length; i++)

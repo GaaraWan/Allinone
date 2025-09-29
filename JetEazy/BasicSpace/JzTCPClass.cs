@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Org.BouncyCastle.Ocsp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -800,6 +801,9 @@ namespace JetEazy.BasicSpace
         Thread threadclient = null;
         Socket socketclient = null;
 
+        int iIndex = 0;
+        int iCount = 5;
+
         string host = "127.0.0.1";
         int port = 6000;
 
@@ -1023,7 +1027,7 @@ namespace JetEazy.BasicSpace
 
                 //socketclient.ReceiveTimeout = 1000;
                 //socketclient.SendTimeout = 1000;
-
+                
                 m_IsConnecting = true;
                 OnTriggerString("S,OK");
 
@@ -1041,6 +1045,9 @@ namespace JetEazy.BasicSpace
 
             if (iret == 0)
             {
+                iIndex = 0;
+                iCount = 5;
+
                 //新建一个通讯线程，一直接收来自服务的消息
                 threadclient = new Thread(RecvSend);
                 threadclient.IsBackground = true;
@@ -1086,41 +1093,18 @@ namespace JetEazy.BasicSpace
                 {
                     byte[] bytes = new byte[1024 * 1024];
                     int recStr = socketclient.Receive(bytes, bytes.Length, 0);
-                    //string strMsg = Encoding.UTF8.GetString(bytes, 0, recStr);
-                    //strMsg = string.Empty;
-
-                    //int i = 0;
-                    //foreach (byte b in bytes)
-                    //{
-                    //    strMsg += b.ToString() + " ";
-                    //    i++;
-
-                    //    if (i >= 100)
-                    //    {
-                    //        strMsg += Environment.NewLine;
-                    //        i = 0;
-                    //    }
-                    //}
-
-                    //this.textBox1.AppendText(Utity.LineFeed + strMsg + Utity.LineFeed);
-                    //CommonLogClass.Instance.Log2("ClientSocket " + host + ":" + port.ToString() + " 接收数据！" + strMsg);
-
                     //解析指令
                     if (recStr == 0)
                     {
-                        //continue;
-
-                        socketclient.Close();
-
+                        socketclient?.Close();
+                        if (socketclient != null)
+                            socketclient = null;
                         m_IsConnecting = false;
                         OnTriggerString("S,FAIL");
-
                         Log.Log2("ClientSocket " + host + ":" + port.ToString() + " 远端服务器断开！无数据！");
-
                         break;
                     }
                     tcpItemData _tcp = new tcpItemData(bytes);
-
                     Log.Log2("ClientSocket " + host + ":" + port.ToString() + " 接收数据！" + _tcp.RevData);
                     switch (_tcp.Cmd)
                     {
@@ -1136,13 +1120,27 @@ namespace JetEazy.BasicSpace
                 }
                 catch (Exception ex)
                 {
-                    socketclient.Close();
+                    //if (iIndex < iCount)
+                    //{
+                    //    Log.Log2($"ClientSocket {host}:{port} 接收异常连接断开！a过滤次数{iIndex}");
+                    //    Log.Log2($"ClientSocket {host}:{port} 接收异常连接断开！{ex.Message}");
+                    //    Log.Log2($"ClientSocket {host}:{port} 接收异常连接断开！{ex.StackTrace}");
+                    //    Log.Log2($"ClientSocket {host}:{port} 接收异常连接断开！{ex.Source}");
+                    //    iIndex++;
+                    //    continue;
+                    //}
 
-                    m_IsConnecting = false;
-                    OnTriggerString("S,FAIL");
-
-                    Log.Log2("ClientSocket " + host + ":" + port.ToString() + " 接收异常连接断开！" + ex.Message);
-                    break;
+                    //socketclient?.Close();
+                    //if (socketclient != null)
+                    //    socketclient = null;
+                    //m_IsConnecting = false;
+                    //OnTriggerString("S,FAIL");
+                    Log.Log2($"ClientSocket {host}:{port} 接收异常！b过滤次数{iIndex}");
+                    Log.Log2($"ClientSocket {host}:{port} 接收异常！{ex.Message}");
+                    Log.Log2($"ClientSocket {host}:{port} 接收异常！{ex.StackTrace}");
+                    Log.Log2($"ClientSocket {host}:{port} 接收异常！{ex.Source}");
+                    iIndex++;
+                    //break;
                 }
             }
 
