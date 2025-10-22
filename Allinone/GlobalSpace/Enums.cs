@@ -590,6 +590,10 @@ namespace Allinone
         NONE = 0,
         MAIN = 1,
         RELATION = 2,
+        [Browsable(false)]
+        MAIN_LEFT = 3,
+        [Browsable(false)]
+        MAIN_RIGHT = 4,
     }
     public enum BorderTypeEnum : int
     {

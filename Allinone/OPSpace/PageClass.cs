@@ -1,19 +1,20 @@
-﻿using System;
+﻿using Allinone.BasicSpace;
+using Allinone.FormSpace;
+using JetEazy;
+using JetEazy.BasicSpace;
+using JzMSR.OPSpace;
+using MoveGraphLibrary;
+using ServiceMessageClass;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
-using MoveGraphLibrary;
-
-using JetEazy;
-using ServiceMessageClass;
-using Allinone.BasicSpace;
-using Allinone.FormSpace;
-using JetEazy.BasicSpace;
+using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace Allinone.OPSpace
 {
@@ -77,6 +78,29 @@ namespace Allinone.OPSpace
         public AnalyzeClass AnalyzeSeed = null;
 
         public AnalyzeClass AnalyzeABSMain = null;
+
+        public AnalyzeClass AnalyzeABSMain_Left = null;
+        public AnalyzeClass AnalyzeABSMain_Right = null;
+
+        int m_UseABSPageIndex = 0;
+        PointF p0=new PointF(0,0);
+        PointF p1=new PointF(0,0);
+        bool m_isSetABSMainPoint = false;//是否設定過絕對座標
+        public void SetABSMainPoint(bool bSet, PointF ep0, PointF ep1)
+        {
+            m_isSetABSMainPoint = bSet;
+            p0 = ep0;
+            p1 = ep1;
+        }
+        PointF p0run = new PointF(0, 0);
+        PointF p1run = new PointF(0, 0);
+        bool m_isSetABSMainPointRun = false;//是否設定過絕對座標
+        public void SetABSMainPointRun(bool bSet, PointF ep0, PointF ep1)
+        {
+            m_isSetABSMainPointRun = bSet;
+            p0run = ep0;
+            p1run = ep1;
+        }
 
         //public int EnvNo = -1;
         //public int RcpNo = -1;
@@ -168,6 +192,10 @@ namespace Allinone.OPSpace
         }
         public void SetbmpRUN(PageOPTypeEnum pageoptype, Bitmap bmp)
         {
+            //如果图片为空则不设置
+            if (bmp == null)
+                return;
+
             bmpRUN[(int)pageoptype]?.Dispose();
             //bmpRUN[(int)pageoptype] = new Bitmap(bmp);
             switch (OPTION)
@@ -1158,12 +1186,19 @@ namespace Allinone.OPSpace
 
             //
 
-            AnalyzeABSMain = A100_01CheckABSMain(AnalyzeRootArray[(int)pageoptype]);
-            if (AnalyzeABSMain != null)
+            switch(Universal.FACTORYNAME)
             {
-                A100_02RunCheckABSMain(AnalyzeRootArray[(int)pageoptype]);
+                //case FactoryName.DAGUI:
+                //    break;
+                default:
+                    AnalyzeABSMain = A100_01CheckABSMain(AnalyzeRootArray[(int)pageoptype]);
+                    if (AnalyzeABSMain != null)
+                    {
+                        A100_02RunCheckABSMain(AnalyzeRootArray[(int)pageoptype]);
+                    }
+                    break;
             }
-
+            
             return isgood;
         }
 
@@ -1180,18 +1215,145 @@ namespace Allinone.OPSpace
             return isgood;
         }
 
+        /// <summary>
+        /// 获取定位点的坐标
+        /// </summary>
+        /// <param name="eAlign">哪个点</param>
+        /// <param name="eTrain">是否训练</param>
+        /// <param name="outptf">输出坐标</param>
+        /// <returns></returns>
+        public bool GetBaseMainPointF(AbsoluteAlignEnum eAlign, bool eTrain, out PointF outptf)
+        {
+            bool ret = false;
+            outptf = new PointF(-99999999, -99999999);
+            switch (eAlign)
+            {
+                case AbsoluteAlignEnum.MAIN_LEFT:
+                    AnalyzeABSMain_Left = A100_01CheckABSMainLeft(AnalyzeRootArray[(int)PageOPTypeEnum.P00]);
+                    if (AnalyzeABSMain_Left != null)
+                    {
+                        ret = true;
+                        if(!eTrain)
+                            outptf = new PointF(AnalyzeABSMain_Left.ALIGNPara.RunCenter.X + AnalyzeABSMain_Left.myOPRectF.X,
+                                                AnalyzeABSMain_Left.ALIGNPara.RunCenter.Y + AnalyzeABSMain_Left.myOPRectF.Y);
+                        else
+                            outptf = new PointF(AnalyzeABSMain_Left.ALIGNPara.OrgCenter.X + AnalyzeABSMain_Left.myOPRectF.X,
+                                                AnalyzeABSMain_Left.ALIGNPara.OrgCenter.Y + AnalyzeABSMain_Left.myOPRectF.Y);
+                    }
+                    break;
+                case AbsoluteAlignEnum.MAIN_RIGHT:
+                    AnalyzeABSMain_Right = A100_01CheckABSMainRight(AnalyzeRootArray[(int)PageOPTypeEnum.P00]);
+                    if (AnalyzeABSMain_Right != null)
+                    {
+                        ret = true;
+                        if (!eTrain)
+                            outptf = new PointF(AnalyzeABSMain_Right.ALIGNPara.RunCenter.X + AnalyzeABSMain_Right.myOPRectF.X,
+                                                AnalyzeABSMain_Right.ALIGNPara.RunCenter.Y + AnalyzeABSMain_Right.myOPRectF.Y);
+                        else
+                            outptf = new PointF(AnalyzeABSMain_Right.ALIGNPara.OrgCenter.X + AnalyzeABSMain_Right.myOPRectF.X,
+                                                AnalyzeABSMain_Right.ALIGNPara.OrgCenter.Y + AnalyzeABSMain_Right.myOPRectF.Y);
+                    }
+                    break;
+            }
+            return ret;
+        }
+        public void A100_02RunCheckLeftRight(AnalyzeClass analyzeroot)
+        {
+            if (!m_isSetABSMainPoint || !m_isSetABSMainPointRun)
+                return;
+
+            if (analyzeroot != null)
+            {
+                foreach (AnalyzeClass analyze in analyzeroot.BranchList)
+                {
+                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.RELATION)
+                    {
+                        PointF ptf = new PointF(analyze.myOPRectF.X,
+                                                analyze.myOPRectF.Y);
+
+                        PointF ptfpatternORG = new PointF(analyze.ALIGNPara.OrgCenter.X + ptf.X,
+                                                          analyze.ALIGNPara.OrgCenter.Y + ptf.Y);
+                        PointF ptfpatternRUN = new PointF(analyze.ALIGNPara.RunCenter.X + ptf.X,
+                                                          analyze.ALIGNPara.RunCenter.Y + ptf.Y);
+                        bool bOK = false;
+                        if (Universal.IsUseCalibration)
+                        {
+                            AoiCalibrationEx.TransformViewToWorld(ptfpatternORG, out PointF orgw);
+                            AoiCalibrationEx.TransformViewToWorld(ptfpatternRUN, out PointF runw);
+                            bOK = analyze.ALIGNPara.CheckAbsOffset2(p0, p1, p0run, p1run, orgw, runw);
+                        }
+                        else
+                        {
+                            bOK = analyze.ALIGNPara.CheckAbsOffset2(p0, p1, p0run, p1run, ptfpatternORG, ptfpatternRUN);
+                        }
+                        if (analyze.IsVeryGood)
+                            analyze.IsVeryGood = !bOK;
+                    }
+                    A100_02RunCheckLeftRight(analyze);
+                }
+            }
+        }
         AnalyzeClass A100_01CheckABSMain(AnalyzeClass analyzeroot)
         {
             if (analyzeroot != null)
             {
                 if (analyzeroot.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                    //|| analyzeroot.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_LEFT
+                    //|| analyzeroot.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_RIGHT)
                     return analyzeroot;
 
                 foreach (AnalyzeClass analyze in analyzeroot.BranchList)
                 {
-                    if (analyze.ALIGNPara.AbsAlignMode != AbsoluteAlignEnum.MAIN)
+                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.RELATION 
+                        || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.NONE)
                         continue;
                     AnalyzeClass temp = A100_01CheckABSMain(analyze);
+                    if (temp != null)
+                        return temp;
+                }
+                return null;
+            }
+            else
+                return null;
+        }
+        AnalyzeClass A100_01CheckABSMainLeft(AnalyzeClass analyzeroot)
+        {
+            if (analyzeroot != null)
+            {
+                if (
+                    analyzeroot.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_LEFT
+                    )
+                    return analyzeroot;
+
+                foreach (AnalyzeClass analyze in analyzeroot.BranchList)
+                {
+                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.RELATION
+                        || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.NONE)
+                        continue;
+                    AnalyzeClass temp = A100_01CheckABSMainLeft(analyze);
+                    if (temp != null)
+                        return temp;
+                }
+                return null;
+            }
+            else
+                return null;
+        }
+        AnalyzeClass A100_01CheckABSMainRight(AnalyzeClass analyzeroot)
+        {
+            if (analyzeroot != null)
+            {
+                if (
+                    analyzeroot.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_RIGHT
+                    )
+                    return analyzeroot;
+
+                foreach (AnalyzeClass analyze in analyzeroot.BranchList)
+                {
+                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.RELATION
+                        || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.NONE)
+                        continue;
+                    AnalyzeClass temp = A100_01CheckABSMainRight(analyze);
                     if (temp != null)
                         return temp;
                 }
@@ -1590,6 +1752,10 @@ namespace Allinone.OPSpace
         {
             return (FromValue >= CompValue - DiffValue) && (FromValue <= CompValue + DiffValue);
         }
+        bool IsInRange(float FromValue, float CompValue, float DiffValue)
+        {
+            return (FromValue >= CompValue - DiffValue) && (FromValue <= CompValue + DiffValue);
+        }
 
         JzFindObjectClass m_Find = new JzFindObjectClass();
         PointF calMarkBlob(Bitmap bmpinput, RectangleF cropRect, int threshold, out RectangleF maxrect, bool isfindWhite = true)
@@ -1615,6 +1781,286 @@ namespace Allinone.OPSpace
 
         #endregion
 
+
+        #region Calibration
+
+        public int XDirCount = 10;
+        public int YDirCount = 10;
+        public float LTX = 100f;
+        public float LTY = 100f;
+        public float XGap = 10f;
+        public float YGap = 10f;
+
+        public CAoiCalibration AoiCalibrationEx = new CAoiCalibration();
+        public void PageAutoCalibration(int pageinex=0)
+        {
+            List<AnalyzeClass> BranchList = AnalyzeRoot.BranchList;
+            #region 自动找出行列
+
+            int Highest = 100000;
+            int HighestIndex = -1;
+            int ReportIndex = 0;
+            List<string> CheckList = new List<string>();
+
+            int i = 0;
+
+            //Clear All Index To 0 and Check the Highest
+
+            foreach (AnalyzeClass keyassign in BranchList)
+            {
+                if (keyassign.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.RELATION)
+                {
+                    keyassign.ReportRowCol = "";
+                    keyassign.ReportIndex = 0;
+                    ReportIndex = 1;
+                }
+                else
+                {
+                    keyassign.ReportRowCol = "";
+                    keyassign.ReportIndex = -1;
+                }
+            }
+
+            i = 0;
+            while (true)
+            {
+                i = 0;
+                Highest = 100000;
+                HighestIndex = -1;
+                foreach (AnalyzeClass keyassign in BranchList)
+                {
+                    if (keyassign.ReportIndex == 0)
+                    {
+                        if (keyassign.myOPRectF.Y < Highest)
+                        {
+                            Highest = (int)keyassign.myOPRectF.Y;
+                            HighestIndex = i;
+                        }
+                    }
+
+                    i++;
+                }
+
+                if (HighestIndex == -1)
+                    break;
+
+                CheckList.Clear();
+
+                //把相同位置的人找出來
+                i = 0;
+                foreach (AnalyzeClass keyassign in BranchList)
+                {
+                    if (keyassign.ReportIndex == 0)
+                    {
+                        if (IsInRange((int)keyassign.myOPRectF.Y, Highest, 50))
+                        {
+                            CheckList.Add(keyassign.myOPRectF.X.ToString("00000000") + "," + i.ToString());
+                        }
+                    }
+                    i++;
+                }
+
+                CheckList.Sort();
+
+                i = 1;
+                foreach (string Str in CheckList)
+                {
+                    string[] Strs = Str.Split(',');
+
+                    BranchList[int.Parse(Strs[1])].ReportIndex = ReportIndex;
+                    BranchList[int.Parse(Strs[1])].ReportRowCol = CheckList.Count.ToString() + "-" + i.ToString();
+                    BranchList[int.Parse(Strs[1])].DataReportIndex = ReportIndex;
+                    ReportIndex++;
+                    i++;
+                }
+            }
+
+            ////从大到小排序
+            //BranchList.Sort((item1, item2) => { return item1.ReportIndex > item2.ReportIndex ? -1 : 1; });
+
+            //从小到大排序
+            BranchList.Sort((item1, item2) => { return item1.ReportIndex >= item2.ReportIndex ? 1 : -1; });
+
+            int icount = 0;
+            foreach (AnalyzeClass analyze in BranchList)
+            {
+                if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.RELATION)
+                {
+                    m_Mapping_Col = int.Parse(analyze.ReportRowCol.Split('-')[0]);
+                    icount++;
+                }
+            }
+            if (m_Mapping_Col != 0)
+                m_Mapping_Row = icount / m_Mapping_Col;
+            else
+                m_Mapping_Row = 0;
+
+            #endregion
+
+            XDirCount = m_Mapping_Col;
+            YDirCount = m_Mapping_Row;
+
+            switch (pageinex)
+            {
+                case 0:
+                    LTX = 0;
+                    break;
+                case 1:
+                    LTX = 130;
+                    break;
+                case 2:
+                    LTX = 270;
+                    break;
+            }
+
+            LTY = 0;
+            XGap = 10;
+            YGap = 10;
+
+            #region 校正
+            i = 0;
+            int j = 0;
+            bool ret = true;
+            float updownoffset = 80f;//方框上下波動範圍
+
+            int RowIndex = 0;
+            int ColumnIndex = 0;
+
+            List<string> RegionCheckList = new List<string>();
+            List<string> RegionArrayList = new List<string>();
+
+            Highest = 1000000;
+
+            foreach (AnalyzeClass msritem in BranchList)
+            {
+                if (msritem.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.RELATION)
+                {
+                    msritem.RowTag = 0;
+                }
+                else
+                {
+                    msritem.RowTag = -1;
+                }
+            }
+
+            RowIndex = 0;
+
+            while (true)
+            {
+                Highest = 1000000;
+                RegionCheckList.Clear();
+
+                foreach (AnalyzeClass msritem in BranchList)
+                {
+                    //if (region.Cell.CellProperty == CellPropertyEnum.STATIC)
+                    //{
+                    if (msritem.CenterPointF.Y < Highest && msritem.RowTag == 0)
+                    {
+                        Highest = (int)msritem.CenterPointF.Y;
+                    }
+                    //}
+                }
+
+                if (Highest == 1000000)
+                {
+                    if (RowIndex != YDirCount)
+                    {
+                        //MessageBox.Show("請確認相關資料是否正確。");
+                        ret = false;
+                    }
+                    break;
+                }
+
+                i = 0;
+                foreach (AnalyzeClass msritem in BranchList)
+                {
+                    //if (region.Cell.CellProperty == CellPropertyEnum.STATIC)
+                    //{
+                    if (IsInRange(Highest, msritem.CenterPointF.Y, updownoffset) && msritem.RowTag == 0)
+                    {
+                        RegionCheckList.Add((((int)msritem.CenterPointF.X).ToString("000000")) + "#" + i.ToString());
+                    }
+                    //}
+                    i++;
+                }
+
+                RegionCheckList.Sort();
+
+                if (RegionCheckList.Count != XDirCount)
+                {
+                    //MessageBox.Show("請確認相關資料是否正確。");
+
+                    ret = false;
+                    break;
+                }
+
+                ColumnIndex = 0;
+
+                string RegionArrayString = "";
+
+                foreach (string str in RegionCheckList)
+                {
+                    string[] strs = str.Split('#');
+
+                    int regionindex = int.Parse(strs[1]);
+
+                    BranchList[regionindex].RelatePointF = new PointF(LTX + XGap * (float)ColumnIndex, LTY + YGap * (float)RowIndex);
+                    BranchList[regionindex].RowTag = 10;
+
+                    RegionArrayString += regionindex.ToString() + ",";
+
+                    ColumnIndex++;
+                }
+
+                RegionArrayString = RemoveLastChar(RegionArrayString, 1);
+
+                RegionArrayList.Add(RegionArrayString);
+
+                RowIndex++;
+            }
+
+            if (ret)
+            {
+                PointF[,] ScreenArray = new PointF[YDirCount, XDirCount];
+                PointF[,] RealArray = new PointF[YDirCount, XDirCount];
+
+                i = 0;
+
+                foreach (string Str in RegionArrayList)
+                {
+                    string[] strs = Str.Split(',');
+
+                    j = 0;
+                    foreach (string str in strs)
+                    {
+                        AnalyzeClass msritem = BranchList[int.Parse(str)];
+
+                        ScreenArray[i, j] = msritem.CenterPointF;
+                        RealArray[i, j] = msritem.RelatePointF;
+
+                        j++;
+                    }
+                    i++;
+                }
+
+                CAoiCalibration LtCalibration = AoiCalibrationEx;
+
+                LtCalibration.Dispose();
+                LtCalibration.SetCalibrationPoints(ScreenArray, RealArray);
+                LtCalibration.CalculateTransformMatrix();
+            }
+            #endregion
+
+        }
+        string RemoveLastChar(string Str, int Count)
+        {
+            if (Str.Length < Count)
+                return "";
+
+            return Str.Remove(Str.Length - Count, Count);
+        }
+
+        #endregion
 
         #endregion
 

@@ -1,17 +1,17 @@
-﻿using System;
+﻿using Allinone.ZGa.Mvc.Model.MarkReferenceSystemModel;
+using AUVision;
+using JetEazy;
+using JetEazy.BasicSpace;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
-using JetEazy;
-using AUVision;
-using JetEazy.BasicSpace;
-using VisionDesigner.AlmightyPatMatch;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Windows.Documents;
 using VisionDesigner;
+using VisionDesigner.AlmightyPatMatch;
 
 namespace Allinone.OPSpace.AnalyzeSpace
 {
@@ -786,6 +786,74 @@ namespace Allinone.OPSpace.AnalyzeSpace
             return AuFindTrain(bmpPattern, bmpMask, brightness, contrast);
         }
 
+        public bool CheckAbsOffset_BAK01(PointF ptfOrg, PointF ptfRun, RectangleF oprectf)
+        {
+            bool ret = false;
+            if (AbsAlignMode == AbsoluteAlignEnum.RELATION)
+            {
+                PointF ptfpatternORG = new PointF(OrgCenter.X + oprectf.X, OrgCenter.Y + oprectf.Y);
+                PointF ptfpatternRUN = new PointF(RunCenter.X + oprectf.X, RunCenter.Y + oprectf.Y);
+
+                // 示例数据
+                PointF theoreticalMark = ptfOrg;      // 理论Mark点位置
+                PointF actualMark = ptfRun;           // 实际Mark点位置
+                PointF theoreticalChar = ptfpatternORG;     // 理论字符位置
+
+                // 创建计算器
+                var calculator = new AOICharOffsetCalculator(
+                    theoreticalMark, actualMark, theoreticalChar);
+
+                // 计算基本偏移（无旋转）
+                Console.WriteLine("=== 基本偏移计算 ===");
+                var result1 = calculator.CalculateOffset(ptfpatternRUN);
+                //PrintResult(result1);
+
+                //// 计算带旋转的偏移
+                //Console.WriteLine("\n=== 带旋转的偏移计算 ===");
+                //var result2 = calculator.CalculateOffsetWithRotation(1.5); // 1.5度旋转
+                //PrintResult(result2);
+
+                double xshiftrunxx = Math.Abs(result1.DeltaX) * MTResolution;
+                double yshiftrunyy = Math.Abs(result1.DeltaY) * MTResolution;
+
+                WorkStatusClass biasrunstatus = new WorkStatusClass(AnanlyzeProcedureEnum.BIAS);
+                string processstring = "Start " + RelateAnalyzeString + " Alignment " + (false ? "<TRAIN>" : "<RUN>") + " Run." + Environment.NewLine;
+                string errorstring = "";
+                ReasonEnum reason = ReasonEnum.PASS;
+                string offsetStr = "X偏移=" + xshiftrunxx.ToString("0.00");
+                offsetStr += " Y偏移=" + yshiftrunyy.ToString("0.00");
+                if (xshiftrunxx > ABSOffset || yshiftrunyy > ABSOffset)
+                //if(Offset > ABSOffset)
+                {
+
+                    ret = true;
+                    //isgood = false;
+                    //PassInfo.BiasOffset = "偏移 " + Offset.ToString("0.00");
+                    processstring = "The ABSOffset is " + Offset.ToString("0.00") + " > " + ABSOffset.ToString("0.00") + " Error." + Environment.NewLine;
+                    processstring = "The ABSOffset is " + offsetStr + " > " + ABSOffset.ToString("0.00") + " Error." + Environment.NewLine;
+                    errorstring = RelateAnalyzeString + "The Offset is " + Offset.ToString("0.00") + " > " + ABSOffset.ToString("0.00") + " Error." + Environment.NewLine;
+                    errorstring = Offset.ToString("0.00");
+                    errorstring = offsetStr;
+                    reason = ReasonEnum.NG;
+                }
+                else
+                {
+                    //PassInfo.BiasOffset = "偏移 " + Offset.ToString("0.00");
+                    processstring = "The ABSOffset is " + Offset.ToString("0.00") + " < " + ABSOffset.ToString("0.00") + " Pass." + Environment.NewLine;
+                    processstring = "The ABSOffset is " + offsetStr + " < " + ABSOffset.ToString("0.00") + " Pass." + Environment.NewLine;
+                    errorstring = "";
+                    reason = ReasonEnum.PASS;
+                }
+
+                biasrunstatus.SetWorkStatus(bmpPattern, bmpPattern, bmpPattern, reason, errorstring, processstring, PassInfo);
+
+                //if (istrain)
+                //    TrainStatusCollection.Add(biasrunstatus);
+                //else
+                RunStatusCollection.Add(biasrunstatus);
+            }
+            return ret;
+        }
         public bool CheckAbsOffset(PointF ptfOrg, PointF ptfRun, RectangleF oprectf)
         {
             bool ret = false;
@@ -846,6 +914,63 @@ namespace Allinone.OPSpace.AnalyzeSpace
                 //if (istrain)
                 //    TrainStatusCollection.Add(biasrunstatus);
                 //else
+                RunStatusCollection.Add(biasrunstatus);
+            }
+            return ret;
+        }
+        public bool CheckAbsOffset2(PointF p0, PointF p1,
+                                    PointF p0run,PointF p1run, 
+                                    PointF ptfpatternORG, PointF ptfpatternRUN)
+        {
+            bool ret = false;
+            if (AbsAlignMode == AbsoluteAlignEnum.RELATION)
+            {
+                //PointF ptfpatternORG = new PointF(OrgCenter.X + oprectf.X, OrgCenter.Y + oprectf.Y);
+                //PointF ptfpatternRUN = new PointF(RunCenter.X + oprectf.X, RunCenter.Y + oprectf.Y);
+
+                // 创建坐标系转换器
+                var coordSystem0 = new MarkCoordinateSystem();
+                coordSystem0.Initialize(p0, p1);
+                PointF org = coordSystem0.WorldToMarkCoordinates(ptfpatternORG);
+
+                coordSystem0.Initialize(p0run, p1run);
+                PointF run = coordSystem0.WorldToMarkCoordinates(ptfpatternRUN);
+
+                double xshiftrunxx = Math.Abs(org.X - run.X);
+                double yshiftrunyy = Math.Abs(org.Y - run.Y);
+
+                //xshiftrunxx *= MTResolution;
+                //yshiftrunyy *= MTResolution;
+
+                WorkStatusClass biasrunstatus = new WorkStatusClass(AnanlyzeProcedureEnum.BIAS);
+                string processstring = "Start " + RelateAnalyzeString + " Alignment " + (false ? "<TRAIN>" : "<RUN>") + " Run." + Environment.NewLine;
+                string errorstring = "";
+                ReasonEnum reason = ReasonEnum.PASS;
+                string offsetStr = "X偏移=" + xshiftrunxx.ToString("0.00");
+                offsetStr += " Y偏移=" + yshiftrunyy.ToString("0.00");
+                if (xshiftrunxx > ABSOffset || yshiftrunyy > ABSOffset)
+                {
+                    ret = true;
+                    processstring = "The ABSOffset is " + offsetStr + " > " + ABSOffset.ToString("0.00") + " Error." + Environment.NewLine;
+                    errorstring = offsetStr;
+                    reason = ReasonEnum.NG;
+                }
+                else
+                {
+                    
+                    processstring = "The ABSOffset is " + offsetStr + " < " + ABSOffset.ToString("0.00") + " Pass." + Environment.NewLine;
+                    errorstring = "";
+                    reason = ReasonEnum.PASS;
+                }
+
+                biasrunstatus.SetWorkStatus(bmpPattern, 
+                    bmpPattern, 
+                    bmpPattern, 
+                    reason, 
+                    errorstring, 
+                    processstring, 
+                    PassInfo);
+
                 RunStatusCollection.Add(biasrunstatus);
             }
             return ret;

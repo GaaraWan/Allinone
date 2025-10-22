@@ -5718,11 +5718,20 @@ namespace Allinone.FormSpace
                     switch (OPTION)
                     {
                         case OptionEnum.MAIN_X6:
-                            if (INI.IsOnlyShowCurrentImage)
+                            if (INI.IsOnlyShowCurrentImage || Universal.IsNoUseIO)
                             {
                                 string[] vs = str.Split('#');
                                 bool bOK = int.TryParse(vs[1], out pageindex);
-                                DISPUIShowCurrentMover(pageindex);
+                                switch (Universal.jetMappingType)
+                                {
+                                    case JetMappingType.MAPPING_A:
+                                        DISPUIShowCurrentMover(0);
+                                        break;
+                                    default:
+                                        if (pageindex < AlbumNow.ENVList[0].PageList.Count)
+                                            DISPUIShowCurrentMover(pageindex);
+                                        break;
+                                }
                                 switch (vs[0])
                                 {
                                     case "ONLINE":
@@ -5738,6 +5747,7 @@ namespace Allinone.FormSpace
                                         }
                                         break;
                                 }
+
                             }
                             break;
                         case OptionEnum.MAIN_SDM5:

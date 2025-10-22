@@ -542,7 +542,9 @@ namespace Allinone.UISpace.RUNUISpace
                         {
                             //analyze.myOPRectF.X += page.GetbmpORG().Width * page.No;
 
-                            if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                            if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN
+                                || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_LEFT
+                                || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_RIGHT)
                                 continue;
 
                             AnalyzeClass analyze1 = new AnalyzeClass();
@@ -854,10 +856,11 @@ namespace Allinone.UISpace.RUNUISpace
                     switch(Universal.FACTORYNAME)
                     {
                         case FactoryName.DONGGUAN:
+                        case FactoryName.RIYUEXING:
 
                             label11.Visible = false;
                             label24.Visible = false;
-
+                            label20.Visible = Universal.IsNoUseIO;
                             break;
                     }
 
@@ -1497,11 +1500,30 @@ namespace Allinone.UISpace.RUNUISpace
                                 //StringBuilder sb = new StringBuilder();
                                 foreach (var myLabel in m_MappingItem)
                                 {
-                                    int _colorIndex = _getColorIndex(myLabel.BackColor);
-                                    list.Add(_colorIndex);
+                                    int _colorIndex0 = _getColorIndex(myLabel.BackColor);
+
+                                    //RGB 0 128 0   
+                                    int _colorIndex1;
+                                    if (myLabel.BackColor.R == 0 && myLabel.BackColor.G == 128 && myLabel.BackColor.B == 0)
+                                    {
+                                        _colorIndex1 = 1;
+                                    }
+                                     else
+                                    {
+                                        _colorIndex1 = 0;
+                                    }
+
+                                    list.Add(_colorIndex1);
                                     //sb.Append(_colorIndex);
                                     //sb.Append(" ");
                                 }
+
+                                //List<int> ints = new List<int>();
+                                //for(int k=0; k < m_MappingItem.Length; k++)
+                                //{
+                                //    ints.Add(k);
+                                //}
+                                //Universal.CipExtend.QcMapResult(ints.ToArray());
 
                                 Universal.CipExtend.QcMapResult(list.ToArray());
 
@@ -1517,7 +1539,7 @@ namespace Allinone.UISpace.RUNUISpace
 
                                 JzMainSDPositionParas.ReportReset();
 
-                                EnvClass env2 = AlbumNow.ENVList[0];
+                                //EnvClass env2 = AlbumNow.ENVList[0];
                                 if (m_MappingItem == null)
                                     return;
                                 string messageStr2 = string.Empty;
@@ -1560,7 +1582,9 @@ namespace Allinone.UISpace.RUNUISpace
                         {
                             foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                             {
-                                if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                                if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN
+                                    || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_LEFT
+                                || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_RIGHT)
                                     continue;
                                 BranchList.Add(analyze);
                             }
@@ -2061,7 +2085,9 @@ namespace Allinone.UISpace.RUNUISpace
             {
                 foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                 {
-                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN
+                        || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_LEFT
+                                || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_RIGHT)
                         continue;
                     BranchList.Add(analyze);
                 }
@@ -2146,7 +2172,9 @@ namespace Allinone.UISpace.RUNUISpace
             {
                 foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                 {
-                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN
+                        || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_LEFT
+                                || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_RIGHT)
                         continue;
                     BranchList.Add(analyze);
                 }
@@ -2202,7 +2230,9 @@ namespace Allinone.UISpace.RUNUISpace
             {
                 foreach (AnalyzeClass analyze in page.AnalyzeRoot.BranchList)
                 {
-                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+                    if (analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN
+                        || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_LEFT
+                                || analyze.ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_RIGHT)
                         continue;
                     BranchList.Add(analyze);
                 }

@@ -1,49 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Data.OleDb;
-using System.Data;
-
-using JetEazy;
-using JetEazy.DBSpace;
-using JetEazy.BasicSpace;
-using JetEazy.ControlSpace;
-using JzOCR.OPSpace;
-using JzMSR.OPSpace;
-using JzASN.OPSpace;
-using JzKHC.OPSpace;
-
-using JzScreenPoints.OPSpace;
-using AllinOne.Jumbo.Net;
-using AllinOne.Jumbo.Net.Common;
-
+﻿using Allinone.BasicSpace;
+using Allinone.ControlSpace;
+using Allinone.ControlSpace.MachineSpace;
 using Allinone.Crystal.Net;
 using Allinone.Crystal.Net.Common;
-
 using Allinone.OPSpace;
-using Allinone.ControlSpace;
 using Allinone.OPSpace.ResultSpace;
-using Allinone.ControlSpace.MachineSpace;
-using System.Windows.Forms;
-using System.Security.Cryptography;
-using System.Diagnostics;
-using EzSegClientLib;
-using AForge.Controls;
-using JetEazy.Interface;
-using JetEazy.CCDSpace.CamLinkDriver;
-using FreeImageAPI;
-using Allinone.BasicSpace;
-using System.Globalization;
-using static MFApi.Script;
-using Newtonsoft.Json.Linq;
-using Allinone.ZGa.Mvc.Model.MapModel;
-using System.Text.RegularExpressions;
-using JetEazy.PlugSpace.BarcodeEx;
 using Allinone.ZGa.Mvc.Model.BarcodeModel;
+using Allinone.ZGa.Mvc.Model.MapModel;
+using Allinone.ZGa.Mvc.Model.MarkReferenceSystemModel;
+using AllinOne.Jumbo.Net;
+using AllinOne.Jumbo.Net.Common;
+using EzSegClientLib;
+using JetEazy;
+using JetEazy.BasicSpace;
+using JetEazy.CCDSpace.CamLinkDriver;
+using JetEazy.ControlSpace;
+using JetEazy.DBSpace;
+using JetEazy.Interface;
+using JzASN.OPSpace;
+using JzKHC.OPSpace;
+using JzMSR.OPSpace;
+using JzOCR.OPSpace;
+using JzScreenPoints.OPSpace;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.OleDb;
+using System.Diagnostics;
+using System.Drawing;
+using System.Globalization;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using System.Windows.Documents;
+using System.Windows.Forms;
 
 namespace Allinone
 {
@@ -53,7 +43,7 @@ namespace Allinone
         public static bool IsNoUseIO = false;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2025/09/28";
+        public static string VersionDate = "2025/10/22";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
         public static OptionEnum OPTION = OptionEnum.MAIN_X6;
@@ -112,7 +102,7 @@ namespace Allinone
             {
                 float ret = 0f;
 
-                switch(OPTION)
+                switch (OPTION)
                 {
                     case OptionEnum.MAIN_X6:
 
@@ -134,7 +124,7 @@ namespace Allinone
                 {
                     case OptionEnum.MAIN_X6:
 
-                        switch(CAMACT)
+                        switch (CAMACT)
                         {
                             case CameraActionMode.CAM_MOTOR_LINESCAN:
                                 ret = 0.014f;
@@ -175,6 +165,7 @@ namespace Allinone
         /// 使用本地图片
         /// </summary>
         public static bool IsLocalPicture = false;
+        public static bool IsUseCalibration = false;
 
         public static UserOptionEnum PassOption = UserOptionEnum.ALL;
 
@@ -482,7 +473,7 @@ namespace Allinone
         }
         public static bool Initial(int langindex)
         {
-            //TestProgram();
+            TestProgram();
 
             //int iWeek = GetWeekNumber();
 
@@ -521,10 +512,10 @@ namespace Allinone
             JetEazy.BasicSpace.LanguageExClass.Instance.Load(Universal.WORKPATH);
             JetEazy.BasicSpace.LanguageExClass.Instance.LanguageIndex = INI.LANGUAGE;
             //JetEazy.BasicSpace.LanguageExClass.Instance.FirstCsv = true;
-            
+
             string ccd_type_filepath = "";
 
-            switch(Universal.OPTION)
+            switch (Universal.OPTION)
             {
                 case OptionEnum.MAIN_X6:
 
@@ -1258,12 +1249,23 @@ namespace Allinone
             switch (VERSION)
             {
                 case VersionEnum.ALLINONE:
-                    switch(OPTION)
+                    switch (OPTION)
                     {
                         case OptionEnum.MAIN:
                             MSRCollectionClass.MSRCollectionPath = $@"{PROGRAMME_ROOT}\JETEAZY\MSR";
                             MSRCollection = new MSRCollectionClass();
                             MSRCollection.Initial();
+                            break;
+                        case OptionEnum.MAIN_X6:
+                            //switch(FACTORYNAME)
+                            //{
+                            //    case FactoryName.DAGUI:
+                            //        MSRCollectionClass.MSRCollectionPath = $@"{PROGRAMME_ROOT}\JETEAZY\MSR";
+                            //        MSRCollection = new MSRCollectionClass();
+                            //        MSRCollection.Initial();
+                            //        break;
+                            //}
+                           
                             break;
                     }
                     break;
@@ -1420,7 +1422,7 @@ namespace Allinone
                             {
                                 MessageBox.Show(ToChangeLanguage("连接打标服务器错误请检查") + "ip=" + INI.tcp_ip + ",port=" + INI.tcp_port.ToString(), "init", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
-                            if(Universal.IsNoUseCCD)
+                            if (Universal.IsNoUseCCD)
                             {
                                 if (X6_HANDLE_CLIENT == null)
                                     X6_HANDLE_CLIENT = new ClientSocket("handle");
@@ -1432,7 +1434,7 @@ namespace Allinone
                                 if (X6_HANDLE_CLIENT == null)
                                     X6_HANDLE_CLIENT = new ClientSocket("handle");
                             }
-                           
+
                             X6_HANDLE_CLIENT.Host = INI.tcp_handle_ip;
                             X6_HANDLE_CLIENT.Port = INI.tcp_handle_port;
                             iret = X6_HANDLE_CLIENT.ConnectServer(!INI.tcp_handle_open);
@@ -2227,7 +2229,7 @@ namespace Allinone
 
                             JZMAINSDPOSITIONPARA = new JzMainSDPositionParaClass(Universal.WORKPATH + "\\pos");
                             JZMAINSDPOSITIONPARA.Initial();
-                          
+
                             //JZMAINSDPOSITIONPARA.SaveMySqlControl();
                             JZMAINSDPOSITIONPARA.SetLogPath("D:\\log\\log.db.collect");
                             JZMAINSDPOSITIONPARA.OpenDB();
@@ -2257,7 +2259,7 @@ namespace Allinone
                             break;
                         case OptionEnum.MAIN_SDM2:
 
-                            switch(myRobotType)
+                            switch (myRobotType)
                             {
                                 case RobotType.HCFA:
                                     opstr += "1,";  //一個 PLC
@@ -2411,7 +2413,7 @@ namespace Allinone
                     //        break;
                     //}
                     IxLineScan = new Linescan_Dvp2();
-                    IxLineScan.Init(JetEazy.CCDSpace.CameraConfig.Instance.cameras[0].IsDebug, 
+                    IxLineScan.Init(JetEazy.CCDSpace.CameraConfig.Instance.cameras[0].IsDebug,
                                     JetEazy.CCDSpace.CameraConfig.Instance.cameras[0].ToCameraString());
                     ret = IxLineScan.Open();
 
@@ -2420,7 +2422,7 @@ namespace Allinone
                     {
                         if (INI.IsOpenAutoChangeRecipe)
                         {
-                            IxAreaCam =new Linescan_Dvp2();
+                            IxAreaCam = new Linescan_Dvp2();
                             IxAreaCam.Init(JetEazy.CCDSpace.CameraConfig.Instance.cameras[1].IsDebug,
                                            JetEazy.CCDSpace.CameraConfig.Instance.cameras[1].ToCameraString());
                             ret = IxAreaCam.Open();
@@ -2485,7 +2487,7 @@ namespace Allinone
         public static void Close()
         {
             CCDCollection.Close();
-            switch(OPTION)
+            switch (OPTION)
             {
                 case OptionEnum.MAIN_SDM5:
                 case OptionEnum.MAIN_X6:
@@ -2734,25 +2736,43 @@ namespace Allinone
 
         static void TestProgram()
         {
-            List<AnalyzeClass> AList = new List<AnalyzeClass>();
-            List<AnalyzeClass> BList = new List<AnalyzeClass>();
+            //List<AnalyzeClass> AList = new List<AnalyzeClass>();
+            //List<AnalyzeClass> BList = new List<AnalyzeClass>();
 
-            AList.Add(new AnalyzeClass());
-            AList[0].AliasName = "FUCK";
-            AList.Add(new AnalyzeClass());
-            AList[1].AliasName = "DAMN";
-            AList.Add(new AnalyzeClass());
-            AList[2].AliasName = "SHIT";
+            //AList.Add(new AnalyzeClass());
+            //AList[0].AliasName = "FUCK";
+            //AList.Add(new AnalyzeClass());
+            //AList[1].AliasName = "DAMN";
+            //AList.Add(new AnalyzeClass());
+            //AList[2].AliasName = "SHIT";
 
-            foreach (AnalyzeClass analye in AList)
-            {
-                BList.Add(analye);
-            }
+            //foreach (AnalyzeClass analye in AList)
+            //{
+            //    BList.Add(analye);
+            //}
 
-            AList.Clear();
+            //AList.Clear();
 
+            PointF p0 = new PointF(0, 0);
+            PointF p0run = new PointF(0, 1);
+            PointF p1 = new PointF(10, 0);
+            PointF p1run = new PointF(10, 1);
+            //PointF OrgCenter = new PointF(5, 0);
+            //PointF RunCenter = new PointF(5, 1);
 
-            
+            PointF ptfpatternORG = new PointF(5,0);
+            PointF ptfpatternRUN = new PointF(5,2);
+
+            // 创建坐标系转换器
+            var coordSystem0 = new MarkCoordinateSystem();
+            coordSystem0.Initialize(p0, p1);
+            PointF org = coordSystem0.WorldToMarkCoordinates(ptfpatternORG);
+
+            coordSystem0.Initialize(p0run, p1run);
+            PointF run = coordSystem0.WorldToMarkCoordinates(ptfpatternRUN);
+
+            double xshiftrunxx = Math.Abs(org.X - run.X);
+            double yshiftrunyy = Math.Abs(org.Y - run.Y);
 
         }
 

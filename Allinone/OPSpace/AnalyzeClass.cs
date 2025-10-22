@@ -99,6 +99,17 @@ namespace Allinone.OPSpace
         /// </summary>
         public bool IsByPass = false;
         public int DataReportIndex = 0;
+        public int RowTag = 0;
+        public PointF CenterPointF
+        {
+            get
+            {
+                return
+                    new PointF(ALIGNPara.OrgCenter.X + myOPRectF.X,
+                    ALIGNPara.OrgCenter.Y + myOPRectF.Y);
+            }
+        }
+        public PointF RelatePointF = new PointF();
 
         /// <summary>
         /// 設定檢查的2D條碼
@@ -1478,7 +1489,9 @@ namespace Allinone.OPSpace
         }
         public bool IsHaveBranchSeed()
         {
-            if (ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+            if (ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN
+                || ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_LEFT
+                || ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_RIGHT)
                 return true;
             if (IsSeed)
                 return true;
@@ -1497,7 +1510,9 @@ namespace Allinone.OPSpace
         }
         public bool IsHaveBranchSeedGood()
         {
-            if (ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN)
+            if (ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN 
+                || ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_LEFT
+                || ALIGNPara.AbsAlignMode == AbsoluteAlignEnum.MAIN_RIGHT)
                 return true;
             if (IsSeed)
             {
@@ -4752,7 +4767,8 @@ namespace Allinone.OPSpace
             if (isgood)
                 isgood &= A03_TrainMeAndSubTreeWithA02(IsMultiThread);
 
-            //FillTrainStatus(TrainStatusCollection);
+            //if (Universal.IsNoUseIO)
+            //    FillTrainStatus(TrainStatusCollection);
 
             if (ispopup)
             {
@@ -5093,16 +5109,19 @@ namespace Allinone.OPSpace
                                  isgood &= branch.A03_RunMeAndSubTreeWithA02();
                          });
 #endif
-                    //foreach (AnalyzeClass branchanalyze in BranchList)
-                    //{
-                    //    if (branchanalyze.MaskMethod == MaskMethodEnum.NONE)
-                    //    {
-                    //        if (branchanalyze.TrainStatusCollection.COUNT > 0)
-                    //        {
-                    //            //branchanalyze.FillTrainStatus(TrainStatusCollection, ToLogString());
-                    //        }
-                    //    }
-                    //}
+                    //if (Universal.IsNoUseIO)//加入训练错误 可以显示 哪个键有问题 20251022
+                    {
+                        foreach (AnalyzeClass branchanalyze in BranchList)
+                        {
+                            if (branchanalyze.MaskMethod == MaskMethodEnum.NONE)
+                            {
+                                if (branchanalyze.TrainStatusCollection.NGCOUNT > 0)
+                                {
+                                    branchanalyze.FillTrainStatus(TrainStatusCollection, ToLogString());
+                                }
+                            }
+                        }
+                    }
 
                     strTmers += " E: " + watch.ElapsedMilliseconds;
                     watch.Reset();

@@ -1005,6 +1005,9 @@
     <Compile Include="ZGa.Mvc\Model\MapModel\BJMapBuilderClassV0.cs" />
     <Compile Include="ZGa.Mvc\Model\MapModel\DGMapBuilderClassV0.cs" />
     <Compile Include="ZGa.Mvc\Model\MapModel\IxMapBuilder.cs" />
+    <Compile Include="ZGa.Mvc\Model\MarkReferenceSystemModel\AOICharOffsetCalculator.cs" />
+    <Compile Include="ZGa.Mvc\Model\MarkReferenceSystemModel\MarkReferenceSystem.cs" />
+    <Compile Include="ZGa.Mvc\Model\MarkReferenceSystemModel\OffsetDetectionModel.cs" />
     <EmbeddedResource Include="FormSpace\ADDEEEECODE.resx">
       <DependentUpon>ADDEEEECODE.cs</DependentUpon>
     </EmbeddedResource>

@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.button28 = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.button18 = new System.Windows.Forms.Button();
             this.button7 = new System.Windows.Forms.Button();
@@ -58,7 +59,6 @@
             this.button12 = new System.Windows.Forms.Button();
             this.button11 = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
-            this.adjUI1 = new Allinone.UISpace.AdjUI();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.button10 = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
@@ -71,7 +71,7 @@
             this.button6 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
-            this.button28 = new System.Windows.Forms.Button();
+            this.adjUI1 = new Allinone.UISpace.AdjUI();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -92,6 +92,7 @@
             this.groupBox1.Controls.Add(this.button11);
             this.groupBox1.Controls.Add(this.button1);
             this.groupBox1.Controls.Add(this.adjUI1);
+            this.groupBox1.Controls.Add(this.button2);
             this.groupBox1.Location = new System.Drawing.Point(3, 3);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(866, 241);
@@ -99,10 +100,19 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "環境設定";
             // 
+            // button28
+            // 
+            this.button28.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
+            this.button28.Location = new System.Drawing.Point(6, 170);
+            this.button28.Name = "button28";
+            this.button28.Size = new System.Drawing.Size(80, 30);
+            this.button28.TabIndex = 51;
+            this.button28.Text = "寻找个数";
+            this.button28.UseVisualStyleBackColor = false;
+            // 
             // panel1
             // 
             this.panel1.Controls.Add(this.button18);
-            this.panel1.Controls.Add(this.button7);
             this.panel1.Controls.Add(this.button26);
             this.panel1.Controls.Add(this.button21);
             this.panel1.Controls.Add(this.checkBox4);
@@ -116,14 +126,12 @@
             this.panel1.Controls.Add(this.button8);
             this.panel1.Controls.Add(this.comboBox1);
             this.panel1.Controls.Add(this.checkBox1);
-            this.panel1.Controls.Add(this.button2);
             this.panel1.Controls.Add(this.button9);
-            this.panel1.Controls.Add(this.button13);
             this.panel1.Controls.Add(this.button16);
             this.panel1.Controls.Add(this.button5);
-            this.panel1.Location = new System.Drawing.Point(481, 138);
+            this.panel1.Location = new System.Drawing.Point(481, 91);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(288, 155);
+            this.panel1.Size = new System.Drawing.Size(288, 202);
             this.panel1.TabIndex = 50;
             this.panel1.Visible = false;
             // 
@@ -140,7 +148,7 @@
             // button7
             // 
             this.button7.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button7.Location = new System.Drawing.Point(3, 104);
+            this.button7.Location = new System.Drawing.Point(499, 244);
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(76, 26);
             this.button7.TabIndex = 23;
@@ -191,7 +199,7 @@
             // button19
             // 
             this.button19.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button19.Location = new System.Drawing.Point(98, 76);
+            this.button19.Location = new System.Drawing.Point(193, 94);
             this.button19.Name = "button19";
             this.button19.Size = new System.Drawing.Size(76, 26);
             this.button19.TabIndex = 39;
@@ -281,17 +289,18 @@
             // button2
             // 
             this.button2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button2.Location = new System.Drawing.Point(15, 114);
+            this.button2.Location = new System.Drawing.Point(96, 172);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(76, 26);
             this.button2.TabIndex = 21;
             this.button2.Text = "設定MSR";
             this.button2.UseVisualStyleBackColor = false;
+            this.button2.Visible = false;
             // 
             // button9
             // 
             this.button9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button9.Location = new System.Drawing.Point(111, 108);
+            this.button9.Location = new System.Drawing.Point(132, 118);
             this.button9.Name = "button9";
             this.button9.Size = new System.Drawing.Size(76, 26);
             this.button9.TabIndex = 26;
@@ -301,7 +310,7 @@
             // button13
             // 
             this.button13.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button13.Location = new System.Drawing.Point(85, 94);
+            this.button13.Location = new System.Drawing.Point(581, 240);
             this.button13.Name = "button13";
             this.button13.Size = new System.Drawing.Size(76, 26);
             this.button13.TabIndex = 30;
@@ -406,13 +415,6 @@
             this.button1.TabIndex = 20;
             this.button1.Text = "設定OCR";
             this.button1.UseVisualStyleBackColor = false;
-            // 
-            // adjUI1
-            // 
-            this.adjUI1.Location = new System.Drawing.Point(2, 13);
-            this.adjUI1.Name = "adjUI1";
-            this.adjUI1.Size = new System.Drawing.Size(220, 96);
-            this.adjUI1.TabIndex = 0;
             // 
             // groupBox3
             // 
@@ -535,15 +537,12 @@
             this.button3.Text = "修改";
             this.button3.UseVisualStyleBackColor = false;
             // 
-            // button28
+            // adjUI1
             // 
-            this.button28.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.button28.Location = new System.Drawing.Point(6, 170);
-            this.button28.Name = "button28";
-            this.button28.Size = new System.Drawing.Size(80, 30);
-            this.button28.TabIndex = 51;
-            this.button28.Text = "寻找个数";
-            this.button28.UseVisualStyleBackColor = false;
+            this.adjUI1.Location = new System.Drawing.Point(2, 13);
+            this.adjUI1.Name = "adjUI1";
+            this.adjUI1.Size = new System.Drawing.Size(220, 96);
+            this.adjUI1.TabIndex = 0;
             // 
             // StpUI
             // 
@@ -551,10 +550,12 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.Controls.Add(this.button3);
+            this.Controls.Add(this.button7);
             this.Controls.Add(this.button6);
             this.Controls.Add(this.button4);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.button13);
             this.Name = "StpUI";
             this.Size = new System.Drawing.Size(872, 302);
             this.groupBox1.ResumeLayout(false);

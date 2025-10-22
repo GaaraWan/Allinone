@@ -582,6 +582,8 @@ namespace Allinone.UISpace.STPUISpace
                     button17.Visible = false;
                     checkBox3.Visible = false;
 
+                    //button2.Visible = true;
+
                     break;
             }
 

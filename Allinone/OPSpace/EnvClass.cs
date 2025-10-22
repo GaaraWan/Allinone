@@ -522,8 +522,6 @@ namespace Allinone.OPSpace
             bool isgood = true;
             string str = "";
 
-
-
             if (Universal.IsMultiThread && IsMultiThread)
             {
                 int itrain = 0;
@@ -570,9 +568,158 @@ namespace Allinone.OPSpace
                     }
                 }
             }
-
+            //bool bOK = A01_trainOffsetProcess();
             return isgood;
         }
+
+        public bool A01_trainOffsetProcess()
+        {
+            bool bOK1 = false;
+            int index1 = 0;
+            //获取左定位点
+            PointF LeftPoint = new PointF(0, 0);
+            int i = 0;
+            foreach (PageClass page in PageList)
+            {
+                bOK1 = page.GetBaseMainPointF(AbsoluteAlignEnum.MAIN_LEFT, true, out LeftPoint);
+                if (bOK1)
+                {
+                    //LeftPoint.X += page.PageOPTypeIndex * page.GetbmpORG().Width;
+                    index1 = i;
+                    break;
+                }
+                i++;
+            }
+
+            bool bOK2 = false;
+            int index2 = 0;
+            //获取右定位点
+            PointF RightPoint = new PointF(0, 0);
+            i = 0;
+            foreach (PageClass page in PageList)
+            {
+                bOK2 = page.GetBaseMainPointF(AbsoluteAlignEnum.MAIN_RIGHT, true, out RightPoint);
+                if (bOK2)
+                {
+                    //RightPoint.X += page.PageOPTypeIndex * page.GetbmpORG().Width;
+                    index2 = i;
+                    break;
+                }
+                i++;
+            }
+
+            if (Universal.IsUseCalibration)
+            {
+                i = 0;
+                foreach (PageClass page in PageList)
+                {
+                    if (bOK1 && bOK2)
+                    {
+                        page.PageAutoCalibration(i);
+                    }
+                    i++;
+                }
+                if (bOK1 && bOK2)
+                {
+                    PageList[index1].AoiCalibrationEx.TransformViewToWorld(LeftPoint, out PointF leftpoiintw);
+                    PageList[index2].AoiCalibrationEx.TransformViewToWorld(RightPoint, out PointF rightpointw);
+
+                    foreach (PageClass page in PageList)
+                    {
+                        if (bOK1 && bOK2)
+                        {
+                            page.SetABSMainPoint(bOK1 && bOK2, leftpoiintw, rightpointw);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (PageClass page in PageList)
+                {
+                    if (bOK1 && bOK2)
+                    {
+                        page.SetABSMainPoint(bOK1 && bOK2, LeftPoint, RightPoint);
+                    }
+                }
+            }
+            return bOK1 && bOK2;
+        }
+        public bool A08_RunOffsetProcess()
+        {
+            bool bOK = true;
+            int index1 = 0;
+            int index2 = 0;
+            int i = 0;
+
+            bool bOK1 = false;
+            //获取左定位点
+            PointF LeftPoint = new PointF(0, 0);
+            i = 0;
+            foreach (PageClass page in PageList)
+            {
+                bOK1 = page.GetBaseMainPointF(AbsoluteAlignEnum.MAIN_LEFT, false, out LeftPoint);
+                if (bOK1)
+                {
+                    //LeftPoint.X += page.PageOPTypeIndex * page.GetbmpORG().Width;
+                    index1 = i;
+                    break;
+                }
+                i++;
+            }
+
+            bool bOK2 = false;
+            //获取右定位点
+            PointF RightPoint = new PointF(0, 0);
+            i = 0;
+            foreach (PageClass page in PageList)
+            {
+                bOK2 = page.GetBaseMainPointF(AbsoluteAlignEnum.MAIN_RIGHT, false, out RightPoint);
+                if (bOK2)
+                {
+                    //RightPoint.X += page.PageOPTypeIndex * page.GetbmpORG().Width;
+                    index2 = i;
+                    break;
+                }
+                i++;
+            }
+            if (Universal.IsUseCalibration)
+            {
+                if (bOK1 && bOK2)
+                {
+                    PageList[index1].AoiCalibrationEx.TransformViewToWorld(LeftPoint, out PointF leftpoiintw);
+                    PageList[index2].AoiCalibrationEx.TransformViewToWorld(RightPoint, out PointF rightpointw);
+
+                    foreach (PageClass page in PageList)
+                    {
+                        if (bOK1 && bOK2)
+                        {
+                            page.SetABSMainPointRun(bOK1 && bOK2, leftpoiintw, rightpointw);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (PageClass page in PageList)
+                {
+                    if (bOK1 && bOK2)
+                    {
+                        page.SetABSMainPointRun(bOK1 && bOK2, LeftPoint, RightPoint);
+                    }
+                }
+            }
+
+            //计算每个框的相对距离偏差
+            foreach (PageClass page in PageList)
+            {
+                page.A100_02RunCheckLeftRight(page.AnalyzeRoot);
+            }
+
+            return bOK;
+        }
+
+
 
         JzTimes TestTime = new JzTimes();
         int[] Testms = new int[100];
