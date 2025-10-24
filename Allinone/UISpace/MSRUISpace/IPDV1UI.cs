@@ -27,6 +27,7 @@ namespace Allinone.UISpace.MSRUISpace
         NumericUpDown numBangBangOffsetVal;
         TextBox txtBangBangRectStr;
         TextBox txtNeverOutsideRect;
+        NumericUpDown numZScoreValue;
 
         Label lblIPDMeanValue;
         Label lblIPDThreshold;
@@ -87,7 +88,8 @@ namespace Allinone.UISpace.MSRUISpace
             retstring += txtBangBangRectStr.Text.ToString() + ",";
             retstring += numBangBangOffsetVal.Value.ToString() + ",";
             retstring += txtNeverOutsideRect.Text.ToString() + ",";
-            retstring += cboIPDMethod.SelectedIndex.ToString();
+            retstring += cboIPDMethod.SelectedIndex.ToString() + ",";
+            retstring += numZScoreValue.Value.ToString();
 
             return retstring;
         }
@@ -141,7 +143,7 @@ namespace Allinone.UISpace.MSRUISpace
             txtNeverOutsideRect = textBox3;
 
             numBangBangOffsetVal = numericUpDown17;
-
+            numZScoreValue = numericUpDown1;
             lblIPDPassNG = label31;
 
             lblIPDMeanValue = label21;
@@ -235,6 +237,10 @@ namespace Allinone.UISpace.MSRUISpace
                     numBangBangOffsetVal.Value = decimal.Parse(strs[6]);
                     txtNeverOutsideRect.Text = strs[7];
                     cboIPDMethod.SelectedIndex = int.Parse(strs[8]);
+                }
+                if (strs.Length > 9)
+                {
+                    numZScoreValue.Value = decimal.Parse(strs[9]);
                 }
             }
             catch (Exception ex)

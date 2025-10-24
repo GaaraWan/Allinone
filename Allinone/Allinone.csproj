@@ -1008,6 +1008,7 @@
     <Compile Include="ZGa.Mvc\Model\MarkReferenceSystemModel\AOICharOffsetCalculator.cs" />
     <Compile Include="ZGa.Mvc\Model\MarkReferenceSystemModel\MarkReferenceSystem.cs" />
     <Compile Include="ZGa.Mvc\Model\MarkReferenceSystemModel\OffsetDetectionModel.cs" />
+    <Compile Include="ZGa.Mvc\Model\Utility\WidthAnalyzer.cs" />
     <EmbeddedResource Include="FormSpace\ADDEEEECODE.resx">
       <DependentUpon>ADDEEEECODE.cs</DependentUpon>
     </EmbeddedResource>

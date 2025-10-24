@@ -40,7 +40,7 @@ namespace Allinone
     public class Universal : JetEazy.Universal
     {
         public static bool IsNoUseCCD = false;
-        public static bool IsNoUseIO = false;
+        public static bool IsNoUseIO = true;
         public static bool IsNoUseMotor = IsNoUseIO;
 
         public static string VersionDate = "2025/10/22";

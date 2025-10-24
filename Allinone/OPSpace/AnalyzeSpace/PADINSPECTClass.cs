@@ -1,37 +1,38 @@
-﻿using JetEazy;
+﻿using AForge.Controls;
+using AForge.Imaging;
+using AForge.Imaging.Filters;
+using AForge.Math;
 using AHBlobPro;
+using Allinone.BasicSpace;
+using Allinone.BasicSpace.MVD;
+using Allinone.FormSpace.BasicPG;
+using Allinone.ZGa.Mvc.Model.Utility;
+using Common;
+using EzSegClientLib;
+using FreeImageAPI;
+using iTextSharp.text.html.simpleparser;
+using JetEazy;
+using JetEazy.BasicSpace;
+using JetEazy.OpenCv4;
+using JzKHC;
+using MoveGraphLibrary;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using JetEazy.BasicSpace;
-using EzSegClientLib;
 using System.Drawing.Imaging;
 using System.IO;
-using FreeImageAPI;
-using System.Windows.Forms;
-using JzKHC;
-using Allinone.BasicSpace;
-using System.ComponentModel;
-using System.Windows.Media.Media3D;
-using JetEazy.OpenCv4;
-using Common;
-using System.Windows.Shell;
-using System.Diagnostics;
-using Allinone.BasicSpace.MVD;
-using iTextSharp.text.html.simpleparser;
-using AForge.Imaging.Filters;
-using AForge.Imaging;
-using AForge.Math;
-using AForge.Controls;
-using static Allinone.OPSpace.AnalyzeSpace.PADINSPECTClass;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Windows.Media.Media3D;
+using System.Windows.Shell;
 using VisionDesigner;
-using Allinone.FormSpace.BasicPG;
-using MoveGraphLibrary;
 using WorldOfMoveableObjects;
+using static Allinone.OPSpace.AnalyzeSpace.PADINSPECTClass;
 //using System.Windows;
 
 namespace Allinone.OPSpace.AnalyzeSpace
@@ -423,6 +424,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                                 numBangBangOffsetVal = int.Parse(strs[6]);
                                                 txtNeverOutsideRect = strs[7];
                                                 cboIPDMethod = int.Parse(strs[8]);
+                                            }
+                                            if (strs.Length > 9)
+                                            {
+                                                numZScoreValue = double.Parse(strs[9]);
                                             }
                                         }
 
@@ -1547,22 +1552,24 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                 GetDataIPD(_bmpnewIpd, false);
                                 _bmpnewIpd.Dispose();
 
+                                double ipdThresholdValue = numZScoreValue;
+
                                 i = 0;
                                 while (i < (int)SIDEEmnum.COUNT)
                                 {
                                     switch ((SIDEEmnum)i)
                                     {
                                         case SIDEEmnum.TOP:
-                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.TOP], jzsideanalyzeex, SIDEEmnum.TOP, GlueChipSlotDir == ChipSlotDir.SlotTop);
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.TOP], jzsideanalyzeex, SIDEEmnum.TOP, GlueChipSlotDir == ChipSlotDir.SlotTop, ipdThresholdValue);
                                             break;
                                         case SIDEEmnum.BOTTOM:
-                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.BOTTOM], jzsideanalyzeex, SIDEEmnum.BOTTOM, GlueChipSlotDir == ChipSlotDir.SlotBottom);
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.BOTTOM], jzsideanalyzeex, SIDEEmnum.BOTTOM, GlueChipSlotDir == ChipSlotDir.SlotBottom, ipdThresholdValue);
                                             break;
                                         case SIDEEmnum.LEFT:
-                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.LEFT], jzsideanalyzeex, SIDEEmnum.LEFT, GlueChipSlotDir == ChipSlotDir.SlotLeft);
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.LEFT], jzsideanalyzeex, SIDEEmnum.LEFT, GlueChipSlotDir == ChipSlotDir.SlotLeft, ipdThresholdValue);
                                             break;
                                         case SIDEEmnum.RIGHT:
-                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.RIGHT], jzsideanalyzeex, SIDEEmnum.RIGHT, GlueChipSlotDir == ChipSlotDir.SlotRight);
+                                            JzFourSideCalV1(out glues[(int)BorderTypeEnum.RIGHT], jzsideanalyzeex, SIDEEmnum.RIGHT, GlueChipSlotDir == ChipSlotDir.SlotRight, ipdThresholdValue);
                                             break;
                                     }
 
@@ -1933,6 +1940,10 @@ namespace Allinone.OPSpace.AnalyzeSpace
                                     numBangBangOffsetVal = int.Parse(strs[6]);
                                     txtNeverOutsideRect = strs[7];
                                     cboIPDMethod = int.Parse(strs[8]);
+                                }
+                                if (strs.Length > 9)
+                                {
+                                    numZScoreValue = double.Parse(strs[9]);
                                 }
                             }
 
@@ -6644,7 +6655,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             return ebmpinput;
         }
 
-
+#if NO_USE_MASK
         bool checkOutGlueBAK1(Bitmap eInput, bool istrain = false)
         {
             //return checkOutGlueV2(eInput, istrain);
@@ -6915,6 +6926,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
 
             return ret;
         }
+#endif
         bool checkOutGlue(Bitmap eInput, out Bitmap bmpResult, bool istrain = false)
         {
             bool ret = true;
@@ -6936,6 +6948,10 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                     numBangBangOffsetVal = int.Parse(strs[6]);
                     txtNeverOutsideRect = strs[7];
                     cboIPDMethod = int.Parse(strs[8]);
+                }
+                if (strs.Length > 9)
+                {
+                    numZScoreValue = double.Parse(strs[9]);
                 }
             }
 
@@ -7096,6 +7112,10 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                     numBangBangOffsetVal = int.Parse(strs[6]);
                     txtNeverOutsideRect = strs[7];
                     cboIPDMethod = int.Parse(strs[8]);
+                }
+                if (strs.Length > 9)
+                {
+                    numZScoreValue = double.Parse(strs[9]);
                 }
             }
 
@@ -7350,6 +7370,10 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                     numBangBangOffsetVal = int.Parse(strs[6]);
                     txtNeverOutsideRect = strs[7];
                     cboIPDMethod = int.Parse(strs[8]);
+                }
+                if (strs.Length > 9)
+                {
+                    numZScoreValue = double.Parse(strs[9]);
                 }
             }
 
@@ -7758,7 +7782,11 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
 
             glue.Run();
         }
-        public void JzFourSideCalV1(out GlueRegionClass glue, JzSideAnalyzeEXClass eSide, SIDEEmnum sIDE, bool isCheckSlot = false)
+        public void JzFourSideCalV1(out GlueRegionClass glue, JzSideAnalyzeEXClass eSide, 
+            SIDEEmnum sIDE, 
+            bool isCheckSlot = false,
+            double eThreshold = 0
+            )
         {
             glue = new GlueRegionClass();
             glue.Reset();
@@ -7771,14 +7799,14 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             {
                 glue.AddPt(point);
             }
-            glue.Run();
+            glue.Run(eThreshold);
             if (isCheckSlot)
             {
                 foreach (Point point in eSide.sidedataexs[(int)sIDE].GetPoints(3))
                 {
                     glue.AddPtIN2(point);//记录薄膜胶的点位
                 }
-                glue.RunSlot();
+                glue.RunSlot(eThreshold);
             }
 
         }
@@ -12720,6 +12748,8 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
 
             private PointF[] LengthPointFsIN2 = new PointF[4];
 
+            private StringBuilder m_CollectWidthAnalyer = new StringBuilder(); 
+
             /// <summary>
             /// 最外层
             /// </summary>
@@ -12768,13 +12798,21 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             {
                 if (LengthPointFsList.Count >= 4)
                 {
-                    LengthPointFs = new PointF[LengthPointFsList.Count];
+                    //LengthPointFs = new PointF[LengthPointFsList.Count];
+                    List<PointF> list = new List<PointF>();
                     int i = 0;
                     foreach (PointF p in LengthPointFsList)
                     {
-                        LengthPointFs[i] = p;
+                        if (m_CollectWidthAnalyer.ToString().IndexOf($";{i};") > 0)
+                        {
+                            i++;
+                            continue;
+                        }
+                        list.Add(p);
                         i++;
                     }
+
+                    LengthPointFs = list.ToArray();
                 }
                 else
                 {
@@ -12797,13 +12835,28 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             {
                 if (LengthPointFsListIN.Count >= 4)
                 {
-                    LengthPointFsIN = new PointF[LengthPointFsListIN.Count];
+                    //LengthPointFsIN = new PointF[LengthPointFsListIN.Count];
+                    //int i = 0;
+                    //foreach (PointF p in LengthPointFsListIN)
+                    //{
+                    //    LengthPointFsIN[i] = p;
+                    //    i++;
+                    //}
+
+                    List<PointF> list = new List<PointF>();
                     int i = 0;
                     foreach (PointF p in LengthPointFsListIN)
                     {
-                        LengthPointFsIN[i] = p;
+                        if (m_CollectWidthAnalyer.ToString().IndexOf($";{i};") > 0)
+                        {
+                            i++;
+                            continue;
+                        }
+                        list.Add(p);
                         i++;
                     }
+
+                    LengthPointFsIN = list.ToArray();
                 }
                 else
                 {
@@ -12826,13 +12879,28 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             {
                 if (LengthPointFsListIN2.Count >= 4)
                 {
-                    LengthPointFsIN2 = new PointF[LengthPointFsListIN2.Count];
+                    //LengthPointFsIN2 = new PointF[LengthPointFsListIN2.Count];
+                    //int i = 0;
+                    //foreach (PointF p in LengthPointFsListIN2)
+                    //{
+                    //    LengthPointFsIN2[i] = p;
+                    //    i++;
+                    //}
+
+                    List<PointF> list = new List<PointF>();
                     int i = 0;
                     foreach (PointF p in LengthPointFsListIN2)
                     {
-                        LengthPointFsIN2[i] = p;
+                        if (m_CollectWidthAnalyer.ToString().IndexOf($";{i};") > 0)
+                        {
+                            i++;
+                            continue;
+                        }
+                        list.Add(p);
                         i++;
                     }
+
+                    LengthPointFsIN2 = list.ToArray();
                 }
                 else
                 {
@@ -12858,7 +12926,14 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                 return LengthMax * INI.MAINSD_PAD_MIL_RESOLUTION;//  a * 0.0254001;
             }
 
-            public void Run()
+            public void Run(double eThreshold = 0)
+            {
+                if (eThreshold == 0)
+                    Run0();
+                else
+                    Run1(eThreshold);
+            }
+            private void Run0()
             {
                 double maxv = -1000;
                 double minv = 1000;
@@ -12877,12 +12952,66 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                 LengthMin = minv;
 
             }
+            private void Run1(double eThreshold = 0)
+            {
+                m_CollectWidthAnalyer.Clear();
+                double maxv = -1000;
+                double minv = 1000;
+                List<double> widthValues = new List<double>();
+
+                int i = 0;
+                while (i < LengthPointFsList.Count)
+                {
+                    double dis = GetPointLength(LengthPointFsListIN[i], LengthPointFsList[i]);
+                    widthValues.Add(dis);
+
+                    i++;
+                }
+
+                if (widthValues.Count > 0)
+                {
+                    // 使用Z-score方法检测异常值
+                    var outliers = WidthAnalyzer.FindOutliersWithZScore(widthValues, eThreshold);
+                    Console.WriteLine("\n检测结果:");
+                    foreach (var point in outliers)
+                    {
+                        string marker = point.IsOutlier ? "*** 异常值 ***" : "正常";
+                        Console.WriteLine($"索引 {point.Index}: {point.Value:F2} | Z-score: {point.ZScore:F2} | {marker}");
+                    }
+                    // 输出异常值汇总
+                    var outlierPoints = outliers.Where(p => p.IsOutlier).ToList();
+                    foreach (var outlier in outlierPoints)
+                    {
+                        m_CollectWidthAnalyer.Append(';');
+                        m_CollectWidthAnalyer.Append(outlier.Index);
+                        m_CollectWidthAnalyer.Append(';');
+                    }
+                    var Points = outliers.Where(p => !p.IsOutlier).ToList();
+                    foreach (var outlier in Points)
+                    {
+                        maxv = Math.Max(maxv, outlier.Value);
+                        minv = Math.Min(minv, outlier.Value);
+                    }
+                }
+
+                LengthMax = maxv;
+                LengthMin = minv;
+
+            }
             double GetPointLength(PointF P1, PointF P2)
             {
                 return Math.Sqrt((double)Math.Pow((P1.X - P2.X), 2) + Math.Pow((P1.Y - P2.Y), 2));
             }
 
-            public void RunSlot()
+            public void RunSlot(double eThreshold = 0)
+            {
+                if (eThreshold == 0)
+                    RunSlot0();
+                else
+                    RunSlot1(eThreshold);
+
+            }
+            public void RunSlot0()
             {
                 double maxv = -1000;
                 double minv = 1000;
@@ -12901,6 +13030,48 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                 LengthSlotMin = minv;
 
             }
+            public void RunSlot1(double eThreshold = 0)
+            {
+                double maxv = -1000;
+                double minv = 1000;
+                List<double> widthValues = new List<double>();
+
+                int i = 0;
+                while (i < LengthPointFsListIN2.Count)
+                {
+                    double dis = GetPointLength(LengthPointFsListIN2[i], LengthPointFsList[i]);
+                    widthValues.Add(dis);
+
+                    i++;
+                }
+
+                if (widthValues.Count > 0)
+                {
+                    // 使用Z-score方法检测异常值
+                    var outliers = WidthAnalyzer.FindOutliersWithZScore(widthValues, eThreshold);
+                    // 输出异常值汇总
+                    var outlierPoints = outliers.Where(p => p.IsOutlier).ToList();
+                    foreach (var outlier in outlierPoints)
+                    {
+                        m_CollectWidthAnalyer.Append(';');
+                        m_CollectWidthAnalyer.Append(outlier.Index);
+                        m_CollectWidthAnalyer.Append(';');
+                    }
+                    var Points = outliers.Where(p => !p.IsOutlier).ToList();
+                    foreach (var outlier in outlierPoints)
+                    {
+                        maxv = Math.Max(maxv, outlier.Value);
+                        minv = Math.Min(minv, outlier.Value);
+                    }
+                }
+
+
+                LengthSlotMax = maxv;
+                LengthSlotMin = minv;
+
+            }
+
+
 
         }
         public class BorderLineRunClass
@@ -15375,6 +15546,7 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
         int numBangBangOffsetVal = 5;
         string txtNeverOutsideRect = "";
         int cboIPDMethod = 0;
+        double numZScoreValue = 0;
 
        public JzSideAnalyzeEXClass jzsideanalyzeex = new JzSideAnalyzeEXClass();
         public List<Bitmap> bmplist = new List<Bitmap>();
@@ -15407,6 +15579,10 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
                     numBangBangOffsetVal = int.Parse(strs[6]);
                     txtNeverOutsideRect = strs[7];
                     cboIPDMethod = int.Parse(strs[8]);
+                }
+                if (strs.Length > 9)
+                {
+                    numZScoreValue = double.Parse(strs[9]);
                 }
             }
 
