@@ -43,13 +43,13 @@ namespace Allinone
         public static bool IsNoUseIO = true;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2025/10/22";
+        public static string VersionDate = "2025/10/28";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
-        public static OptionEnum OPTION = OptionEnum.MAIN_X6;
+        public static OptionEnum OPTION = OptionEnum.MAIN_SDM2;
 
         public static CameraActionMode CAMACT = CameraActionMode.CAM_MOTOR_MODE2;
-        public static RobotType myRobotType = RobotType.NONE;
+        public static RobotType myRobotType = RobotType.HCFA;
         public static DiskType myDiskType = DiskType.DISK_D;
         public static JetMappingType jetMappingType = JetMappingType.NONE;
         public static FactoryName FACTORYNAME = FactoryName.NONE;

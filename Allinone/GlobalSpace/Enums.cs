@@ -113,13 +113,13 @@ namespace Allinone
         //COUNT = 2,
 
         NONE = -1,
-        [Description("ipd小颗粒")]
+        [Description("PAD_SMALL-ipd小颗粒")]
         PAD_SMALL = 0,
-        [Description("ipd小颗粒V1")]
+        [Description("PAD_V1-ipd小颗粒V1")]
         PAD_V1 = 1,
-        [Description("胶水间距")]
+        [Description("PAD_G1-胶水间距")]
         PAD_G1 = 2,
-        [Description("银胶异形检测")]
+        [Description("PAD_G2-银胶异形检测")]
         PAD_G2 = 3,
 
     }

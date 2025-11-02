@@ -149,7 +149,8 @@ namespace Allinone.FormSpace.PADForm
 
             while (i < Enum.GetNames(typeof(PadInspectMethodEnum)).Length - 1)
             {
-                cboMeasureMethod.Items.Add(((PadInspectMethodEnum)i).ToString());
+                cboMeasureMethod.Items.Add(GetEnumDescription((PadInspectMethodEnum)i)).ToString();
+                //cboMeasureMethod.Items.Add(((PadInspectMethodEnum)i).ToString());
                 i++;
             }
         }
@@ -192,6 +193,21 @@ namespace Allinone.FormSpace.PADForm
             }
 
             return retstr;
+        }
+
+        string GetEnumDescription(Enum value)
+        {
+            var fieldInfo = value.GetType().GetField(value.ToString());
+            var descriptionAttributes = fieldInfo.GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[];
+
+            if (descriptionAttributes.Length > 0)
+            {
+                return descriptionAttributes[0].Description;
+            }
+            else
+            {
+                return value.ToString();
+            }
         }
     }
 }

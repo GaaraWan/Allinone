@@ -3629,101 +3629,109 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             PADRegionFind_BlackEdge(bmpInput, PADGrayThreshold, false, out PADTempRegion);
 
             #region 判断有无胶水  VICTOR模式
-            //60ms
-            if (isgood)
+
+            switch(ChipNoGlueMode)
             {
-                //int isized = 10;
-                int isized = _from_bmpinputSize_to_iSized(bmpInput);
-                if (isized == 0)
-                    isized = 1;
-                PointF fillCenterPointF = new PointF(0, 0);
-                Bitmap bmpsize = PADTempRegion.GetChipGlue(-isized, out fillCenterPointF);//  new Bitmap(bmpinput, Resize(bmpinput.Size, -isized));
-                AForge.Imaging.Filters.HistogramEqualization histogramEqualization11 =
-                    new AForge.Imaging.Filters.HistogramEqualization();
-                Bitmap bmphistogramEqualization11 = histogramEqualization11.Apply(bmpsize);
+                case ChipNoGlueMethod.NoGlueNormal:
 
-                //bmphistogramEqualization11 = FloodFill(bmphistogramEqualization11, 
-                //        new Point(bmphistogramEqualization11.Width / 2, bmphistogramEqualization11.Height / 2),
-                //                                                    Color.White, (int)(255 * NoGlueThresholdValue));
+                    //60ms
+                    if (isgood)
+                    {
+                        //int isized = 10;
+                        int isized = _from_bmpinputSize_to_iSized(bmpInput);
+                        if (isized == 0)
+                            isized = 1;
+                        PointF fillCenterPointF = new PointF(0, 0);
+                        Bitmap bmpsize = PADTempRegion.GetChipGlue(isized, out fillCenterPointF);//  new Bitmap(bmpinput, Resize(bmpinput.Size, -isized));
+                        AForge.Imaging.Filters.HistogramEqualization histogramEqualization11 =
+                            new AForge.Imaging.Filters.HistogramEqualization();
+                        Bitmap bmphistogramEqualization11 = histogramEqualization11.Apply(bmpsize);
 
-                bmphistogramEqualization11 = FloodFill(bmphistogramEqualization11,
-                                                                                 new Point((int)fillCenterPointF.X, (int)fillCenterPointF.Y),
-                                                                                 Color.White,
-                                                                                 (int)(255 * NoGlueThresholdValue));
+                        //bmphistogramEqualization11 = FloodFill(bmphistogramEqualization11, 
+                        //        new Point(bmphistogramEqualization11.Width / 2, bmphistogramEqualization11.Height / 2),
+                        //                                                    Color.White, (int)(255 * NoGlueThresholdValue));
 
-                AForge.Imaging.Filters.Grayscale grayscale11 =
-                    new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
-                bmphistogramEqualization11 = grayscale11.Apply(bmphistogramEqualization11);
+                        bmphistogramEqualization11 = FloodFill(bmphistogramEqualization11,
+                                                                                         new Point((int)fillCenterPointF.X, (int)fillCenterPointF.Y),
+                                                                                         Color.White,
+                                                                                         (int)(255 * NoGlueThresholdValue));
 
-                AForge.Imaging.Filters.ExtractBiggestBlob extractBiggestBlob11 =
-                    new AForge.Imaging.Filters.ExtractBiggestBlob();
-                try
-                {
-                    bmphistogramEqualization11 = extractBiggestBlob11.Apply(bmphistogramEqualization11);
-                }
-                catch
-                {
+                        AForge.Imaging.Filters.Grayscale grayscale11 =
+                            new AForge.Imaging.Filters.Grayscale(0.299, 0.587, 0.114);
+                        bmphistogramEqualization11 = grayscale11.Apply(bmphistogramEqualization11);
 
-                }
+                        AForge.Imaging.Filters.ExtractBiggestBlob extractBiggestBlob11 =
+                            new AForge.Imaging.Filters.ExtractBiggestBlob();
+                        try
+                        {
+                            bmphistogramEqualization11 = extractBiggestBlob11.Apply(bmphistogramEqualization11);
+                        }
+                        catch
+                        {
 
-                if (m_IsSaveTemp)
-                {
-                    bmphistogramEqualization11.Save("D:\\testtest\\" + _CalPageIndex() +
-                        RelateAnalyzeString + "NoDispensing" + ".png", System.Drawing.Imaging.ImageFormat.Png);
+                        }
 
-                }
+                        if (m_IsSaveTemp)
+                        {
+                            bmphistogramEqualization11.Save("D:\\testtest\\" + _CalPageIndex() +
+                                RelateAnalyzeString + "NoDispensing" + ".png", System.Drawing.Imaging.ImageFormat.Png);
 
-                Rectangle rectangletemp = new Rectangle(extractBiggestBlob11.BlobPosition.X,
-                                                                           extractBiggestBlob11.BlobPosition.Y,
-                                                                           bmphistogramEqualization11.Width,
-                                                                           bmphistogramEqualization11.Height);
+                        }
 
-                RectangleF rectangletemp2 = ResizeWithLocation3(rectangletemp, isized);
+                        Rectangle rectangletemp = new Rectangle(extractBiggestBlob11.BlobPosition.X,
+                                                                                   extractBiggestBlob11.BlobPosition.Y,
+                                                                                   bmphistogramEqualization11.Width,
+                                                                                   bmphistogramEqualization11.Height);
 
-                double iwidthtmp = Math.Max(rectangletemp2.Width, rectangletemp2.Height);
-                double iheighttmp = Math.Min(rectangletemp2.Width, rectangletemp2.Height);
+                        RectangleF rectangletemp2 = ResizeWithLocation3(rectangletemp, -isized);
 
-                if (!IsInRangeRatio(m_PADRegion.RegionWidth, iwidthtmp, OWidthRatio))
-                {
-                    isgood = false;
-                    processstring += "Error in " + RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + rectangletemp2.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
-                    errorstring += RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + rectangletemp2.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
-                    descstriing = "无胶";
-                    reason = ReasonEnum.NG;
+                        double iwidthtmp = Math.Max(rectangletemp2.Width, rectangletemp2.Height);
+                        double iheighttmp = Math.Min(rectangletemp2.Width, rectangletemp2.Height);
 
-                    bmpoutput.Dispose();
-                    bmpoutput = (Bitmap)bmpinput.Clone();// new Bitmap(bmpinput);
-                    //jzToolsClass.DrawRect(bmpoutput, rect1pattrem, new Pen(Color.Red, 5));
-                    //if (INI.CHIP_NG_SHOW)
-                    //{
-                    //    bmpoutput.Dispose();
-                    //    bmpoutput = new Bitmap(bmpgray11);
-                    //}
-                }
-                else if (!IsInRangeRatio(m_PADRegion.RegionHeight, iheighttmp, OHeightRatio))
-                {
-                    isgood = false;
-                    processstring += "Error in " + RelateAnalyzeString + " PAD HEIGHT OVER Ratio= " + OHeightRatio.ToString() + " , " + rectangletemp2.Height.ToString() + " , " + m_PADRegion.RegionHeight.ToString() + Environment.NewLine;
-                    errorstring += RelateAnalyzeString + " PAD HEIGHT OVER Ratio= " + OHeightRatio.ToString() + " , " + rectangletemp2.Height.ToString() + " , " + m_PADRegion.RegionHeight.ToString() + Environment.NewLine;
-                    descstriing = "无胶";
-                    reason = ReasonEnum.NG;
+                        if (!IsInRangeRatio(m_PADRegion.RegionWidth, iwidthtmp, OWidthRatio))
+                        {
+                            isgood = false;
+                            processstring += "Error in " + RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + rectangletemp2.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+                            errorstring += RelateAnalyzeString + " PAD WIDTH OVER Ratio= " + OWidthRatio.ToString() + " , " + rectangletemp2.Width.ToString() + " , " + m_PADRegion.RegionWidth.ToString() + Environment.NewLine;
+                            descstriing = "无胶";
+                            reason = ReasonEnum.NG;
 
-                    bmpoutput.Dispose();
-                    bmpoutput = (Bitmap)bmpinput.Clone();// new Bitmap(bmpinput);
-                    //jzToolsClass.DrawRect(bmpoutput, rect1pattrem, new Pen(Color.Red, 5));
-                    //if (INI.CHIP_NG_SHOW)
-                    //{
-                    //    bmpoutput.Dispose();
-                    //    bmpoutput = new Bitmap(bmpgray11);
-                    //}
-                }
+                            bmpoutput.Dispose();
+                            bmpoutput = (Bitmap)bmpinput.Clone();// new Bitmap(bmpinput);
+                                                                 //jzToolsClass.DrawRect(bmpoutput, rect1pattrem, new Pen(Color.Red, 5));
+                                                                 //if (INI.CHIP_NG_SHOW)
+                                                                 //{
+                                                                 //    bmpoutput.Dispose();
+                                                                 //    bmpoutput = new Bitmap(bmpgray11);
+                                                                 //}
+                        }
+                        else if (!IsInRangeRatio(m_PADRegion.RegionHeight, iheighttmp, OHeightRatio))
+                        {
+                            isgood = false;
+                            processstring += "Error in " + RelateAnalyzeString + " PAD HEIGHT OVER Ratio= " + OHeightRatio.ToString() + " , " + rectangletemp2.Height.ToString() + " , " + m_PADRegion.RegionHeight.ToString() + Environment.NewLine;
+                            errorstring += RelateAnalyzeString + " PAD HEIGHT OVER Ratio= " + OHeightRatio.ToString() + " , " + rectangletemp2.Height.ToString() + " , " + m_PADRegion.RegionHeight.ToString() + Environment.NewLine;
+                            descstriing = "无胶";
+                            reason = ReasonEnum.NG;
+
+                            bmpoutput.Dispose();
+                            bmpoutput = (Bitmap)bmpinput.Clone();// new Bitmap(bmpinput);
+                                                                 //jzToolsClass.DrawRect(bmpoutput, rect1pattrem, new Pen(Color.Red, 5));
+                                                                 //if (INI.CHIP_NG_SHOW)
+                                                                 //{
+                                                                 //    bmpoutput.Dispose();
+                                                                 //    bmpoutput = new Bitmap(bmpgray11);
+                                                                 //}
+                        }
 
 
-                bmphistogramEqualization11.Dispose();
-                bmpsize.Dispose();
-                //bmpfloodfill.Dispose();
-                ////bmpgray11.Dispose();
-                //bmpextractBiggestBlob11.Dispose();
+                        bmphistogramEqualization11.Dispose();
+                        bmpsize.Dispose();
+                        //bmpfloodfill.Dispose();
+                        ////bmpgray11.Dispose();
+                        //bmpextractBiggestBlob11.Dispose();
+                    }
+
+                    break;
             }
 
             #endregion
@@ -12294,7 +12302,9 @@ public bool PB10_GlueInspectionProcess(Bitmap bmpinput, ref Bitmap bmpoutput)
             m_samplinggap = 37;
 
             int _minsize = Math.Min(eRect.Width, eRect.Height);
-            if (_minsize >= 1500)
+            if (_minsize >= 2000)
+                m_samplinggap = 200;
+            else if(_minsize >= 1500)
                 m_samplinggap = 137;
             else if (_minsize >= 800)
                 m_samplinggap = 37;
