@@ -1,13 +1,15 @@
-﻿using System;
+﻿using GetNGNum;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
-using System.IO;
 using System.Threading;
+using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TreeView;
 
 namespace AJZReportViewer
@@ -37,6 +39,8 @@ namespace AJZReportViewer
         Button btnLstGo;
         Button btnLstUpdate;
         Button btnShowWholeImage;
+
+        DataGridView dgvData => dataGridView1;
 
         public frmMain()
         {
@@ -129,11 +133,20 @@ namespace AJZReportViewer
                 case VERSION.SDM2:
 
                     tabControl1.Controls.RemoveAt(0);
+                    rtblog.Visible = true;
+                    rtblog.Dock = DockStyle.Fill;
 
                     break;
                 case VERSION.SDM5:
 
                     grpErrorColor.Visible = false;
+
+                    break;
+                case VERSION.MAIN_X6:
+
+                    dgvData.Visible = true;
+                    dgvData.Dock = DockStyle.Fill;
+                    dgv_init();
 
                     break;
             }
@@ -808,11 +821,35 @@ namespace AJZReportViewer
             Array.Sort(arrFi, delegate (FileInfo x, FileInfo y) { return y.CreationTime.CompareTo(x.CreationTime); });
         }
 
+        private void 查询ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            switch (Global.VER)
+            {
+                case VERSION.SDM2:
+                    break;
+                case VERSION.MAIN_X6:
+                    ControlEnable(false);
+                    query_dgv_data();
+                    ControlEnable(true);
+                    break;
+            }
+        }
         private void 报表一ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            System.Threading.Thread th_report = new Thread(new ThreadStart(_report1));
-            th_report.IsBackground = true;
-            th_report.Start();
+
+            switch (Global.VER)
+            {
+                case VERSION.SDM2:
+                    System.Threading.Thread th_report = new Thread(new ThreadStart(_report1));
+                    th_report.IsBackground = true;
+                    th_report.Start();
+                    break;
+                case VERSION.MAIN_X6:
+                    ControlEnable(false);
+                    output_dgv_data();
+                    ControlEnable(true);
+                    break;
+            }
         }
 
         #region 报表输出
@@ -903,6 +940,285 @@ namespace AJZReportViewer
             ControlEnable(true);
         }
 
+        GetNgNum getNgNum = new GetNgNum();
+        void dgv_init()
+        {
+            dataGridView1.Columns.Clear();
+            dataGridView1.Rows.Clear();
+            // 第一列：NG类型
+            var NgtypeCol = new DataGridViewTextBoxColumn
+            {
+                Name = "NgType",
+                HeaderText = "测试结果",
+                Width = 120,
+                ReadOnly = true
+            };
+            dataGridView1.Columns.Add(NgtypeCol);
+
+            var dateList = new List<string>();
+            var cur = dtp1.Value.Date;
+            var end = dtp2.Value.Date;
+
+            string dateStr = cur.ToString("yyyyMMdd");
+            string dateFolder = Path.Combine(getNgNum.SourcePath, dateStr);
+
+            if (Directory.Exists(dateFolder))
+            {
+                var col = new DataGridViewTextBoxColumn
+                {
+                    Name = dateStr,
+                    HeaderText = dateStr,
+                    ReadOnly = true
+                };
+                dataGridView1.Columns.Add(col);
+                dateList.Add(dateStr);
+            }
+            cur = cur.AddDays(1);
+
+
+            // 每个 NG 类型一行
+            foreach (var kv in getNgNum.ngTypeMap.OrderBy(k => k.Key))
+            {
+                var row = new List<object>();
+                row.Add(kv.Value); // 第一列是 NG 类型名称
+
+                foreach (var date in dateList)
+                {
+                    var dailyCounts = getNgNum.GetNgCountsByDate(date);
+                    int count = dailyCounts.ContainsKey(kv.Key) ? dailyCounts[kv.Key] : 0;
+                    row.Add(count);
+                }
+
+                dataGridView1.Rows.Add(row.ToArray());
+            }
+
+
+            // 行上色（区分不同 NG 类型）
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                string ngType = row.Cells[0].Value?.ToString();
+                switch (ngType)
+                {
+                    case "正确":
+                        row.DefaultCellStyle.BackColor = Color.Green;
+                        break;
+                    case "印字错误":
+                        row.DefaultCellStyle.BackColor = Color.LightBlue;
+                        break;
+                    case "印字偏移":
+                        row.DefaultCellStyle.BackColor = Color.LightYellow;
+                        break;
+                    case "油墨错误":
+                        row.DefaultCellStyle.BackColor = Color.LightCyan;
+                        break;
+                    case "印字缺失":
+                        row.DefaultCellStyle.BackColor = Color.Red;
+                        break;
+                    case "不检测":
+                        row.DefaultCellStyle.BackColor = Color.DarkViolet;
+                        break;
+                    case "其他":
+                        row.DefaultCellStyle.BackColor = Color.LightGray;
+                        break;
+                    case "2D对比错误":
+                        row.DefaultCellStyle.BackColor = Color.Orange;
+                        break;
+                    case "2D读取错误":
+                        row.DefaultCellStyle.BackColor = Color.LightGoldenrodYellow
+                            ;
+                        break;
+                    case "2D重复":
+                        row.DefaultCellStyle.BackColor = Color.Pink;
+                        break;
+                }
+                dataGridView1.AllowUserToAddRows = false;
+            }
+        }
+        void query_dgv_data()
+        {
+            DateTime start = dtp1.Value.Date;
+            DateTime end = dtp2.Value.Date;
+
+            dataGridView1.Columns.Clear();
+            dataGridView1.Rows.Clear();
+
+            // 第一列：测试类型
+            var typeCol = new DataGridViewTextBoxColumn
+            {
+                Name = "NgType",
+                HeaderText = "测试结果",
+                Width = 120,
+                ReadOnly = true
+            };
+            dataGridView1.Columns.Add(typeCol);
+
+            // 第二列：时间
+            string dateRangeStr = start.ToString("yyyyMMdd") + "-" + end.ToString("yyyyMMdd");
+            var rangeCol = new DataGridViewTextBoxColumn
+            {
+                Name = "DateRange",
+                HeaderText = dateRangeStr,
+                ReadOnly = true
+            };
+            rangeCol.Width = 220;
+            dataGridView1.Columns.Add(rangeCol);
+
+            //第三列：占比
+            var percentageCol = new DataGridViewTextBoxColumn
+            {
+                Name = "PercentageCol",
+                HeaderText = "百分比",
+                Width = 120,
+                ReadOnly = true
+            };
+            dataGridView1.Columns.Add(percentageCol);
+
+
+            // 计算每个 NG 类型在选定区间内的总数
+            var ngKeys = getNgNum.ngTypeMap.Keys.OrderBy(k => k).ToList();
+            foreach (var kv in getNgNum.ngTypeMap.OrderBy(k => k.Key))
+            {
+                int totalCount = 0;
+                var cur = start;
+                while (cur <= end)
+                {
+                    string dateStr = cur.ToString("yyyyMMdd");
+                    string dateFolder = Path.Combine(getNgNum.SourcePath, dateStr);
+                    if (Directory.Exists(dateFolder))
+                    {
+                        var dailyCounts = getNgNum.GetNgCountsByDate(dateStr);
+                        totalCount += dailyCounts.ContainsKey(kv.Key) ? dailyCounts[kv.Key] : 0;
+                    }
+                    cur = cur.AddDays(1);
+                }
+
+                dataGridView1.Rows.Add(kv.Value, totalCount);
+            }
+
+
+            // 总计数量
+            int totalAll = 0;
+            foreach (var kv in getNgNum.ngTypeMap.Keys)
+            {
+                totalAll += dataGridView1.Rows
+                    .Cast<DataGridViewRow>()
+                    .Where(r => r.Cells[0].Value != null && r.Cells[0].Value.ToString() == getNgNum.ngTypeMap[kv])
+                    .Sum(r => Convert.ToInt32(r.Cells[1].Value));
+            }
+            int totalRowIndex = dataGridView1.Rows.Add("数量总计", totalAll);
+
+            var totalRow = dataGridView1.Rows[totalRowIndex];
+            totalRow.DefaultCellStyle.BackColor = Color.Gray;
+
+
+            // 计算百分比列
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                if (row.Cells[0].Value?.ToString() == "数量总计")
+                {
+                    // 总计行占比显示 100%
+                    row.Cells[2].Value = "100%";
+                    continue;
+                }
+
+                int count = Convert.ToInt32(row.Cells[1].Value);
+                double percent = totalAll > 0 ? (count * 100.0 / totalAll) : 0;
+                row.Cells[2].Value = percent.ToString("0.0") + "%";
+            }
+
+
+            // 行上色
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                string ngType = row.Cells[0].Value?.ToString();
+                switch (ngType)
+                {
+                    case "正确":
+                        row.DefaultCellStyle.BackColor = Color.Green;
+                        break;
+                    case "印字错误":
+                        row.DefaultCellStyle.BackColor = Color.LightBlue;
+                        break;
+                    case "印字偏移":
+                        row.DefaultCellStyle.BackColor = Color.LightYellow;
+                        break;
+                    case "油墨错误":
+                        row.DefaultCellStyle.BackColor = Color.LightCyan;
+                        break;
+                    case "印字缺失":
+                        row.DefaultCellStyle.BackColor = Color.Red;
+                        break;
+                    case "不检测":
+                        row.DefaultCellStyle.BackColor = Color.DarkViolet;
+                        break;
+                    case "其他":
+                        row.DefaultCellStyle.BackColor = Color.LightGray;
+                        break;
+                    case "2D对比错误":
+                        row.DefaultCellStyle.BackColor = Color.Orange;
+                        break;
+                    case "2D读取错误":
+                        row.DefaultCellStyle.BackColor = Color.LightGoldenrodYellow;
+                        break;
+                    case "2D重复":
+                        row.DefaultCellStyle.BackColor = Color.Pink;
+                        break;
+                }
+            }
+        }
+        
+        void output_dgv_data()
+        {
+            DateTime start = dtp1.Value.Date;
+            DateTime end = dtp2.Value.Date;
+
+            var dateList = new List<string>();
+            var cur = start;
+            while (cur <= end)
+            {
+                string dateStr = cur.ToString("yyyyMMdd");
+                string dateFolder = Path.Combine(getNgNum.SourcePath, dateStr);
+                if (Directory.Exists(dateFolder))
+                    dateList.Add(dateStr);
+                cur = cur.AddDays(1);
+            }
+
+            if (dateList.Count == 0)
+            {
+                MessageBox.Show("选定日期区间内没有可导出的目录。");
+                return;
+            }
+
+            try
+            {
+                string newFileName = getNgNum.ParseByDates(dateList, start, end);
+
+                if (!string.IsNullOrEmpty(newFileName))
+                {
+                    string fileName = Path.GetFileName(newFileName);
+                    MessageBox.Show($"导出成功!\n目录: {getNgNum.TargetPath}\n文件: {fileName}", "提示");
+
+                    // 自动打开文件
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = newFileName,
+                            UseShellExecute = true
+                        });
+                    }
+                    catch (Exception ex2)
+                    {
+                        MessageBox.Show("打开文件失败: " + ex2.Message);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("导出出错: " + ex.Message);
+            }
+        }
+
         #endregion
 
 
@@ -936,5 +1252,6 @@ namespace AJZReportViewer
             }));
         }
 
+        
     }
 }

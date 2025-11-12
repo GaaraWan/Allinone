@@ -1,4 +1,4 @@
-﻿//#define FATEK
+﻿#define FATEK
 
 #if FATEK
 

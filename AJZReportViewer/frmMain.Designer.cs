@@ -91,6 +91,8 @@ namespace AJZReportViewer
             this.导出ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.报表一ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allinoneViewerUI1 = new AJZReportViewer.AllinoneViewerUI();
+            this.panel4 = new System.Windows.Forms.Panel();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.groupBox1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -104,6 +106,8 @@ namespace AJZReportViewer
             this.menuStrip1.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.menuStrip2.SuspendLayout();
+            this.panel4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -516,7 +520,7 @@ namespace AJZReportViewer
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(1256, 835);
+            this.tabPage2.Size = new System.Drawing.Size(1256, 785);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "清理资料";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -528,7 +532,7 @@ namespace AJZReportViewer
             this.listBox2.ItemHeight = 12;
             this.listBox2.Location = new System.Drawing.Point(3, 30);
             this.listBox2.Name = "listBox2";
-            this.listBox2.Size = new System.Drawing.Size(960, 802);
+            this.listBox2.Size = new System.Drawing.Size(960, 752);
             this.listBox2.TabIndex = 3;
             // 
             // pgINI
@@ -536,7 +540,7 @@ namespace AJZReportViewer
             this.pgINI.Dock = System.Windows.Forms.DockStyle.Right;
             this.pgINI.Location = new System.Drawing.Point(963, 30);
             this.pgINI.Name = "pgINI";
-            this.pgINI.Size = new System.Drawing.Size(290, 802);
+            this.pgINI.Size = new System.Drawing.Size(290, 752);
             this.pgINI.TabIndex = 4;
             // 
             // menuStrip1
@@ -606,30 +610,29 @@ namespace AJZReportViewer
             // 
             // tabPage3
             // 
+            this.tabPage3.Controls.Add(this.dataGridView1);
             this.tabPage3.Controls.Add(this.rtblog);
-            this.tabPage3.Controls.Add(this.dtp2);
-            this.tabPage3.Controls.Add(this.label4);
-            this.tabPage3.Controls.Add(this.dtp1);
-            this.tabPage3.Controls.Add(this.label3);
+            this.tabPage3.Controls.Add(this.panel4);
             this.tabPage3.Controls.Add(this.menuStrip2);
             this.tabPage3.Location = new System.Drawing.Point(4, 22);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(1256, 835);
+            this.tabPage3.Size = new System.Drawing.Size(1256, 785);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "报表导出";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
             // rtblog
             // 
-            this.rtblog.Location = new System.Drawing.Point(17, 89);
+            this.rtblog.Location = new System.Drawing.Point(97, 160);
             this.rtblog.Name = "rtblog";
             this.rtblog.Size = new System.Drawing.Size(632, 399);
             this.rtblog.TabIndex = 11;
             this.rtblog.Text = "";
+            this.rtblog.Visible = false;
             // 
             // dtp2
             // 
-            this.dtp2.Location = new System.Drawing.Point(86, 62);
+            this.dtp2.Location = new System.Drawing.Point(84, 40);
             this.dtp2.Name = "dtp2";
             this.dtp2.Size = new System.Drawing.Size(200, 21);
             this.dtp2.TabIndex = 10;
@@ -637,7 +640,7 @@ namespace AJZReportViewer
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(15, 68);
+            this.label4.Location = new System.Drawing.Point(13, 46);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(65, 12);
             this.label4.TabIndex = 9;
@@ -645,7 +648,7 @@ namespace AJZReportViewer
             // 
             // dtp1
             // 
-            this.dtp1.Location = new System.Drawing.Point(86, 35);
+            this.dtp1.Location = new System.Drawing.Point(84, 13);
             this.dtp1.Name = "dtp1";
             this.dtp1.Size = new System.Drawing.Size(200, 21);
             this.dtp1.TabIndex = 8;
@@ -653,7 +656,7 @@ namespace AJZReportViewer
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(15, 41);
+            this.label3.Location = new System.Drawing.Point(13, 19);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(65, 12);
             this.label3.TabIndex = 7;
@@ -675,6 +678,7 @@ namespace AJZReportViewer
             this.查询ToolStripMenuItem.Name = "查询ToolStripMenuItem";
             this.查询ToolStripMenuItem.Size = new System.Drawing.Size(44, 21);
             this.查询ToolStripMenuItem.Text = "查询";
+            this.查询ToolStripMenuItem.Click += new System.EventHandler(this.查询ToolStripMenuItem_Click);
             // 
             // 导出ToolStripMenuItem
             // 
@@ -704,6 +708,28 @@ namespace AJZReportViewer
             this.allinoneViewerUI1.Size = new System.Drawing.Size(833, 542);
             this.allinoneViewerUI1.TabIndex = 2;
             // 
+            // panel4
+            // 
+            this.panel4.Controls.Add(this.label3);
+            this.panel4.Controls.Add(this.dtp1);
+            this.panel4.Controls.Add(this.dtp2);
+            this.panel4.Controls.Add(this.label4);
+            this.panel4.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel4.Location = new System.Drawing.Point(0, 25);
+            this.panel4.Name = "panel4";
+            this.panel4.Size = new System.Drawing.Size(1256, 69);
+            this.panel4.TabIndex = 12;
+            // 
+            // dataGridView1
+            // 
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.Location = new System.Drawing.Point(256, 247);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.RowTemplate.Height = 23;
+            this.dataGridView1.Size = new System.Drawing.Size(535, 411);
+            this.dataGridView1.TabIndex = 13;
+            this.dataGridView1.Visible = false;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -732,6 +758,9 @@ namespace AJZReportViewer
             this.tabPage3.PerformLayout();
             this.menuStrip2.ResumeLayout(false);
             this.menuStrip2.PerformLayout();
+            this.panel4.ResumeLayout(false);
+            this.panel4.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -798,6 +827,8 @@ namespace AJZReportViewer
         private System.Windows.Forms.ToolStripMenuItem 查询ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 导出ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 报表一ToolStripMenuItem;
+        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.Panel panel4;
     }
 }
 

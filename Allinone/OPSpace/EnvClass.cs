@@ -2147,16 +2147,32 @@ namespace Allinone.OPSpace
                 return c;
 
             bool bfind = false;
-
+            //先找偏移的错误
             i = 0;
             while (i < runstatuscollection.NGCOUNT)
             {
-                if (eanalyze.PassInfo.ToString() == runstatuscollection.GetNGRunStatus(i).PassInfo.ToString())
+                if (eanalyze.PassInfo.ToString() == runstatuscollection.GetNGRunStatus(i).PassInfo.ToString()
+                    &&
+                    runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure == AnanlyzeProcedureEnum.BIAS
+                    )
                 {
                     bfind = true;
                     break;
                 }
                 i++;
+            }
+            if (!bfind)
+            {
+                i = 0;
+                while (i < runstatuscollection.NGCOUNT)
+                {
+                    if (eanalyze.PassInfo.ToString() == runstatuscollection.GetNGRunStatus(i).PassInfo.ToString())
+                    {
+                        bfind = true;
+                        break;
+                    }
+                    i++;
+                }
             }
 
             if (bfind)
@@ -2174,18 +2190,36 @@ namespace Allinone.OPSpace
             }
 
             i = 0;
+            bfind = false;
 
             foreach (AnalyzeClass analyze in eanalyze.BranchList)
             {
                 i = 0;
                 while (i < runstatuscollection.NGCOUNT)
                 {
-                    if (analyze.PassInfo.ToString() == runstatuscollection.GetNGRunStatus(i).PassInfo.ToString())
+                    if (analyze.PassInfo.ToString() == runstatuscollection.GetNGRunStatus(i).PassInfo.ToString()
+                        &&
+                        runstatuscollection.GetNGRunStatus(i).AnalyzeProcedure == AnanlyzeProcedureEnum.BIAS
+                        )
                     {
                         bfind = true;
                         break;
                     }
                     i++;
+                }
+
+                if (!bfind)
+                {
+                    i = 0;
+                    while (i < runstatuscollection.NGCOUNT)
+                    {
+                        if (analyze.PassInfo.ToString() == runstatuscollection.GetNGRunStatus(i).PassInfo.ToString())
+                        {
+                            bfind = true;
+                            break;
+                        }
+                        i++;
+                    }
                 }
 
                 if (bfind)

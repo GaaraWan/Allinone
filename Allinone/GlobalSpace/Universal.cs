@@ -40,16 +40,16 @@ namespace Allinone
     public class Universal : JetEazy.Universal
     {
         public static bool IsNoUseCCD = false;
-        public static bool IsNoUseIO = true;
+        public static bool IsNoUseIO = false;
         public static bool IsNoUseMotor = IsNoUseIO;
 
-        public static string VersionDate = "2025/10/28";
+        public static string VersionDate = "2025/11/12";
 
         public static VersionEnum VERSION = VersionEnum.ALLINONE;
-        public static OptionEnum OPTION = OptionEnum.MAIN_SDM2;
+        public static OptionEnum OPTION = OptionEnum.MAIN_X6;
 
         public static CameraActionMode CAMACT = CameraActionMode.CAM_MOTOR_MODE2;
-        public static RobotType myRobotType = RobotType.HCFA;
+        public static RobotType myRobotType = RobotType.NONE;
         public static DiskType myDiskType = DiskType.DISK_D;
         public static JetMappingType jetMappingType = JetMappingType.NONE;
         public static FactoryName FACTORYNAME = FactoryName.NONE;
@@ -2736,6 +2736,63 @@ namespace Allinone
 
         static void TestProgram()
         {
+
+            //CAoiCalibration calibration = new CAoiCalibration();
+
+            //PointF[] p0 = new PointF[9];
+            //p0[0] = new PointF(367, 1101);
+            //p0[1] = new PointF(626, 1103);
+            //p0[2] = new PointF(888, 1106);
+            //p0[3] = new PointF(362, 1362);
+            //p0[4] = new PointF(622, 1365);
+            //p0[5] = new PointF(885, 1369);
+            //p0[6] = new PointF(358, 1625);
+            //p0[7] = new PointF(618, 1629);
+            //p0[8] = new PointF(881, 1634);
+
+            //PointF[] p1 = new PointF[9];
+            //p1[0] = new PointF(-115, -85);
+            //p1[1] = new PointF(-100, -85);
+            //p1[2] = new PointF(-85, -85);
+            //p1[3] = new PointF(-115, -100);
+            //p1[4] = new PointF(-100, -100);
+            //p1[5] = new PointF(-85, -100);
+            //p1[6] = new PointF(-115, -115);
+            //p1[7] = new PointF(-100, -115);
+            //p1[8] = new PointF(-85, -115);
+
+
+            //PointF[,] views = new PointF[3, 3];
+            //PointF[,] worlds = new PointF[3, 3];
+
+
+    
+            //int z = 0;
+            //for (int i = 0; i < 3; i++)
+            //{
+            //    for (int j = 0; j < 3; j++)
+            //    {
+            //        views[i, j] = p0[z];
+            //        z++;
+            //    }
+            //}
+
+            //z = 0;
+            //for (int i = 0; i < 3; i++)
+            //{
+            //    for (int j = 0; j < 3; j++)
+            //    {
+            //        worlds[i, j] = p1[z];
+            //        z++;
+            //    }
+            //}
+            //calibration.Dispose();
+            //calibration.SetCalibrationPoints(views, worlds);
+            //calibration.CalculateTransformMatrix();
+            ////calibration.TransformViewToWorld(new PointF(426, 1166), out PointF pp1);
+            //calibration.TransformViewToWorld(new PointF(496, 1374), out PointF pp1);
+            //calibration.TransformViewToWorld(new PointF(680, 1470), out PointF pp2);
+
             //List<AnalyzeClass> AList = new List<AnalyzeClass>();
             //List<AnalyzeClass> BList = new List<AnalyzeClass>();
 
@@ -2753,26 +2810,26 @@ namespace Allinone
 
             //AList.Clear();
 
-            PointF p0 = new PointF(0, 0);
-            PointF p0run = new PointF(0, 1);
-            PointF p1 = new PointF(10, 0);
-            PointF p1run = new PointF(10, 1);
-            //PointF OrgCenter = new PointF(5, 0);
-            //PointF RunCenter = new PointF(5, 1);
+            //PointF p0 = new PointF(0, 0);
+            //PointF p0run = new PointF(0, 1);
+            //PointF p1 = new PointF(10, 0);
+            //PointF p1run = new PointF(10, 1);
+            ////PointF OrgCenter = new PointF(5, 0);
+            ////PointF RunCenter = new PointF(5, 1);
 
-            PointF ptfpatternORG = new PointF(5,0);
-            PointF ptfpatternRUN = new PointF(5,2);
+            //PointF ptfpatternORG = new PointF(5, 0);
+            //PointF ptfpatternRUN = new PointF(5, 2);
 
-            // 创建坐标系转换器
-            var coordSystem0 = new MarkCoordinateSystem();
-            coordSystem0.Initialize(p0, p1);
-            PointF org = coordSystem0.WorldToMarkCoordinates(ptfpatternORG);
+            //// 创建坐标系转换器
+            //var coordSystem0 = new MarkCoordinateSystem();
+            //coordSystem0.Initialize(p0, p1);
+            //PointF org = coordSystem0.WorldToMarkCoordinates(ptfpatternORG);
 
-            coordSystem0.Initialize(p0run, p1run);
-            PointF run = coordSystem0.WorldToMarkCoordinates(ptfpatternRUN);
+            //coordSystem0.Initialize(p0run, p1run);
+            //PointF run = coordSystem0.WorldToMarkCoordinates(ptfpatternRUN);
 
-            double xshiftrunxx = Math.Abs(org.X - run.X);
-            double yshiftrunyy = Math.Abs(org.Y - run.Y);
+            //double xshiftrunxx = Math.Abs(org.X - run.X);
+            //double yshiftrunyy = Math.Abs(org.Y - run.Y);
 
         }
 

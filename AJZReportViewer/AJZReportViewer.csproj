@@ -71,6 +71,7 @@
     </Compile>
     <Compile Include="Global.cs" />
     <Compile Include="INIClass.cs" />
+    <Compile Include="Mvc\Model\Zyt\GetNgNum.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReportItem.cs" />
@@ -113,5 +114,6 @@
       <Name>JzDisplay</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
